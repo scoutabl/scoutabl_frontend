@@ -141,7 +141,7 @@
   }
 
   .bg-gradient-custom {
-    background: linear-gradient(to right, var(--gradientstart), var(--gradientend));
+    background: linear-gradient(89.56deg, #806BFF 0.37%, #A669FD 99.63%);
   }
 
   .font-sans {
