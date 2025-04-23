@@ -2,10 +2,7 @@ import React from 'react';
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm } from 'react-hook-form'
 import { z } from 'zod'
-import googleIcon from '/googleIcon.svg'
-import micorosoftIcon from '/microsoftIcon.svg'
-import helpIcon from '/helpIcon.svg'
-import logo from '/logo.svg'
+
 import {
     Form,
     FormControl,
@@ -16,19 +13,11 @@ import {
 } from "@/components/ui/form"
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import {
-    Dialog,
-    DialogContent,
-    DialogDescription,
-    DialogHeader,
-    DialogTitle,
-    DialogTrigger,
-    DialogFooter,
-    DialogClose
-} from '@/components/ui/dialog'
-import { Label } from '@/components/ui/label';
+import googleIcon from '/googleIcon.svg'
+import micorosoftIcon from '/microsoftIcon.svg'
+
 import GradientBackground from '@/components/GradientBackground';
-import { ChevronLeft } from 'lucide-react';
+
 const LoginPage = () => {
     const formSchema = z.object({
         email: z.string().email({ message: "Email is required" }),
@@ -90,50 +79,7 @@ const LoginPage = () => {
                                     <label className='text-primarytext text-xs font-medium' htmlFor="rememberMe">Remember me</label>
                                 </div>
                                 {/* <a href="#" className='text-primarytext text-xs font-medium'>Forgot Password?</a> */}
-                                <Dialog >
-                                    <DialogTrigger asChild>
-                                        <span className='text-primarytext text-xs font-medium cursor-pointer'>Forgot Password?</span>
-                                    </DialogTrigger>
-                                    <DialogContent className="sm:max-w-[549px] rounded-[40px] p-[50px]">
-                                        <DialogHeader>
-                                            <DialogDescription className='flex items-center justify-between'>
-                                                <span className='text-[#333333] font-normal text-xl'>
-                                                    Recover your <span className='bg-gradient-to-r from-[#806BFF] to-[#A669FD] inline-block text-transparent bg-clip-text'>Scoutabl Account</span>
-                                                </span>
-                                                <span className='flex items-center gap-2'>
-                                                    <img src={helpIcon} alt="help icon" className='h-[14px] w-[14px]' />
-                                                    <span className='font-medium text-base text-[#454545]'>Help</span>
-                                                </span>
-                                            </DialogDescription>
-                                            <DialogTitle className='font-semibold text-[2.5rem] text-[#333333]'>Password Recovery</DialogTitle>
-                                            <figure className='w-full flex items-center justify-center py-5'>
-                                                <img src={logo} alt="scoutabl logo" />
-                                            </figure>
-                                        </DialogHeader>
-                                        <div className="grid gap-4 py-4">
-                                            <div className="flex flex-col gap-4">
-                                                <Label htmlFor="email" className="text-right">
-                                                    Enter your email adress
-                                                </Label>
-                                                <Input
-                                                    id="email"
-                                                    // defaultValue="Enter your email address"
-                                                    placeholder="Enter your email address"
-                                                    className="col-span-3"
-                                                />
-                                            </div>
-                                        </div>
-                                        <DialogFooter className='flex flex-col gap-9'>
-                                            <Button type="submit" className='bg-gradient-custom h-[54px] w-[296px] rounded-[20px] [box-shadow:0px_0px_4px_rgba(0,_0,_0,_0.25)] hover:opacity-90'>Send Code</Button>
-                                            <DialogClose asChild>
-                                                <Button className='flex items-center justify-center gap-2 bg-black rouned-[12px] h-10 w-[129px]'>
-                                                    <ChevronLeft />
-                                                    <span className='text-white font-semibold text-sm'>Back</span>
-                                                </Button>
-                                            </DialogClose>
-                                        </DialogFooter>
-                                    </DialogContent>
-                                </Dialog>
+                                
                             </div>
                             <div className='w-full flex items-center justify-center'>
                                 <Button className='bg-gradient-custom h-10 w-24 rounded-[12px]' type="submit">
@@ -149,14 +95,15 @@ const LoginPage = () => {
                             <div className='h-px bg-[#CFDFE2] flex-1'></div>
                         </div>
                         <div className='flex items-center justify-center gap-5'>
-                            <a href="#">
+                            <a href="https://dev.scoutabl.com/auth/login/azuread-tenant-oauth2/">
                                 <img src={micorosoftIcon} alt="Microsoft" className='w-[29.24px] h-[29.24px]' />
                             </a>
-                            <a href="#">
+                            <a href="https://dev.scoutabl.com/auth/login/google-oauth2/">
                                 <img src={googleIcon} alt="Google" className='w-[29.24px] h-[29.24px]' />
                             </a>
                         </div>
                         <span className='pt-6 block text-center'>Don't have an account? <a href="/register" className='text-secondarytext'>Don&apos;t Miss Out</a></span>
+                        <OtpInput />
                     </Form>
                 </div>
             </div>

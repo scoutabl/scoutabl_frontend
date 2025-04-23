@@ -164,10 +164,10 @@ const SignupPage = () => {
                             <div className='h-px bg-[#CFDFE2] flex-1'></div>
                         </div>
                         <div className='flex items-center justify-center gap-5'>
-                            <a href="#">
+                            <a href="https://dev.scoutabl.com/auth/login/azuread-tenant-oauth2/">
                                 <img src={micorosoftIcon} alt="Microsoft" className='w-[29.24px] h-[29.24px]' />
                             </a>
-                            <a href="#">
+                            <a href="https://dev.scoutabl.com/auth/login/google-oauth2/">
                                 <img src={googleIcon} alt="Google" className='w-[29.24px] h-[29.24px]' />
                             </a>
                         </div>
