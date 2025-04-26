@@ -17,6 +17,7 @@ import googleIcon from '/googleIcon.svg'
 import micorosoftIcon from '/microsoftIcon.svg'
 
 import GradientBackground from '@/components/GradientBackground';
+import PasswordRecoveryModal from '@/components/PasswordRecoveryModal';
 
 const LoginPage = () => {
     const formSchema = z.object({
@@ -67,7 +68,7 @@ const LoginPage = () => {
                                     <FormItem>
                                         <FormLabel className='text-primarytext text-base font-medium pb-2'>Password</FormLabel>
                                         <FormControl>
-                                            <Input type="password" placeholder="Enter your password" {...field} />
+                                            <Input autoComplete="on" type="password" placeholder="Enter your password" {...field} />
                                         </FormControl>
                                         <FormMessage />
                                     </FormItem>
@@ -78,8 +79,9 @@ const LoginPage = () => {
                                     <input className='appearance-none w-3.5 h-3.5 bg-white border-2 rounded border-black outline checked:bg-purple-800' type="checkbox" name="rememberMe" id="rememberMe" />
                                     <label className='text-primarytext text-xs font-medium' htmlFor="rememberMe">Remember me</label>
                                 </div>
+                                <PasswordRecoveryModal />
                                 {/* <a href="#" className='text-primarytext text-xs font-medium'>Forgot Password?</a> */}
-                                
+
                             </div>
                             <div className='w-full flex items-center justify-center'>
                                 <Button className='bg-gradient-custom h-10 w-24 rounded-[12px]' type="submit">
@@ -102,8 +104,8 @@ const LoginPage = () => {
                                 <img src={googleIcon} alt="Google" className='w-[29.24px] h-[29.24px]' />
                             </a>
                         </div>
-                        <span className='pt-6 block text-center'>Don't have an account? <a href="/register" className='text-secondarytext'>Don&apos;t Miss Out</a></span>
-                        <OtpInput />
+                        <span className='pt-6 block text-center'>Don&apos;t have an account? <a href="/register" className='text-secondarytext'>Don&apos;t Miss Out</a></span>
+
                     </Form>
                 </div>
             </div>

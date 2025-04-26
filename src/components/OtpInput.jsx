@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 
-const OtpInput = ({ length = 4, onOtpSubmit = () => { } }) => {
+const OtpInput = ({ length = 6, onOtpSubmit = () => { }, onChange = () => { } }) => {
     const [otp, setOtp] = useState(new Array(length).fill(''));
     const inputRefs = useRef([]);
 
@@ -11,11 +11,9 @@ const OtpInput = ({ length = 4, onOtpSubmit = () => { } }) => {
         newOtp[index] = value.substring(value.length - 1);
         setOtp(newOtp);
 
-        //submimt trigger 
+        // Notify parent of change, but don't submit
         const combinedOtp = newOtp.join('');
-        if (combinedOtp.length === length) {
-            onOtpSubmit(combinedOtp);
-        }
+        onChange(combinedOtp);
 
         //Move to next input if current is filled
         if (value && index < length - 1 && inputRefs.current[index + 1]) {
@@ -49,13 +47,13 @@ const OtpInput = ({ length = 4, onOtpSubmit = () => { } }) => {
     }, []);
 
     return (
-        <div>
+        <div className='mb-[26px] self-center'>
             {otp.map((value, index) => (
                 <input
                     autoComplete='one-time-code'
                     inputMode='numeric'
                     type="text"
-                    className="w-[40px] h-[40px] border-b-2 border-black text-center text-[20px] font-bold mx-1"
+                    className="mx-2 w-[40px] h-[68px] border-b-2 border-[#5C5C5C] text-center text-[64px] font-bold focus:outline-none focus:border-b-purple-500 text-[#5C5C5C]"
                     key={index}
                     ref={(input) => (inputRefs.current[index] = input)}
                     value={value}
