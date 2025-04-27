@@ -6,7 +6,7 @@ import LoginPage from './pages/LoginPage'
 import SignupPage from './pages/SignupPage'
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import Navbar from './components/Navbar'
-import OtpInput from './components/OtpInput'
+import OrganizationSetupPage from './pages/OrganizationSetupPage'
 import { Toaster } from './components/ui/sonner'
 function App() {
 
@@ -16,6 +16,7 @@ function App() {
       <Routes>
         <Route path="/login" element={<LoginPage />} />
         <Route path="/signup" element={<SignupPage />} />
+        <Route path='organization-setup' element={<OrganizationSetupPage />} />
       </Routes>
       <Toaster />
     </Router>
