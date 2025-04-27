@@ -2,6 +2,7 @@ import React from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
+import { isValidPhoneNumber } from "react-phone-number-input";
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -11,6 +12,7 @@ import {
     FormItem,
     FormLabel,
     FormMessage,
+    FormDescription
 } from "@/components/ui/form";
 import {
     Select,
@@ -19,6 +21,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select";
+import { PhoneInput } from '@/components/ui/PhoneInput';
 import logo from '/logo.svg';
 import { FormProvider, useFormState } from '@/context/FormContext';
 
@@ -211,35 +214,50 @@ function OrganizationDetailsStep() {
 }
 
 // Step 2: Setup Goals
-function SetupGoalsStep() {
+function SetupLinksStep() {
     const { state, dispatch } = useFormState();
 
-    const goals = [
-        { id: 'hiring', label: 'Streamline hiring process' },
-        { id: 'candidates', label: 'Find better candidates' },
-        { id: 'diversity', label: 'Improve diversity hiring' },
-        { id: 'automation', label: 'Automate recruitment tasks' },
-        { id: 'reporting', label: 'Better reporting & analytics' },
-    ];
+    // Schema for step 1
+    const schema = z.object({
+        companyWebsite: z.string().min(1, { message: "Company name is required" }),
+        helpDeskLinK: z.string().min(1, { message: "Company type is required" }),
+        carrerPageLink: z.string().min(1, { message: "Employee count is required" }),
+        companyAddress: z.string().min(1, { message: "Country is required" }),
+        contactEmail: z.string().min(1, { message: "City is required" }),
+        contactNumber: z
+            .string()
+            .refine(isValidPhoneNumber, { message: "Invalid phone number" })
+            .or(z.literal("")),
+    });
 
-    const [selectedGoals, setSelectedGoals] = React.useState(state.formData.goals || []);
+    const form = useForm({
+        resolver: zodResolver(schema),
+        defaultValues: {
 
-    const toggleGoal = (goalId) => {
-        setSelectedGoals(prev =>
-            prev.includes(goalId)
-                ? prev.filter(id => id !== goalId)
-                : [...prev, goalId]
-        );
-    };
+            companyWebsite: state.formData.companyWebsite,
+            helpDeskLinK: state.formData.helpDeskLinK,
+            carrerPageLink: state.formData.carrerPageLink,
+            companyAddress: state.formData.companyAddress,
+            contactEmail: state.formData.contactEmail,
+            contactNumber: state.formData.contactNumber
+        }
+    });
 
-    const handleNext = () => {
+    function onSubmit(values) {
         dispatch({
             type: 'SET_FORM_DATA',
-            payload: { goals: selectedGoals }
+            payload: {
+                companyName: values.companyWebsite,
+                companyType: values.helpDeskLinK,
+                employeeCount: values.carrerPageLink,
+                companyAddress: values.companyAddress,
+                contactEmail: values.contactEmail,
+                contactNumber: values.contactNumber
+            }
         });
 
         dispatch({ type: 'NEXT_STEP' });
-    };
+    }
 
     const handleBack = () => {
         dispatch({ type: 'PREV_STEP' });
@@ -247,33 +265,108 @@ function SetupGoalsStep() {
 
     return (
         <div className="w-full max-w-md mx-auto">
-            <h2 className="text-2xl font-bold mb-6">Setup Goals</h2>
-            <p className="text-gray-500 mb-8">What are you looking to achieve with Scoutabl?</p>
+            <h2 className="text-2xl font-bold mb-6">Add your Links </h2>
+            <p className="text-gray-500 mb-8">These details allow Orion to outreach to candidates.</p>
 
-            <div className="space-y-4">
-                {goals.map(goal => (
-                    <div
-                        key={goal.id}
-                        onClick={() => toggleGoal(goal.id)}
-                        className={`p-4 border rounded-lg cursor-pointer transition-colors ${selectedGoals.includes(goal.id)
-                            ? 'border-blue-500 bg-blue-50'
-                            : 'border-gray-200 hover:bg-gray-50'
-                            }`}
-                    >
-                        <div className="flex items-center">
-                            <div className={`w-5 h-5 rounded-full border mr-3 flex items-center justify-center ${selectedGoals.includes(goal.id) ? 'bg-blue-500 border-blue-500' : 'border-gray-400'
-                                }`}>
-                                {selectedGoals.includes(goal.id) && (
-                                    <svg width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                        <path d="M10 3L4.5 8.5L2 6" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                                    </svg>
-                                )}
-                            </div>
-                            <span>{goal.label}</span>
-                        </div>
+            <Form {...form}>
+                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                    <FormField
+                        control={form.control}
+                        name="companyWebsite"
+                        render={({ field }) => (
+                            <FormItem>
+                                <FormLabel>companyWebsite</FormLabel>
+                                <FormControl>
+                                    <Input placeholder="scoutabl.com" {...field} />
+                                </FormControl>
+                                <FormMessage />
+                            </FormItem>
+                        )}
+                    />
+
+                    <div className="grid grid-cols-2 gap-4">
+                        <FormField
+                            control={form.control}
+                            name="helpDeskLinK"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>helpDesk LinK*</FormLabel>
+                                    <FormControl>
+                                        <Input placeholder="www.scoutabl.com/helpdesk" {...field} />
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+
+                        <FormField
+                            control={form.control}
+                            name="careerPageLink"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Career Page Link*</FormLabel>
+                                    <FormControl>
+                                        <Input placeholder="www.scoutabl.com/jobs" {...field} />
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
                     </div>
-                ))}
-            </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                        <FormField
+                            control={form.control}
+                            name="companyAddress"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Company Address*</FormLabel>
+                                    <FormControl>
+                                        <Input placeholder="2443 Sierra Nevada Road, Mammoth Lakes CA 93546" {...field} />
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+
+                        <FormField
+                            control={form.control}
+                            name="contactEmail"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Contact Email</FormLabel>
+                                    <FormControl>
+                                        <Input placeholder="Enter Contact Email" {...field} />
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+                        <FormField
+                            control={form.control}
+                            name="contactNumber"
+                            render={({ field }) => (
+                                <FormItem className="flex flex-col items-start">
+                                    <FormLabel className="text-left">Phone Number</FormLabel>
+                                    <FormControl className="w-full">
+                                        <PhoneInput placeholder="Enter a phone number" {...field} />
+                                    </FormControl>
+                                    <FormDescription className="text-left">
+                                        Enter a phone number
+                                    </FormDescription>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+                    </div>
+
+                    <div className="flex justify-end pt-4">
+                        <Button type="submit" className="bg-gradient-custom rounded-[20px] min-w-[100px]">
+                            Continue
+                        </Button>
+                    </div>
+                </form>
+            </Form>
 
             <div className="flex justify-between pt-8">
                 <Button
@@ -285,8 +378,7 @@ function SetupGoalsStep() {
                     Back
                 </Button>
                 <Button
-                    type="button"
-                    onClick={handleNext}
+                    type="submit"
                     className="bg-gradient-custom rounded-[20px] min-w-[100px]"
                 >
                     Continue
@@ -668,7 +760,7 @@ function StepContent() {
         case 1:
             return <OrganizationDetailsStep />;
         case 2:
-            return <SetupGoalsStep />;
+            return <SetupLinksStep />;
         case 3:
             return <MissionVisionStep />;
         case 4:

@@ -14,16 +14,24 @@ const initialState = {
             city: '',
         },
 
-        // Step 2: Setup Goals
-        goals: [],
+        // Step 2: Setup Links
+        companyWebsite: '',
+        helpDeskLinK: '',
+        carrerPageLink: '',
+        companyAddress: '',
+        contactEmail: '',
+        contactNumber: '',
 
         // Step 3: Mission & Vision
         mission: '',
         vision: '',
 
         // Step 4: Setup Social
-        website: '',
+        overview: '',
         linkedin: '',
+        twitter: '',
+        facebook: '',
+        instagram: '',
 
         // Step 5: Upload Logo
         logo: null,
