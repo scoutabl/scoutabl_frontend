@@ -1,4 +1,4 @@
-import React from 'react';
+import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -22,8 +22,21 @@ import {
     SelectValue,
 } from "@/components/ui/select";
 import { PhoneInput } from '@/components/ui/PhoneInput';
-import logo from '/logo.svg';
 import { FormProvider, useFormState } from '@/context/FormContext';
+import { Textarea } from '@/components/ui/textarea';
+import { FaLinkedinIn, FaXTwitter } from "react-icons/fa6";
+import { FaFacebookF } from "react-icons/fa";
+import { RiInstagramFill } from "react-icons/ri";
+import {
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+    DialogFooter,
+    DialogClose,
+} from "@/components/ui/dialog";
+import previewLogo from '/previewLogo.svg';
+import logo from '/logo.svg';
 
 // Step 1: Organization Details
 function OrganizationDetailsStep() {
@@ -67,18 +80,18 @@ function OrganizationDetailsStep() {
     }
 
     return (
-        <div className="w-full max-w-md mx-auto">
-            <h2 className="text-2xl font-bold mb-6">Customize your Organization</h2>
-            <p className="text-gray-500 mb-8">These details allow us to customize your experience.</p>
+        <div className="w-full max-w-[642px] mx-auto flex flex-col items-center justify-center">
+            <h2 className="text-[2rem] font-bold mb- text-center">Customize your <span className='bg-gradient-to-r from-[#806BFF] to-[#A669FD] inline-block text-transparent bg-clip-text'>Organization</span></h2>
+            <p className="text-[#5C5C5C] mb-10 text-center">These details allow us to customize your experience.</p>
 
             <Form {...form}>
-                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 w-xl">
                     <FormField
                         control={form.control}
                         name="companyName"
                         render={({ field }) => (
                             <FormItem>
-                                <FormLabel>Company Name*</FormLabel>
+                                <FormLabel>Company Name<span className='text-[#E45270]'>*</span></FormLabel>
                                 <FormControl>
                                     <Input placeholder="Enter your company name" {...field} />
                                 </FormControl>
@@ -93,14 +106,15 @@ function OrganizationDetailsStep() {
                             name="companyType"
                             render={({ field }) => (
                                 <FormItem>
-                                    <FormLabel>Company Type*</FormLabel>
+                                    <FormLabel>Company Type<span className='text-[#E45270]'>*</span></FormLabel>
                                     <Select
                                         onValueChange={field.onChange}
                                         defaultValue={field.value}
+
                                     >
                                         <FormControl>
                                             <SelectTrigger>
-                                                <SelectValue placeholder="Select type" />
+                                                <SelectValue placeholder="Select Company Type" />
                                             </SelectTrigger>
                                         </FormControl>
                                         <SelectContent>
@@ -120,22 +134,28 @@ function OrganizationDetailsStep() {
                             name="employeeCount"
                             render={({ field }) => (
                                 <FormItem>
-                                    <FormLabel>Employee Count*</FormLabel>
+                                    <FormLabel>Employee Count<span className='text-[#E45270]'>*</span></FormLabel>
                                     <Select
                                         onValueChange={field.onChange}
                                         defaultValue={field.value}
                                     >
                                         <FormControl>
                                             <SelectTrigger>
-                                                <SelectValue placeholder="Select count" />
+                                                <SelectValue placeholder="Select Employee Count" />
                                             </SelectTrigger>
                                         </FormControl>
                                         <SelectContent>
-                                            <SelectItem value="1-10">1-10</SelectItem>
-                                            <SelectItem value="11-50">11-50</SelectItem>
-                                            <SelectItem value="51-200">51-200</SelectItem>
-                                            <SelectItem value="201-500">201-500</SelectItem>
-                                            <SelectItem value="501+">501+</SelectItem>
+                                            <SelectItem value="15">1-15</SelectItem>
+                                            <SelectItem value="30">15-30</SelectItem>
+                                            <SelectItem value="50">31-50</SelectItem>
+                                            <SelectItem value="100">51-100</SelectItem>
+                                            <SelectItem value="200">101-200</SelectItem>
+                                            <SelectItem value="300">201-300</SelectItem>
+                                            <SelectItem value="400">301-400</SelectItem>
+                                            <SelectItem value="500">401-500</SelectItem>
+                                            <SelectItem value="750">501-750</SelectItem>
+                                            <SelectItem value="1000">751-1000</SelectItem>
+                                            <SelectItem value="1000+">1000+</SelectItem>
                                         </SelectContent>
                                     </Select>
                                     <FormMessage />
@@ -150,7 +170,7 @@ function OrganizationDetailsStep() {
                             name="country"
                             render={({ field }) => (
                                 <FormItem>
-                                    <FormLabel>Company Location*</FormLabel>
+                                    <FormLabel>Company Location<span className='text-[#E45270]'>*</span></FormLabel>
                                     <Select
                                         onValueChange={field.onChange}
                                         defaultValue={field.value}
@@ -209,7 +229,7 @@ function OrganizationDetailsStep() {
                     </div>
                 </form>
             </Form>
-        </div>
+        </div >
     );
 }
 
@@ -217,13 +237,23 @@ function OrganizationDetailsStep() {
 function SetupLinksStep() {
     const { state, dispatch } = useFormState();
 
-    // Schema for step 1
+    // Schema for step 2
     const schema = z.object({
-        companyWebsite: z.string().min(1, { message: "Company name is required" }),
-        helpDeskLinK: z.string().min(1, { message: "Company type is required" }),
-        carrerPageLink: z.string().min(1, { message: "Employee count is required" }),
-        companyAddress: z.string().min(1, { message: "Country is required" }),
-        contactEmail: z.string().min(1, { message: "City is required" }),
+        companyWebsite: z.string()
+            .regex(/^(https?:\/\/)?([\w\d\-_]+\.+[A-Za-z]{2,})+\/?/, { message: "Please enter a valid URL" })
+            .min(1, { message: "Company website is required" }),
+        helpDeskLink: z.string()
+            .regex(/^(https?:\/\/)?([\w\d\-_]+\.+[A-Za-z]{2,})+\/?/, { message: "Please enter a valid URL" })
+            .min(1, {
+                message: "Help desk link is required"
+            }),
+        careerPageLink: z.string()
+            .regex(/^(https?:\/\/)?([\w\d\-_]+\.+[A-Za-z]{2,})+\/?/, { message: "Please enter a valid URL" })
+            .min(1, {
+                message: "Career page link is required"
+            }),
+        companyAddress: z.string().min(1, { message: "Company address is required" }),
+        contactEmail: z.string().email({ message: "Please enter a valid email" }),
         contactNumber: z
             .string()
             .refine(isValidPhoneNumber, { message: "Invalid phone number" })
@@ -233,10 +263,9 @@ function SetupLinksStep() {
     const form = useForm({
         resolver: zodResolver(schema),
         defaultValues: {
-
             companyWebsite: state.formData.companyWebsite,
-            helpDeskLinK: state.formData.helpDeskLinK,
-            carrerPageLink: state.formData.carrerPageLink,
+            helpDeskLink: state.formData.helpDeskLink,
+            careerPageLink: state.formData.careerPageLink,
             companyAddress: state.formData.companyAddress,
             contactEmail: state.formData.contactEmail,
             contactNumber: state.formData.contactNumber
@@ -247,9 +276,9 @@ function SetupLinksStep() {
         dispatch({
             type: 'SET_FORM_DATA',
             payload: {
-                companyName: values.companyWebsite,
-                companyType: values.helpDeskLinK,
-                employeeCount: values.carrerPageLink,
+                companyWebsite: values.companyWebsite,
+                helpDeskLink: values.helpDeskLink,
+                careerPageLink: values.careerPageLink,
                 companyAddress: values.companyAddress,
                 contactEmail: values.contactEmail,
                 contactNumber: values.contactNumber
@@ -264,18 +293,18 @@ function SetupLinksStep() {
     };
 
     return (
-        <div className="w-full max-w-md mx-auto">
-            <h2 className="text-2xl font-bold mb-6">Add your Links </h2>
-            <p className="text-gray-500 mb-8">These details allow Orion to outreach to candidates.</p>
+        <div className="w-full max-w-[642px] mx-auto flex flex-col items-center justify-center">
+            <h2 className="text-[2rem] font-bold mb- text-center">Add your <span className='bg-gradient-to-r from-[#806BFF] to-[#A669FD] inline-block text-transparent bg-clip-text'>Links</span></h2>
+            <p className="text-[#5C5C5C] mb-10 text-center">These details allow Orion to outreach to candidates.</p>
 
             <Form {...form}>
-                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 w-xl">
                     <FormField
                         control={form.control}
                         name="companyWebsite"
                         render={({ field }) => (
                             <FormItem>
-                                <FormLabel>companyWebsite</FormLabel>
+                                <FormLabel>Company Website<span className='text-[#E45270]'>*</span></FormLabel>
                                 <FormControl>
                                     <Input placeholder="scoutabl.com" {...field} />
                                 </FormControl>
@@ -287,12 +316,12 @@ function SetupLinksStep() {
                     <div className="grid grid-cols-2 gap-4">
                         <FormField
                             control={form.control}
-                            name="helpDeskLinK"
+                            name="helpDeskLink"
                             render={({ field }) => (
                                 <FormItem>
-                                    <FormLabel>helpDesk LinK*</FormLabel>
+                                    <FormLabel>Help Desk Link<span className='text-[#E45270]'>*</span></FormLabel>
                                     <FormControl>
-                                        <Input placeholder="www.scoutabl.com/helpdesk" {...field} />
+                                        <Input placeholder="https://www.scoutabl.com/helpdesk" {...field} />
                                     </FormControl>
                                     <FormMessage />
                                 </FormItem>
@@ -304,37 +333,35 @@ function SetupLinksStep() {
                             name="careerPageLink"
                             render={({ field }) => (
                                 <FormItem>
-                                    <FormLabel>Career Page Link*</FormLabel>
+                                    <FormLabel>Career Page Link<span className='text-[#E45270]'>*</span></FormLabel>
                                     <FormControl>
-                                        <Input placeholder="www.scoutabl.com/jobs" {...field} />
+                                        <Input placeholder="https://wwww.scoutabl.com/jobs" {...field} />
                                     </FormControl>
                                     <FormMessage />
                                 </FormItem>
                             )}
                         />
                     </div>
-
+                    <FormField
+                        control={form.control}
+                        name="companyAddress"
+                        render={({ field }) => (
+                            <FormItem>
+                                <FormLabel>Company Address<span className='text-[#E45270]'>*</span></FormLabel>
+                                <FormControl>
+                                    <Input placeholder="2443 Sierra Nevada Road, Mammoth Lakes CA 93546" {...field} />
+                                </FormControl>
+                                <FormMessage />
+                            </FormItem>
+                        )}
+                    />
                     <div className="grid grid-cols-2 gap-4">
-                        <FormField
-                            control={form.control}
-                            name="companyAddress"
-                            render={({ field }) => (
-                                <FormItem>
-                                    <FormLabel>Company Address*</FormLabel>
-                                    <FormControl>
-                                        <Input placeholder="2443 Sierra Nevada Road, Mammoth Lakes CA 93546" {...field} />
-                                    </FormControl>
-                                    <FormMessage />
-                                </FormItem>
-                            )}
-                        />
-
                         <FormField
                             control={form.control}
                             name="contactEmail"
                             render={({ field }) => (
                                 <FormItem>
-                                    <FormLabel>Contact Email</FormLabel>
+                                    <FormLabel>Contact Email<span className='text-[#E45270]'>*</span></FormLabel>
                                     <FormControl>
                                         <Input placeholder="Enter Contact Email" {...field} />
                                     </FormControl>
@@ -351,39 +378,29 @@ function SetupLinksStep() {
                                     <FormControl className="w-full">
                                         <PhoneInput placeholder="Enter a phone number" {...field} />
                                     </FormControl>
-                                    <FormDescription className="text-left">
-                                        Enter a phone number
-                                    </FormDescription>
                                     <FormMessage />
                                 </FormItem>
                             )}
                         />
                     </div>
-
-                    <div className="flex justify-end pt-4">
-                        <Button type="submit" className="bg-gradient-custom rounded-[20px] min-w-[100px]">
+                    <div className="flex justify-between pt-8">
+                        <Button
+                            type="button"
+                            variant="outline"
+                            onClick={handleBack}
+                            className="rounded-[20px] min-w-[100px]"
+                        >
+                            Back
+                        </Button>
+                        <Button
+                            type="submit"
+                            className="bg-gradient-custom rounded-[20px] min-w-[100px]"
+                        >
                             Continue
                         </Button>
                     </div>
                 </form>
             </Form>
-
-            <div className="flex justify-between pt-8">
-                <Button
-                    type="button"
-                    variant="outline"
-                    onClick={handleBack}
-                    className="rounded-[20px] min-w-[100px]"
-                >
-                    Back
-                </Button>
-                <Button
-                    type="submit"
-                    className="bg-gradient-custom rounded-[20px] min-w-[100px]"
-                >
-                    Continue
-                </Button>
-            </div>
         </div>
     );
 }
@@ -393,15 +410,15 @@ function MissionVisionStep() {
     const { state, dispatch } = useFormState();
 
     const schema = z.object({
-        mission: z.string().min(1, { message: "Mission statement is required" }),
-        vision: z.string().min(1, { message: "Vision statement is required" }),
+        companyMission: z.string().min(1, { message: "Company Mission is required" }),
+        companyVision: z.string().min(1, { message: "Company Vision is required" }),
     });
 
     const form = useForm({
         resolver: zodResolver(schema),
         defaultValues: {
-            mission: state.formData.mission,
-            vision: state.formData.vision,
+            companyMission: state.formData.mission,
+            companyVision: state.formData.vision,
         }
     });
 
@@ -419,20 +436,19 @@ function MissionVisionStep() {
     };
 
     return (
-        <div className="w-full max-w-md mx-auto">
-            <h2 className="text-2xl font-bold mb-6">Mission & Vision</h2>
-            <p className="text-gray-500 mb-8">Tell us about your company's mission and vision.</p>
-
+        <div className="w-full max-w-[642px] mx-auto">
+            <h2 className="text-[2rem] font-bold mb-3 text-center">What&apos;s your <span className='bg-gradient-to-r from-[#806BFF] to-[#A669FD] inline-block text-transparent bg-clip-text'>Goal</span></h2>
+            <p className="text-[#5C5C5C] mb-10 text-center">These details allow us to showcase the essence of your company.</p>
             <Form {...form}>
-                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 w-xl">
                     <FormField
                         control={form.control}
-                        name="mission"
+                        name="companyMission"
                         render={({ field }) => (
                             <FormItem>
-                                <FormLabel>Mission Statement*</FormLabel>
+                                <FormLabel>Company Mission<span className='text-[#E45270]'>*</span></FormLabel>
                                 <FormControl>
-                                    <Input placeholder="Enter your mission statement" {...field} />
+                                    <Textarea placeholder="Enter your company mission" {...field} className='resize-none' />
                                 </FormControl>
                                 <FormMessage />
                             </FormItem>
@@ -441,12 +457,12 @@ function MissionVisionStep() {
 
                     <FormField
                         control={form.control}
-                        name="vision"
+                        name="companyVision"
                         render={({ field }) => (
                             <FormItem>
-                                <FormLabel>Vision Statement*</FormLabel>
+                                <FormLabel>Company Vision<span className='text-[#E45270]'>*</span></FormLabel>
                                 <FormControl>
-                                    <Input placeholder="Enter your vision statement" {...field} />
+                                    <Textarea placeholder="Enter your company vision" {...field} className='resize-none' />
                                 </FormControl>
                                 <FormMessage />
                             </FormItem>
@@ -478,17 +494,32 @@ function MissionVisionStep() {
 // Step 4: Setup Social
 function SocialMediaStep() {
     const { state, dispatch } = useFormState();
+    const [modal, setModal] = useState(null); // which modal is open
+    const [tempUrl, setTempUrl] = useState(""); // temp value for modal input
+
+    const socialPlatforms = [
+        { key: "linkedin", icon: <FaLinkedinIn />, label: "LinkedIn" },
+        { key: "twitter", icon: <FaXTwitter />, label: "Twitter" },
+        { key: "facebook", icon: <FaFacebookF />, label: "Facebook" },
+        { key: "instagram", icon: <RiInstagramFill />, label: "Instagram" },
+    ];
 
     const schema = z.object({
-        website: z.string().url({ message: "Please enter a valid URL" }).optional().or(z.literal('')),
+        overview: z.string().min(1, { message: "Overview is required" }),
         linkedin: z.string().url({ message: "Please enter a valid LinkedIn URL" }).optional().or(z.literal('')),
+        twitter: z.string().url({ message: "Please enter a valid Twitter URL" }).optional().or(z.literal('')),
+        facebook: z.string().url({ message: "Please enter a valid Facebook URL" }).optional().or(z.literal('')),
+        instagram: z.string().url({ message: "Please enter a valid Instagram URL" }).optional().or(z.literal('')),
     });
 
     const form = useForm({
         resolver: zodResolver(schema),
         defaultValues: {
-            website: state.formData.website,
+            overview: state.formData.overview,
             linkedin: state.formData.linkedin,
+            twitter: state.formData.twitter,
+            facebook: state.formData.facebook,
+            instagram: state.formData.instagram,
         }
     });
 
@@ -505,41 +536,92 @@ function SocialMediaStep() {
         dispatch({ type: 'PREV_STEP' });
     };
 
+    // Open modal for a platform
+    const openModal = (platform) => {
+        setTempUrl(form.getValues(platform) || "");
+        setModal(platform);
+    };
+
     return (
-        <div className="w-full max-w-md mx-auto">
-            <h2 className="text-2xl font-bold mb-6">Setup Social Media</h2>
-            <p className="text-gray-500 mb-8">Connect your company's online presence.</p>
+        <div className="w-full max-w-[642px] mx-auto">
+            <h2 className="text-[2rem] font-bold mb-3 text-center">What&apos;s your <span className='bg-gradient-to-r from-[#806BFF] to-[#A669FD] inline-block text-transparent bg-clip-text'>Specialty</span></h2>
+            <p className="text-[#5C5C5C] mb-10 text-center">These details allow Orion to customize your culture tests</p>
 
             <Form {...form}>
-                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 w-xl">
                     <FormField
                         control={form.control}
-                        name="website"
+                        name="overview"
                         render={({ field }) => (
                             <FormItem>
-                                <FormLabel>Company Website</FormLabel>
+                                <FormLabel>Overview of Products/ Services<span className='text-[#E45270]'>*</span></FormLabel>
                                 <FormControl>
-                                    <Input placeholder="https://your-company.com" {...field} />
+                                    <Textarea placeholder="Enter a brief overview of your company" {...field} className='resize-none' />
                                 </FormControl>
                                 <FormMessage />
                             </FormItem>
                         )}
                     />
+                    <div className='flex items-center justify-center gap-3'>
+                        {socialPlatforms.map(({ key, icon, label }) => (
+                            <button
+                                type="button"
+                                key={key}
+                                className={`group w-[35px] h-[35px] rounded-full border-2 flex items-center justify-center hover:bg-gradient-to-r from-[#806BFF] to-[#A669FD]
+                  ${form.getValues(key) ? "bg-gradient-to-r from-[#806BFF] to-[#A669FD] text-white border-[#A669FD]" : "bg-white border-[#A669FD]"}
+                `}
+                                onClick={() => openModal(key)}
+                                title={label}
+                            >
+                                {icon}
+                            </button>
+                        ))}
+                    </div>
 
-                    <FormField
-                        control={form.control}
-                        name="linkedin"
-                        render={({ field }) => (
-                            <FormItem>
-                                <FormLabel>LinkedIn Profile</FormLabel>
-                                <FormControl>
-                                    <Input placeholder="https://linkedin.com/company/your-company" {...field} />
-                                </FormControl>
-                                <FormMessage />
-                            </FormItem>
-                        )}
-                    />
+                    {/* Modal */}
+                    <Dialog open={!!modal} onOpenChange={open => !open && setModal(null)}>
+                        <DialogContent>
+                            <DialogHeader>
+                                <DialogTitle>
+                                    Add {modal && modal.charAt(0).toUpperCase() + modal.slice(1)} URL
+                                </DialogTitle>
+                            </DialogHeader>
+                            <form>
+                                <Input
+                                    value={form.watch(modal) || ""}
+                                    onChange={e => form.setValue(modal, e.target.value, { shouldValidate: true })}
+                                    placeholder={`Enter ${modal} URL`}
+                                    autoFocus
+                                />
+                                {form.formState.errors[modal] && (
+                                    <div className="text-red-500 text-xs mt-1">
+                                        {form.formState.errors[modal].message}
+                                    </div>
+                                )}
+                                <DialogFooter className="flex justify-between mt-4">
+                                    <Button type="button" variant="destructive" onClick={() => setModal(null)}>
+                                        Cancel
+                                    </Button>
+                                    <Button
+                                        type="button"
+                                        className="bg-gradient-custom hover:bg-gradient-custom/50"
+                                        onClick={async () => {
+                                            const value = form.watch(modal);
+                                            if (!value) {
+                                                form.setError(modal, { type: "manual", message: "Please enter a URL" });
+                                                return;
+                                            }
+                                            const valid = await form.trigger(modal);
+                                            if (valid) setModal(null);
+                                        }}
+                                    >
+                                        Save
+                                    </Button>
+                                </DialogFooter>
 
+                            </form>
+                        </DialogContent>
+                    </Dialog>
                     <div className="flex justify-between pt-4">
                         <Button
                             type="button"
@@ -565,7 +647,7 @@ function SocialMediaStep() {
 // Step 5: Upload Logo
 function UploadLogoStep() {
     const { state, dispatch } = useFormState();
-    const [previewUrl, setPreviewUrl] = React.useState(state.formData.logo);
+    const [previewUrl, setPreviewUrl] = useState(state.formData.logo);
 
     const handleFileChange = (e) => {
         const file = e.target.files[0];
@@ -628,9 +710,9 @@ function UploadLogoStep() {
     };
 
     return (
-        <div className="w-full max-w-md mx-auto">
-            <h2 className="text-2xl font-bold mb-6">Upload Company Logo</h2>
-            <p className="text-gray-500 mb-8">Add your company logo to complete your profile.</p>
+        <div className="w-full max-w-[642px] mx-auto">
+            <h2 className="text-[2rem] font-bold mb-3 text-center">Upload your <span className='bg-gradient-to-r from-[#806BFF] to-[#A669FD] inline-block text-transparent bg-clip-text'>Logo</span></h2>
+            <p className="text-[#5C5C5C] mb-10 text-center">These details allow us to customize your experience.</p>
 
             <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center mb-6">
                 {previewUrl ? (
@@ -643,9 +725,8 @@ function UploadLogoStep() {
                     </div>
                 ) : (
                     <div className="text-gray-400 mb-4">
-                        <svg xmlns="http://www.w3.org/2000/svg" className="mx-auto h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
-                        </svg>
+                        <img src={previewLogo} alt="Upload Logo" className="mx-auto" />
+                        <p className="text-sm">No logo uploaded yet</p>
                     </div>
                 )}
 
@@ -690,11 +771,11 @@ function ProgressSidebar() {
     const { state, dispatch } = useFormState();
 
     const steps = [
-        { number: 1, label: 'Organization Detail', desc: 'Setup your Scoutabl details' },
-        { number: 2, label: 'Setup Goals', desc: 'What do you want to achieve?' },
-        { number: 3, label: 'Mission & Vision', desc: 'Tell us your story' },
-        { number: 4, label: 'Setup Social', desc: 'Connect your accounts' },
-        { number: 5, label: 'Upload Logo', desc: 'Personalize your profile' },
+        { number: 1, label: 'Organization Detail', desc: 'Setup Your Account Details' },
+        { number: 2, label: 'Setup Links', desc: 'Add Your Weblinks' },
+        { number: 3, label: 'Mission & Vision', desc: 'Add Your Goals' },
+        { number: 4, label: 'Setup Social', desc: 'Add Your Networks' },
+        { number: 5, label: 'Upload Logo', desc: 'Review and Submit' },
     ];
 
     const handleStepClick = (stepNumber) => {
@@ -784,26 +865,21 @@ const OrganizationSetupPage = () => {
 
                 {/* Main content area */}
                 <div className="w-3/4 bg-gray-50 flex flex-col">
-                    <div className="flex justify-end p-4">
+                    {/* <div className="flex justify-end p-4">
                         <button className="text-gray-500 hover:text-gray-700">
                             <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                             </svg>
                         </button>
-                    </div>
+                    </div> */}
+                    {/* Progress indicator (1/5, 2/5, etc) */}
+                    <div className="flex-1 flex flex-col gap-3 items-center justify-center px-8 py-4">
 
-                    <div className="flex-1 flex items-center justify-center px-8 py-4">
+                        <StepIndicator />
                         <StepContent />
                     </div>
 
-                    {/* Progress indicator (1/5, 2/5, etc) */}
-                    <div className="flex justify-center pb-6">
-                        <div className="flex items-center">
-                            <span className="text-sm text-gray-500">
-                                <StepIndicator />
-                            </span>
-                        </div>
-                    </div>
+
                 </div>
             </div>
         </FormProvider>
@@ -815,18 +891,7 @@ function StepIndicator() {
     const { state } = useFormState();
     return (
         <div className="flex items-center gap-2">
-            {Array.from({ length: state.totalSteps }).map((_, index) => (
-                <div
-                    key={index}
-                    className={`h-2 w-2 rounded-full ${index + 1 === state.step
-                        ? 'bg-blue-500'
-                        : index + 1 < state.step
-                            ? 'bg-blue-300'
-                            : 'bg-gray-300'
-                        }`}
-                />
-            ))}
-            <span className="ml-2 text-sm text-gray-600">{state.step}/{state.totalSteps}</span>
+            <span className="text-base text-[#333333]">{state.step}/{state.totalSteps}</span>
         </div>
     );
 }

@@ -23,8 +23,8 @@ const initialState = {
         contactNumber: '',
 
         // Step 3: Mission & Vision
-        mission: '',
-        vision: '',
+        companyMission: '',
+        companyVision: '',
 
         // Step 4: Setup Social
         overview: '',

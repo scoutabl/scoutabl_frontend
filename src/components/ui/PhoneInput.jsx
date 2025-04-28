@@ -31,6 +31,7 @@ const PhoneInput = React.forwardRef(
                 countrySelectComponent={CountrySelect}
                 inputComponent={InputComponent}
                 smartCaret={false}
+                defaultCountry="IN"
                 /**
                  * Handles the onChange event.
                  *
@@ -71,19 +72,12 @@ const CountrySelect = ({
                 <Button
                     type="button"
                     variant="outline"
-                    className="flex gap-1 rounded-e-none rounded-s-lg border-r-0 px-3 focus:z-10"
+                    className="flex gap-1 rounded-e-none rounded-s-lg border-r-0 focus:z-10 bg-black h-[47px] px-3 min-w-[70px] hover:bg-black/80"
                     disabled={disabled}
                 >
-                    <FlagComponent
-                        country={selectedCountry}
-                        countryName={selectedCountry}
-                    />
-                    <ChevronsUpDown
-                        className={cn(
-                            "-mr-2 size-4 opacity-50",
-                            disabled ? "hidden" : "opacity-100"
-                        )}
-                    />
+                    <span className="text-sm text-white">
+                        {selectedCountry ? `+${RPNInput.getCountryCallingCode(selectedCountry)}` : ''}
+                    </span>
                 </Button>
             </PopoverTrigger>
             <PopoverContent className="w-[300px] p-0">
@@ -137,8 +131,7 @@ const CountrySelectOption = ({
 }) => {
     return (
         <CommandItem className="gap-2" onSelect={() => onChange(country)}>
-            <FlagComponent country={country} countryName={countryName} />
-            <span className="flex-1 text-sm">{countryName}</span>
+            <span className="flex-1 text-sm " >{countryName}</span>
             <span className="text-sm text-foreground/50">{`+${RPNInput.getCountryCallingCode(
                 country
             )}`}</span>
@@ -154,7 +147,7 @@ const FlagComponent = ({ country, countryName }) => {
     const Flag = flags[country]
 
     return (
-        <span className="flex h-4 w-6 overflow-hidden rounded-sm bg-foreground/20 [&_svg]:size-full">
+        <span className="flex h-4 w-6 overflow-hidden rounded-sm bg-foreground/20 ">
             {Flag && <Flag title={countryName} />}
         </span>
     )
