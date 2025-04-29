@@ -701,30 +701,54 @@ const HomePage = () => {
                     </AnimatePresence>
 
                     {/* Center content */}
-                    <div
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        transition={{ duration: 0.1, ease: 'ease' }}
                         className="absolute left-1/2 top-1/2 flex flex-col items-center justify-center w-full max-w-2xl px-4"
                         style={{ transform: 'translate(-50%, -50%)', zIndex: 10 }}
                     >
-                        <h1 className="text-3xl md:text-4xl lg:text-5xl font-extrabold mb-6 text-center leading-tight">
+                        <motion.h1
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            transition={{ duration: 0.3, ease: 'ease' }}
+                            className="text-3xl md:text-4xl lg:text-5xl font-extrabold mb-6 text-center leading-tight">
                             Welcome Jake!
-                        </h1>
-                        <p className="text-lg md:text-xl text-gray-600 text-center max-w-2xl font-normal">
+                        </motion.h1>
+                        <motion.p
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            transition={{ duration: 0.5, ease: 'ease' }}
+                            className="text-lg md:text-xl text-gray-600 text-center max-w-2xl font-normal">
                             Hire Beyond Resumes With AI Precision & Blockchain Trust
-                        </p>
-                        <div className="flex items-center justify-center gap-2 my-10">
+                        </motion.p>
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            transition={{ duration: 0.7, ease: 'ease' }}
+                            className="flex items-center justify-center gap-2 my-10">
                             <span className="text-base text-black font-medium">Already a Pro?</span>
                             <a href="#" className="text-bases text-[#0084FF] hover:underline">
                                 Skip the walkthrough
                             </a>
-                        </div>
-                        <button className="max-w-[317px] max-h-[72px] bg-gradient-custom text-white p-4 rounded-full text-base font-bold shadow-lg flex items-center gap-2 transition-all duration-200">
+                        </motion.div>
+                        <motion.button
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            transition={{ duration: 1, ease: 'ease' }}
+                            className="max-w-[317px] max-h-[72px] bg-gradient-custom text-white p-4 rounded-full text-base font-bold shadow-lg flex items-center gap-2 transition-all duration-200">
                             <img src={plusIcon} alt="plusIcon" className='h-10 w-10' />
                             Create Your First Assessment
-                        </button>
-                    </div>
+                        </motion.button>
+                    </motion.div>
                 </div>
             </div>
-        </div>
+        </div >
     )
 }
 
