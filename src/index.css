@@ -1,6 +1,7 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@100;200;300;400;500;600;700;800;900&display=swap');
 @import "tailwindcss";
 @import "tw-animate-css";
+@import "tailwindcss/utilities";
 
 @custom-variant dark (&:is(.dark *));
 
@@ -148,6 +149,13 @@
     font-family: var(--font-sans);
   }
 
+}
+
+@theme {
+
+  --animate-shine: shine 3s ease-out infinite;
+  --animate-gradient-flow: gradientFlow 10s ease infinite;
+
   @keyframes shine {
     0% {
       background-position: 200% 0;
@@ -176,11 +184,5 @@
     }
   }
 
-  .animate-shine {
-    animation: shine 3s ease-out infinite;
-  }
 
-  .animate-gradient-flow {
-    animation: gradientFlow 10s ease infinite;
-  }
 }
