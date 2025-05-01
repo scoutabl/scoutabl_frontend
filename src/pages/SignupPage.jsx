@@ -324,7 +324,7 @@ const SignupPage = () => {
                     }
                 }}
             >
-                <DialogContent className="sm:max-w-[549px] rounded-[40px] p-[50px] min-h-[686px]">
+                <DialogContent className="sm:max-w-[549px] rounded-[40px] px-12 py-6 max-h-[686px]">
                     <DialogHeader >
                         <DialogDescription className='flex items-center justify-between'>
                             <span className='text-[#333333] font-normal text-xl'>
@@ -340,7 +340,7 @@ const SignupPage = () => {
                             <>
                                 <DialogTitle className='font-semibold text-[2.5rem] text-[#333333]'>Account Created</DialogTitle>
                                 <figure className='w-full flex items-center justify-center py-5'>
-                                    <img src={logo} alt="scoutabl logo" />
+                                    <img src={logo} alt="scoutabl logo" className='h-20 w-20' />
                                 </figure>
                                 <span className="text-black text-lg font-medium">
                                     You just took your first step to better hiring.
