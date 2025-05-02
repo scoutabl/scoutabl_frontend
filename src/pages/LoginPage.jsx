@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm } from 'react-hook-form'
 import { z } from 'zod'
+import { useAuth } from '@/context/AuthContext';
 
 import {
     Form,
@@ -20,9 +21,13 @@ import GradientBackground from '@/components/GradientBackground';
 import PasswordRecoveryModal from '@/components/PasswordRecoveryModal';
 
 const LoginPage = () => {
+    const { login } = useAuth();
+    const [error, setError] = useState('');
+    const [isLoading, setIsLoading] = useState(false);
+
     const formSchema = z.object({
         email: z.string().email({ message: "Email is required" }),
-        password: z.string().min(8, { message: "Password is required" }),
+        password: z.string().min(8, { message: "Password must be at least 8 characters" }),
     })
 
     const form = useForm({
@@ -33,21 +38,44 @@ const LoginPage = () => {
         }
     })
 
-    function onSubmit(values) {
-        console.log(values)
+    async function onSubmit(values) {
+        try {
+            setIsLoading(true);
+            setError('');
+            console.log('Form values:', values);
+
+            const success = await login(values.email, values.password);
+            if (!success) {
+                setError('Invalid email or password. Please try again.');
+            }
+        } catch (error) {
+            console.error('Login submission error:', error);
+            setError('An error occurred during login. Please try again.');
+        } finally {
+            setIsLoading(false);
+        }
     }
 
     return (
-        <div className='flex min-h-screen'>
+        <div className='grid grid-cols-12 min-h-screen'>
             {/* Background Section */}
-
             <GradientBackground />
+
             {/* Form Section */}
-            <div className="w-1/3 flex items-center justify-center py-24">
-                <div className="w-full max-w-[342px] mx-auto px-4">
-                    <h1 className='pb-6 text-[3.25rem] font-bold leading-[51.9px] tracking-[-6%]'>Welcome<br /> to Scoutabl</h1>
+            <div className="w-[480px] flex flex-col justify-center px-12 bg-white">
+                <div className="w-full">
+                    <h1 className='text-[2rem] font-bold text-[#333333] mb-8'>
+                        Welcome<br />to Scoutabl
+                    </h1>
+
                     <Form {...form}>
                         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                            {error && (
+                                <div className="p-3 text-red-500 bg-red-100 rounded-md text-sm">
+                                    {error}
+                                </div>
+                            )}
+
                             <FormField
                                 control={form.control}
                                 name="email"
@@ -55,7 +83,11 @@ const LoginPage = () => {
                                     <FormItem>
                                         <FormLabel className='text-primarytext text-base font-medium pb-2'>Business Email</FormLabel>
                                         <FormControl>
-                                            <Input placeholder="Enter your business email" {...field} />
+                                            <Input
+                                                placeholder="Enter your business email"
+                                                {...field}
+                                                disabled={isLoading}
+                                            />
                                         </FormControl>
                                         <FormMessage className='py-1' />
                                     </FormItem>
@@ -68,7 +100,13 @@ const LoginPage = () => {
                                     <FormItem>
                                         <FormLabel className='text-primarytext text-base font-medium pb-2'>Password</FormLabel>
                                         <FormControl>
-                                            <Input autoComplete="on" type="password" placeholder="Enter your password" {...field} />
+                                            <Input
+                                                autoComplete="current-password"
+                                                type="password"
+                                                placeholder="Enter your password"
+                                                {...field}
+                                                disabled={isLoading}
+                                            />
                                         </FormControl>
                                         <FormMessage />
                                     </FormItem>
@@ -76,18 +114,30 @@ const LoginPage = () => {
                             />
                             <div className='flex items-center justify-between'>
                                 <div className='flex items-center justify-start gap-2'>
-                                    <input className='appearance-none w-3.5 h-3.5 bg-white border-2 rounded border-black outline checked:bg-purple-800' type="checkbox" name="rememberMe" id="rememberMe" />
+                                    <input
+                                        className='appearance-none w-3.5 h-3.5 bg-white border-2 rounded border-black outline checked:bg-purple-800'
+                                        type="checkbox"
+                                        name="rememberMe"
+                                        id="rememberMe"
+                                        disabled={isLoading}
+                                    />
                                     <label className='text-primarytext text-xs font-medium' htmlFor="rememberMe">Remember me</label>
                                 </div>
                                 <PasswordRecoveryModal />
-                                {/* <a href="#" className='text-primarytext text-xs font-medium'>Forgot Password?</a> */}
-
                             </div>
                             <div className='w-full flex items-center justify-center'>
-                                <Button className='bg-gradient-custom h-10 w-24 rounded-[12px]' type="submit">
-                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="size-6">
-                                        <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3" />
-                                    </svg>
+                                <Button
+                                    className='bg-gradient-custom h-10 w-24 rounded-[12px]'
+                                    type="submit"
+                                    disabled={isLoading}
+                                >
+                                    {isLoading ? (
+                                        <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-white"></div>
+                                    ) : (
+                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="size-6">
+                                            <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3" />
+                                        </svg>
+                                    )}
                                 </Button>
                             </div>
                         </form>
@@ -105,7 +155,6 @@ const LoginPage = () => {
                             </a>
                         </div>
                         <span className='pt-6 block text-center'>Don&apos;t have an account? <a href="/register" className='text-secondarytext'>Don&apos;t Miss Out</a></span>
-
                     </Form>
                 </div>
             </div>
