@@ -24,6 +24,7 @@ const LoginPage = () => {
     const { login } = useAuth();
     const [error, setError] = useState('');
     const [isLoading, setIsLoading] = useState(false);
+    const [rememberMe, setRememberMe] = useState(false);
 
     const formSchema = z.object({
         email: z.string().email({ message: "Email is required" }),
@@ -44,7 +45,7 @@ const LoginPage = () => {
             setError('');
             console.log('Form values:', values);
 
-            const success = await login(values.email, values.password);
+            const success = await login(values.email, values.password, rememberMe);
             if (!success) {
                 setError('Invalid email or password. Please try again.');
             }
@@ -57,7 +58,7 @@ const LoginPage = () => {
     }
 
     return (
-        <div className='grid grid-cols-12 min-h-screen'>
+        <div className='flex  min-h-screen'>
             {/* Background Section */}
             <GradientBackground />
 
@@ -65,17 +66,11 @@ const LoginPage = () => {
             <div className="w-[480px] flex flex-col justify-center px-12 bg-white">
                 <div className="w-full">
                     <h1 className='text-[2rem] font-bold text-[#333333] mb-8'>
-                        Welcome<br />to Scoutabl
+                        Welcome to <span className='bg-gradient-to-r from-[#806BFF] to-[#A669FD] inline-block text-transparent bg-clip-text'>Scoutabl</span>
                     </h1>
 
                     <Form {...form}>
                         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-                            {error && (
-                                <div className="p-3 text-red-500 bg-red-100 rounded-md text-sm">
-                                    {error}
-                                </div>
-                            )}
-
                             <FormField
                                 control={form.control}
                                 name="email"
@@ -112,6 +107,11 @@ const LoginPage = () => {
                                     </FormItem>
                                 )}
                             />
+                            {error && (
+                                <div className="p-3 text-red-500 bg-red-100 rounded-md text-sm">
+                                    {error}
+                                </div>
+                            )}
                             <div className='flex items-center justify-between'>
                                 <div className='flex items-center justify-start gap-2'>
                                     <input
@@ -119,6 +119,8 @@ const LoginPage = () => {
                                         type="checkbox"
                                         name="rememberMe"
                                         id="rememberMe"
+                                        checked={rememberMe}
+                                        onChange={(e) => setRememberMe(e.target.checked)}
                                         disabled={isLoading}
                                     />
                                     <label className='text-primarytext text-xs font-medium' htmlFor="rememberMe">Remember me</label>

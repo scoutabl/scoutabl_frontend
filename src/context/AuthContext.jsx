@@ -13,10 +13,10 @@ export const AuthProvider = ({ children }) => {
     const navigate = useNavigate();
 
     useEffect(() => {
-        // Check for tokens in localStorage on mount
-        const storedAccessToken = localStorage.getItem('accessToken');
-        const storedRefreshToken = localStorage.getItem('refreshToken');
-        const storedUser = localStorage.getItem('user');
+        // Check for tokens in storage on mount
+        const storedAccessToken = sessionStorage.getItem('accessToken') || localStorage.getItem('accessToken');
+        const storedRefreshToken = sessionStorage.getItem('refreshToken') || localStorage.getItem('refreshToken');
+        const storedUser = sessionStorage.getItem('user') || localStorage.getItem('user');
 
         if (storedAccessToken && storedRefreshToken) {
             setAccessToken(storedAccessToken);
@@ -27,11 +27,27 @@ export const AuthProvider = ({ children }) => {
         setLoading(false);
     }, []);
 
-    const login = async (email, password) => {
+    const storeAuthData = (data, userData, rememberMe = false) => {
+        const storage = rememberMe ? localStorage : sessionStorage;
+
+        // Clear both storages first to prevent conflicts
+        [localStorage, sessionStorage].forEach(s => {
+            s.removeItem('accessToken');
+            s.removeItem('refreshToken');
+            s.removeItem('user');
+        });
+
+        // Store in selected storage
+        storage.setItem('accessToken', data.access);
+        storage.setItem('refreshToken', data.refresh);
+        storage.setItem('user', JSON.stringify(userData));
+    };
+
+    const login = async (email, password, rememberMe = false) => {
         try {
             console.log('Attempting login with:', { email, password }); // Debug log
 
-            const response = await fetch('https://dev.scoutabl.com/login/', {
+            const response = await fetch('https://dev.scoutabl.com/api/login/', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -40,30 +56,31 @@ export const AuthProvider = ({ children }) => {
                     email: email,
                     password: password
                 }),
-                credentials: 'include' // Include cookies if your backend uses them
+                credentials: 'include'
             });
 
-            console.log('Response status:', response.status); // Debug log
+            console.log('Response status:', response.status);
 
             if (!response.ok) {
                 const errorData = await response.json();
-                console.error('Login error response:', errorData); // Debug log
+                console.error('Login error response:', errorData);
                 throw new Error(errorData.detail || 'Login failed');
             }
 
             const data = await response.json();
-            console.log('Login success data:', data); // Debug log
+            console.log('Login success data:', data);
 
-            // Store tokens and user data
+            // Set tokens in state
             setAccessToken(data.access);
             setRefreshToken(data.refresh);
-            localStorage.setItem('accessToken', data.access);
-            localStorage.setItem('refreshToken', data.refresh);
 
-            // Fetch user data with the new access token
-            await fetchUserData(data.access);
+            // Fetch user data
+            const userData = await fetchUserData(data.access);
 
-            navigate('/dashboard'); // Redirect to dashboard after login
+            // Store auth data in selected storage
+            storeAuthData(data, userData, rememberMe);
+
+            navigate('/dashboard');
             return true;
         } catch (error) {
             console.error('Login error:', error);
@@ -85,9 +102,10 @@ export const AuthProvider = ({ children }) => {
 
             const userData = await response.json();
             setUser(userData);
-            localStorage.setItem('user', JSON.stringify(userData));
+            return userData;
         } catch (error) {
             console.error('Error fetching user data:', error);
+            return null;
         }
     };
 
@@ -95,9 +113,12 @@ export const AuthProvider = ({ children }) => {
         setUser(null);
         setAccessToken(null);
         setRefreshToken(null);
-        localStorage.removeItem('accessToken');
-        localStorage.removeItem('refreshToken');
-        localStorage.removeItem('user');
+        // Clear both storages on logout
+        [localStorage, sessionStorage].forEach(storage => {
+            storage.removeItem('accessToken');
+            storage.removeItem('refreshToken');
+            storage.removeItem('user');
+        });
         navigate('/login');
     };
 
