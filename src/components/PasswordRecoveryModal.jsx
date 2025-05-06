@@ -66,11 +66,34 @@ const PasswordRecoveryModal = () => {
     };
 
 
-    const onSubmit = (values) => {
-        console.log(email, isCodeSent)
-        setIsCodeSent(true);
-        console.log(values)
-        console.log(watch("email"))
+    const onSubmit = async (values) => {
+
+        try {
+            const response = await fetch('https://dev.scoutabl.com/api/users/forgot_password/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    email: values.email
+                }),
+                credentials: 'include'
+            })
+
+            console.log('Response status:', response.status);
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                console.error('Login error response:', errorData);
+                throw new Error(errorData.detail || 'Forgot Password Failed');
+            }
+            const data = await response.json();
+            setIsCodeSent(true);
+            console.log(data, data.message, data.email_verification)
+        } catch (error) {
+            console.error('Login error:', error);
+            return false;
+        }
     }
 
 
@@ -79,7 +102,7 @@ const PasswordRecoveryModal = () => {
             <DialogTrigger asChild>
                 <span className='text-primarytext text-xs font-medium cursor-pointer'>Forgot Password?</span>
             </DialogTrigger>
-            <DialogContent className="sm:max-w-[549px] rounded-[40px] p-[50px] min-h-[686px]">
+            <DialogContent className="rounded-[40px] p-6">
                 <DialogHeader>
                     <DialogDescription className='flex items-center justify-between'>
                         <span className='text-[#333333] font-normal text-xl'>
@@ -91,8 +114,8 @@ const PasswordRecoveryModal = () => {
                         </span>
                     </DialogDescription>
                     <DialogTitle className='font-semibold text-[2.5rem] text-[#333333]'>Password Recovery</DialogTitle>
-                    <figure className='w-full flex items-center justify-center py-5'>
-                        <img src={logo} alt="scoutabl logo" />
+                    <figure className='w-full flex items-center justify-center'>
+                        <img src={logo} alt="scoutabl logo" className='h-24 w-24' />
                     </figure>
                 </DialogHeader>
                 <AnimatePresence mode='wait'>
