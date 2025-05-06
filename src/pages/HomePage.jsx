@@ -11,11 +11,13 @@ import avatar9 from '/avatar9.svg';
 import plusIcon from '/plusIcon.svg';
 import { motion, AnimatePresence } from 'framer-motion';
 import HomePageModal from '@/components/HomePageModal';
+
 const HomePage = () => {
     const [windowSize, setWindowSize] = useState({
         width: typeof window !== 'undefined' ? window.innerWidth : 0,
         height: typeof window !== 'undefined' ? window.innerHeight : 0,
     });
+    const [showModal, setShowModal] = useState(false);
 
     useEffect(() => {
         const handleResize = () => {
@@ -129,7 +131,7 @@ const HomePage = () => {
     };
 
     return (
-        <>
+        <div className="relative min-h-screen">
             <div className="relative w-full min-h-screen flex items-center justify-center overflow-hidden bg-gray-50 px-4">
                 <div className="relative flex items-center justify-center">
                     {/* Outermost circle */}
@@ -235,7 +237,7 @@ const HomePage = () => {
                                 </a>
                             </motion.div>
                             <button
-
+                                onClick={() => setShowModal(true)}
                                 initial={{ opacity: 0 }}
                                 animate={{ opacity: 1 }}
                                 exit={{ opacity: 0 }}
@@ -248,8 +250,30 @@ const HomePage = () => {
                     </div>
                 </div>
             </div >
-            <HomePageModal />
-        </>
+
+            {/* Modal Overlay */}
+            <AnimatePresence>
+                {showModal && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        transition={{ duration: 0.2 }}
+                        className="fixed inset-0 bg-black/50 flex items-center justify-center z-50"
+                    >
+                        <div className="relative">
+                            <button
+                                onClick={() => setShowModal(false)}
+                                className="absolute -top-12 right-0 text-white hover:text-gray-200 text-2xl z-50"
+                            >
+                                ×
+                            </button>
+                            <HomePageModal onClose={() => setShowModal(false)} />
+                        </div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+        </div>
     )
 }
 
