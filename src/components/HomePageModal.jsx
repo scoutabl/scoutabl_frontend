@@ -153,9 +153,9 @@ const HomePageModal = ({ onClose }) => {
                                     key={option.id}
                                     variants={itemVariants}
                                     onClick={() => setSelectedOption(option.id)}
-                                    className={`group max-w-[213px] max-h-[192px] rounded-[16px] cursor-pointer transition-all duration-300 border border-transparent ${selectedOption === option.id
-                                        ? 'bg-gradient-to-r from-[#806BFF] to-[#A669FD] p-px'
-                                        : 'hover:bg-gradient-to-r hover:from-[#806BFF] hover:to-[#A669FD] hover:p-px'
+                                    className={`group rounded-[16px] cursor-pointer transition-all duration-300 border border-transparent p-px bg-gradient-to-r ${selectedOption === option.id
+                                        ? 'from-[#806BFF] to-[#A669FD]'
+                                        : 'from-transparent to-transparent hover:from-[#806BFF] hover:to-[#A669FD]'
                                         }`}
                                 >
                                     <div className='h-full w-full px-[22px] py-[41px] flex flex-col items-center justify-center gap-2 [box-shadow:0px_16px_24px_rgba(0,_0,_0,_0.06),_0px_2px_6px_rgba(0,_0,_0,_0.04)] border-black/10 rounded-[16px] bg-white'>
@@ -252,9 +252,9 @@ const HomePageModal = ({ onClose }) => {
                                     key={option.id}
                                     variants={itemVariants}
                                     onClick={() => setSelectedOption(option.id)}
-                                    className={`group max-w-[213px] max-h-[192px] rounded-[16px] cursor-pointer transition-all duration-300 border border-transparent ${selectedOption === option.id
-                                        ? 'bg-gradient-to-r from-[#806BFF] to-[#A669FD] p-px'
-                                        : 'hover:bg-gradient-to-r hover:from-[#806BFF] hover:to-[#A669FD] hover:p-px'
+                                    className={`group rounded-[16px] cursor-pointer transition-all duration-300 border border-transparent p-px bg-gradient-to-r ${selectedOption === option.id
+                                        ? 'from-[#806BFF] to-[#A669FD]'
+                                        : 'from-transparent to-transparent hover:from-[#806BFF] hover:to-[#A669FD]'
                                         }`}
                                 >
                                     <div className='h-full w-full px-[22px] py-[41px] flex flex-col items-center justify-center gap-2 [box-shadow:0px_16px_24px_rgba(0,_0,_0,_0.06),_0px_2px_6px_rgba(0,_0,_0,_0.04)] border-black/10 rounded-[16px] bg-white'>
