@@ -11,6 +11,7 @@ import avatar9 from '/avatar9.svg';
 import plusIcon from '/plusIcon.svg';
 import { motion, AnimatePresence } from 'framer-motion';
 import HomePageModal from '@/components/HomePageModal';
+import RichText from '@/components/RichText';
 
 const HomePage = () => {
     const [windowSize, setWindowSize] = useState({
@@ -273,6 +274,7 @@ const HomePage = () => {
                     </motion.div>
                 )}
             </AnimatePresence>
+            <RichText />
         </div>
     )
 }

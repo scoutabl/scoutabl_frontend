@@ -130,6 +130,18 @@
     @apply bg-background text-foreground;
     font-family: var(--font-sans);
   }
+
+  h1 {
+    @apply text-2xl font-bold;
+  }
+
+  h2 {
+    @apply text-xl font-bold;
+  }
+
+  h3 {
+    @apply text-lg font-bold;
+  }
 }
 
 @layer utilities {
@@ -153,6 +165,10 @@
 
 @theme {
 
+  /* colors */
+  --color-purplePrimary: #8B5CF6;
+  --color-purpleSecondary: #CFDDFD;
+  --color-greyAccent: #5C5C5C;
   --animate-shine: shine 3s ease-out infinite;
   --animate-gradient-flow: gradientFlow 10s ease infinite;
 

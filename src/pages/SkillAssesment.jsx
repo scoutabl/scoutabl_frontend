@@ -1,12 +1,12 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { questions } from '../lib/questions';
 import WaveformComponent from '../components/WavesurferComponent';
-import RichTextEditor from '../components/RichTextEditor';
 import { cn } from '@/lib/utils';
+import RichText from '@/components/RichText';
 
 // Question type components
 const MCQQuestion = ({ question, onAnswer, selectedAnswer }) => (
-    <div className="space-y-4">
+    <div className="space-y-4 my-auto">
         {question.options.map((option, index) => (
             <div
                 key={index}
@@ -29,7 +29,7 @@ const MCQQuestion = ({ question, onAnswer, selectedAnswer }) => (
 );
 
 const MultiSelectQuestion = ({ question, onAnswer, selectedAnswers = [] }) => (
-    <div className="space-y-4">
+    <div className="space-y-4 my-auto">
         {question.options.map((option, index) => (
             <div
                 key={index}
@@ -69,7 +69,7 @@ const RearrangeQuestion = ({ question, onAnswer, currentOrder = [] }) => {
     };
 
     return (
-        <div className="space-y-4">
+        <div className="space-y-4 my-auto">
             {items.map((item, index) => (
                 <div
                     key={index}
@@ -106,7 +106,7 @@ const RearrangeQuestion = ({ question, onAnswer, currentOrder = [] }) => {
 };
 
 const CodingQuestion = ({ question, onAnswer, answer = '' }) => (
-    <div className="space-y-4">
+    <div className="space-y-4 my-auto">
         <div className="p-4 rounded-lg border border-gray-200 bg-[#1E1E1E]">
             <textarea
                 className="w-full min-h-[400px] p-4 font-mono text-sm bg-transparent text-white resize-none focus:outline-none"
@@ -134,7 +134,7 @@ const VoiceQuestion = ({ question, onAnswer, recording = false }) => {
     };
 
     return (
-        <div className="space-y-6">
+        <div className="space-y-6 my-auto">
             <WaveformComponent
                 isRecording={isRecording}
                 onRecordingComplete={handleRecordingComplete}
@@ -221,43 +221,26 @@ const VideoQuestion = ({ question, onAnswer, recording = false }) => {
                     Time left: {Math.floor(timeLeft / 60)}:{String(timeLeft % 60).padStart(2, '0')}
                 </div>
             </div>
-            <div className="p-4 rounded-lg border border-gray-200">
-                <h4 className="font-medium mb-2">Requirements:</h4>
-                <ul className="list-disc list-inside space-y-1 text-sm text-gray-600">
-                    {question.requirements.map((req, index) => (
-                        <li key={index}>{req}</li>
-                    ))}
-                </ul>
-            </div>
         </div>
     );
 };
 
 const LongAnswerQuestion = ({ question, onAnswer, answer = '' }) => {
-    return (
-        <div className="space-y-6">
-            <div className="p-4 rounded-lg border border-gray-200">
-                {question.sampleAnswer && (
-                    <div className="mb-4">
-                        <h4 className="text-sm font-medium text-gray-700 mb-2">Sample Answer:</h4>
-                        <p className="text-sm text-gray-600">{question.sampleAnswer}</p>
-                    </div>
-                )}
+    const [post, setPost] = useState("")
 
-                <div className="mt-4">
-                    <h4 className="text-sm font-medium text-gray-700 mb-2">Your Answer:</h4>
-                    <div className="min-h-[300px] border rounded-lg">
-                        <RichTextEditor />
-                    </div>
-                    {question.maxWords && (
-                        <p className="text-sm text-gray-500 mt-2">
-                            Maximum words: {question.maxWords}
-                        </p>
-                    )}
-                </div>
-            </div>
-        </div>
-    );
+    const onChange = (content) => {
+        setPost(content)
+        console.log(content)
+    }
+
+    useEffect(() => {
+        console.log(post)
+    }, [post])
+
+
+    return (
+        <RichText content={post} onChange={onChange} />
+    )
 };
 
 const SkillAssesment = () => {
@@ -304,10 +287,12 @@ const SkillAssesment = () => {
         }
     };
 
+
+
     return (
         <div className="flex gap-8 h-[calc(100vh-130px)] mt-20 px-12 mb-[50px]">
             {/* Left Sidebar */}
-            <div className="w-[531px] h-full bg-white rounded-[20px] p-6 border-[1px] border-[rgba(224,224,224,0.65)] [box-shadow:0px_16px_24px_rgba(0,_0,_0,_0.06),_0px_2px_6px_rgba(0,_0,_0,_0.04)]">
+            <div className="max-w-[531px] flex-1 h-full bg-white rounded-[20px] p-6 border-[1px] border-[rgba(224,224,224,0.65)] [box-shadow:0px_16px_24px_rgba(0,_0,_0,_0.06),_0px_2px_6px_rgba(0,_0,_0,_0.04)]">
                 <div className="flex items-center justify-between mb-6">
                     <div className="flex items-center gap-2">
                         <span className="text-sm font-medium">Question {currentQuestionIndex + 1} of {questions.length}</span>
@@ -358,14 +343,13 @@ const SkillAssesment = () => {
             </div>
 
             {/* Main Content Area */}
-            <div className="flex-1 flex flex-col bg-white rounded-[20px] pt-[100px]">
+            <div className="flex-1 flex flex-col bg-white rounded-[20px]">
                 {/* <div className="mb-6">
                         <h2 className="text-xl font-semibold">Problem Solving ({currentQuestionIndex + 1}/{questions.length})</h2>
                     </div> */}
-
                 {renderQuestion()}
 
-                <div className="flex justify-between mt-auto">
+                <div className="flex justify-between">
                     <button
                         className="px-4 py-2 rounded-lg border border-gray-200 hover:bg-gray-50 disabled:opacity-50"
                         onClick={() => setCurrentQuestionIndex(currentQuestionIndex - 1)}
