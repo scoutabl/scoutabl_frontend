@@ -35,7 +35,7 @@ const NavigationWrapper = ({ children }) => {
 
   return (
     <>
-      {isAuthPage ? <AuthNavbar /> : user && <Navbar />}
+      {isAuthPage ? <AuthNavbar /> : ""}
       {children}
     </>
   );

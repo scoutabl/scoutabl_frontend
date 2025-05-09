@@ -3,7 +3,11 @@ import { questions } from '../lib/questions';
 import WaveformComponent from '../components/WavesurferComponent';
 import { cn } from '@/lib/utils';
 import RichText from '@/components/RichText';
-
+import logo from '/scoutableBlackLogo.svg'
+import timerLogo from '/timerLogo.svg'
+import { FaQuestion } from "react-icons/fa6";
+import { Headphones, Flag, ChevronLeft, ChevronRight } from 'lucide-react';
+import footerLogo from '/greyLogo.svg'
 // Question type components
 const MCQQuestion = ({ question, onAnswer, selectedAnswer }) => (
     <div className="space-y-4 my-auto">
@@ -290,81 +294,109 @@ const SkillAssesment = () => {
 
 
     return (
-        <div className="flex gap-8 h-[calc(100vh-130px)] mt-20 px-12 mb-[50px]">
-            {/* Left Sidebar */}
-            <div className="max-w-[531px] flex-1 h-full bg-white rounded-[20px] p-6 border-[1px] border-[rgba(224,224,224,0.65)] [box-shadow:0px_16px_24px_rgba(0,_0,_0,_0.06),_0px_2px_6px_rgba(0,_0,_0,_0.04)]">
-                <div className="flex items-center justify-between mb-6">
-                    <div className="flex items-center gap-2">
-                        <span className="text-sm font-medium">Question {currentQuestionIndex + 1} of {questions.length}</span>
-                    </div>
-                    <button>
-                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-                            <path d="M10 12.5C11.3807 12.5 12.5 11.3807 12.5 10C12.5 8.61929 11.3807 7.5 10 7.5C8.61929 7.5 7.5 8.61929 7.5 10C7.5 11.3807 8.61929 12.5 10 12.5Z" fill="currentColor" />
-                        </svg>
-                    </button>
+        <div className='min-h-screen flex flex-col gap-6 py-6'>
+            {/* Top Navbar */}
+            <div className='flex items-center justify-between px-12'>
+                <div className='flex gap-1 items-center justify-center'>
+                    <img src={logo} alt='scoutabl logo' className='h-[30px] w-[30px]' />
+                    <h1 className='text-2xl text-greyPrimary font-bold'>Scoutabl</h1>
                 </div>
-
-                <div className="space-y-6">
-                    <h2 className="text-lg font-medium">{currentQuestion.questionTitle}</h2>
-
-                    <div className="space-y-4">
-                        <h3 className="font-medium">Instructions:</h3>
-                        <ol className="list-decimal list-inside space-y-2 text-sm text-gray-600">
-                            {currentQuestion.instructions?.map((instruction, index) => (
-                                <li key={index} className="pl-2">{instruction}</li>
-                            ))}
-                        </ol>
-                    </div>
-
-                    {currentQuestion.optional && (
-                        <div className="space-y-2">
-                            <h3 className="font-medium">Optional:</h3>
-                            <p className="text-sm text-gray-600">
-                                {currentQuestion.optional}
-                            </p>
-                        </div>
-                    )}
-
-                    {currentQuestion.assessmentCriteria && (
-                        <div className="space-y-2">
-                            <p className="text-sm text-gray-600">
-                                {currentQuestion.assessmentCriteria}
-                            </p>
-                        </div>
-                    )}
-
-                    <div className="flex items-center gap-1 px-3 py-[6px] text-sm font-semibold rounded-full bg-[#CFDDFD] hover:bg-[#8B5CF6] hover:text-white transition-all ease-in-out duration-200 cursor-pointer">
-                        <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <path fillRule="evenodd" clipRule="evenodd" d="M18 9C18 13.9706 13.9706 18 9 18C4.02944 18 0 13.9706 0 9C0 4.02944 4.02944 0 9 0C13.9706 0 18 4.02944 18 9ZM10 15C10 15.5523 9.55229 16 9 16C8.44771 16 8 15.5523 8 15C8 14.4477 8.44771 14 9 14C9.55229 14 10 14.4477 10 15ZM10.1836 7.55176C8.87965 7.98654 8.00004 9.20652 8 10.5811V13H10V10.5811C10 10.0673 10.329 9.61071 10.8164 9.44824C12.1203 9.01346 13 7.79348 13 6.41895V5.90527C12.9998 3.74855 11.2514 2.00023 9.09473 2H9C6.79086 2 5 3.79086 5 6H7C7 4.89543 7.89543 4 9 4H9.09473C10.1469 4.00023 10.9998 4.85312 11 5.90527V6.41895C11 6.93272 10.671 7.38929 10.1836 7.55176Z" fill="currentColor" />
-                        </svg>
-                        Tell me about this question type
-                    </div>
+                <div>
+                    <span className="text-base font-normal">Problem Solving <span className='font-bold text-greyPrimary'>({currentQuestionIndex + 1}/{questions.length})</span></span>
+                </div>
+                <div className='flex gap-1 items-center justify-center'>
+                    <img src={timerLogo} alt='timer logo' />
+                    <span>time Left:</span>
                 </div>
             </div>
+            <div className="flex-1 flex gap-8 px-12">
+                {/* Left Sidebar */}
+                <div className="w-[40%] max-w-[531px] min-w-[330px] flex flex-col gap-6 bg-white rounded-[20px] p-6 border-[1px] border-[rgba(224,224,224,0.65)] [box-shadow:0px_16px_24px_rgba(0,_0,_0,_0.06),_0px_2px_6px_rgba(0,_0,_0,_0.04)]">
+                    <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                            <span className="text-sm font-medium">Question {currentQuestionIndex + 1} of {questions.length}</span>
+                        </div>
+                        <div className="flex items-center gap-2 px-3 py-[6px] rounded-full group hover:bg-purplePrimary hover:text-white">
+                            <div className='h-6 w-6 grid place-content-center rounded-full bg-purplePrimary group-hover:bg-white text-white group-hover:text-purplePrimary'>
+                                <FaQuestion size={16} />
+                            </div>
+                            <span className='text-purplePrimary text-sm font-medium group-hover:text-white'>Question info</span>
+                        </div>
+                    </div>
 
-            {/* Main Content Area */}
-            <div className="flex-1 flex flex-col bg-white rounded-[20px]">
-                {/* <div className="mb-6">
+                    <div className="space-y-6">
+                        <h2 className="text-lg font-medium">{currentQuestion.questionTitle}</h2>
+
+                        <div className="space-y-4">
+                            <h3 className="font-medium">Instructions:</h3>
+                            <ol className="list-decimal list-inside space-y-2 text-sm text-gray-600">
+                                {currentQuestion.instructions?.map((instruction, index) => (
+                                    <li key={index} className="pl-2">{instruction}</li>
+                                ))}
+                            </ol>
+                        </div>
+
+                        {currentQuestion.optional && (
+                            <div className="space-y-2">
+                                <h3 className="font-medium">Optional:</h3>
+                                <p className="text-sm text-gray-600">
+                                    {currentQuestion.optional}
+                                </p>
+                            </div>
+                        )}
+
+                        {currentQuestion.assessmentCriteria && (
+                            <div className="space-y-2">
+                                <p className="text-sm text-gray-600">
+                                    {currentQuestion.assessmentCriteria}
+                                </p>
+                            </div>
+                        )}
+
+                    </div>
+                    <div className='flex items-center justify-between mt-auto'>
+                        <div className='flex items-center gap-2'>
+                            <div className='h-10 w-10 grid place-content-center group rounded-full border border-black hover:bg-purplePrimary hover:text-white hover:border-purplePrimary'>
+                                <Flag />
+                            </div>
+                            <div className='h-10 w-10 grid place-content-center rounded-full border border-black hover:bg-purplePrimary hover:text-white hover:border-purplePrimary'>
+                                <Headphones />
+                            </div>
+                        </div>
+                        <div className="flex gap-4">
+                            <button
+                                className="flex items-center gap-1 px-[22px] py-[10px] text-bold text-base rounded-full border border-purplePrimary hover:bg-purplePrimary text-purplePrimary bg-white hover:text-white disabled:opacity-50"
+                                onClick={() => setCurrentQuestionIndex(currentQuestionIndex - 1)}
+                                disabled={currentQuestionIndex === 0}
+                            >
+                                <ChevronLeft size={20} />
+                                Back
+                            </button>
+                            <button
+                                className="flex items-center gap-1 px-[22px] py-[10px] text-bold text-base rounded-full border border-purplePrimary bg-purplePrimary text-white hover:bg-white hover:text-purplePrimary disabled:opacity-50"
+                                onClick={() => setCurrentQuestionIndex(currentQuestionIndex + 1)}
+                                disabled={currentQuestionIndex === questions.length - 1}
+                            >
+                                Next
+                                <ChevronRight size={20} />
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Main Content Area */}
+                <div className="flex-1 flex flex-col bg-white rounded-[20px] min-w-0">
+                    {/* <div className="mb-6">
                         <h2 className="text-xl font-semibold">Problem Solving ({currentQuestionIndex + 1}/{questions.length})</h2>
                     </div> */}
-                {renderQuestion()}
+                    {renderQuestion()}
 
-                <div className="flex justify-between">
-                    <button
-                        className="px-4 py-2 rounded-lg border border-gray-200 hover:bg-gray-50 disabled:opacity-50"
-                        onClick={() => setCurrentQuestionIndex(currentQuestionIndex - 1)}
-                        disabled={currentQuestionIndex === 0}
-                    >
-                        Back
-                    </button>
-                    <button
-                        className="px-4 py-2 rounded-lg bg-[#8B5CF6] text-white hover:bg-[#7C3AED] disabled:opacity-50"
-                        onClick={() => setCurrentQuestionIndex(currentQuestionIndex + 1)}
-                        disabled={currentQuestionIndex === questions.length - 1}
-                    >
-                        Next
-                    </button>
+
                 </div>
+            </div>
+            <div className='flex items-center justify-center gap-2'>
+                <img src={footerLogo} alt="scoutable logo" />
+                <span className='text-base font-normal text-greyTertiary'>Powered by Scoutabl</span>
             </div>
         </div>
     );
