@@ -138,7 +138,9 @@ export const AuthProvider = ({ children }) => {
 
             const data = await response.json();
             setAccessToken(data.access);
-            localStorage.setItem('accessToken', data.access);
+            // localStorage.setItem('accessToken', data.access);
+            const currentStorage = sessionStorage.getItem('refreshToken') ? sessionStorage : localStorage;
+            currentStorage.setItem('accessToken', data.access);
             return data.access;
         } catch (error) {
             console.error('Error refreshing token:', error);

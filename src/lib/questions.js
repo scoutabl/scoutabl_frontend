@@ -1,7 +1,7 @@
 export const questions = [
     {
         questionId: 1,
-        type: 'voice',
+        type: 'video',
         questionTitle: "Explain how you would implement a shopping cart feature in a React e-commerce application.",
         durationSeconds: 120, // 2 minutes
         instructions: [

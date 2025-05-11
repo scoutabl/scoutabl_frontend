@@ -12,13 +12,30 @@ import plusIcon from '/plusIcon.svg';
 import { motion, AnimatePresence } from 'framer-motion';
 import HomePageModal from '@/components/HomePageModal';
 import RichText from '@/components/RichText';
+import VideoRecorder from '@/components/common/VideoRecorder';
 
 const HomePage = () => {
+    const [userFirstName, setUserFirstName] = useState('');
+    const [userLastName, setUserLastName] = useState('');
     const [windowSize, setWindowSize] = useState({
         width: typeof window !== 'undefined' ? window.innerWidth : 0,
         height: typeof window !== 'undefined' ? window.innerHeight : 0,
     });
     const [showModal, setShowModal] = useState(false);
+
+    useEffect(() => {
+        //throw error if no user found in local storage
+        //parse userdata string to json
+        const user = JSON.parse(localStorage.getItem('user') || sessionStorage.getItem('user'));
+        if (!user) {
+            console.error('No user found in local storage');
+            // Optionally redirect or show a message
+
+        }
+        setUserFirstName(user?.first_name || '');
+        setUserLastName(user?.last_name || '');
+        console.table(user)
+    }, [localStorage, sessionStorage]);
 
     useEffect(() => {
         const handleResize = () => {
@@ -132,150 +149,153 @@ const HomePage = () => {
     };
 
     return (
-        <div className="relative min-h-screen">
-            <div className="relative w-full min-h-screen flex items-center justify-center overflow-hidden bg-gray-50 px-4">
-                <div className="relative flex items-center justify-center">
-                    {/* Outermost circle */}
-                    <div
-                        className="absolute rounded-full bg-[radial-gradient(50%_50%_at_50%_50%,_rgba(228,_228,_228,_0)_83.85%,_rgba(228,_228,_228,_0.35)_100%)] overflow-visible"
-                        style={{
-                            width: `${circleStyles.outer.width}px`,
-                            height: `${circleStyles.outer.height}px`,
-                            maxWidth: '1222px', // Exact size from Figma
-                            maxHeight: '1222px',
-                        }}
-                    />
+        <>
+            <div className="relative min-h-screen">
+                <div className="relative w-full min-h-screen flex items-center justify-center overflow-hidden bg-gray-50 px-4">
+                    <div className="relative flex items-center justify-center">
+                        {/* Outermost circle */}
+                        <div
+                            className="absolute rounded-full bg-[radial-gradient(50%_50%_at_50%_50%,_rgba(228,_228,_228,_0)_83.85%,_rgba(228,_228,_228,_0.35)_100%)] overflow-visible"
+                            style={{
+                                width: `${circleStyles.outer.width}px`,
+                                height: `${circleStyles.outer.height}px`,
+                                maxWidth: '1222px', // Exact size from Figma
+                                maxHeight: '1222px',
+                            }}
+                        />
 
-                    {/* Middle circle */}
-                    <div
-                        className="absolute rounded-full bg-[radial-gradient(50%_50%_at_50%_50%,_rgba(228,_228,_228,_0)_83.85%,_rgba(228,_228,_228,_0.35)_100%)] overflow-visible"
-                        style={{
-                            width: `${circleStyles.middle.width}px`,
-                            height: `${circleStyles.middle.height}px`,
-                            maxWidth: '948px', // Exact size from Figma
-                            maxHeight: '948px',
-                        }}
-                    >
-                        <AnimatePresence initial={false}>
-                            {middlePositions.map((pos, i) => (
-                                <motion.img
-                                    key={middleImages[i] + swapKey} // unique key for fade
-                                    src={middleImages[i]}
-                                    alt={`Middle Avatar ${i}`}
-                                    className="absolute"
-                                    style={pos.style}
-                                    variants={fadeVariants}
-                                    initial="initial"
-                                    animate="animate"
-                                    exit="exit"
-                                    transition={{ duration: 0.5 }}
-                                />
-                            ))}
-                        </AnimatePresence>
-                    </div>
-
-                    {/* Inner circle */}
-                    <div
-                        className="absolute rounded-full bg-[radial-gradient(50%_50%_at_50%_50%,_rgba(228,_228,_228,_0)_83.85%,_rgba(228,_228,_228,_0.35)_100%)] overflow-visible"
-                        style={{
-                            width: `${circleStyles.inner.width}px`,
-                            height: `${circleStyles.inner.height}px`,
-                            maxWidth: '680px', // Exact size from Figma
-                            maxHeight: '680px',
-                        }}
-                    >
-                        <AnimatePresence initial={false}>
-                            {innerPositions.map((pos, i) => (
-                                <motion.img
-                                    key={innerImages[i] + swapKey} // unique key for fade
-                                    src={innerImages[i]}
-                                    alt={`Inner Avatar ${i}`}
-                                    className="absolute"
-                                    style={pos.style}
-                                    variants={fadeVariants}
-                                    initial="initial"
-                                    animate="animate"
-                                    exit="exit"
-                                    transition={{ duration: 0.5 }}
-                                />
-                            ))}
-                        </AnimatePresence>
-
-                        {/* Center content */}
-                        <motion.div
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            exit={{ opacity: 0 }}
-                            transition={{ duration: 0.1, ease: 'ease' }}
-                            className="absolute left-1/2 top-1/2 flex flex-col items-center justify-center w-full max-w-2xl px-4"
-                            style={{ transform: 'translate(-50%, -50%)', zIndex: 10 }}
+                        {/* Middle circle */}
+                        <div
+                            className="absolute rounded-full bg-[radial-gradient(50%_50%_at_50%_50%,_rgba(228,_228,_228,_0)_83.85%,_rgba(228,_228,_228,_0.35)_100%)] overflow-visible"
+                            style={{
+                                width: `${circleStyles.middle.width}px`,
+                                height: `${circleStyles.middle.height}px`,
+                                maxWidth: '948px', // Exact size from Figma
+                                maxHeight: '948px',
+                            }}
                         >
-                            <motion.h1
-                                initial={{ opacity: 0 }}
-                                animate={{ opacity: 1 }}
-                                exit={{ opacity: 0 }}
-                                transition={{ duration: 0.3, ease: 'ease' }}
-                                className="text-[clamp(1.8rem,_-2.3929rem_+_8.7351vw,_3.5rem)] font-extrabold mb-6 text-center leading-tight">
-                                Welcome Jake!
-                            </motion.h1>
-                            <motion.p
-                                initial={{ opacity: 0 }}
-                                animate={{ opacity: 1 }}
-                                exit={{ opacity: 0 }}
-                                transition={{ duration: 0.5, ease: 'ease' }}
-                                className="text-[clamp(0.8333rem,_0.6429rem_+_0.3968vw,_1rem)] md:max-w-[460px] text-gray-600 text-center max-w-2xl font-normal">
-                                Hire Beyond Resumes With AI Precision & Blockchain Trust
-                            </motion.p>
+                            <AnimatePresence initial={false}>
+                                {middlePositions.map((pos, i) => (
+                                    <motion.img
+                                        key={middleImages[i] + swapKey} // unique key for fade
+                                        src={middleImages[i]}
+                                        alt={`Middle Avatar ${i}`}
+                                        className="absolute"
+                                        style={pos.style}
+                                        variants={fadeVariants}
+                                        initial="initial"
+                                        animate="animate"
+                                        exit="exit"
+                                        transition={{ duration: 0.5 }}
+                                    />
+                                ))}
+                            </AnimatePresence>
+                        </div>
+
+                        {/* Inner circle */}
+                        <div
+                            className="absolute rounded-full bg-[radial-gradient(50%_50%_at_50%_50%,_rgba(228,_228,_228,_0)_83.85%,_rgba(228,_228,_228,_0.35)_100%)] overflow-visible"
+                            style={{
+                                width: `${circleStyles.inner.width}px`,
+                                height: `${circleStyles.inner.height}px`,
+                                maxWidth: '680px', // Exact size from Figma
+                                maxHeight: '680px',
+                            }}
+                        >
+                            <AnimatePresence initial={false}>
+                                {innerPositions.map((pos, i) => (
+                                    <motion.img
+                                        key={innerImages[i] + swapKey} // unique key for fade
+                                        src={innerImages[i]}
+                                        alt={`Inner Avatar ${i}`}
+                                        className="absolute"
+                                        style={pos.style}
+                                        variants={fadeVariants}
+                                        initial="initial"
+                                        animate="animate"
+                                        exit="exit"
+                                        transition={{ duration: 0.5 }}
+                                    />
+                                ))}
+                            </AnimatePresence>
+
+                            {/* Center content */}
                             <motion.div
                                 initial={{ opacity: 0 }}
                                 animate={{ opacity: 1 }}
                                 exit={{ opacity: 0 }}
-                                transition={{ duration: 0.7, ease: 'ease' }}
-                                className="flex items-center justify-center gap-2 md:my-6 lg:my-10">
-                                <span className="text-base text-black font-medium">Already a Pro?</span>
-                                <a href="#" className="text-bases text-[#0084FF] hover:underline">
-                                    Skip the walkthrough
-                                </a>
-                            </motion.div>
-                            <button
-                                onClick={() => setShowModal(true)}
-                                initial={{ opacity: 0 }}
-                                animate={{ opacity: 1 }}
-                                exit={{ opacity: 0 }}
-                                transition={{ duration: 1, ease: 'ease' }}
-                                className="md:max-w-[280px] lg:max-w-[317px] lg:max-h-[72px] bg-gradient-custom text-white p-4 rounded-full md:text-sm lg:text-base font-bold shadow-lg flex items-center gap-2 transition-all duration-200 hover:opacity-90">
-                                <img src={plusIcon} alt="plusIcon" className='md:h-6 md:w-6 lg:h-10 lg:w-10' />
-                                Create Your First Assessment
-                            </button>
-                        </motion.div>
-                    </div>
-                </div>
-            </div >
-
-            {/* Modal Overlay */}
-            <AnimatePresence>
-                {showModal && (
-                    <motion.div
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
-                        transition={{ duration: 0.2 }}
-                        className="fixed inset-0 bg-black/50 flex items-center justify-center z-50"
-                    >
-                        <div className="relative">
-                            <button
-                                onClick={() => setShowModal(false)}
-                                className="absolute -top-12 right-0 text-white hover:text-gray-200 text-2xl z-50"
+                                transition={{ duration: 0.1, ease: 'ease' }}
+                                className="absolute left-1/2 top-1/2 flex flex-col items-center justify-center w-full max-w-2xl px-4"
+                                style={{ transform: 'translate(-50%, -50%)', zIndex: 10 }}
                             >
-                                ×
-                            </button>
-                            <HomePageModal onClose={() => setShowModal(false)} />
+                                <motion.h1
+                                    initial={{ opacity: 0 }}
+                                    animate={{ opacity: 1 }}
+                                    exit={{ opacity: 0 }}
+                                    transition={{ duration: 0.3, ease: 'ease' }}
+                                    className="text-[clamp(1.8rem,_-2.3929rem_+_8.7351vw,_3.5rem)] font-extrabold mb-6 text-center leading-tight">
+                                    Welcome {userFirstName}
+                                </motion.h1>
+                                <motion.p
+                                    initial={{ opacity: 0 }}
+                                    animate={{ opacity: 1 }}
+                                    exit={{ opacity: 0 }}
+                                    transition={{ duration: 0.5, ease: 'ease' }}
+                                    className="text-[clamp(0.8333rem,_0.6429rem_+_0.3968vw,_1rem)] md:max-w-[460px] text-gray-600 text-center max-w-2xl font-normal">
+                                    Hire Beyond Resumes With AI Precision & Blockchain Trust
+                                </motion.p>
+                                <motion.div
+                                    initial={{ opacity: 0 }}
+                                    animate={{ opacity: 1 }}
+                                    exit={{ opacity: 0 }}
+                                    transition={{ duration: 0.7, ease: 'ease' }}
+                                    className="flex items-center justify-center gap-2 md:my-6 lg:my-10">
+                                    <span className="text-base text-black font-medium">Already a Pro?</span>
+                                    <a href="#" className="text-bases text-[#0084FF] hover:underline">
+                                        Skip the walkthrough
+                                    </a>
+                                </motion.div>
+                                <button
+                                    onClick={() => setShowModal(true)}
+                                    initial={{ opacity: 0 }}
+                                    animate={{ opacity: 1 }}
+                                    exit={{ opacity: 0 }}
+                                    transition={{ duration: 1, ease: 'ease' }}
+                                    className="md:max-w-[280px] lg:max-w-[317px] lg:max-h-[72px] bg-gradient-custom text-white p-4 rounded-full md:text-sm lg:text-base font-bold shadow-lg flex items-center gap-2 transition-all duration-200 hover:opacity-90">
+                                    <img src={plusIcon} alt="plusIcon" className='md:h-6 md:w-6 lg:h-10 lg:w-10' />
+                                    Create Your First Assessment
+                                </button>
+                            </motion.div>
                         </div>
-                    </motion.div>
-                )}
-            </AnimatePresence>
-            <RichText />
-        </div>
+                    </div>
+                </div >
+
+                {/* Modal Overlay */}
+                <AnimatePresence>
+                    {showModal && (
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            transition={{ duration: 0.2 }}
+                            className="fixed inset-0 bg-black/50 flex items-center justify-center z-50"
+                        >
+                            <div className="relative">
+                                <button
+                                    onClick={() => setShowModal(false)}
+                                    className="absolute -top-12 right-0 text-white hover:text-gray-200 text-2xl z-50"
+                                >
+                                    ×
+                                </button>
+                                <HomePageModal onClose={() => setShowModal(false)} />
+                            </div>
+                        </motion.div>
+                    )}
+                </AnimatePresence>
+                <RichText />
+            </div>
+            <VideoRecorder />
+        </>
     )
 }
 
