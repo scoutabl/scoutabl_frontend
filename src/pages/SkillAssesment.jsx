@@ -3,6 +3,7 @@ import { questions } from '../lib/questions';
 import WaveformComponent from '../components/WavesurferComponent';
 import { cn } from '@/lib/utils';
 import RichText from '@/components/RichText';
+import VideoRecorder from '@/components/common/VideoRecorder';
 import logo from '/scoutableBlackLogo.svg'
 import timerLogo from '/timerLogo.svg'
 import { FaQuestion } from "react-icons/fa6";
@@ -231,111 +232,126 @@ const VoiceQuestion = ({ question, onAnswer, recording = false }) => {
 //     );
 // };
 
-const VideoQuestion = ({ question, onAnswer, recording = false }) => {
-    const [isRecording, setIsRecording] = useState(recording);
-    const [mediaStream, setMediaStream] = useState(null);
-    const [mediaRecorder, setMediaRecorder] = useState(null);
-    const [recordedChunks, setRecordedChunks] = useState([]);
-    const [videoURL, setVideoURL] = useState(null);
-    const [timeLeft, setTimeLeft] = useState(question.durationSeconds);
-    const videoRef = useRef(null);
-    const timerRef = useRef(null);
+// const VideoQuestion = ({ question, onAnswer, recording = false }) => {
+//     const [isRecording, setIsRecording] = useState(recording);
+//     const [mediaStream, setMediaStream] = useState(null);
+//     const [mediaRecorder, setMediaRecorder] = useState(null);
+//     const [recordedChunks, setRecordedChunks] = useState([]);
+//     const [videoURL, setVideoURL] = useState(null);
+//     const [timeLeft, setTimeLeft] = useState(question.durationSeconds);
+//     const videoRef = useRef(null);
+//     const timerRef = useRef(null);
 
-    useEffect(() => {
-        const getMedia = async () => {
-            try {
-                const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
-                setMediaStream(stream);
-                if (videoRef.current) {
-                    videoRef.current.srcObject = stream;
-                }
-            } catch (err) {
-                console.error('Error accessing media devices.', err);
-            }
-        };
-        getMedia();
+//     useEffect(() => {
+//         const getMedia = async () => {
+//             try {
+//                 const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+//                 setMediaStream(stream);
+//                 if (videoRef.current) {
+//                     videoRef.current.srcObject = stream;
+//                 }
+//             } catch (err) {
+//                 console.error('Error accessing media devices.', err);
+//             }
+//         };
+//         getMedia();
 
-        return () => {
-            if (mediaStream) {
-                mediaStream.getTracks().forEach(track => track.stop());
-            }
-        };
-    }, []);
+//         return () => {
+//             if (mediaStream) {
+//                 mediaStream.getTracks().forEach(track => track.stop());
+//             }
+//         };
+//     }, []);
 
-    useEffect(() => {
-        if (isRecording && timeLeft > 0) {
-            timerRef.current = setTimeout(() => {
-                setTimeLeft(prev => prev - 1);
-            }, 1000);
-        } else if (timeLeft === 0 && isRecording) {
-            stopRecording();
-        }
+//     useEffect(() => {
+//         if (isRecording && timeLeft > 0) {
+//             timerRef.current = setTimeout(() => {
+//                 setTimeLeft(prev => prev - 1);
+//             }, 1000);
+//         } else if (timeLeft === 0 && isRecording) {
+//             stopRecording();
+//         }
 
-        return () => clearTimeout(timerRef.current);
-    }, [timeLeft, isRecording]);
+//         return () => clearTimeout(timerRef.current);
+//     }, [timeLeft, isRecording]);
 
-    const startRecording = () => {
-        if (!mediaStream) return;
+//     const startRecording = () => {
+//         if (!mediaStream) return;
 
-        const recorder = new MediaRecorder(mediaStream);
-        setRecordedChunks([]);
-        setMediaRecorder(recorder);
+//         const recorder = new MediaRecorder(mediaStream);
+//         setRecordedChunks([]);
+//         setMediaRecorder(recorder);
 
-        recorder.ondataavailable = (event) => {
-            if (event.data.size > 0) {
-                setRecordedChunks(prev => [...prev, event.data]);
-            }
-        };
+//         recorder.ondataavailable = (event) => {
+//             if (event.data.size > 0) {
+//                 setRecordedChunks(prev => [...prev, event.data]);
+//             }
+//         };
 
-        recorder.onstop = () => {
-            const blob = new Blob(recordedChunks, { type: 'video/webm' });
-            const url = URL.createObjectURL(blob);
-            setVideoURL(url);
-            onAnswer(blob); // send the recorded video blob to parent
-        };
+//         recorder.onstop = () => {
+//             const blob = new Blob(recordedChunks, { type: 'video/webm' });
+//             const url = URL.createObjectURL(blob);
+//             setVideoURL(url);
+//             onAnswer(blob); // send the recorded video blob to parent
+//         };
 
-        recorder.start();
-        setIsRecording(true);
-        setTimeLeft(question.durationSeconds);
-    };
+//         recorder.start();
+//         setIsRecording(true);
+//         setTimeLeft(question.durationSeconds);
+//     };
 
-    const stopRecording = () => {
-        if (mediaRecorder && mediaRecorder.state !== 'inactive') {
-            mediaRecorder.stop();
-        }
-        setIsRecording(false);
-    };
+//     const stopRecording = () => {
+//         if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+//             mediaRecorder.stop();
+//         }
+//         setIsRecording(false);
+//     };
 
-    const toggleRecording = () => {
-        if (isRecording) {
-            stopRecording();
-        } else {
-            startRecording();
+//     const toggleRecording = () => {
+//         if (isRecording) {
+//             stopRecording();
+//         } else {
+//             startRecording();
+//         }
+//     };
+
+//     return (
+//         <div className="space-y-6">
+//             <div className="aspect-video rounded-lg border border-gray-200 bg-black flex items-center justify-center overflow-hidden">
+//                 {videoURL && !isRecording ? (
+//                     <video src={videoURL} controls className="w-full h-full object-cover" />
+//                 ) : (
+//                     <video ref={videoRef} autoPlay muted className="w-full h-full object-cover" />
+//                 )}
+//             </div>
+
+//             <div className="flex justify-center gap-4">
+//                 <button
+//                     onClick={toggleRecording}
+//                     className={`px-6 py-2 rounded-full ${isRecording ? 'bg-red-500 text-white' : 'bg-[#8B5CF6] text-white'}`}
+//                 >
+//                     {isRecording ? 'Stop Recording' : 'Start Recording'}
+//                 </button>
+//                 <div className="flex items-center text-sm text-gray-500">
+//                     Time left: {Math.floor(timeLeft / 60)}:{String(timeLeft % 60).padStart(2, '0')}
+//                 </div>
+//             </div>
+//         </div>
+//     );
+// };
+const VideoQuestion = ({ question, onAnswer }) => {
+    const [blob, setBlob] = useState(null);
+
+    // This function will be called when the video is submitted
+    const handleVideoSubmit = (videoBlob) => {
+        if (videoBlob) {
+            setBlob(videoBlob);
+            onAnswer(videoBlob);
         }
     };
 
     return (
-        <div className="space-y-6">
-            <div className="aspect-video rounded-lg border border-gray-200 bg-black flex items-center justify-center overflow-hidden">
-                {videoURL && !isRecording ? (
-                    <video src={videoURL} controls className="w-full h-full object-cover" />
-                ) : (
-                    <video ref={videoRef} autoPlay muted className="w-full h-full object-cover" />
-                )}
-            </div>
-
-            <div className="flex justify-center gap-4">
-                <button
-                    onClick={toggleRecording}
-                    className={`px-6 py-2 rounded-full ${isRecording ? 'bg-red-500 text-white' : 'bg-[#8B5CF6] text-white'}`}
-                >
-                    {isRecording ? 'Stop Recording' : 'Start Recording'}
-                </button>
-                <div className="flex items-center text-sm text-gray-500">
-                    Time left: {Math.floor(timeLeft / 60)}:{String(timeLeft % 60).padStart(2, '0')}
-                </div>
-            </div>
-        </div>
+        <VideoRecorder onSubmitVideo={handleVideoSubmit} />
     );
 };
 
@@ -490,7 +506,7 @@ const SkillAssesment = () => {
                 </div>
 
                 {/* Main Content Area */}
-                <div className="flex-1 flex flex-col bg-white rounded-[20px] min-w-0">
+                <div className="flex-1">
                     {/* <div className="mb-6">
                         <h2 className="text-xl font-semibold">Problem Solving ({currentQuestionIndex + 1}/{questions.length})</h2>
                     </div> */}
