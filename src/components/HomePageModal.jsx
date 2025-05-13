@@ -9,7 +9,7 @@ import userIcon from '/userIcon.svg'
 import { Button } from './ui/button'
 import { ChevronRight, ChevronLeft } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
-
+import { cn } from '@/lib/utils'
 const HomePageModal = ({ onClose }) => {
     const [selectedOption, setSelectedOption] = useState(null);
     const [currentStep, setCurrentStep] = useState('test');
@@ -96,20 +96,6 @@ const HomePageModal = ({ onClose }) => {
         }
     };
 
-    // const itemVariants = {
-    //     hidden: {
-    //         opacity: 0,
-    //         y: 20
-    //     },
-    //     show: {
-    //         opacity: 1,
-    //         y: 0,
-    //         transition: {
-    //             duration: 0.4,
-    //             ease: "easeOut"
-    //         }
-    //     }
-    // };
     const itemVariants = {
         hidden: { opacity: 0, y: 20 },
         show: { opacity: 1, transition: { duration: 0.5 }, y: 0 },
@@ -126,6 +112,7 @@ const HomePageModal = ({ onClose }) => {
         >
             <AnimatePresence mode="wait">
                 {currentStep === 'test' ? (
+                    // first step
                     <motion.div
                         key="test-content"
                         initial={{ opacity: 0, y: 20 }}
@@ -158,7 +145,11 @@ const HomePageModal = ({ onClose }) => {
                                         : 'from-transparent to-transparent hover:from-[#806BFF] hover:to-[#A669FD]'
                                         }`}
                                 >
-                                    <div className='h-full w-full px-[22px] py-[41px] flex flex-col items-center justify-center gap-2 [box-shadow:0px_16px_24px_rgba(0,_0,_0,_0.06),_0px_2px_6px_rgba(0,_0,_0,_0.04)] border-black/10 rounded-[16px] bg-white'>
+                                    <div className={cn(
+                                        'h-full w-full px-[22px] py-[41px] flex flex-col items-center justify-center gap-2 [box-shadow:0px_16px_24px_rgba(0,_0,_0,_0.06),_0px_2px_6px_rgba(0,_0,_0,_0.04)] border-black/10 rounded-[16px] bg-white hover:bg-[#FAEEFF] transition-all duration-300 ease-in-out',
+                                        selectedOption === option.id ? 'bg-[#FAEEFF]' : 'bg-white'
+
+                                    )}>
                                         <img
                                             src={option.icon}
                                             alt={`${option.title} Icon`}
@@ -189,6 +180,7 @@ const HomePageModal = ({ onClose }) => {
                         </motion.div>
                     </motion.div>
                 ) : (
+                    // second step
                     <motion.div
                         key="role-content"
                         initial={{ opacity: 0, y: 20 }}
@@ -209,38 +201,6 @@ const HomePageModal = ({ onClose }) => {
                                 —no fine-tuning necessary.
                             </p>
                         </motion.div>
-
-                        {/* <motion.div
-                            className='flex items-center justify-between gap-10'
-                            variants={containerVariants}
-                            initial="hidden"
-                            animate="show"
-                        >
-                            {roles.map((option) => (
-                                <motion.div
-                                    key={option.id}
-                                    variants={itemVariants}
-                                    onClick={() => setSelectedOption(option.id)}
-                                    className={`group max-w-[213px] max-h-[192px] rounded-[16px] cursor-pointer transition-all duration-300 border border-transparent ${selectedOption === option.id
-                                        ? 'bg-gradient-to-r from-[#806BFF] to-[#A669FD] p-px'
-                                        : 'hover:bg-gradient-to-r hover:from-[#806BFF] hover:to-[#A669FD] hover:p-px'
-                                        }`}
-                                >
-                                    <div className='h-full w-full px-[22px] py-[41px] flex flex-col items-center justify-center gap-2 [box-shadow:0px_16px_24px_rgba(0,_0,_0,_0.06),_0px_2px_6px_rgba(0,_0,_0,_0.04)] border-black/10 rounded-[16px] bg-white'>
-                                        <img
-                                            src={option.icon}
-                                            alt={`${option.title} Icon`}
-                                            className={`w-10 h-10 pb-2 transition-colors duration-300 ${selectedOption === option.id
-                                                ? '[filter:invert(41%)_sepia(56%)_saturate(1009%)_hue-rotate(226deg)_brightness(94%)_contrast(94%)]'
-                                                : 'group-hover:[filter:invert(41%)_sepia(56%)_saturate(1009%)_hue-rotate(226deg)_brightness(94%)_contrast(94%)]'
-                                                }`}
-                                        />
-                                        <h3 className='text-xs font-semibold text-[#333333]'>{option.title}</h3>
-                                        <span className='font-normal text-[10px] text-[#5C5C5C] text-center'>{option.description}</span>
-                                    </div>
-                                </motion.div>
-                            ))}
-                        </motion.div> */}
                         <motion.div
                             className='flex items-center justify-between gap-10'
                             variants={containerVariants}
@@ -257,7 +217,11 @@ const HomePageModal = ({ onClose }) => {
                                         : 'from-transparent to-transparent hover:from-[#806BFF] hover:to-[#A669FD]'
                                         }`}
                                 >
-                                    <div className='h-full w-full px-[22px] py-[41px] flex flex-col items-center justify-center gap-2 [box-shadow:0px_16px_24px_rgba(0,_0,_0,_0.06),_0px_2px_6px_rgba(0,_0,_0,_0.04)] border-black/10 rounded-[16px] bg-white'>
+                                    <div className={cn(
+                                        'h-full w-full px-[22px] py-[41px] flex flex-col items-center justify-center gap-2 [box-shadow:0px_16px_24px_rgba(0,_0,_0,_0.06),_0px_2px_6px_rgba(0,_0,_0,_0.04)] border-black/10 rounded-[16px] bg-white hover:bg-[#FAEEFF] transition-all duration-300 ease-in-out',
+                                        selectedOption === option.id ? 'bg-[#FAEEFF]' : 'bg-white'
+
+                                    )}>
                                         <img
                                             src={option.icon}
                                             alt={`${option.title} Icon`}

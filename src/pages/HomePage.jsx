@@ -174,7 +174,7 @@ const HomePage = () => {
                             maxHeight: '948px',
                         }}
                     >
-                        <AnimatePresence initial={false}>
+                        <AnimatePresence initial={true}>
                             {middlePositions.map((pos, i) => (
                                 <motion.img
                                     key={middleImages[i] + swapKey} // unique key for fade
@@ -186,7 +186,7 @@ const HomePage = () => {
                                     initial="initial"
                                     animate="animate"
                                     exit="exit"
-                                    transition={{ duration: 0.5 }}
+                                    transition={{ duration: 0.5, delay: 0.3 + (i * 0.2) }}
                                 />
                             ))}
                         </AnimatePresence>
@@ -202,7 +202,7 @@ const HomePage = () => {
                             maxHeight: '680px',
                         }}
                     >
-                        <AnimatePresence initial={false}>
+                        <AnimatePresence initial={true}>
                             {innerPositions.map((pos, i) => (
                                 <motion.img
                                     key={innerImages[i] + swapKey} // unique key for fade
@@ -214,7 +214,7 @@ const HomePage = () => {
                                     initial="initial"
                                     animate="animate"
                                     exit="exit"
-                                    transition={{ duration: 0.5 }}
+                                    transition={{ duration: 0.5, delay: 0.5 + (i * 0.15) }}
                                 />
                             ))}
                         </AnimatePresence>
@@ -224,47 +224,47 @@ const HomePage = () => {
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
                             exit={{ opacity: 0 }}
-                            transition={{ duration: 0.1, ease: 'ease' }}
+                            transition={{ duration: 0.3, ease: 'easeOut' }}
                             className="absolute left-1/2 top-1/2 flex flex-col items-center justify-center w-full max-w-2xl px-4"
                             style={{ transform: 'translate(-50%, -50%)', zIndex: 10 }}
                         >
                             <motion.h1
-                                initial={{ opacity: 0 }}
-                                animate={{ opacity: 1 }}
-                                exit={{ opacity: 0 }}
-                                transition={{ duration: 0.3, ease: 'ease' }}
+                                initial={{ opacity: 0, y: 20 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0, y: -20 }}
+                                transition={{ duration: 0.4, ease: 'easeOut', delay: 0.1 }}
                                 className="text-[clamp(1.8rem,_-2.3929rem_+_8.7351vw,_3.5rem)] font-extrabold mb-6 text-center leading-tight">
                                 Welcome {userFirstName}
                             </motion.h1>
                             <motion.p
-                                initial={{ opacity: 0 }}
-                                animate={{ opacity: 1 }}
-                                exit={{ opacity: 0 }}
-                                transition={{ duration: 0.5, ease: 'ease' }}
+                                initial={{ opacity: 0, y: 20 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0, y: -20 }}
+                                transition={{ duration: 0.4, ease: 'easeOut', delay: 0.2 }}
                                 className="text-[clamp(0.8333rem,_0.6429rem_+_0.3968vw,_1rem)] md:max-w-[460px] text-gray-600 text-center max-w-2xl font-normal">
                                 Hire Beyond Resumes With AI Precision & Blockchain Trust
                             </motion.p>
                             <motion.div
-                                initial={{ opacity: 0 }}
-                                animate={{ opacity: 1 }}
-                                exit={{ opacity: 0 }}
-                                transition={{ duration: 0.7, ease: 'ease' }}
+                                initial={{ opacity: 0, y: 20 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0, y: -20 }}
+                                transition={{ duration: 0.4, ease: 'easeOut', delay: 0.3 }}
                                 className="flex items-center justify-center gap-2 md:my-6 lg:my-10">
                                 <span className="text-base text-black font-medium">Already a Pro?</span>
                                 <a href="#" className="text-bases text-[#0084FF] hover:underline">
                                     Skip the walkthrough
                                 </a>
                             </motion.div>
-                            <button
+                            <motion.button
                                 onClick={() => setShowModal(true)}
-                                initial={{ opacity: 0 }}
-                                animate={{ opacity: 1 }}
-                                exit={{ opacity: 0 }}
-                                transition={{ duration: 1, ease: 'ease' }}
+                                initial={{ opacity: 0, y: 20 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0, y: -20 }}
+                                transition={{ duration: 0.4, ease: 'easeOut', delay: 0.4 }}
                                 className="md:max-w-[280px] lg:max-w-[317px] lg:max-h-[72px] bg-gradient-custom text-white p-4 rounded-full md:text-sm lg:text-base font-bold shadow-lg flex items-center gap-2 transition-all duration-200 hover:opacity-90">
                                 <img src={plusIcon} alt="plusIcon" className='md:h-6 md:w-6 lg:h-10 lg:w-10' />
                                 Create Your First Assessment
-                            </button>
+                            </motion.button>
                         </motion.div>
                     </div>
                 </div>
