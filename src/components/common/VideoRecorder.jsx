@@ -371,8 +371,8 @@ export default function VideoRecorder({ onSubmitVideo }) {
     };
 
     return (
-        <div className="flex flex-col w-full h-full items-center gap-4">
-            <div className="relative w-full h-[484px] overflow-hidden rounded-xl bg-black">
+        <div className="flex flex-col w-full h-full items-center gap-2">
+            <div className="relative w-full overflow-hidden rounded-xl bg-black h-[min(380px,50vh)] md:h-[min(420px,55vh)] lg:h-[min(480px,60vh)]">
                 {error && (
                     <div className="absolute inset-0 bg-black bg-opacity-70 flex flex-col items-center justify-center text-white z-10">
                         <p className="text-red-400 text-center mb-2">{error}</p>
@@ -393,38 +393,38 @@ export default function VideoRecorder({ onSubmitVideo }) {
                 />
             </div>
 
-            <div className="flex items-center justify-between w-full bg-white rounded-lg p-2 mb-2 border border-gray-100">
-                <div id="siri-container" className="w-3/4 h-[85px] bg-white" />
+            <div className="flex items-center justify-between w-full bg-white rounded-lg p-1 border border-gray-100">
+                <div id="siri-container" className="w-3/4 h-[70px] bg-white" />
                 <span className="font-semibold text-right w-1/4 pr-2">
                     {Math.floor(timeLeft / 60)}:{(timeLeft % 60).toString().padStart(2, '0')} mins
                 </span>
             </div>
 
-            <div className='flex flex-col gap-3 items-center justify-center'>
-                <span className='text-center'>{attemptsLeft} attempts remaining</span>
+            <div className='flex flex-col gap-2 items-center justify-center'>
+                <span className='text-center text-sm'>{attemptsLeft} attempts remaining</span>
                 <div className="flex gap-12 justify-center w-full">
                     <button
                         onClick={handleRetry}
-                        className="flex flex-col gap-2 items-center justify-center text-greyAccent"
+                        className="flex flex-col gap-1 items-center justify-center text-greyAccent"
                     >
-                        <img src={reSubmitIcon} alt='retry Icon' className='h-[52px] w-[52px]' />
-                        Re-Submit
+                        <img src={reSubmitIcon} alt='retry Icon' className='h-[45px] w-[45px]' />
+                        <span className="text-sm">Re-Submit</span>
                     </button>
                     <button
                         onClick={recording ? handleStopRecording : handleRecord}
                         disabled={error}
-                        className="flex flex-col gap-2 items-center justify-center text-greyAccent"
+                        className="flex flex-col gap-1 items-center justify-center text-greyAccent"
                     >
-                        {recording ? <img src={stopRecordingBtnIcon} alt='Stop Recording Icon' /> : <img src={recordBtnIcon} alt='Record Icon' />}
-                        {recording ? 'Stop' : 'Record'}
+                        {recording ? <img src={stopRecordingBtnIcon} alt='Stop Recording Icon' className='h-[45px] w-[45px]' /> : <img src={recordBtnIcon} alt='Record Icon' className='h-[45px] w-[45px]' />}
+                        <span className="text-sm">{recording ? 'Stop' : 'Record'}</span>
                     </button>
                     <button
                         onClick={handleSubmit}
                         disabled={!recordedVideoURL}
-                        className="flex flex-col gap-2 items-center justify-center text-greyAccent"
+                        className="flex flex-col gap-1 items-center justify-center text-greyAccent"
                     >
-                        <img src={submitRecordingBtnIcon} alt='Stop Recording Icon' />
-                        Submit
+                        <img src={submitRecordingBtnIcon} alt='Stop Recording Icon' className='h-[45px] w-[45px]' />
+                        <span className="text-sm">Submit</span>
                     </button>
                 </div>
             </div>

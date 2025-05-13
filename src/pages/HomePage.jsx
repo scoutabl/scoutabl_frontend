@@ -13,6 +13,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import HomePageModal from '@/components/HomePageModal';
 import RichText from '@/components/RichText';
 import VideoRecorder from '@/components/common/VideoRecorder';
+import CodingAssesment from '@/components/features/candidateAssesments/codingAssesment';
 
 const HomePage = () => {
     const [userFirstName, setUserFirstName] = useState('');
@@ -149,7 +150,7 @@ const HomePage = () => {
     };
 
     return (
-
+        <>
         <div className="relative min-h-screen">
             <div className="relative w-full min-h-screen flex items-center justify-center overflow-hidden bg-gray-50 px-4">
                 <div className="relative flex items-center justify-center">
@@ -293,6 +294,8 @@ const HomePage = () => {
                 )}
             </AnimatePresence>
         </div>
+        <CodingAssesment />
+        </>
 
     )
 }

@@ -9,6 +9,7 @@ import timerLogo from '/timerLogo.svg'
 import { FaQuestion } from "react-icons/fa6";
 import { Headphones, Flag, ChevronLeft, ChevronRight } from 'lucide-react';
 import footerLogo from '/greyLogo.svg'
+import QuestionPopup from '@/components/features/candidateAssesments/QuestionPopup';
 // Question type components
 const MCQQuestion = ({ question, onAnswer, selectedAnswer }) => (
     <div className="space-y-4 my-auto">
@@ -170,9 +171,9 @@ const VoiceQuestion = ({ question, onAnswer, recording = false }) => {
 
 
                         ) : (
-                            <>
-                                <div className='h-5 w-5 bg-red-500 rounded-full' />
-                            </>
+
+                            <div className='h-5 w-5 bg-red-500 rounded-full' />
+
                         )}
                     </div>
                     {isRecording ? <span className='text-sm font-normal'>Stop</span> : <span className='text-sm font-normal'>Record</span>}
@@ -191,154 +192,6 @@ const VoiceQuestion = ({ question, onAnswer, recording = false }) => {
     );
 };
 
-
-//old one
-// const VideoQuestion = ({ question, onAnswer, recording = false }) => {
-//     const [isRecording, setIsRecording] = useState(recording);
-//     const [timeLeft, setTimeLeft] = useState(question.durationSeconds);
-
-//     const toggleRecording = () => {
-//         setIsRecording(!isRecording);
-//         onAnswer(!isRecording);
-//     };
-
-//     return (
-//         <div className="space-y-6">
-//             <div className="aspect-video rounded-lg border border-gray-200 bg-gray-50 flex items-center justify-center">
-//                 {isRecording ? (
-//                     <div className="text-red-500 flex items-center gap-2">
-//                         <div className="w-3 h-3 bg-red-500 rounded-full animate-pulse" />
-//                         Recording...
-//                     </div>
-//                 ) : (
-//                     <div className="text-gray-400">Camera preview will appear here</div>
-//                 )}
-//             </div>
-//             <div className="flex justify-center gap-4">
-//                 <button
-//                     onClick={toggleRecording}
-//                     className={`px-6 py-2 rounded-full ${isRecording
-//                         ? 'bg-red-500 text-white'
-//                         : 'bg-[#8B5CF6] text-white'
-//                         }`}
-//                 >
-//                     {isRecording ? 'Stop Recording' : 'Start Recording'}
-//                 </button>
-//                 <div className="flex items-center text-sm text-gray-500">
-//                     Time left: {Math.floor(timeLeft / 60)}:{String(timeLeft % 60).padStart(2, '0')}
-//                 </div>
-//             </div>
-//         </div>
-//     );
-// };
-
-// const VideoQuestion = ({ question, onAnswer, recording = false }) => {
-//     const [isRecording, setIsRecording] = useState(recording);
-//     const [mediaStream, setMediaStream] = useState(null);
-//     const [mediaRecorder, setMediaRecorder] = useState(null);
-//     const [recordedChunks, setRecordedChunks] = useState([]);
-//     const [videoURL, setVideoURL] = useState(null);
-//     const [timeLeft, setTimeLeft] = useState(question.durationSeconds);
-//     const videoRef = useRef(null);
-//     const timerRef = useRef(null);
-
-//     useEffect(() => {
-//         const getMedia = async () => {
-//             try {
-//                 const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
-//                 setMediaStream(stream);
-//                 if (videoRef.current) {
-//                     videoRef.current.srcObject = stream;
-//                 }
-//             } catch (err) {
-//                 console.error('Error accessing media devices.', err);
-//             }
-//         };
-//         getMedia();
-
-//         return () => {
-//             if (mediaStream) {
-//                 mediaStream.getTracks().forEach(track => track.stop());
-//             }
-//         };
-//     }, []);
-
-//     useEffect(() => {
-//         if (isRecording && timeLeft > 0) {
-//             timerRef.current = setTimeout(() => {
-//                 setTimeLeft(prev => prev - 1);
-//             }, 1000);
-//         } else if (timeLeft === 0 && isRecording) {
-//             stopRecording();
-//         }
-
-//         return () => clearTimeout(timerRef.current);
-//     }, [timeLeft, isRecording]);
-
-//     const startRecording = () => {
-//         if (!mediaStream) return;
-
-//         const recorder = new MediaRecorder(mediaStream);
-//         setRecordedChunks([]);
-//         setMediaRecorder(recorder);
-
-//         recorder.ondataavailable = (event) => {
-//             if (event.data.size > 0) {
-//                 setRecordedChunks(prev => [...prev, event.data]);
-//             }
-//         };
-
-//         recorder.onstop = () => {
-//             const blob = new Blob(recordedChunks, { type: 'video/webm' });
-//             const url = URL.createObjectURL(blob);
-//             setVideoURL(url);
-//             onAnswer(blob); // send the recorded video blob to parent
-//         };
-
-//         recorder.start();
-//         setIsRecording(true);
-//         setTimeLeft(question.durationSeconds);
-//     };
-
-//     const stopRecording = () => {
-//         if (mediaRecorder && mediaRecorder.state !== 'inactive') {
-//             mediaRecorder.stop();
-//         }
-//         setIsRecording(false);
-//     };
-
-//     const toggleRecording = () => {
-//         if (isRecording) {
-//             stopRecording();
-//         } else {
-//             startRecording();
-//         }
-//     };
-
-//     return (
-//         <div className="space-y-6">
-//             <div className="aspect-video rounded-lg border border-gray-200 bg-black flex items-center justify-center overflow-hidden">
-//                 {videoURL && !isRecording ? (
-//                     <video src={videoURL} controls className="w-full h-full object-cover" />
-//                 ) : (
-//                     <video ref={videoRef} autoPlay muted className="w-full h-full object-cover" />
-//                 )}
-//             </div>
-
-//             <div className="flex justify-center gap-4">
-//                 <button
-//                     onClick={toggleRecording}
-//                     className={`px-6 py-2 rounded-full ${isRecording ? 'bg-red-500 text-white' : 'bg-[#8B5CF6] text-white'}`}
-//                 >
-//                     {isRecording ? 'Stop Recording' : 'Start Recording'}
-//                 </button>
-//                 <div className="flex items-center text-sm text-gray-500">
-//                     Time left: {Math.floor(timeLeft / 60)}:{String(timeLeft % 60).padStart(2, '0')}
-//                 </div>
-//             </div>
-//         </div>
-//     );
-// };
 const VideoQuestion = ({ question, onAnswer }) => {
     const [blob, setBlob] = useState(null);
 
@@ -435,7 +288,10 @@ const SkillAssesment = () => {
                 <div className="w-[40%] max-w-[531px] min-w-[330px] flex flex-col gap-6 bg-white rounded-[20px] p-6 border-[1px] border-[rgba(224,224,224,0.65)] [box-shadow:0px_16px_24px_rgba(0,_0,_0,_0.06),_0px_2px_6px_rgba(0,_0,_0,_0.04)]">
                     <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2">
-                            <span className="text-sm font-medium">Question {currentQuestionIndex + 1} of {questions.length}</span>
+                            <QuestionPopup
+                                currentQuestionIndex={currentQuestionIndex}
+                                onQuestionSelect={(index) => setCurrentQuestionIndex(index)}
+                            />
                         </div>
                         <div className="flex items-center gap-2 px-3 py-[6px] rounded-full group hover:bg-purplePrimary hover:text-white">
                             <div className='h-6 w-6 grid place-content-center rounded-full bg-purplePrimary group-hover:bg-white text-white group-hover:text-purplePrimary'>
@@ -506,14 +362,20 @@ const SkillAssesment = () => {
                 </div>
 
                 {/* Main Content Area */}
-                <div className="flex-1">
-                    {/* <div className="mb-6">
+
+                {/* <div className="mb-6">
                         <h2 className="text-xl font-semibold">Problem Solving ({currentQuestionIndex + 1}/{questions.length})</h2>
                     </div> */}
+                {/* <div className={`${currentQuestion.type !== 'video' && currentQuestion.type !== 'long-answer' ? 'mt-[100px]' : ''}`}>
+                        
+                    </div> */}
+                <div className={cn('flex-1',
+                    { 'mt-[100px]': currentQuestion.type !== 'video' && currentQuestion.type !== 'long-answer' })}>
                     {renderQuestion()}
-
-
                 </div>
+
+
+
             </div>
             <div className='flex items-center justify-center gap-2'>
                 <img src={footerLogo} alt="scoutable logo" />

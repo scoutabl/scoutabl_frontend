@@ -120,10 +120,13 @@
 @layer base {
   * {
     @apply border-border outline-ring/50;
+
+    @aokk
   }
 
   html {
     font-family: var(--font-sans);
+
   }
 
   body {
@@ -161,6 +164,36 @@
     font-family: var(--font-sans);
   }
 
+  .scrollbar-webkit {
+
+    /* Basic scrollbar styling */
+    &::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    &::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    &::-webkit-scrollbar-thumb {
+      background: #5C5C5C;
+      border-radius: 20px;
+      height: 40px;
+      /* Fixed height */
+    }
+
+    /* Hide scrollbar buttons */
+    &::-webkit-scrollbar-button {
+      display: none;
+    }
+  }
+
+  /* Special class for extra small scrollbar thumbs */
+  .tiny-thumb {
+    &::-webkit-scrollbar-thumb {
+      height: 10px !important;
+    }
+  }
 }
 
 @theme {
