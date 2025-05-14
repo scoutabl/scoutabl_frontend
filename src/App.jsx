@@ -1,16 +1,13 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
 import './App.css'
-import LoginPage from './pages/LoginPage'
-import SignupPage from './pages/SignupPage'
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
-import Navbar from './components/Navbar'
-import AuthNavbar from './components/AuthNavbar'
+import SignupPage from './pages/SignupPage'
+import LoginPage from './pages/LoginPage'
 import HomePage from './pages/HomePage'
-import { Toaster } from './components/ui/sonner'
-import { AuthProvider, useAuth } from './context/AuthContext'
 import SkillAssesment from './pages/SkillAssesment'
+import { AuthProvider, useAuth } from './context/AuthContext'
+import AuthNavbar from './components/AuthNavbar'
+import { Toaster } from './components/ui/sonner'
+import NotFoundPage from './pages/NotFoundPage';
 
 // Protected Route component
 const ProtectedRoute = ({ children }) => {
@@ -73,6 +70,7 @@ function App() {
               path="/"
               element={<Navigate to="/dashboard" replace />}
             />
+            <Route path="*" element={<NotFoundPage />} />
           </Routes>
         </NavigationWrapper>
         <Toaster />

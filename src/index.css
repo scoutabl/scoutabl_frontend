@@ -199,6 +199,7 @@
 @theme {
 
   /* colors */
+  --color-bluePrimary: #0084FF;
   --color-purplePrimary: #8B5CF6;
   --color-purpleSecondary: #CFDDFD;
   --color-greyAccent: #5C5C5C;

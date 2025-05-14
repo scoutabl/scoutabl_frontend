@@ -3,7 +3,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm } from 'react-hook-form'
 import { z } from 'zod'
 import { useAuth } from '@/context/AuthContext';
-
+import PasswordRecoveryModal from '@/components/PasswordRecoveryModal';
 import {
     Form,
     FormControl,
@@ -14,11 +14,10 @@ import {
 } from "@/components/ui/form"
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import GradientBackground from '@/components/GradientBackground';
 import googleIcon from '/googleIcon.svg'
 import micorosoftIcon from '/microsoftIcon.svg'
-
-import GradientBackground from '@/components/GradientBackground';
-import PasswordRecoveryModal from '@/components/PasswordRecoveryModal';
+import { Eye, EyeOff } from 'lucide-react';
 
 const LoginPage = () => {
     const { login } = useAuth();
@@ -27,7 +26,11 @@ const LoginPage = () => {
     const [rememberMe, setRememberMe] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
     const formSchema = z.object({
-        email: z.string().email({ message: "Email is required" }),
+        email: z
+            .string()
+            .min(1, { message: "Email is required" }).max(50, { message: "Email is too long" })
+            .regex(/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/, { message: "Invalid email address" })
+            .email({ message: "Email is required" }),
         password: z.string().min(8, { message: "Password must be at least 8 characters" }),
     })
 
@@ -58,26 +61,25 @@ const LoginPage = () => {
     }
 
     return (
-        <div className='flex  min-h-screen'>
+        <div className='flex min-h-screen'>
             {/* Background Section */}
             <GradientBackground />
-
             {/* Form Section */}
-            <div className="w-[480px] flex flex-col justify-center px-12 bg-white">
-                <div className="w-full">
-                    <h1 className='text-[2rem] font-bold text-[#333333] mb-8'>
-                        Welcome to <span className='bg-gradient-to-r from-[#806BFF] to-[#A669FD] inline-block text-transparent bg-clip-text'>Scoutabl</span>
+            <div className="w-full md:w-1/2 flex flex-col justify-center items-center px-6 py-8 relative bg-white">
+                <div className="w-full max-w-[342px]">
+                    <h1 className='text-[50px] font-bold text-[#333333] mb-8'>
+                        Welcome to Scoutabl
                     </h1>
 
                     <Form {...form}>
-                        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                        <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col gap-3">
                             {/* email field */}
                             <FormField
                                 control={form.control}
                                 name="email"
                                 render={({ field }) => (
                                     <FormItem>
-                                        <FormLabel className='text-primarytext text-base font-medium pb-2'>Business Email</FormLabel>
+                                        <FormLabel className='text-primarytext text-base font-medium'>Business Email</FormLabel>
                                         <FormControl>
                                             <Input
                                                 placeholder="Enter your business email"
@@ -89,34 +91,15 @@ const LoginPage = () => {
                                     </FormItem>
                                 )}
                             />
-                            {/* <FormField
-                                control={form.control}
-                                name="password"
-                                render={({ field }) => (
-                                    <FormItem>
-                                        <FormLabel className='text-primarytext text-base font-medium pb-2'>Password</FormLabel>
-                                        <FormControl>
-                                            <Input
-                                                autoComplete="current-password"
-                                                type="password"
-                                                placeholder="Enter your password"
-                                                {...field}
-                                                disabled={isLoading}
-                                            />
-                                        </FormControl>
-                                        <FormMessage />
-                                    </FormItem>
-                                )}
-                            /> */}
                             {/* Password field*/}
                             <FormField
                                 control={form.control}
                                 name="password"
                                 render={({ field }) => (
                                     <FormItem>
-                                        <FormLabel className='text-primarytext text-base font-medium pb-2'>Password</FormLabel>
-                                        <FormControl>
-                                            <div className="relative">
+                                        <FormLabel className='text-primarytext text-base font-medium'>Password</FormLabel>
+                                        <div className="relative">
+                                            <FormControl>
                                                 <Input
                                                     type={showPassword ? "text" : "password"}
                                                     autoComplete="current-password"
@@ -124,25 +107,21 @@ const LoginPage = () => {
                                                     {...field}
                                                     disabled={isLoading}
                                                 />
-                                                <button
-                                                    type="button"
-                                                    onClick={() => setShowPassword(prev => !prev)}
-                                                    className="absolute inset-y-0 right-3 flex items-center text-gray-600"
-                                                    tabIndex={-1}
-                                                >
-                                                    {showPassword ? (
-                                                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 3l18 18M10.477 10.477A3 3 0 0012 15a3 3 0 003-3 3 3 0 00-4.523-2.523zM21 12c0-1.44-3.75-6-9-6S3 10.56 3 12c0 .994 1.35 3.287 3.236 4.884M17.657 17.657A9.969 9.969 0 0012 18c-2.392 0-4.6-.84-6.314-2.229" />
-                                                        </svg>
-                                                    ) : (
-                                                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M2.25 12s3.75-6 9.75-6 9.75 6 9.75 6-3.75 6-9.75 6S2.25 12 2.25 12z" />
-                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15.75 12a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0z" />
-                                                        </svg>
-                                                    )}
-                                                </button>
-                                            </div>
-                                        </FormControl>
+                                            </FormControl>
+                                            <button
+                                                type="button"
+                                                onClick={() => setShowPassword(prev => !prev)}
+                                                className="absolute inset-y-0 right-3 flex items-center text-gray-600"
+                                                tabIndex={-1}
+                                            >
+                                                {showPassword ? (
+                                                    <Eye className="h-5 w-5" color='black' />
+
+                                                ) : (
+                                                    <EyeOff className="h-5 w-5" color='black' />
+                                                )}
+                                            </button>
+                                        </div>
                                         <FormMessage />
                                     </FormItem>
                                 )}
@@ -152,7 +131,7 @@ const LoginPage = () => {
                                     {error}
                                 </div>
                             )}
-                            <div className='flex items-center justify-between'>
+                            <div className='flex items-center justify-between mt-1'>
                                 <div className='flex items-center justify-start gap-2'>
                                     <input
                                         className='appearance-none w-3.5 h-3.5 bg-white border-2 rounded border-black outline checked:bg-purple-800'

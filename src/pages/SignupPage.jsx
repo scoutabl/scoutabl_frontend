@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod'
 import { set, useForm } from 'react-hook-form'
 import { z } from 'zod'
+import backgroundImage from '/loginBg.svg'
 import googleIcon from '/googleIcon.svg'
 import micorosoftIcon from '/microsoftIcon.svg'
 import helpIcon from '/helpIcon.svg'
@@ -18,21 +19,28 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import GradientBackground from '@/components/GradientBackground';
-import { MessageSquareWarning } from 'lucide-react';
+import { ChevronRight, MessageSquareWarning, Eye, EyeOff } from 'lucide-react';
 import { Dialog, DialogTitle, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogClose } from '@/components/ui/dialog';
 import { ChevronLeft } from 'lucide-react';
 import { toast } from "sonner"
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '@/context/AuthContext';
 
 const SignupPage = () => {
     const [apiError, setApiError] = useState("")
     const [open, setOpen] = useState(false);
     const [email, setEmail] = useState("");
+    const [showPassword, setShowPassword] = useState(false);
     const [otpValue, setOtpValue] = useState('');
     const [isVerified, setIsVerified] = useState(false);
     const [emailVerificationId, setEmailVerificationId] = useState('')
     const [accessToken, setAccessToken] = useState('')
     const [cooldownActive, setCooldownActive] = useState(false);
     const [cooldownTime, setCooldownTime] = useState(0);
+    const [isLoading, setIsLoading] = useState(false);
+    const { login } = useAuth();
+    const navigate = useNavigate();
+    const [userPassword, setUserPassword] = useState("");
 
     // Reset isVerified state on component mount
     useEffect(() => {
@@ -86,11 +94,12 @@ const SignupPage = () => {
     };
 
     async function onSubmit(values) {
-        console.log(isVerified)
+        setIsLoading(true);
         const [first_name, ...rest] = values.fullName.trim().split(' ');
         const last_name = rest.join(' ');
         const username = values.email
         setEmail(values.email)
+        setUserPassword(values.password)
         const payload = {
             first_name: first_name,
             last_name: last_name,
@@ -129,6 +138,8 @@ const SignupPage = () => {
         } catch (error) {
             console.error("Error:", error);
             alert("An error occurred during registration.");
+        } finally {
+            setIsLoading(false);
         }
     }
 
@@ -149,7 +160,6 @@ const SignupPage = () => {
                 }),
             });
 
-
             const data = await response.json();
             if (!response.ok) {
                 console.error("Error:", data);
@@ -158,7 +168,6 @@ const SignupPage = () => {
             }
             // Success logic here
             setIsVerified(true);
-            // Don't close the modal immediately, show the account created screen
             toast.success("Email verified successfully!");
         } catch (error) {
             console.error("Error:", error);
@@ -225,26 +234,32 @@ const SignupPage = () => {
         }
     }
 
+
+
     return (
-        <div className='flex min-h-screen'>
-            {/* Background Section */}
+        <div className="flex flex-col md:flex-row min-h-screen">
             <GradientBackground />
-            {/* Form Section */}
-            <div className="w-1/3 flex items-center justify-center py-24">
-                <div className="w-full max-w-[342px] mx-auto px-4">
-                    <h1 className='pb-6 text-[3.25rem] font-bold leading-[51.9px] tracking-[-6%]'>Welcome<br /> to Scoutabl</h1>
+            {/* Right: Form */}
+            {/* <div className="w-full md:w-1/2 min-w-[350px] flex flex-col justify-center px-4 md:px-12 bg-white"> */}
+            <div className="w-full md:w-1/2 flex flex-col justify-center items-center px-6 py-8 relative bg-white">
+                <div className="w-full max-w-[342px]">
+                    <h1 className='text-4xl md:text-[52px] font-bold text-greyPrimary mb-6'>
+                        Welcome to Scoutabl
+                    </h1>
                     <Form {...form}>
-                        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                        <form onSubmit={form.handleSubmit(onSubmit)} className="w-full">
                             <FormField
                                 control={form.control}
                                 name="fullName"
                                 render={({ field }) => (
                                     <FormItem>
-                                        <FormLabel className='text-primarytext text-base font-medium pb-2'>Full Name</FormLabel>
+                                        <FormLabel className='text-primarytext text-base font-medium'>Full Name</FormLabel>
                                         <FormControl>
                                             <Input placeholder="Enter your name" {...field} />
                                         </FormControl>
-                                        <FormMessage className='py-1' />
+                                        <div className="min-h-[20px] py-1">
+                                            <FormMessage className="text-xs font-medium" />
+                                        </div>
                                     </FormItem>
                                 )}
                             />
@@ -253,32 +268,76 @@ const SignupPage = () => {
                                 name="email"
                                 render={({ field }) => (
                                     <FormItem>
-                                        <FormLabel className='text-primarytext text-base font-medium pb-2'>Business Email</FormLabel>
+                                        <FormLabel className='text-primarytext text-base font-medium'>Business Email</FormLabel>
                                         <FormControl>
                                             <Input placeholder="Enter your business email" {...field} />
                                         </FormControl>
-                                        <FormMessage className='py-1' />
+                                        <div className="min-h-[20px] py-1">
+                                            <FormMessage className="text-xs font-medium" />
+                                        </div>
                                     </FormItem>
                                 )}
                             />
+                            {/* <FormField
+                                control={form.control}
+                                name="password"
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel className='text-primarytext text-base font-medium'>Password</FormLabel>
+                                        <FormControl>
+                                            <Input autoComplete="on" type="password" placeholder="Enter your password" {...field} />
+                                        </FormControl>
+                                        <FormMessage className="text-xs"/>
+                                    </FormItem>
+                                )}
+                            /> */}
+                            {/* Password field*/}
                             <FormField
                                 control={form.control}
                                 name="password"
                                 render={({ field }) => (
                                     <FormItem>
-                                        <FormLabel className='text-primarytext text-base font-medium pb-2'>Password</FormLabel>
-                                        <FormControl>
-                                            <Input autoComplete="on" type="password" placeholder="Enter your password" {...field} />
-                                        </FormControl>
-                                        <FormMessage />
+                                        <FormLabel className='text-primarytext text-base font-medium'>Password</FormLabel>
+                                        <div className="relative">
+                                            <FormControl>
+                                                <Input
+                                                    type={showPassword ? "text" : "password"}
+                                                    autoComplete="current-password"
+                                                    placeholder="Enter your password"
+                                                    {...field}
+                                                    disabled={isLoading}
+                                                />
+                                            </FormControl>
+                                            <button
+                                                type="button"
+                                                onClick={() => setShowPassword(prev => !prev)}
+                                                className="absolute inset-y-0 right-3 flex items-center text-gray-600"
+                                                tabIndex={-1}
+                                            >
+                                                {showPassword ? (
+                                                    <Eye className="h-5 w-5" color='black' />
+
+                                                ) : (
+                                                    <EyeOff className="h-5 w-5" color='black' />
+                                                )}
+                                            </button>
+                                        </div>
+                                        <div className="min-h-[20px] py-1">
+                                            <FormMessage className="text-xs font-medium" />
+                                        </div>
                                     </FormItem>
                                 )}
                             />
                             <div className='w-full flex items-center justify-center'>
-                                <Button className='bg-gradient-custom h-10 w-24 rounded-[12px]' type="submit">
-                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="size-6">
-                                        <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3" />
-                                    </svg>
+                                <Button className='bg-gradient-custom [box-shadow:0px_4px_4px_rgba(0,_0,_0,_0.25)] rounded-[12px] flex items-center justify-center gap-2' type="submit" disabled={isLoading}>
+                                    {isLoading ? (
+                                        <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-white"></div>
+                                    ) : (
+                                        <>
+                                            Take the first step
+                                            <ChevronRight />
+                                        </>
+                                    )}
                                 </Button>
                             </div>
 
@@ -306,6 +365,7 @@ const SignupPage = () => {
                     </Form>
                 </div>
             </div>
+
             <Dialog
                 open={open}
                 onOpenChange={(openState) => {
@@ -337,28 +397,19 @@ const SignupPage = () => {
                         </DialogDescription>
                         {isVerified
                             ?
-                            <>
-                                <DialogTitle className='font-semibold text-[2.5rem] text-[#333333]'>Account Created</DialogTitle>
+                            <div className='flex flex-col items-center justify-center gap-6 max-w-'>
+                                <DialogTitle className='font-semibold text-[2.5rem] text-[#333333] mt-2'>Account Created</DialogTitle>
                                 <figure className='w-full flex items-center justify-center py-5'>
-                                    <img src={logo} alt="scoutabl logo" className='h-20 w-20' />
+                                    <img src={logo} alt="scoutabl logo" className='h-28 w-28' />
                                 </figure>
-                                <span className="text-black text-lg font-medium">
+                                <span className="text-greyPrimary text-lg font-light text-center">
                                     You just took your first step to better hiring.
                                 </span>
                                 <div className="flex flex-col items-center justify-center gap-3">
                                     <a href="/organization-setup" className='bg-gradient-custom h-[54px] w-[296px] rounded-[20px] [box-shadow:0px_0px_4px_rgba(0,_0,_0,_0.25)] hover:opacity-90 flex items-center justify-center'>Setup your Account</a>
-                                    <Button
-                                        onClick={() => {
-                                            setOpen(false);
-                                            resetStates();
-                                            setIsVerified(false);
-                                        }}
-                                        className='flex items-center justify-center gap-2 bg-black rounded-[12px] h-10 w-[129px] mt-4'
-                                    >
-                                        <span className='text-white font-semibold text-sm'>Close</span>
-                                    </Button>
+                                    <span className='text-greyPrimary font-normal text-sm cursor-pointer' onClick={async () => { await login(email, userPassword, true); navigate('/'); }}>Be lazy &amp; <span className='text-bluePrimary hover:underline underline-offset-2'>Skip for Now!</span></span>
                                 </div>
-                            </>
+                            </div>
                             :
                             <>
                                 <DialogTitle className='font-semibold text-[2.5rem] text-[#333333]'>Email Verification</DialogTitle>
@@ -391,7 +442,7 @@ const SignupPage = () => {
                     </DialogHeader>
                 </DialogContent>
             </Dialog>
-        </div >
+        </div>
     );
 };
 
