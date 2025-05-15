@@ -10,6 +10,12 @@ import { FaQuestion } from "react-icons/fa6";
 import { Headphones, Flag, ChevronLeft, ChevronRight } from 'lucide-react';
 import footerLogo from '/greyLogo.svg'
 import QuestionPopup from '@/components/features/candidateAssesments/QuestionPopup';
+import gradientRatingCurve from '/gradientRatingCurve.svg'
+import emoji1 from '/emoji1.svg'
+import emoji2 from '/emoji2.svg'
+import emoji3 from '/emoji3.svg'
+import emoji4 from '/emoji4.svg'
+import emoji5 from '/emoji5.svg'
 // Question type components
 const MCQQuestion = ({ question, onAnswer, selectedAnswer }) => (
     <div className="space-y-4 my-auto">
@@ -33,6 +39,43 @@ const MCQQuestion = ({ question, onAnswer, selectedAnswer }) => (
         ))}
     </div>
 );
+
+const RatingQuestion = ({ question, onAnswer, selectedAnswer }) => {
+
+    const [rating, setRating] = useState(selectedAnswer || 0);
+
+    const emojis = [
+        { img: emoji1, value: -2 },
+        { img: emoji2, value: -1 },
+        { img: emoji3, value: 0 },
+        { img: emoji4, value: 1 },
+        { img: emoji5, value: 2 },
+    ];
+    return (
+        <div className='w-full min-h-[205px] flex items-center justify-center [box-shadow:0px_16px_24px_rgba(0,_0,_0,_0.06),_0px_2px_6px_rgba(0,_0,_0,_0.04)] rounded-[28px] border border-[rgba(224,224,224,0.65)]'>
+            <div className='relative max-w-[469px] flex flex-col items-center justify-center'>
+                <img src={gradientRatingCurve} alt="rating curve" className="absolute left-0 right-0 mx-auto" />
+                <div className='flex items-center gap-10 relative z-10'>
+                    {emojis.map((emoji, idx) => (
+                        <button
+                            key={idx}
+                            onClick={() => {
+                                setRating(emoji.value);
+                                onAnswer(emoji.value);
+                            }}
+                        >
+                            <img src={emoji.img} alt={`rating-${emoji.value}`}
+                                className={cn("w-[60px] h-[60px] p-px border-4 border-transparent rounded-full",
+                                    { 'border-purplePrimary': rating === emoji.value }
+                                )}
+                            />
+                        </button>
+                    ))}
+                </div>
+            </div>
+        </div>
+    )
+}
 
 const MultiSelectQuestion = ({ question, onAnswer, selectedAnswers = [] }) => (
     <div className="space-y-4 my-auto">
@@ -260,6 +303,8 @@ const SkillAssesment = () => {
                 return <VideoQuestion {...props} />;
             case 'long-answer':
                 return <LongAnswerQuestion {...props} />;
+            case 'rating':
+                return <RatingQuestion {...props} />;
             default:
                 return <div>Unknown question type</div>;
         }
