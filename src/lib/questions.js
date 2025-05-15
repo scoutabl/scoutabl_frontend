@@ -1,15 +1,10 @@
 export const questions = [
     {
-        questionId: 15,
-        type: 'video',
-        questionTitle: "Explain how you would implement a shopping cart feature in a React e-commerce application.",
-        durationSeconds: 120, // 2 minutes
-        instructions: [
-            "State management (Redux/Context)",
-            "Cart operations (add/remove/update)",
-            "Persistence (localStorage)",
-            "Cart summary calculation"
-        ]
+        questionId: 1,
+        type: 'rating',
+        questionTitle: "What is the difference between controlled and uncontrolled components in React forms?",
+        sampleAnswer: "Controlled components have their state controlled by React through props and setState, while uncontrolled components maintain their own internal state using refs.",
+        maxWords: 50
     },
     {
         questionId: 2,
@@ -178,10 +173,16 @@ export const questions = [
         ]
     },
     {
-        questionId: 1,
-        type: 'rating',
-        questionTitle: "What is the difference between controlled and uncontrolled components in React forms?",
-        sampleAnswer: "Controlled components have their state controlled by React through props and setState, while uncontrolled components maintain their own internal state using refs.",
-        maxWords: 50
-    }
+        questionId: 15,
+        type: 'video',
+        questionTitle: "Explain how you would implement a shopping cart feature in a React e-commerce application.",
+        durationSeconds: 120, // 2 minutes
+        instructions: [
+            "State management (Redux/Context)",
+            "Cart operations (add/remove/update)",
+            "Persistence (localStorage)",
+            "Cart summary calculation"
+        ]
+    },
+
 ];

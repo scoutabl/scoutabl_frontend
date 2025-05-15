@@ -16,6 +16,7 @@ import emoji2 from '/emoji2.svg'
 import emoji3 from '/emoji3.svg'
 import emoji4 from '/emoji4.svg'
 import emoji5 from '/emoji5.svg'
+import CodingAssesment from '@/components/features/candidateAssesments/CodingAssesment';
 // Question type components
 const MCQQuestion = ({ question, onAnswer, selectedAnswer }) => (
     <div className="space-y-4 my-auto">
@@ -313,120 +314,123 @@ const SkillAssesment = () => {
 
 
     return (
-        <div className='min-h-screen flex flex-col gap-6 py-6'>
-            {/* Top Navbar */}
-            <div className='flex items-center justify-between px-12'>
-                <div className='flex gap-1 items-center justify-center'>
-                    <img src={logo} alt='scoutabl logo' className='h-[30px] w-[30px]' />
-                    <h1 className='text-2xl text-greyPrimary font-bold'>Scoutabl</h1>
+        <>
+            <div className='min-h-screen flex flex-col gap-6 py-6'>
+                {/* Top Navbar */}
+                <div className='flex items-center justify-between px-12'>
+                    <div className='flex gap-1 items-center justify-center'>
+                        <img src={logo} alt='scoutabl logo' className='h-[30px] w-[30px]' />
+                        <h1 className='text-2xl text-greyPrimary font-bold'>Scoutabl</h1>
+                    </div>
+                    <div>
+                        <span className="text-base font-normal">Problem Solving <span className='font-bold text-greyPrimary'>({currentQuestionIndex + 1}/{questions.length})</span></span>
+                    </div>
+                    <div className='flex gap-1 items-center justify-center'>
+                        <img src={timerLogo} alt='timer logo' />
+                        <span>time Left:</span>
+                    </div>
                 </div>
-                <div>
-                    <span className="text-base font-normal">Problem Solving <span className='font-bold text-greyPrimary'>({currentQuestionIndex + 1}/{questions.length})</span></span>
-                </div>
-                <div className='flex gap-1 items-center justify-center'>
-                    <img src={timerLogo} alt='timer logo' />
-                    <span>time Left:</span>
-                </div>
-            </div>
-            <div className="flex-1 flex gap-8 px-12">
-                {/* Left Sidebar */}
-                <div className="w-[40%] max-w-[531px] min-w-[330px] flex flex-col gap-6 bg-white rounded-[20px] p-6 border-[1px] border-[rgba(224,224,224,0.65)] [box-shadow:0px_16px_24px_rgba(0,_0,_0,_0.06),_0px_2px_6px_rgba(0,_0,_0,_0.04)]">
-                    <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                            <QuestionPopup
-                                currentQuestionIndex={currentQuestionIndex}
-                                onQuestionSelect={(index) => setCurrentQuestionIndex(index)}
-                            />
-                        </div>
-                        <div className="flex items-center gap-2 px-3 py-[6px] rounded-full group hover:bg-purplePrimary hover:text-white">
-                            <div className='h-6 w-6 grid place-content-center rounded-full bg-purplePrimary group-hover:bg-white text-white group-hover:text-purplePrimary'>
-                                <FaQuestion size={16} />
+                <div className="flex-1 flex gap-8 px-12">
+                    {/* Left Sidebar */}
+                    <div className="w-[40%] max-w-[531px] min-w-[330px] flex flex-col gap-6 bg-white rounded-[20px] p-6 border-[1px] border-[rgba(224,224,224,0.65)] [box-shadow:0px_16px_24px_rgba(0,_0,_0,_0.06),_0px_2px_6px_rgba(0,_0,_0,_0.04)]">
+                        <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                                <QuestionPopup
+                                    currentQuestionIndex={currentQuestionIndex}
+                                    onQuestionSelect={(index) => setCurrentQuestionIndex(index)}
+                                />
                             </div>
-                            <span className='text-purplePrimary text-sm font-medium group-hover:text-white'>Question info</span>
+                            <div className="flex items-center gap-2 px-3 py-[6px] rounded-full group hover:bg-purplePrimary hover:text-white">
+                                <div className='h-6 w-6 grid place-content-center rounded-full bg-purplePrimary group-hover:bg-white text-white group-hover:text-purplePrimary'>
+                                    <FaQuestion size={16} />
+                                </div>
+                                <span className='text-purplePrimary text-sm font-medium group-hover:text-white'>Question info</span>
+                            </div>
+                        </div>
+
+                        <div className="space-y-6">
+                            <h2 className="text-lg font-medium">{currentQuestion.questionTitle}</h2>
+
+                            <div className="space-y-4">
+                                <h3 className="font-medium">Instructions:</h3>
+                                <ol className="list-decimal list-inside space-y-2 text-sm text-gray-600">
+                                    {currentQuestion.instructions?.map((instruction, index) => (
+                                        <li key={index} className="pl-2">{instruction}</li>
+                                    ))}
+                                </ol>
+                            </div>
+
+                            {currentQuestion.optional && (
+                                <div className="space-y-2">
+                                    <h3 className="font-medium">Optional:</h3>
+                                    <p className="text-sm text-gray-600">
+                                        {currentQuestion.optional}
+                                    </p>
+                                </div>
+                            )}
+
+                            {currentQuestion.assessmentCriteria && (
+                                <div className="space-y-2">
+                                    <p className="text-sm text-gray-600">
+                                        {currentQuestion.assessmentCriteria}
+                                    </p>
+                                </div>
+                            )}
+
+                        </div>
+                        <div className='flex items-center justify-between mt-auto'>
+                            <div className='flex items-center gap-2'>
+                                <div className='h-10 w-10 grid place-content-center group rounded-full border border-black hover:bg-purplePrimary hover:text-white hover:border-purplePrimary'>
+                                    <Flag />
+                                </div>
+                                <div className='h-10 w-10 grid place-content-center rounded-full border border-black hover:bg-purplePrimary hover:text-white hover:border-purplePrimary'>
+                                    <Headphones />
+                                </div>
+                            </div>
+                            <div className="flex gap-4">
+                                <button
+                                    className="flex items-center gap-1 px-[22px] py-[10px] text-bold text-base rounded-full border border-purplePrimary hover:bg-purplePrimary text-purplePrimary bg-white hover:text-white disabled:opacity-50"
+                                    onClick={() => setCurrentQuestionIndex(currentQuestionIndex - 1)}
+                                    disabled={currentQuestionIndex === 0}
+                                >
+                                    <ChevronLeft size={20} />
+                                    Back
+                                </button>
+                                <button
+                                    className="flex items-center gap-1 px-[22px] py-[10px] text-bold text-base rounded-full border border-purplePrimary bg-purplePrimary text-white hover:bg-white hover:text-purplePrimary disabled:opacity-50"
+                                    onClick={() => setCurrentQuestionIndex(currentQuestionIndex + 1)}
+                                    disabled={currentQuestionIndex === questions.length - 1}
+                                >
+                                    Next
+                                    <ChevronRight size={20} />
+                                </button>
+                            </div>
                         </div>
                     </div>
 
-                    <div className="space-y-6">
-                        <h2 className="text-lg font-medium">{currentQuestion.questionTitle}</h2>
+                    {/* Main Content Area */}
 
-                        <div className="space-y-4">
-                            <h3 className="font-medium">Instructions:</h3>
-                            <ol className="list-decimal list-inside space-y-2 text-sm text-gray-600">
-                                {currentQuestion.instructions?.map((instruction, index) => (
-                                    <li key={index} className="pl-2">{instruction}</li>
-                                ))}
-                            </ol>
-                        </div>
-
-                        {currentQuestion.optional && (
-                            <div className="space-y-2">
-                                <h3 className="font-medium">Optional:</h3>
-                                <p className="text-sm text-gray-600">
-                                    {currentQuestion.optional}
-                                </p>
-                            </div>
-                        )}
-
-                        {currentQuestion.assessmentCriteria && (
-                            <div className="space-y-2">
-                                <p className="text-sm text-gray-600">
-                                    {currentQuestion.assessmentCriteria}
-                                </p>
-                            </div>
-                        )}
-
-                    </div>
-                    <div className='flex items-center justify-between mt-auto'>
-                        <div className='flex items-center gap-2'>
-                            <div className='h-10 w-10 grid place-content-center group rounded-full border border-black hover:bg-purplePrimary hover:text-white hover:border-purplePrimary'>
-                                <Flag />
-                            </div>
-                            <div className='h-10 w-10 grid place-content-center rounded-full border border-black hover:bg-purplePrimary hover:text-white hover:border-purplePrimary'>
-                                <Headphones />
-                            </div>
-                        </div>
-                        <div className="flex gap-4">
-                            <button
-                                className="flex items-center gap-1 px-[22px] py-[10px] text-bold text-base rounded-full border border-purplePrimary hover:bg-purplePrimary text-purplePrimary bg-white hover:text-white disabled:opacity-50"
-                                onClick={() => setCurrentQuestionIndex(currentQuestionIndex - 1)}
-                                disabled={currentQuestionIndex === 0}
-                            >
-                                <ChevronLeft size={20} />
-                                Back
-                            </button>
-                            <button
-                                className="flex items-center gap-1 px-[22px] py-[10px] text-bold text-base rounded-full border border-purplePrimary bg-purplePrimary text-white hover:bg-white hover:text-purplePrimary disabled:opacity-50"
-                                onClick={() => setCurrentQuestionIndex(currentQuestionIndex + 1)}
-                                disabled={currentQuestionIndex === questions.length - 1}
-                            >
-                                Next
-                                <ChevronRight size={20} />
-                            </button>
-                        </div>
-                    </div>
-                </div>
-
-                {/* Main Content Area */}
-
-                {/* <div className="mb-6">
+                    {/* <div className="mb-6">
                         <h2 className="text-xl font-semibold">Problem Solving ({currentQuestionIndex + 1}/{questions.length})</h2>
                     </div> */}
-                {/* <div className={`${currentQuestion.type !== 'video' && currentQuestion.type !== 'long-answer' ? 'mt-[100px]' : ''}`}>
+                    {/* <div className={`${currentQuestion.type !== 'video' && currentQuestion.type !== 'long-answer' ? 'mt-[100px]' : ''}`}>
                         
                     </div> */}
-                <div className={cn('flex-1',
-                    { 'mt-[100px]': currentQuestion.type !== 'video' && currentQuestion.type !== 'long-answer' })}>
-                    {renderQuestion()}
+                    <div className={cn('flex-1',
+                        { 'mt-[100px]': currentQuestion.type !== 'video' && currentQuestion.type !== 'long-answer' })}>
+                        {renderQuestion()}
+                    </div>
+
+
+
                 </div>
-
-
-
+                <div className='flex items-center justify-center gap-2'>
+                    <img src={footerLogo} alt="scoutable logo" />
+                    <span className='text-base font-normal text-greyTertiary'>Powered by Scoutabl</span>
+                </div>
             </div>
-            <div className='flex items-center justify-center gap-2'>
-                <img src={footerLogo} alt="scoutable logo" />
-                <span className='text-base font-normal text-greyTertiary'>Powered by Scoutabl</span>
-            </div>
-        </div>
+            <CodingAssesment />
+        </>
     );
 };
 
