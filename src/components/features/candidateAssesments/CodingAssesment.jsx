@@ -5,6 +5,7 @@ import sidebarOpenIcon from '/sidebarOpen.svg';
 import sidebarCloseIcon from '/sidebarClose.svg';
 import submissionIcon from '/submissionIcon.svg';
 import CodeEditor from './CodeEditor';
+import { questionsData } from '@/lib/codingQuestions';
 export default function CodingAssesment() {
     const [isCollapsed, setIsCollapsed] = useState(false);
     const [activeTab, setActiveTab] = useState('description');
@@ -16,34 +17,34 @@ export default function CodingAssesment() {
     };
 
     // Dummy data for questions
-    const questionsData = [
-        {
-            id: 1,
-            title: "Implement a dynamic form generator with validation.",
-            instructions: [
-                "Create a form with at least one field initially.",
-                "Allow users to add or remove fields dynamically.",
-                "Each field should have a label, type, and optional validation rules.",
-                "Validate fields on blur or form submission.",
-                "Display error messages for invalid fields.",
-                "Use CSS for styling."
-            ],
-            optional: "Implement advanced validation, conditional fields, field rearrangement, and i18n support.",
-            assessment: "Your solution will be assessed based on functionality, code quality, and performance. Optional: Implement advanced validation, conditional fields, field rearrangement, and i18n support."
-        },
-        {
-            id: 2,
-            title: "Explain how you would implement a shopping cart feature in a React e-commerce application.",
-            instructions: [
-                "State management (Redux/Context)",
-                "Cart operations (add/remove/update)",
-                "Persistence (localStorage)",
-                "Cart summary calculation"
-            ],
-            optional: "Implement product variants and quantity constraints.",
-            assessment: "Your solution will be assessed based on architecture design, state management approach, and performance considerations."
-        }
-    ];
+    // const questionsData = [
+    //     {
+    //         id: 1,
+    //         title: "Implement a dynamic form generator with validation.",
+    //         instructions: [
+    //             "Create a form with at least one field initially.",
+    //             "Allow users to add or remove fields dynamically.",
+    //             "Each field should have a label, type, and optional validation rules.",
+    //             "Validate fields on blur or form submission.",
+    //             "Display error messages for invalid fields.",
+    //             "Use CSS for styling."
+    //         ],
+    //         optional: "Implement advanced validation, conditional fields, field rearrangement, and i18n support.",
+    //         assessment: "Your solution will be assessed based on functionality, code quality, and performance. Optional: Implement advanced validation, conditional fields, field rearrangement, and i18n support."
+    //     },
+    //     {
+    //         id: 2,
+    //         title: "Explain how you would implement a shopping cart feature in a React e-commerce application.",
+    //         instructions: [
+    //             "State management (Redux/Context)",
+    //             "Cart operations (add/remove/update)",
+    //             "Persistence (localStorage)",
+    //             "Cart summary calculation"
+    //         ],
+    //         optional: "Implement product variants and quantity constraints.",
+    //         assessment: "Your solution will be assessed based on architecture design, state management approach, and performance considerations."
+    //     }
+    // ];
 
     // Get current question data
     const currentQuestionData = questionsData.find(q => q.id === currentQuestion) || questionsData[0];
@@ -79,7 +80,6 @@ export default function CodingAssesment() {
 
     return (
         <div className='flex gap-8 px-12 py-6'>
-
             <div className={cn(
                 "relative transition-all duration-300 ease-in-out",
                 isCollapsed ? "w-[60px]" : "max-w-[531px] w-full"
@@ -87,7 +87,7 @@ export default function CodingAssesment() {
 
 
                 <aside className={cn(
-                    "bg-white rounded-[20px] border border-gray-200 shadow-md transition-all duration-300 h-full overflow-hidden min-h-screen",
+                    "bg-white rounded-[20px] border border-gray-200 shadow-md transition-all duration-300 h-full overflow-hidden max-h-[767px]",
                     isCollapsed ? "p-2" : "p-6"
                 )}>
                     {isCollapsed ? (
@@ -181,7 +181,7 @@ export default function CodingAssesment() {
 
                             {/* Content based on active tab */}
                             {activeTab === 'description' ? (
-                                <div className="space-y-6 overflow-y-auto max-h-[calc(100vh-220px)]">
+                                <div className="space-y-6 overflow-auto max-h-[548px] scrollbar-webkit tiny-thumb">
                                     <h2 className="text-lg font-medium">{currentQuestionData.title}</h2>
 
                                     <div className="space-y-4">
@@ -193,7 +193,22 @@ export default function CodingAssesment() {
                                         </ol>
                                     </div>
 
+                                    {/* test cases */}
                                     <div className="space-y-2">
+                                        <p className="text-sm text-gray-600">
+                                            <span className="font-medium">Test Cases:</span>
+                                        </p>
+                                        {currentQuestionData.testCases.map((testCase, index) => (
+                                            <div key={index}>
+                                                <h3 className="text-sm text-gray-600">Example {index + 1}:</h3>
+                                                <p><strong>Input:</strong> {testCase.input}</p>
+                                                <p><strong>Output:</strong> {testCase.output}</p>
+                                                <p><strong>Explanation:</strong> {testCase.explanation}</p>
+                                            </div>
+                                        ))}
+                                    </div>
+
+                                    {/* <div className="space-y-2">
                                         <p className="text-sm text-gray-600">
                                             <span className="font-medium">Optional: </span>
                                             {currentQuestionData.optional}
@@ -204,7 +219,7 @@ export default function CodingAssesment() {
                                         <p className="text-sm text-gray-600">
                                             {currentQuestionData.assessment}
                                         </p>
-                                    </div>
+                                    </div> */}
 
                                     {/* Repeated assessment text from the image */}
                                     <div className="space-y-2">
@@ -284,7 +299,7 @@ export default function CodingAssesment() {
                 </aside>
             </div>
             <div className='flex-1'>
-                <CodeEditor />
+                <CodeEditor testCases={currentQuestionData.testCases} />
             </div>
         </div>
     );

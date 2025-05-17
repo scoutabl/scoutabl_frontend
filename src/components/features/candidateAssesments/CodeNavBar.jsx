@@ -1,14 +1,51 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { ChevronDown, Play, RotateCcw, Braces } from 'lucide-react';
 import { FaCheckCircle } from "react-icons/fa";
-import { LANGUAGE_VERSIONS } from '@/lib/constants'
-import { toast } from "sonner"
-import { executeCode } from '@/api/monacoCodeApi'
-const CodeNavBar = ({ language, onSelect, editorRef, setOutput }) => {
-    const [open, setIsOpen] = useState(false)
+import { fetchLanguageRuntimes, executeCode } from '@/api/monacoCodeApi'
 
-    const languages = Object.entries(LANGUAGE_VERSIONS)
+const ALLOWED_LANGUAGES = [
+    { key: 'python', display: 'Python 3' },
+    { key: 'javascript', display: 'JavaScript' },
+    { key: 'typescript', display: 'TypeScript' },
+    { key: 'csharp', display: 'C#' },
+    { key: 'c++', display: 'C++' },
+    { key: 'java', display: 'Java' },
+    { key: 'go', display: 'Go' },
+    { key: 'php', display: 'PHP' },
+];
+
+const CodeNavBar = ({
+    language, onSelect, editorRef, setOutput,
+    testCases = [], userTestCases = [], inputVars = [],
+    selectedCase, setActiveTab, setLoading, loading
+}) => {
+    const [open, setIsOpen] = useState(false)
+    const [languages, setLanguages] = useState([])
+    const [error, setError] = useState(null)
+
+    useEffect(() => {
+        const getRuntimes = async () => {
+            setLoading(true)
+            setError(null)
+            try {
+                const data = await fetchLanguageRuntimes();
+                // Filter to allowed languages only
+                const filtered = ALLOWED_LANGUAGES.map(({ key, display }) => {
+                    // Find the best match in the fetched data
+                    const match = data.find(l => l.language === key || l.aliases?.includes(key));
+                    return match ? { ...match, display } : null;
+                }).filter(Boolean);
+                setLanguages(filtered)
+                console.log(data)
+            } catch (err) {
+                setError('Failed to load languages')
+            } finally {
+                setLoading(false)
+            }
+        }
+        getRuntimes();
+    }, [])
 
     const handleSelect = (lang) => {
         onSelect(lang);
@@ -17,17 +54,43 @@ const CodeNavBar = ({ language, onSelect, editorRef, setOutput }) => {
 
     //run code
     const handleRunCode = async () => {
+        setLoading(true);
+        setActiveTab('results');
         const sourceCode = editorRef.current.getValue();
         if (!sourceCode) {
-            toast.error("Please write some code first")
+            toast.error("Please write some code first");
+            setLoading(false);
             return;
         }
+        const selected = languages.find(l => l.language === language || l.aliases?.includes(language));
+        const version = selected?.version;
+        if (!version) {
+            toast.error("Language version not found");
+            setLoading(false);
+            return;
+        }
+
+        // Combine all test cases
+        const allCases = [...(testCases || []), ...(userTestCases || [])];
+        const tc = allCases[selectedCase] || allCases[0]; // fallback to first if not found
+
+        let injectedCode = sourceCode;
+        if (language === 'javascript') {
+            let varLines = inputVars.map(v => `${v} = ${tc[v]};`).join('\n');
+            injectedCode = `${varLines}\n${sourceCode}`;
+        }
+        // For other languages, adjust as needed
+
         try {
-            const { run: result } = await executeCode(language, sourceCode);
-            setOutput(result?.output || result?.error || "No output")
-        } catch (error) {
-            console.error("Error running code:", error);
-            toast.error("An error occurred while running the code")
+            const response = await executeCode(language, injectedCode, version);
+            setOutput([{
+                input: inputVars.map(v => ({ name: v, value: tc[v] })),
+                expected: tc.output,
+                stdout: response.run.stdout?.trim() ?? '',
+                output: response.run.output?.trim() ?? '',
+            }]);
+        } finally {
+            setLoading(false);
         }
     }
 
@@ -44,57 +107,73 @@ const CodeNavBar = ({ language, onSelect, editorRef, setOutput }) => {
                     </button> */}
                     <button
                         className="flex items-center gap-[6px] p-0 justify-between px-3"
+                        disabled={loading || !!error}
                     >
                         <Braces color='#333333' size={20} />
                         <span className="text-sm font-normal text-greyPrimary truncate">
                             {language}
-                            <span className="text-xs text-greyPrimary font-normal ml-1">({LANGUAGE_VERSIONS[language]})</span>
+                            <span className="text-xs text-greyPrimary font-normal ml-1">
+                                {loading ? 'Loading...' : error ? 'Error' : (() => {
+                                    const selected = languages.find(l => l.language === language || l.aliases?.includes(language));
+                                    return selected ? selected.version : ''
+                                })()}
+                            </span>
                         </span>
                         <ChevronDown />
                     </button>
                 </PopoverTrigger>
 
                 <PopoverContent className="rounded-2xl flex flex-col p-0 max-w-[180px] ml-8" sideOffset={12} >
-                    {
-                        languages.map(([lang], idx) => {
-                            const isSelected = lang === language;
-                            const isFirst = idx === 0;
-                            const isLast = idx === languages.length - 1;
-                            const barRounding = isFirst && isLast
-                                ? "rounded-tr-2xl rounded-br-2xl"
-                                : isFirst
-                                    ? "rounded-tr-2xl"
-                                    : isLast
-                                        ? "rounded-br-2xl"
-                                        : "";
+                    {loading && <div className="p-4 text-center text-sm">Loading...</div>}
+                    {error && <div className="p-4 text-center text-sm text-red-500">{error}</div>}
+                    {!loading && !error && languages.map((langObj, idx) => {
+                        const lang = langObj.language;
+                        const display = langObj.display || lang;
+                        const isSelected = lang === language;
+                        const isFirst = idx === 0;
+                        const isLast = idx === languages.length - 1;
+                        const barRounding = isFirst && isLast
+                            ? "rounded-tr-2xl rounded-br-2xl"
+                            : isFirst
+                                ? "rounded-tr-2xl"
+                                : isLast
+                                    ? "rounded-br-2xl"
+                                    : "";
 
-                            return (
-                                <div
-                                    key={lang}
-                                    onClick={() => handleSelect(lang)}
-                                    className={`group py-3 flex items-center relative cursor-pointer first:rounded-t-2xl last:rounded-b-2xl overflow-hidden pl-0
-                                        ${isSelected ? "bg-[#E8DEFD] text-[#8B5CF6]" : ""}
-                                        hover:bg-[#E8DEFD] hover:text-[#8B5CF6]`
-                                    }
-                                >
-                                    {(isSelected) && (
-                                        <div className={`absolute left-0 top-0 h-full w-1 bg-[#8B5CF6] ${barRounding}`} />
-                                    )}
-                                    <div className={`absolute left-0 top-0 h-full w-1 bg-[#8B5CF6] opacity-0 group-hover:opacity-100 ${barRounding}`} />
-                                    <span className={`ml-4 ${isSelected ? "text-[#8B5CF6]" : "text-black"} group-hover:text-[#8B5CF6]`}>
-                                        {lang}
-                                    </span>
-                                </div>
-                            ); Braces
-                        })
-                    }
+                        return (
+                            <div
+                                key={lang}
+                                onClick={() => handleSelect(lang)}
+                                className={`group py-3 flex items-center relative cursor-pointer first:rounded-t-2xl last:rounded-b-2xl overflow-hidden pl-0
+                                    ${isSelected ? "bg-[#E8DEFD] text-[#8B5CF6]" : ""}
+                                    hover:bg-[#E8DEFD] hover:text-[#8B5CF6]`
+                                }
+                            >
+                                {(isSelected) && (
+                                    <div className={`absolute left-0 top-0 h-full w-1 bg-[#8B5CF6] ${barRounding}`} />
+                                )}
+                                <div className={`absolute left-0 top-0 h-full w-1 bg-[#8B5CF6] opacity-0 group-hover:opacity-100 ${barRounding}`} />
+                                <span className={`ml-4 ${isSelected ? "text-[#8B5CF6]" : "text-black"} group-hover:text-[#8B5CF6]`}>
+                                    {display} <span className="ml-2 text-xs text-gray-400">{langObj.version}</span>
+                                </span>
+                            </div>
+                        );
+                    })}
                 </PopoverContent>
             </Popover>
             <div className='flex items-center gap-12'>
                 {/* runtime buttons */}
                 <div className='flex items-center gap-3'>
-                    <button onClick={handleRunCode} className='flex gap-[6px] items-center py-2 px-3 rounded-[8px] hover:bg-white transition-all duration-300 ease-in'>
-                        <Play color='#333333' size={20} />
+                    <button
+                        onClick={handleRunCode}
+                        className='flex gap-[6px] items-center py-2 px-3 rounded-[8px] hover:bg-white transition-all duration-300 ease-in'
+                        disabled={loading}
+                    >
+                        {loading ? (
+                            <span className="animate-spin mr-2 w-4 h-4 border-2 border-t-transparent border-purple-600 rounded-full"></span>
+                        ) : (
+                            <Play color='#333333' size={20} />
+                        )}
                         <span className='text-greyPrimary font-normal text-sm'>Run</span>
                     </button>
                     <button className='flex gap-[6px] items-center py-2 px-3 rounded-[8px] hover:bg-white transition-all duration-300 ease-in'>

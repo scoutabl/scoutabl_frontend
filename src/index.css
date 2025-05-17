@@ -10,6 +10,7 @@
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
+  --color-backgroundPrimary: #EFF3FD;
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
@@ -130,7 +131,7 @@
   }
 
   body {
-    @apply bg-background text-foreground;
+    @apply bg-backgroundPrimary text-foreground;
     font-family: var(--font-sans);
   }
 
@@ -178,8 +179,6 @@
     &::-webkit-scrollbar-thumb {
       background: #5C5C5C;
       border-radius: 20px;
-      height: 40px;
-      /* Fixed height */
     }
 
     /* Hide scrollbar buttons */
