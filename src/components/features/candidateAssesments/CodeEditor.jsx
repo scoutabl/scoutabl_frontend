@@ -4,7 +4,10 @@ import CodeNavBar from './CodeNavBar'
 import { CODE_SNIPPETS } from '@/lib/constants'
 import Output from './Output'
 
-const CodeEditor = ({ testCases, inputVars }) => {
+const MIN_OUTPUT_HEIGHT = 60;
+const MIN_EDITOR_HEIGHT = 100;
+
+const CodeEditor = ({ testCases, inputVars, callPattern, collapsed }) => {
     const [value, setValue] = useState('')
     const [language, setLanguage] = useState('python')
     const editorRef = useRef()
@@ -13,6 +16,9 @@ const CodeEditor = ({ testCases, inputVars }) => {
     const [selectedCase, setSelectedCase] = useState(0)
     const [activeTab, setActiveTab] = useState('cases')
     const [loading, setLoading] = useState(false)
+    const [editorHeight, setEditorHeight] = useState(400); // px, default height
+    const [isOutputCollapsed, setIsOutputCollapsed] = useState(false);
+    const isResizing = useRef(false);
 
     const onMount = (editor) => {
         editorRef.current = editor
@@ -24,9 +30,48 @@ const CodeEditor = ({ testCases, inputVars }) => {
         setValue(CODE_SNIPPETS[language])
     }
 
+    // Mouse event handlers for resizing
+    const handleMouseDown = (e) => {
+        isResizing.current = true;
+        document.body.style.cursor = 'row-resize';
+        window.addEventListener('mousemove', handleMouseMove);
+        window.addEventListener('mouseup', handleMouseUp);
+    };
+    const handleMouseMove = (e) => {
+        if (!isResizing.current) return;
+        const container = document.querySelector('.editor-output-container');
+        const containerTop = container.getBoundingClientRect().top;
+        const containerHeight = container.offsetHeight;
+        const newEditorHeight = e.clientY - containerTop;
+        const newOutputHeight = containerHeight - newEditorHeight - 8; // 8px for resizer
+
+        // Collapse Output if too small
+        setIsOutputCollapsed(newOutputHeight <= MIN_OUTPUT_HEIGHT);
+
+        // Prevent editor from being too small or too large
+        if (newEditorHeight > MIN_EDITOR_HEIGHT && newOutputHeight > MIN_OUTPUT_HEIGHT) {
+            setEditorHeight(newEditorHeight);
+        }
+    };
+    const handleMouseUp = () => {
+        isResizing.current = false;
+        document.body.style.cursor = '';
+        window.removeEventListener('mousemove', handleMouseMove);
+        window.removeEventListener('mouseup', handleMouseUp);
+    };
+
+    if (collapsed) {
+        // Only show the vertical CodeNavBar, nothing else
+        return (
+            <div className="flex flex-col items-center justify-center h-full w-full bg-black">
+                <CodeNavBar collapsed />
+            </div>
+        )
+    }
+
     return (
-        <div className="flex-1 flex flex-col gap-3">
-            <div className="flex-1 flex flex-col min-h-0 rounded-2xl">
+        <div className="editor-output-container flex flex-col h-full min-h-0 min-w-0 overflow-x-auto">
+            <div style={{ height: editorHeight, minHeight: MIN_EDITOR_HEIGHT }} className="rounded-2xl flex flex-col">
                 <div className='px-6 py-3 bg-purpleSecondary rounded-tl-2xl rounded-tr-2xl'>
                     <CodeNavBar
                         language={language}
@@ -40,13 +85,15 @@ const CodeEditor = ({ testCases, inputVars }) => {
                         setActiveTab={setActiveTab}
                         setLoading={setLoading}
                         loading={loading}
+                        callPattern={callPattern}
                     />
                 </div>
-                <div className="flex-1 min-h-0 rounded-bl-2xl round-br-2xl overflow-hidden border border-gray-200">
+                <div className="flex-1 min-h-0 rounded-bl-2xl rounded-br-2xl overflow-auto border border-gray-200">
                     <Editor
                         language={language}
                         defaultValue={CODE_SNIPPETS[language]}
-                        height="525px"
+                        height="100%"
+                        width="100%"
                         theme='vs-dark'
                         onMount={onMount}
                         value={value}
@@ -54,18 +101,29 @@ const CodeEditor = ({ testCases, inputVars }) => {
                     />
                 </div>
             </div>
-            <Output
-                output={output}
-                testCases={testCases}
-                userTestCases={userTestCases}
-                setUserTestCases={setUserTestCases}
-                inputVars={inputVars}
-                selectedCase={selectedCase}
-                setSelectedCase={setSelectedCase}
-                activeTab={activeTab}
-                setActiveTab={setActiveTab}
-                loading={loading}
-            />
+            {/* Resizer bar */}
+            <div
+                className="h-2 w-full flex items-center justify-center cursor-row-resize bg-gray-200"
+                onMouseDown={handleMouseDown}
+                style={{ minHeight: 8, maxHeight: 8 }}
+            >
+                <div className="w-12 h-1 rounded-full bg-greyAccent" />
+            </div>
+            <div style={{ flex: 1, minHeight: 0 }}>
+                <Output
+                    output={output}
+                    testCases={testCases}
+                    userTestCases={userTestCases}
+                    setUserTestCases={setUserTestCases}
+                    inputVars={inputVars}
+                    selectedCase={selectedCase}
+                    setSelectedCase={setSelectedCase}
+                    activeTab={activeTab}
+                    setActiveTab={setActiveTab}
+                    loading={loading}
+                    collapsed={isOutputCollapsed}
+                />
+            </div>
         </div>
     )
 }

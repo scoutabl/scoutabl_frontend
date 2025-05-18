@@ -9,7 +9,7 @@
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) + 4px);
+  --radius-xl: calc(var(--radius) + 2px);
   --color-backgroundPrimary: #EFF3FD;
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -199,6 +199,7 @@
 
   /* colors */
   --color-bluePrimary: #0084FF;
+  --color-blueSecondary: #E2EAFF;
   --color-purplePrimary: #8B5CF6;
   --color-purpleSecondary: #CFDDFD;
   --color-purpleTertiary: ##E8DEFD;
@@ -237,4 +238,19 @@
   }
 
 
+}
+
+/* Container query for CodeNavBar responsive buttons */
+.code-navbar-container {
+  container-type: inline-size;
+}
+
+.code-navbar-btn-label {
+  display: inline;
+}
+
+@container (max-width: 400px) {
+  .code-navbar-btn-label {
+    display: none;
+  }
 }

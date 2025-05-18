@@ -18,15 +18,17 @@ const ALLOWED_LANGUAGES = [
 const CodeNavBar = ({
     language, onSelect, editorRef, setOutput,
     testCases = [], userTestCases = [], inputVars = [],
-    selectedCase, setActiveTab, setLoading, loading
+    selectedCase, setActiveTab, setLoading, loading, callPattern,
+    collapsed
 }) => {
     const [open, setIsOpen] = useState(false)
     const [languages, setLanguages] = useState([])
     const [error, setError] = useState(null)
 
     useEffect(() => {
+        if (collapsed) return;
         const getRuntimes = async () => {
-            setLoading(true)
+            setLoading && setLoading(true)
             setError(null)
             try {
                 const data = await fetchLanguageRuntimes();
@@ -37,74 +39,95 @@ const CodeNavBar = ({
                     return match ? { ...match, display } : null;
                 }).filter(Boolean);
                 setLanguages(filtered)
-                console.log(data)
             } catch (err) {
                 setError('Failed to load languages')
             } finally {
-                setLoading(false)
+                setLoading && setLoading(false)
             }
         }
         getRuntimes();
-    }, [])
+    }, [collapsed])
 
     const handleSelect = (lang) => {
-        onSelect(lang);
+        onSelect && onSelect(lang);
         setIsOpen(false)
     }
 
     //run code
     const handleRunCode = async () => {
-        setLoading(true);
-        setActiveTab('results');
-        const sourceCode = editorRef.current.getValue();
+        if (collapsed) return;
+        setLoading && setLoading(true);
+        setActiveTab && setActiveTab('results');
+        const sourceCode = editorRef?.current?.getValue?.();
         if (!sourceCode) {
-            toast.error("Please write some code first");
-            setLoading(false);
+            setLoading && setLoading(false);
             return;
         }
         const selected = languages.find(l => l.language === language || l.aliases?.includes(language));
         const version = selected?.version;
         if (!version) {
-            toast.error("Language version not found");
-            setLoading(false);
+            setLoading && setLoading(false);
             return;
         }
-
-        // Combine all test cases
         const allCases = [...(testCases || []), ...(userTestCases || [])];
-        const tc = allCases[selectedCase] || allCases[0]; // fallback to first if not found
-
+        const tc = allCases[selectedCase] || allCases[0];
         let injectedCode = sourceCode;
         if (language === 'javascript') {
-            let varLines = inputVars.map(v => `${v} = ${tc[v]};`).join('\n');
-            injectedCode = `${varLines}\n${sourceCode}`;
+            let varLines = '';
+            if (inputVars.length === 1) {
+                varLines = `let ${inputVars[0]} = ${JSON.stringify(tc.input)};`;
+            } else {
+                varLines = inputVars.map((v, i) => `let ${v} = ${JSON.stringify(tc.input[i])};`).join('\n');
+            }
+            injectedCode = `${varLines}\n${sourceCode}\n${callPattern}`;
         }
-        // For other languages, adjust as needed
-
         try {
+            const start = Date.now();
             const response = await executeCode(language, injectedCode, version);
-            setOutput([{
-                input: inputVars.map(v => ({ name: v, value: tc[v] })),
+            const end = Date.now();
+            const runtime = end - start;
+            const normalize = v => (v === undefined || v === null) ? '' : String(v).trim();
+            const isCorrect = normalize(response.run.output) === normalize(tc.output);
+            setOutput && setOutput([{
+                input: inputVars.length === 1
+                    ? [{ name: inputVars[0], value: tc.input }]
+                    : inputVars.map((v, i) => ({ name: v, value: tc.input[i] })),
                 expected: tc.output,
                 stdout: response.run.stdout?.trim() ?? '',
                 output: response.run.output?.trim() ?? '',
+                isCorrect,
+                runtime,
             }]);
         } finally {
-            setLoading(false);
+            setLoading && setLoading(false);
         }
     }
 
+    if (collapsed) {
+        // Render vertical icon-only navbar
+        return (
+            <div className="flex flex-col items-center justify-center gap-6 h-full w-full bg-bluePrimary">
+                <button title="Language" className="p-2 rounded hover:bg-gray-800">
+                    <Braces color='#fff' size={24} />
+                </button>
+                <button title="Run" className="p-2 rounded hover:bg-gray-800">
+                    <Play color='#fff' size={24} />
+                </button>
+                <button title="Submit" className="p-2 rounded hover:bg-gray-800">
+                    <FaCheckCircle color='#1EA378' size={24} />
+                </button>
+                <button title="Reset" className="p-2 rounded hover:bg-gray-800">
+                    <RotateCcw color='#EB5757' size={24} />
+                </button>
+            </div>
+        );
+    }
+
     return (
-        <div className='flex justify-between'>
+        <div className='flex justify-between min-w-0 overflow-x-auto code-navbar-container'>
             {/* language selector */}
             <Popover open={open} onOpenChange={setIsOpen}>
                 <PopoverTrigger asChild>
-                    {/* <button
-                        className="flex items-center gap-[6px] p-0 w-fit justify-between"
-                    >
-                        <span className="text-sm text-greyPrimary font-medium ml-1">{language}&nbsp;({LANGUAGE_VERSIONS[language]})</span>
-                        <ChevronDown />
-                    </button> */}
                     <button
                         className="flex items-center gap-[6px] p-0 justify-between px-3"
                         disabled={loading || !!error}
@@ -122,7 +145,6 @@ const CodeNavBar = ({
                         <ChevronDown />
                     </button>
                 </PopoverTrigger>
-
                 <PopoverContent className="rounded-2xl flex flex-col p-0 max-w-[180px] ml-8" sideOffset={12} >
                     {loading && <div className="p-4 text-center text-sm">Loading...</div>}
                     {error && <div className="p-4 text-center text-sm text-red-500">{error}</div>}
@@ -174,15 +196,15 @@ const CodeNavBar = ({
                         ) : (
                             <Play color='#333333' size={20} />
                         )}
-                        <span className='text-greyPrimary font-normal text-sm'>Run</span>
+                        <span className='text-greyPrimary font-normal text-sm code-navbar-btn-label'>Run</span>
                     </button>
                     <button className='flex gap-[6px] items-center py-2 px-3 rounded-[8px] hover:bg-white transition-all duration-300 ease-in'>
                         <FaCheckCircle color='#1EA378' size={20} />
-                        <span className='text-greyPrimary font-normal text-sm'>Submit</span>
+                        <span className='text-greyPrimary font-normal text-sm code-navbar-btn-label'>Submit</span>
                     </button>
                     <button className='flex gap-[6px] items-center py-2 px-3 rounded-[8px] hover:bg-white transition-all duration-300 ease-in'>
                         <RotateCcw color='#EB5757' size={20} />
-                        <span className='text-greyPrimary font-normal text-sm'>Reset</span>
+                        <span className='text-greyPrimary font-normal text-sm code-navbar-btn-label'>Reset</span>
                     </button>
                 </div>
                 {/* resize buttons */}
