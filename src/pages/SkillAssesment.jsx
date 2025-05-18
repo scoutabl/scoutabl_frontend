@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState } from 'react';
 import { questions } from '../lib/questions';
 import WaveformComponent from '../components/WavesurferComponent';
 import { cn } from '@/lib/utils';
@@ -41,8 +41,7 @@ const MCQQuestion = ({ question, onAnswer, selectedAnswer }) => (
     </div>
 );
 
-const RatingQuestion = ({ question, onAnswer, selectedAnswer }) => {
-
+const RatingQuestion = ({ onAnswer, selectedAnswer }) => {
     const [rating, setRating] = useState(selectedAnswer || 0);
 
     const emojis = [
@@ -155,7 +154,7 @@ const RearrangeQuestion = ({ question, onAnswer, currentOrder = [] }) => {
     );
 };
 
-const CodingQuestion = ({ question, onAnswer, answer = '' }) => (
+const CodingQuestion = ({ onAnswer, answer = '' }) => (
     <div className="space-y-4 my-auto">
         <div className="p-4 rounded-lg border border-gray-200 bg-[#1E1E1E]">
             <textarea
@@ -168,9 +167,8 @@ const CodingQuestion = ({ question, onAnswer, answer = '' }) => (
     </div>
 );
 
-const VoiceQuestion = ({ question, onAnswer, recording = false }) => {
+const VoiceQuestion = ({ onAnswer, recording = false }) => {
     const [isRecording, setIsRecording] = useState(recording);
-    const [timeLeft, setTimeLeft] = useState(question.durationSeconds);
     const [audioBlob, setAudioBlob] = useState(null);
 
     const toggleRecording = () => {
@@ -236,13 +234,9 @@ const VoiceQuestion = ({ question, onAnswer, recording = false }) => {
     );
 };
 
-const VideoQuestion = ({ question, onAnswer }) => {
-    const [blob, setBlob] = useState(null);
-
-    // This function will be called when the video is submitted
+const VideoQuestion = ({ onAnswer }) => {
     const handleVideoSubmit = (videoBlob) => {
         if (videoBlob) {
-            setBlob(videoBlob);
             onAnswer(videoBlob);
         }
     };
@@ -252,7 +246,7 @@ const VideoQuestion = ({ question, onAnswer }) => {
     );
 };
 
-const LongAnswerQuestion = ({ question, onAnswer, answer = '' }) => {
+const LongAnswerQuestion = () => {
     const [post, setPost] = useState("")
 
     const onChange = (content) => {

@@ -237,11 +237,10 @@ const SignupPage = () => {
 
 
     return (
-        <div className="flex flex-col md:flex-row min-h-screen">
+        <div className='min-h-screen flex'>
             <GradientBackground />
             {/* Right: Form */}
-            {/* <div className="w-full md:w-1/2 min-w-[350px] flex flex-col justify-center px-4 md:px-12 bg-white"> */}
-            <div className="w-full md:w-1/2 flex flex-col justify-center items-center px-6 py-8 relative bg-white">
+            <div className="w-full md:w-1/2 md:ml-auto flex flex-col justify-center items-center p-4 sm:p-6 md:p-8 bg-white min-h-screen">
                 <div className="w-full max-w-[342px]">
                     <h1 className='text-4xl md:text-[52px] font-bold text-greyPrimary mb-6'>
                         Welcome to Scoutabl

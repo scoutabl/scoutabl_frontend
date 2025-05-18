@@ -8,6 +8,8 @@ import { AuthProvider, useAuth } from './context/AuthContext'
 import AuthNavbar from './components/AuthNavbar'
 import { Toaster } from './components/ui/sonner'
 import NotFoundPage from './pages/NotFoundPage';
+import { AnimatePresence } from 'framer-motion';
+import { PageTransition } from './components/PageTransition';
 
 // Protected Route component
 const ProtectedRoute = ({ children }) => {
@@ -26,15 +28,79 @@ const ProtectedRoute = ({ children }) => {
 
 // Navigation wrapper component
 const NavigationWrapper = ({ children }) => {
-  const { user } = useAuth();
+  // const { user } = useAuth();
   const location = useLocation();
   const isAuthPage = ['/login', '/register'].includes(location.pathname);
 
   return (
     <>
       {isAuthPage ? <AuthNavbar /> : ""}
-      {children}
+      <AnimatePresence mode="wait">
+        {children}
+      </AnimatePresence>
     </>
+  );
+};
+
+// Routes wrapper component
+const RoutesWithTransitions = () => {
+  const location = useLocation();
+
+  return (
+    <Routes location={location} key={location.pathname}>
+      <Route
+        path="/login"
+        element={
+          <PageTransition>
+            <LoginPage />
+          </PageTransition>
+        }
+      />
+      <Route
+        path="/register"
+        element={
+          <PageTransition>
+            <SignupPage />
+          </PageTransition>
+        }
+      />
+      {/* <Route path='/organization-setup' element={<OrganizationSetupPage />} /> */}
+
+      {/* Protected routes */}
+      <Route
+        path="/dashboard"
+        element={
+          <ProtectedRoute>
+            <PageTransition>
+              <HomePage />
+            </PageTransition>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/assesment"
+        element={
+          <ProtectedRoute>
+            <PageTransition>
+              <SkillAssesment />
+            </PageTransition>
+          </ProtectedRoute>
+        }
+      />
+      {/* Redirect root to dashboard or login based on auth state */}
+      <Route
+        path="/"
+        element={<Navigate to="/dashboard" replace />}
+      />
+      <Route
+        path="*"
+        element={
+          <PageTransition>
+            <NotFoundPage />
+          </PageTransition>
+        }
+      />
+    </Routes>
   );
 };
 
@@ -43,35 +109,7 @@ function App() {
     <Router>
       <AuthProvider>
         <NavigationWrapper>
-          <Routes>
-            <Route path="/login" element={<LoginPage />} />
-            <Route path="/register" element={<SignupPage />} />
-            {/* <Route path='/organization-setup' element={<OrganizationSetupPage />} /> */}
-
-            {/* Protected routes */}
-            <Route
-              path="/dashboard"
-              element={
-                <ProtectedRoute>
-                  <HomePage />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/assesment"
-              element={
-                <ProtectedRoute>
-                  <SkillAssesment />
-                </ProtectedRoute>
-              }
-            />
-            {/* Redirect root to dashboard or login based on auth state */}
-            <Route
-              path="/"
-              element={<Navigate to="/dashboard" replace />}
-            />
-            <Route path="*" element={<NotFoundPage />} />
-          </Routes>
+          <RoutesWithTransitions />
         </NavigationWrapper>
         <Toaster />
       </AuthProvider>

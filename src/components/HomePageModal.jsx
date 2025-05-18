@@ -10,9 +10,50 @@ import { Button } from './ui/button'
 import { ChevronRight, ChevronLeft } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { cn } from '@/lib/utils'
+
+const modalVariants = {
+    hidden: {
+        scale: 0.9,
+        opacity: 0,
+        transition: { duration: 0.3, ease: "easeInOut" }
+
+    },
+    visible: {
+        scale: 1,
+        opacity: 1,
+        transition: {
+            type: "spring",
+            stiffness: 300,
+            damping: 30,
+            duration: 0.3
+        }
+    },
+    exit: {
+        scale: 0.9,
+        opacity: 0,
+        transition: { duration: 0.2 }
+    }
+};
+
+const stepVariants = {
+    enter: (direction) => ({
+        x: direction > 0 ? 50 : -50,
+        opacity: 0
+    }),
+    center: {
+        x: 0,
+        opacity: 1
+    },
+    exit: (direction) => ({
+        x: direction < 0 ? 50 : -50,
+        opacity: 0
+    })
+};
+
 const HomePageModal = ({ onClose }) => {
     const [selectedOption, setSelectedOption] = useState(null);
     const [currentStep, setCurrentStep] = useState('test');
+    const [direction, setDirection] = useState(0);
     const modalRef = useRef(null);
 
     useEffect(() => {
@@ -28,11 +69,13 @@ const HomePageModal = ({ onClose }) => {
 
     const handleNext = () => {
         if (selectedOption) {
+            setDirection(1);
             setCurrentStep('role');
         }
     };
 
     const handleBack = () => {
+        setDirection(-1);
         setCurrentStep('test');
     };
 
@@ -103,31 +146,50 @@ const HomePageModal = ({ onClose }) => {
 
     return (
         <motion.div
-            initial={{ scale: 0.9, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            exit={{ scale: 0.9, opacity: 0 }}
-            transition={{ duration: 0.2 }}
+            variants={modalVariants}
+            initial="hidden"
+            animate="visible"
+            exit="exit"
             className='relative w-[1139px] h-[644px] rounded-[16px] flex flex-col items-center justify-center mx-auto [box-shadow:0px_16px_24px_rgba(0,_0,_0,_0.06),_0px_2px_6px_rgba(0,_0,_0,_0.04)] overflow-hidden bg-white'
             ref={modalRef}
+            style={{ willChange: "transform" }}
         >
-            <AnimatePresence mode="wait">
+            <AnimatePresence mode="wait" custom={direction}>
                 {currentStep === 'test' ? (
-                    // first step
                     <motion.div
                         key="test-content"
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: 20 }}
-                        transition={{ duration: 0.3 }}
+                        custom={direction}
+                        variants={stepVariants}
+                        initial="enter"
+                        animate="center"
+                        exit="exit"
+                        transition={{
+                            type: "spring",
+                            stiffness: 300,
+                            damping: 30
+                        }}
                         className='flex flex-col items-center justify-center gap-[52px]'
                     >
                         <motion.div
-                            initial={{ opacity: 0, y: 20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ duration: 0.4, delay: 0.1 }}
+                            // initial={{ opacity: 0, y: 20 }}
+                            // animate={{ opacity: 1, y: 0 }}
+                            // transition={{ duration: 0.4, delay: 0.2 }}
+                            className='flex flex-col items-center justify-center'
                         >
-                            <h2 className='text-[32px] font-light pb-3'>Which kind of test fits your <span className='bg-gradient-to-r from-[#806BFF] to-[#A669FD] inline-block text-transparent bg-clip-text'>#hiring flow?</span></h2>
-                            <p className='text-[#5C5C5C] text-sm font-medium text-center'>These answers help Scoutabl shape an experience that fits you like a tailored suit—minus the stitching</p>
+                            <motion.h2
+                                className='text-[32px] font-light pb-3'
+                                initial={{ opacity: 0, y: 20 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ duration: 0.4, delay: 0.2 }}
+                            >
+                                Which kind of test fits your <span className='bg-gradient-to-r from-[#806BFF] to-[#A669FD] inline-block text-transparent bg-clip-text'>#hiring flow?</span></motion.h2>
+                            <motion.p
+                                className='text-[#5C5C5C] text-sm font-medium text-center'
+                                initial={{ opacity: 0, y: 20 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ duration: 0.4, delay: 0.4 }}
+                            >
+                                These answers help Scoutabl shape an experience that fits you like a tailored suit—minus the stitching</motion.p>
                         </motion.div>
                         <motion.div
                             className='flex items-center justify-between gap-10'
@@ -180,26 +242,39 @@ const HomePageModal = ({ onClose }) => {
                         </motion.div>
                     </motion.div>
                 ) : (
-                    // second step
                     <motion.div
                         key="role-content"
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: 20 }}
-                        transition={{ duration: 0.3 }}
+                        custom={direction}
+                        variants={stepVariants}
+                        initial="enter"
+                        animate="center"
+                        exit="exit"
+                        transition={{
+                            type: "spring",
+                            stiffness: 300,
+                            damping: 30
+                        }}
                         className="flex flex-col items-center justify-center gap-[52px]"
                     >
                         <motion.div
-                            initial={{ opacity: 0, y: -20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ duration: 0.4, delay: 0.1 }}
+                            className='flex flex-col items-center justify-center'
                         >
-                            <h2 className="text-[32px] font-light pb-3">Which best describes your <span className="bg-gradient-to-r from-[#806BFF] to-[#A669FD] inline-block text-transparent bg-clip-text">#role</span>?</h2>
-                            <p className="text-[#5C5C5C] text-sm font-medium text-center">
+                            <motion.h2
+                                className="text-[32px] font-light pb-3"
+                                initial={{ opacity: 0, y: 20 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ duration: 0.4, delay: 0.2 }}
+                            >Which best describes your <span className="bg-gradient-to-r from-[#806BFF] to-[#A669FD] inline-block text-transparent bg-clip-text">#role</span>?</motion.h2>
+                            <motion.p
+                                className="text-[#5C5C5C] text-sm font-medium text-center"
+                                initial={{ opacity: 0, y: 20 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ duration: 0.4, delay: 0.4 }}
+                            >
                                 Your role helps Scoutabl customize the experience to suit your needs
                                 <br />
                                 —no fine-tuning necessary.
-                            </p>
+                            </motion.p>
                         </motion.div>
                         <motion.div
                             className='flex items-center justify-between gap-10'
@@ -261,7 +336,14 @@ const HomePageModal = ({ onClose }) => {
                 )}
             </AnimatePresence>
 
-            <img src={bottomBg} alt="Bottom Background" className='absolute bottom-0 right-0' />
+            <motion.img
+                src={bottomBg}
+                alt="Bottom Background"
+                className='absolute bottom-0 right-0'
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.3, ease: "easeInOut", type: "spring", stiffness: 300, damping: 30 }}
+            />
         </motion.div>
     )
 }
