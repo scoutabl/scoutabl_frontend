@@ -1,5 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { cn } from '@/lib/utils';
+import AssessmentNavbar from '@/components/shared/AssesmentNavbar';
 
 import CodeEditor from './CodeEditor';
 import { questionsData } from '@/lib/codingQuestions';
@@ -86,58 +87,61 @@ export default function CodingAssesment() {
     };
 
     return (
-        <div className='flex gap-3 px-12 py-6 h-screen min-w-0'>
-            <div
-                ref={sidebarRef}
-                style={{
-                    width: isSidebarCollapsed ? minSidebarWidth : (isCollapsed ? 60 : sidebarWidth),
-                    minWidth: minSidebarWidth,
-                    maxWidth: maxSidebarWidth,
-                    transition: isResizing.current ? 'none' : 'width 0.2s'
-                }}
-                className="h-full"
-            >
-                <CodeSidebar
-                    isCollapsed={isSidebarCollapsed}
-                    collapsed={isSidebarCollapsed}
-                    activeTab={activeTab}
-                    setActiveTab={setActiveTab}
-                    currentQuestion={currentQuestion}
-                    setCurrentQuestion={setCurrentQuestion}
-                    totalQuestions={totalQuestions}
-                    toggleSidebar={toggleSidebar}
-                    currentQuestionData={currentQuestionData}
-                    submissionsData={submissionsData}
-                    getStatusColor={getStatusColor}
-                />
-            </div>
-            {/* Resizer bar as a flex child with a vertical grip */}
-            <div
-                className='h-full w-2 flex items-center justify-center cursor-ew-resize transition-colors duration-150 z-20'
-                style={{ minWidth: 8, maxWidth: 8 }}
-                onMouseDown={handleMouseDown}
-            >
-                <div className="w-1 h-6 rounded-full bg-greyAccent" />
-            </div>
-            {isEditorCollapsed ? (
-                <div className="flex-1 h-full min-w-0 bg-black">
-                    <CodeEditor
-                        testCases={currentQuestionData.testCases}
-                        inputVars={currentQuestionData.inputVars}
-                        callPattern={currentQuestionData.callPattern}
-                        collapsed={true}
+        <>
+            <AssessmentNavbar currentIndex={currentQuestion} total={totalQuestions} timeLeft={100} />
+            <div className='flex gap-3 px-12 py-6 h-screen min-w-0'>
+                <div
+                    ref={sidebarRef}
+                    style={{
+                        width: isSidebarCollapsed ? minSidebarWidth : (isCollapsed ? 60 : sidebarWidth),
+                        minWidth: minSidebarWidth,
+                        maxWidth: maxSidebarWidth,
+                        transition: isResizing.current ? 'none' : 'width 0.2s'
+                    }}
+                    className="h-full"
+                >
+                    <CodeSidebar
+                        isCollapsed={isSidebarCollapsed}
+                        collapsed={isSidebarCollapsed}
+                        activeTab={activeTab}
+                        setActiveTab={setActiveTab}
+                        currentQuestion={currentQuestion}
+                        setCurrentQuestion={setCurrentQuestion}
+                        totalQuestions={totalQuestions}
+                        toggleSidebar={toggleSidebar}
+                        currentQuestionData={currentQuestionData}
+                        submissionsData={submissionsData}
+                        getStatusColor={getStatusColor}
                     />
                 </div>
-            ) : (
-                <div className='flex-1 h-full min-w-0'>
-                    <CodeEditor
-                        testCases={currentQuestionData.testCases}
-                        inputVars={currentQuestionData.inputVars}
-                        callPattern={currentQuestionData.callPattern}
-                        collapsed={false}
-                    />
+                {/* Resizer bar as a flex child with a vertical grip */}
+                <div
+                    className='h-full w-2 flex items-center justify-center cursor-ew-resize transition-colors duration-150 z-20'
+                    style={{ minWidth: 8, maxWidth: 8 }}
+                    onMouseDown={handleMouseDown}
+                >
+                    <div className="w-1 h-6 rounded-full bg-greyAccent" />
                 </div>
-            )}
-        </div>
+                {isEditorCollapsed ? (
+                    <div className="flex-1 h-full min-w-0 bg-black">
+                        <CodeEditor
+                            testCases={currentQuestionData.testCases}
+                            inputVars={currentQuestionData.inputVars}
+                            callPattern={currentQuestionData.callPattern}
+                            collapsed={true}
+                        />
+                    </div>
+                ) : (
+                    <div className='flex-1 h-full min-w-0'>
+                        <CodeEditor
+                            testCases={currentQuestionData.testCases}
+                            inputVars={currentQuestionData.inputVars}
+                            callPattern={currentQuestionData.callPattern}
+                            collapsed={false}
+                        />
+                    </div>
+                )}
+            </div>
+        </>
     );
 }

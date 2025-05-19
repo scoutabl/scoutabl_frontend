@@ -17,6 +17,7 @@ import emoji3 from '/emoji3.svg'
 import emoji4 from '/emoji4.svg'
 import emoji5 from '/emoji5.svg'
 import CodingAssesment from '@/components/features/candidateAssesments/CodingAssesment';
+import AssessmentNavbar from '@/components/shared/AssesmentNavbar';
 // Question type components
 const MCQQuestion = ({ question, onAnswer, selectedAnswer }) => (
     <div className="space-y-4 my-auto">
@@ -309,22 +310,10 @@ const SkillAssesment = () => {
 
     return (
         <>
-            <div className='min-h-screen flex flex-col gap-6 py-6'>
+            <div className='min-h-screen flex flex-col gap-6 py-6 px-12'>
                 {/* Top Navbar */}
-                <div className='flex items-center justify-between px-12'>
-                    <div className='flex gap-1 items-center justify-center'>
-                        <img src={logo} alt='scoutabl logo' className='h-[30px] w-[30px]' />
-                        <h1 className='text-2xl text-greyPrimary font-bold'>Scoutabl</h1>
-                    </div>
-                    <div>
-                        <span className="text-base font-normal">Problem Solving <span className='font-bold text-greyPrimary'>({currentQuestionIndex + 1}/{questions.length})</span></span>
-                    </div>
-                    <div className='flex gap-1 items-center justify-center'>
-                        <img src={timerLogo} alt='timer logo' />
-                        <span>time Left:</span>
-                    </div>
-                </div>
-                <div className="flex-1 flex gap-8 px-12">
+                <AssessmentNavbar currentIndex={currentQuestionIndex} total={questions.length} timeLeft={100} />
+                <div className="flex-1 flex gap-8 px-12 h-[calc(100vh_-_116px)]">
                     {/* Left Sidebar */}
                     <div className="w-[40%] max-w-[531px] min-w-[330px] flex flex-col gap-6 bg-white rounded-[20px] p-6 border-[1px] border-[rgba(224,224,224,0.65)] [box-shadow:0px_16px_24px_rgba(0,_0,_0,_0.06),_0px_2px_6px_rgba(0,_0,_0,_0.04)]">
                         <div className="flex items-center justify-between">

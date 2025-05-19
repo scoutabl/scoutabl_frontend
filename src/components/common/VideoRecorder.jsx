@@ -5,6 +5,7 @@ import reSubmitIcon from '/retryBtn.svg'
 import recordBtnIcon from '/recordBtn.svg'
 import stopRecordingBtnIcon from '/stopRecordingBtn.svg'
 import submitRecordingBtnIcon from '/recordSubmitBtn.svg'
+import circleCheckIcon from '/circleCheck.svg'
 export default function VideoRecorder({ onSubmitVideo }) {
     const [recordedBlob, setRecordedBlob] = useState(null);
     const videoRef = useRef(null);
@@ -372,7 +373,7 @@ export default function VideoRecorder({ onSubmitVideo }) {
 
     return (
         <div className="flex flex-col w-full h-full items-center gap-2">
-            <div className="relative w-full overflow-hidden rounded-xl bg-black h-[min(380px,50vh)] md:h-[min(420px,55vh)] lg:h-[min(480px,60vh)]">
+            <div className="relative w-full overflow-hidden rounded-xl bg-black h-[min(380px,50vh)] md:h-[min(420px,55vh)] lg:h-[min(350px,50vh)]">
                 {error && (
                     <div className="absolute inset-0 bg-black bg-opacity-70 flex flex-col items-center justify-center text-white z-10">
                         <p className="text-red-400 text-center mb-2">{error}</p>
@@ -393,9 +394,9 @@ export default function VideoRecorder({ onSubmitVideo }) {
                 />
             </div>
 
-            <div className="flex items-center justify-between w-full bg-white rounded-lg p-1 border border-gray-100">
+            <div className="flex items-center justify-evenly w-full bg-white rounded-lg p-1 shadow-md">
                 <div id="siri-container" className="w-3/4 h-[70px] bg-white" />
-                <span className="font-semibold text-right w-1/4 pr-2">
+                <span className="font-semibold text-right pr-2">
                     {Math.floor(timeLeft / 60)}:{(timeLeft % 60).toString().padStart(2, '0')} mins
                 </span>
             </div>
@@ -405,26 +406,30 @@ export default function VideoRecorder({ onSubmitVideo }) {
                 <div className="flex gap-12 justify-center w-full">
                     <button
                         onClick={handleRetry}
-                        className="flex flex-col gap-1 items-center justify-center text-greyAccent"
+                        className="group flex flex-col gap-2 items-center justify-center text-greyAccent "
                     >
-                        <img src={reSubmitIcon} alt='retry Icon' className='h-[45px] w-[45px]' />
-                        <span className="text-sm">Re-Submit</span>
+                        <div className='bg-transparent rounded-full p-2 h-[52px] w-[52px] flex items-center justify-center group-hover:bg-black group-hover:text-white transition-all duration-300'>
+                            <img src={reSubmitIcon} alt='retry Icon' className='group-hover:invert group-hover:scale-110 transition-all duration-300' />
+                        </div>
+                        <span className="text-sm font-medium">Re-Submit</span>
                     </button>
                     <button
                         onClick={recording ? handleStopRecording : handleRecord}
                         disabled={error}
-                        className="flex flex-col gap-1 items-center justify-center text-greyAccent"
+                        className="group flex flex-col gap-2 items-center justify-center text-greyAccent"
                     >
-                        {recording ? <img src={stopRecordingBtnIcon} alt='Stop Recording Icon' className='h-[45px] w-[45px]' /> : <img src={recordBtnIcon} alt='Record Icon' className='h-[45px] w-[45px]' />}
-                        <span className="text-sm">{recording ? 'Stop' : 'Record'}</span>
+                        {recording ? <img src={stopRecordingBtnIcon} alt='Stop Recording Icon' className='h-[52px] w-[52px] group-hover:bg-black group-hover:text-white transition-all duration-300 rounded-full' /> : <img src={recordBtnIcon} alt='Record Icon' className='h-[52px] w-[52px] group-hover:bg-black group-hover:text-white transition-all duration-300 rounded-full' />}
+                        <span className="text-sm font-medium">{recording ? 'Stop' : 'Record'}</span>
                     </button>
                     <button
                         onClick={handleSubmit}
                         disabled={!recordedVideoURL}
-                        className="flex flex-col gap-1 items-center justify-center text-greyAccent"
+                        className="group flex flex-col gap-2 items-center justify-center text-greyAccent"
                     >
-                        <img src={submitRecordingBtnIcon} alt='Stop Recording Icon' className='h-[45px] w-[45px]' />
-                        <span className="text-sm">Submit</span>
+                        <div className='bg-black rounded-full p-2 h-[52px] w-[52px] flex items-center justify-center transition-all duration-300 group-hover:bg-[#008B00]'>
+                            <img src={circleCheckIcon} alt='Stop Recording Icon' className='h-[25px] w-[25px]' />
+                        </div>
+                        <span className="text-sm font-medium">Submit</span>
                     </button>
                 </div>
             </div>
