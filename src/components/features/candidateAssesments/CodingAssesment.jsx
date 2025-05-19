@@ -1,30 +1,25 @@
-import React, { useState, useRef } from 'react';
+import React from 'react';
 import { cn } from '@/lib/utils';
 import AssessmentNavbar from '@/components/shared/AssesmentNavbar';
-
 import CodeEditor from './CodeEditor';
 import { questionsData } from '@/lib/codingQuestions';
 import CodeSidebar from './CodeSidebar';
+import { CodingAssesmentProvider, useCodingAssesment } from './CodingAssesmentContext';
 
-export default function CodingAssesment() {
-    const [isCollapsed, setIsCollapsed] = useState(false);
-    const [activeTab, setActiveTab] = useState('description');
-    const [currentQuestion, setCurrentQuestion] = useState(1);
-    const totalQuestions = 15;
-    const [sidebarWidth, setSidebarWidth] = useState(400); // default width
-    const sidebarRef = useRef(null);
-    const isResizing = useRef(false);
-    const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
-    const [isEditorCollapsed, setIsEditorCollapsed] = useState(false);
+function CodingAssesmentInner() {
+    const {
+        activeTab, setActiveTab,
+        currentQuestion, setCurrentQuestion,
+        totalQuestions,
+        sidebarWidth, setSidebarWidth,
+        isCollapsed, setIsCollapsed,
+        isFullscreen, setIsFullscreen,
+        sidebarRef, isResizing
+    } = useCodingAssesment();
 
     const minSidebarWidth = 60;
-    const minEditorWidth = 60;
-    // Allow sidebar to take up to 99vw (almost the whole screen)
-    const maxSidebarWidth = window.innerWidth * 0.99;
-
-    const toggleSidebar = () => {
-        setIsCollapsed(!isCollapsed);
-    };
+    const minEditorWidth = 200;
+    const maxSidebarWidth = window.innerWidth * 0.90;
 
     // Get current question data
     const currentQuestionData = questionsData.find(q => q.id === currentQuestion) || questionsData[0];
@@ -63,10 +58,6 @@ export default function CodingAssesment() {
         const totalWidth = sidebarRef.current.parentElement.offsetWidth;
         const newWidth = e.clientX - sidebarRef.current.getBoundingClientRect().left;
         const editorWidth = totalWidth - newWidth - 8; // 8px for resizer
-
-        setIsSidebarCollapsed(newWidth <= minSidebarWidth);
-        setIsEditorCollapsed(editorWidth <= minEditorWidth);
-
         if (newWidth >= minSidebarWidth && editorWidth >= minEditorWidth && newWidth <= maxSidebarWidth) {
             setSidebarWidth(newWidth);
         }
@@ -86,14 +77,30 @@ export default function CodingAssesment() {
         window.addEventListener('mouseup', handleMouseUp);
     };
 
+    if (isFullscreen) {
+        // Render fullscreen overlay with only CodeEditor
+        return (
+            <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', zIndex: 9999, background: '#18181b' }}>
+                <CodeEditor
+                    testCases={currentQuestionData.testCases}
+                    inputVars={currentQuestionData.inputVars}
+                    callPattern={currentQuestionData.callPattern}
+                    fullscreen={true}
+                    onExitFullscreen={() => setIsFullscreen(false)}
+                />
+            </div>
+        );
+    }
+
     return (
         <>
             <AssessmentNavbar currentIndex={currentQuestion} total={totalQuestions} timeLeft={100} />
-            <div className='flex gap-3 px-12 py-6 h-screen min-w-0'>
+            <div className='flex gap-3 px-12 py-6 min-w-0 h-calc[100vh_-_116px]'>
+                {/* Sidebar */}
                 <div
                     ref={sidebarRef}
                     style={{
-                        width: isSidebarCollapsed ? minSidebarWidth : (isCollapsed ? 60 : sidebarWidth),
+                        width: sidebarWidth,
                         minWidth: minSidebarWidth,
                         maxWidth: maxSidebarWidth,
                         transition: isResizing.current ? 'none' : 'width 0.2s'
@@ -101,20 +108,12 @@ export default function CodingAssesment() {
                     className="h-full"
                 >
                     <CodeSidebar
-                        isCollapsed={isSidebarCollapsed}
-                        collapsed={isSidebarCollapsed}
-                        activeTab={activeTab}
-                        setActiveTab={setActiveTab}
-                        currentQuestion={currentQuestion}
-                        setCurrentQuestion={setCurrentQuestion}
-                        totalQuestions={totalQuestions}
-                        toggleSidebar={toggleSidebar}
                         currentQuestionData={currentQuestionData}
                         submissionsData={submissionsData}
                         getStatusColor={getStatusColor}
                     />
                 </div>
-                {/* Resizer bar as a flex child with a vertical grip */}
+                {/* Resizer bar */}
                 <div
                     className='h-full w-2 flex items-center justify-center cursor-ew-resize transition-colors duration-150 z-20'
                     style={{ minWidth: 8, maxWidth: 8 }}
@@ -122,26 +121,25 @@ export default function CodingAssesment() {
                 >
                     <div className="w-1 h-6 rounded-full bg-greyAccent" />
                 </div>
-                {isEditorCollapsed ? (
-                    <div className="flex-1 h-full min-w-0 bg-black">
+                {/* Main content area: flex row for editor/output */}
+                <div className='flex-1 h-full min-w-0 overflow-x-auto'>
+                    <div className='h-full min-w-[400px] flex flex-col'>
                         <CodeEditor
                             testCases={currentQuestionData.testCases}
                             inputVars={currentQuestionData.inputVars}
                             callPattern={currentQuestionData.callPattern}
-                            collapsed={true}
                         />
                     </div>
-                ) : (
-                    <div className='flex-1 h-full min-w-0'>
-                        <CodeEditor
-                            testCases={currentQuestionData.testCases}
-                            inputVars={currentQuestionData.inputVars}
-                            callPattern={currentQuestionData.callPattern}
-                            collapsed={false}
-                        />
-                    </div>
-                )}
+                </div>
             </div>
         </>
+    );
+}
+
+export default function CodingAssesment() {
+    return (
+        <CodingAssesmentProvider>
+            <CodingAssesmentInner />
+        </CodingAssesmentProvider>
     );
 }

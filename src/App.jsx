@@ -4,6 +4,7 @@ import SignupPage from './pages/SignupPage'
 import LoginPage from './pages/LoginPage'
 import HomePage from './pages/HomePage'
 import SkillAssesment from './pages/SkillAssesment'
+import CodingAssesment from './components/features/candidateAssesments/CodingAssesment'
 import { AuthProvider, useAuth } from './context/AuthContext'
 import AuthNavbar from './components/AuthNavbar'
 import { Toaster } from './components/ui/sonner'
@@ -83,6 +84,16 @@ const RoutesWithTransitions = () => {
           <ProtectedRoute>
             <PageTransition>
               <SkillAssesment />
+            </PageTransition>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/coding-assesment"
+        element={
+          <ProtectedRoute>
+            <PageTransition>
+              <CodingAssesment />
             </PageTransition>
           </ProtectedRoute>
         }

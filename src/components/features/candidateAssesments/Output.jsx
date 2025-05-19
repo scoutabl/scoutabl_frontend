@@ -1,8 +1,8 @@
 import React, { useState } from 'react'
 import { Plus, CheckSquare, BarChart2 } from 'lucide-react';
+import { cn } from '@/lib/utils';
+import OutputNavBar from './OutputNavBar';
 
-import testCaseIcon from '/testCaseIcon.svg'
-import testResultIcon from '/testResultIcon.svg'
 function formatInputValue(val) {
   try {
     if (typeof val === 'string') {
@@ -66,62 +66,29 @@ const Output = ({
     }
   };
 
-  if (collapsed) {
-    // Render only the tabs in a white, rounded container
-    return (
-      <div className="bg-white rounded-2xl shadow h-full w-full flex flex-col">
-        <div className="flex items-center gap-4 mb-6 p-6">
-          <button
-            className={`flex items-center gap-2 px-2 py-1 text-sm font-medium border-b-2 transition-colors duration-200 ${activeTab === 'cases' ? 'border-green-500 text-green-700' : 'border-transparent text-gray-500 hover:text-green-700'}`}
-            onClick={() => setActiveTab('cases')}
-          >
-            <img src={testCaseIcon} alt="testCaseIcon" />
-            Testcase
-          </button>
-          <button
-            className={`flex items-center gap-2 px-2 py-1 text-sm font-medium border-b-2 transition-colors duration-200 ${activeTab === 'results' ? 'border-green-500 text-green-700' : 'border-transparent text-gray-500 hover:text-green-700'}`}
-            onClick={() => setActiveTab('results')}
-          >
-            <img src={testResultIcon} alt="testResultIcon" />
-            Test Result
-          </button>
-        </div>
-      </div>
-    );
-  }
-
   return (
-    <div className="bg-white rounded-2xl shadow p-6 h-full flex flex-col">
+    <div className="bg-white rounded-2xl shadow  h-full flex flex-col min-w-[400px] overflow-x-auto">
       {/* Tabs */}
-      <div className="flex items-center gap-4 mb-6">
-        <button
-          className={`flex items-center gap-2 px-2 py-1 text-sm font-medium border-b-2 transition-colors duration-200 ${activeTab === 'cases' ? 'border-green-500 text-green-700' : 'border-transparent text-gray-500 hover:text-green-700'}`}
-          onClick={() => setActiveTab('cases')}
-        >
-          <img src={testCaseIcon} alt="testCaseIcon" />
-          Testcase
-        </button>
-        <button
-          className={`flex items-center gap-2 px-2 py-1 text-sm font-medium border-b-2 transition-colors duration-200 ${activeTab === 'results' ? 'border-green-500 text-green-700' : 'border-transparent text-gray-500 hover:text-green-700'}`}
-          onClick={() => setActiveTab('results')}
-        >
-          <img src={testResultIcon} alt="testResultIcon" />
-          Test Result
-        </button>
-      </div>
+      <OutputNavBar activeTab={activeTab} setActiveTab={setActiveTab} />
 
       {/* Tab Content */}
       {activeTab === 'cases' && (
-        <div className="py-2 space-y-4 flex-1 overflow-auto">
+        <div className="flex-1 overflow-auto pt-8 min-h-[330px]">
           {/* Test case tabs */}
-          <div className="flex justify-center items-center gap-2 mb-4 pt-6">
+          <div className="flex justify-center items-center gap-2">
             {allCases.map((tc, idx) => (
               <div key={idx} className="flex items-center">
                 <button
-                  className={`px-4 py-[6px] rounded-full border ${selectedCase === idx ? 'bg-purpleSecondary border-0 ' : 'bg-white border-[#CCCCCC]'} font-medium text-sm flex items-center gap-1 text-greyPrimary `}
+                  className={cn(
+                    "px-4 py-[6px] rounded-full border font-medium text-sm flex items-center gap-1 text-greyPrimary",
+                    selectedCase === idx ? "bg-purpleSecondary border-0 " : "bg-white border-[#CCCCCC]"
+                  )}
                   onClick={() => setSelectedCase(idx)}
                 >
-                  <span className={`w-2 h-2 rounded-full ${selectedCase === idx ? 'bg-[#1EA378]' : 'bg-greyPrimary'}`}></span>
+                  <span className={cn(
+                    "w-2 h-2 rounded-full",
+                    selectedCase === idx ? "bg-[#1EA378]" : "bg-greyPrimary"
+                  )}></span>
                   Case {idx + 1}
                   {idx >= (testCases ? testCases.length : 0) && (
                     <span
@@ -133,7 +100,7 @@ const Output = ({
               </div>
             ))}
             <div className='flex flex-col items-center gap-1'>
-              <div className="relative flex items-center">
+              <div className="group relative flex items-center">
                 <button
                   className="ml-2 rounded-full bg-greyPrimary flex items-center"
                   onClick={() => setSelectedCase(allCases.length)}
@@ -141,7 +108,7 @@ const Output = ({
                 >
                   <Plus color="white" />
                 </button>
-                <span className="absolute -top-[30px] -right-[60px] w-[65px] h-6 bg-purpleSecondary grid place-content-center rounded-tl-md rounded-br-md rounded-tr-md text-sm text-greyPrimary font-bold shadow">
+                <span className="absolute -top-[30px] -right-[60px] w-[65px] h-6 bg-purpleSecondary grid place-content-center rounded-tl-md rounded-br-md rounded-tr-md text-sm text-greyPrimary font-bold shadow opacity-0 group-hover:opacity-100 transition-opacity duration-200 ">
                   {allCases.length > 0 ? `${selectedCase + 1}/${allCases.length}` : '0/0'}
                 </span>
               </div>
@@ -178,8 +145,8 @@ const Output = ({
           )}
           {/* Show selected test case input */}
           {selectedCase < allCases.length && allCases[selectedCase] && (
-            <div className="space-y-2">
-              <div>
+            <div className="space-y-2 p-6">
+              <div className='flex flex-col gap-2'>
                 <span className="block font-semibold mb-2 text-sm text-greyPrimary">Input</span>
                 <div className="bg-blue-50 rounded-lg px-4 py-2 text-base">
                   <div>
@@ -200,7 +167,7 @@ const Output = ({
             </div>
           ) : (
             output.length > 0 ? (
-              <div className='w-full flex flex-col gap-4'>
+              <div className='w-full flex flex-col gap-4 min-h-[330px]'>
                 {/* Runtime Error Box */}
                 {result.stdout && result.stdout.toLowerCase().includes('error') ? (
                   <div className="bg-[#FFE5E5] border border-[#FFBABA] rounded-lg p-6 mb-2">
@@ -209,7 +176,10 @@ const Output = ({
                 ) : (
                   hasExpected && (
                     <div className="flex">
-                      <span className={`font-bold text-lg ${result.isCorrect ? 'text-[#008B00]' : 'text-[#EB5757]'}`}>
+                      <span className={cn(
+                        "font-bold text-lg",
+                        result.isCorrect ? "text-[#008B00]" : "text-[#EB5757]"
+                      )}>
                         {result.isCorrect ? 'Accepted' : 'Wrong Answer'}
                       </span>
                       {result.runtime && (
@@ -252,7 +222,7 @@ const Output = ({
                 ) : null}
               </div>
             ) : (
-              <div className="flex-1 flex items-center justify-center min-h-0 h-full overflow-hidden">
+              <div className="flex-1 flex items-center justify-center min-h-[330px] h-full overflow-hidden">
                 <span className="text-gray-400 text-lg text-center">You must run your code first</span>
               </div>
             )

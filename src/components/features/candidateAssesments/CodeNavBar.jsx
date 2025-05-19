@@ -19,7 +19,8 @@ const CodeNavBar = ({
     language, onSelect, editorRef, setOutput,
     testCases = [], userTestCases = [], inputVars = [],
     selectedCase, setActiveTab, setLoading, loading, callPattern,
-    collapsed
+    collapsed,
+    onCollapse, onExpand, onFullscreen, onExitFullscreen
 }) => {
     const [open, setIsOpen] = useState(false)
     const [languages, setLanguages] = useState([])
@@ -104,9 +105,9 @@ const CodeNavBar = ({
     }
 
     if (collapsed) {
-        // Render vertical icon-only navbar
+        // Render vertical icon-only navbar, with expand and fullscreen buttons
         return (
-            <div className="flex flex-col items-center justify-center gap-6 h-full w-full bg-bluePrimary">
+            <div className="flex flex-col items-center justify-center gap-6 h-full w-full bg-white">
                 <button title="Language" className="p-2 rounded hover:bg-gray-800">
                     <Braces color='#fff' size={24} />
                 </button>
@@ -119,12 +120,31 @@ const CodeNavBar = ({
                 <button title="Reset" className="p-2 rounded hover:bg-gray-800">
                     <RotateCcw color='#EB5757' size={24} />
                 </button>
+                {/* Expand button */}
+                {onExpand && (
+                    <button title="Expand" className="p-2 rounded hover:bg-gray-800" onClick={onExpand}>
+                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M5 8V5H8" stroke="#fff" strokeWidth="2" strokeLinecap="round" />
+                            <path d="M15 12V15H12" stroke="#fff" strokeWidth="2" strokeLinecap="round" />
+                            <path d="M5 5L10 10" stroke="#fff" strokeWidth="2" strokeLinecap="round" />
+                        </svg>
+                    </button>
+                )}
+                {/* Fullscreen button */}
+                {onFullscreen && (
+                    <button title="Fullscreen" className="p-2 rounded hover:bg-gray-800" onClick={onFullscreen}>
+                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <rect x="3" y="3" width="14" height="14" rx="2" stroke="#fff" strokeWidth="2" />
+                            <path d="M7 7H13V13H7V7Z" stroke="#fff" strokeWidth="2" />
+                        </svg>
+                    </button>
+                )}
             </div>
         );
     }
 
     return (
-        <div className='flex justify-between min-w-0 overflow-x-auto code-navbar-container'>
+        <div className='px-6 py-3 bg-purpleSecondary rounded-tl-2xl rounded-tr-2xl flex justify-between min-w-0 overflow-x-auto code-navbar-container'>
             {/* language selector */}
             <Popover open={open} onOpenChange={setIsOpen}>
                 <PopoverTrigger asChild>
@@ -207,17 +227,33 @@ const CodeNavBar = ({
                         <span className='text-greyPrimary font-normal text-sm code-navbar-btn-label'>Reset</span>
                     </button>
                 </div>
-                {/* resize buttons */}
+                {/* resize/collapse/fullscreen/exit-fullscreen buttons */}
                 <div className='flex items-center gap-4'>
-                    <button>
-                        <ChevronDown />
-                    </button>
-                    <button>
-                        <svg width="15" height="15" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M5.5 1.5H2.83333C2.09695 1.5 1.5 2.09695 1.5 2.83333V5.5M5.5 13.5H2.83333C2.09695 13.5 1.5 12.903 1.5 12.1667V9.5M9.5 1.5H12.1667C12.903 1.5 13.5 2.09695 13.5 2.83333V5.5M13.5 9.5V12.1667C13.5 12.903 12.903 13.5 12.1667 13.5H9.5" stroke="#333333" stroke-width="1.5" stroke-linecap="round" />
-                        </svg>
-
-                    </button>
+                    {/* Only show exit fullscreen if in fullscreen mode */}
+                    {onExitFullscreen ? (
+                        <button className='py-2 px-3 rounded-[8px] hover:bg-white transition-all duration-300 ease-in' onClick={onExitFullscreen} title="Exit Fullscreen">
+                            <svg width="15" height="15" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M2.833 5.5H5.5V2.833M12.167 9.5H9.5V12.167M5.5 2.833L1.5 6.833M9.5 12.167L13.5 8.167" stroke="#333333" strokeWidth="1.5" strokeLinecap="round" />
+                            </svg>
+                        </button>
+                    ) : (
+                        <>
+                            {/* collapse button */}
+                            {onCollapse && (
+                                <button className='py-2 px-3 rounded-[8px] hover:bg-white transition-all duration-300 ease-in' onClick={onCollapse} title="Collapse">
+                                    <ChevronDown />
+                                </button>
+                            )}
+                            {/* fullscreen button */}
+                            {onFullscreen && (
+                                <button className='py-2 px-3 rounded-[8px] hover:bg-white transition-all duration-300 ease-in' onClick={onFullscreen} title="Fullscreen">
+                                    <svg width="15" height="15" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                        <path d="M5.5 1.5H2.83333C2.09695 1.5 1.5 2.09695 1.5 2.83333V5.5M5.5 13.5H2.83333C2.09695 13.5 1.5 12.903 1.5 12.1667V9.5M9.5 1.5H12.1667C12.903 1.5 13.5 2.09695 13.5 2.83333V5.5M13.5 9.5V12.1667C13.5 12.903 12.903 13.5 12.1667 13.5H9.5" stroke="#333333" strokeWidth="1.5" strokeLinecap="round" />
+                                    </svg>
+                                </button>
+                            )}
+                        </>
+                    )}
                 </div>
             </div>
         </div>

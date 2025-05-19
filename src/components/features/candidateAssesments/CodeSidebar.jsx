@@ -4,20 +4,22 @@ import { ChevronLeft, ChevronRight, FileText, MessageSquare, HelpCircle, Clock, 
 import sidebarOpenIcon from '/sidebarOpen.svg';
 import sidebarCloseIcon from '/sidebarClose.svg';
 import submissionIcon from '/submissionIcon.svg';
+import { useCodingAssesment } from './CodingAssesmentContext';
 
 const CodeSidebar = ({
-    isCollapsed,
-    activeTab,
-    setActiveTab,
-    currentQuestion,
-    setCurrentQuestion,
-    totalQuestions,
-    toggleSidebar,
     currentQuestionData,
     submissionsData,
     getStatusColor
 }) => {
+    const {
+        activeTab, setActiveTab,
+        currentQuestion, setCurrentQuestion,
+        totalQuestions,
+        isCollapsed,
+        setIsCollapsed
+    } = useCodingAssesment();
     const sideBarWidthRef = useRef(0);
+    const toggleSidebar = () => setIsCollapsed(!isCollapsed);
     return (
         <aside className={cn(
             "relative bg-white rounded-[20px] border border-gray-200 shadow-md transition-all duration-300 h-full overflow-x-auto max-h-[767px]",
@@ -25,27 +27,29 @@ const CodeSidebar = ({
         )}>
             {isCollapsed ? (
                 // Collapsed view
-                <div className="flex flex-col items-center gap-6 py-4">
+                <div className="flex flex-col-reverse items-center gap-6 py-4">
                     <button
                         className={cn(
-                            "p-2 rounded-md w-full flex justify-center",
-                            activeTab === 'description' ? "bg-purple-100 text-purple-600" : "text-gray-500 hover:bg-gray-100"
-                        )}
-                        onClick={() => setActiveTab('description')}
-                    >
-                        <FileText size={20} />
-                    </button>
-                    <button
-                        className={cn(
-                            "p-2 rounded-md w-full flex justify-center",
+                            "p-2 rounded-md w-full flex flex-col items-center justify-center gap-1",
                             activeTab === 'submissions' ? "bg-purple-100 text-purple-600" : "text-gray-500 hover:bg-gray-100"
                         )}
                         onClick={() => setActiveTab('submissions')}
                     >
                         <img src={submissionIcon} alt="submissionIcon" />
+                        <span className='text-sm font-medium' style={{ writingMode: 'vertical-lr', textOrientation: 'mixed', transform: 'rotate(180deg)' }}>Submissions</span>
+                    </button>
+                    <button
+                        className={cn(
+                            "p-2 rounded-md w-full flex flex-col items-center justify-center gap-1",
+                            activeTab === 'description' ? "bg-purple-100 text-purple-600" : "text-gray-500 hover:bg-gray-100"
+                        )}
+                        onClick={() => setActiveTab('description')}
+                    >
+                        <FileText size={20} />
+                        <span className='text-sm font-medium' style={{ writingMode: 'vertical-lr', textOrientation: 'mixed', transform: 'rotate(180deg)' }}>Description</span>
                     </button>
                     {/* Collapse button */}
-                    <button onClick={toggleSidebar}>
+                    <button onClick={toggleSidebar} className='p-2 rounded-md w-full flex justify-center'>
                         {isCollapsed ? <img src={sidebarOpenIcon} alt="sidebarOpen Icon" /> : <img src={sidebarCloseIcon} alt="sidebarClose Icon" />}
                     </button>
                 </div>
@@ -138,19 +142,6 @@ const CodeSidebar = ({
                                     </div>
                                 ))}
                             </div>
-
-                            {/* <div className="space-y-2">
-                <p className="text-sm text-gray-600">
-                  <span className="font-medium">Optional: </span>
-                  {currentQuestionData.optional}
-                </p>
-              </div>
-
-              <div className="space-y-2 border-t pt-4 mt-4">
-                <p className="text-sm text-gray-600">
-                  {currentQuestionData.assessment}
-                </p>
-              </div> */}
 
                             {/* Repeated assessment text from the image */}
                             <div className="space-y-2">
