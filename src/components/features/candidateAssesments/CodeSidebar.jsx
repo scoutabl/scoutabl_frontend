@@ -108,33 +108,34 @@ const CodeSidebar = ({
                         </button>
                     </div>
 
-                    {/* Question number */}
-                    <div className="flex items-center justify-between mb-4">
-                        <div className="flex items-center gap-2">
-                            <select
-                                className="bg-gray-100 border border-gray-300 text-gray-700 rounded-md px-2 py-1 text-sm focus:outline-none"
-                                value={currentQuestion}
-                                onChange={(e) => setCurrentQuestion(parseInt(e.target.value))}
-                            >
-                                {Array.from({ length: totalQuestions }, (_, i) => (
-                                    <option key={i + 1} value={i + 1}>
-                                        Question {i + 1} of {totalQuestions}
-                                    </option>
-                                ))}
-                            </select>
-                        </div>
 
-                        <button className="flex items-center gap-1 px-3 py-1 rounded-full text-purple-600 hover:bg-purple-50 group">
-                            <div className="h-6 w-6 grid place-content-center rounded-full bg-purple-600 group-hover:bg-purple-700 text-white">
-                                <HelpCircle size={14} />
-                            </div>
-                            <span className="text-sm font-medium">Question info</span>
-                        </button>
-                    </div>
 
                     {/* Content based on active tab */}
                     {activeTab === 'description' ? (
                         <div className="space-y-6 overflow-auto max-h-[548px]">
+                            {/* Question number */}
+                            <div className="flex items-center justify-between mb-4">
+                                <div className="flex items-center gap-2">
+                                    <select
+                                        className="bg-gray-100 border border-gray-300 text-gray-700 rounded-md px-2 py-1 text-sm focus:outline-none"
+                                        value={currentQuestion}
+                                        onChange={(e) => setCurrentQuestion(parseInt(e.target.value))}
+                                    >
+                                        {Array.from({ length: totalQuestions }, (_, i) => (
+                                            <option key={i + 1} value={i + 1}>
+                                                Question {i + 1} of {totalQuestions}
+                                            </option>
+                                        ))}
+                                    </select>
+                                </div>
+
+                                <button className="flex items-center gap-1 px-3 py-1 rounded-full text-purple-600 hover:bg-purple-50 group">
+                                    <div className="h-6 w-6 grid place-content-center rounded-full bg-purple-600 group-hover:bg-purple-700 text-white">
+                                        <HelpCircle size={14} />
+                                    </div>
+                                    <span className="text-sm font-medium">Question info</span>
+                                </button>
+                            </div>
                             <h2 className="text-lg font-medium">{currentQuestionData.title}</h2>
 
                             <div className="space-y-4">
@@ -191,20 +192,29 @@ const CodeSidebar = ({
                                     <div
                                         key={submission.id}
                                         className={cn(
-                                            "grid grid-cols-5 text-sm rounded-lg p-2",
+                                            "flex items-center justify-between rounded-lg p-2",
                                             getStatusColor(submission.status)
                                         )}
                                     >
-                                        <div className="font-semibold">{String(submission.id).padStart(2, '0')}</div>
-                                        <div>{submission.status}</div>
-                                        <div className="flex items-center gap-1">
-                                            <Clock size={14} /> {submission.runtime}
+                                        <div className="flex items-center gap-2">
+                                            <span className="font-bold text-[1.875rem] text-greyPrimary">{String(submission.id).padStart(2, '0')}</span>
+                                            <span className={cn('text-sm text-bold text-[#DA4D2E]',
+                                                {
+                                                    'text-[#008B00]': submission.status === 'Accepted',
+                                                })}
+                                            >
+                                                {submission.status}</span>
                                         </div>
-                                        <div className="flex items-center gap-1">
-                                            <HardDrive size={14} /> {submission.memory}
-                                        </div>
-                                        <div className="bg-blue-500 text-white px-2 py-0.5 rounded-full text-xs flex items-center gap-1 w-fit">
-                                            <Code size={12} /> {submission.language}
+                                        <div className="flex items-center gap-2">
+                                            <div className="flex items-center gap-1">
+                                                <Clock size={14} /> {submission.runtime}
+                                            </div>
+                                            <div className="flex items-center gap-1">
+                                                <HardDrive size={14} /> {submission.memory}
+                                            </div>
+                                            <div className="bg-blue-500 text-white px-2 py-0.5 rounded-full text-xs flex items-center gap-1 w-fit">
+                                                <Code size={12} /> {submission.language}
+                                            </div>
                                         </div>
                                     </div>
                                 ))}
