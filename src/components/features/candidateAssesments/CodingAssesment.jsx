@@ -56,21 +56,36 @@ function CodingAssesmentInner() {
     };
 
     // Update sidebar width and collapse state on resize
+    // const handleMouseMove = (e) => {
+    //     if (!isResizing.current) return;
+    //     const totalWidth = sidebarRef.current.parentElement.offsetWidth;
+    //     const newWidth = e.clientX - sidebarRef.current.getBoundingClientRect().left;
+    //     const editorWidth = totalWidth - newWidth - 8; // 8px for resizer
+    //     if (newWidth <= COLLAPSED_WIDTH) {
+    //         prevSidebarWidthRef.current = sidebarWidth > COLLAPSED_WIDTH ? sidebarWidth : 400;
+    //         setIsCollapsed(true);
+    //         setSidebarWidth(COLLAPSED_WIDTH);
+    //     } else if (newWidth >= minSidebarWidth && editorWidth >= minEditorWidth && newWidth <= maxSidebarWidth) {
+    //         setSidebarWidth(newWidth);
+    //         if (isCollapsed) setIsCollapsed(false);
+    //     }
+    // };
+
     const handleMouseMove = (e) => {
         if (!isResizing.current) return;
         const totalWidth = sidebarRef.current.parentElement.offsetWidth;
         const newWidth = e.clientX - sidebarRef.current.getBoundingClientRect().left;
         const editorWidth = totalWidth - newWidth - 8; // 8px for resizer
+
         if (newWidth <= COLLAPSED_WIDTH) {
             prevSidebarWidthRef.current = sidebarWidth > COLLAPSED_WIDTH ? sidebarWidth : 400;
             setIsCollapsed(true);
             setSidebarWidth(COLLAPSED_WIDTH);
-        } else if (newWidth >= minSidebarWidth && editorWidth >= minEditorWidth && newWidth <= maxSidebarWidth) {
+        } else if (editorWidth >= minEditorWidth && newWidth <= maxSidebarWidth) {
             setSidebarWidth(newWidth);
-            if (isCollapsed) setIsCollapsed(false);
+            setIsCollapsed(prev => (prev ? false : prev)); // Always uncollapse if previously collapsed
         }
     };
-
     // When user clicks collapse/expand button, toggle and restore width
     const handleCollapseToggle = () => {
         if (isCollapsed) {
@@ -136,7 +151,7 @@ function CodingAssesmentInner() {
                 </div>
                 {/* Resizer bar */}
                 <div
-                    className='h-full w-2 flex items-center justify-center cursor-ew-resize transition-colors duration-150 z-20'
+                    className='h-[calc(100vh_-_116px)] w-2 flex items-center justify-center cursor-ew-resize transition-colors duration-150 z-20'
                     style={{ minWidth: 8, maxWidth: 8 }}
                     onMouseDown={handleMouseDown}
                 >
