@@ -9,7 +9,8 @@ import { useCodingAssesment } from './CodingAssesmentContext';
 const CodeSidebar = ({
     currentQuestionData,
     submissionsData,
-    getStatusColor
+    getStatusColor,
+    onCollapseToggle
 }) => {
     const {
         activeTab, setActiveTab,
@@ -19,15 +20,14 @@ const CodeSidebar = ({
         setIsCollapsed
     } = useCodingAssesment();
     const sideBarWidthRef = useRef(0);
-    const toggleSidebar = () => setIsCollapsed(!isCollapsed);
     return (
         <aside className={cn(
             "relative bg-white rounded-[20px] border border-gray-200 shadow-md transition-all duration-300 h-full overflow-x-auto max-h-[767px]",
-            isCollapsed ? "p-2" : "p-6"
+            isCollapsed ? "p-1 w-12 min-w-[48px] max-w-[48px]" : "p-6"
         )}>
             {isCollapsed ? (
                 // Collapsed view
-                <div className="flex flex-col-reverse items-center gap-6 py-4">
+                <div className="flex flex-col-reverse justify-end gap-3 py-2 h-[calc(100vh-100px)] rounded-xl">
                     <button
                         className={cn(
                             "p-2 rounded-md w-full flex flex-col items-center justify-center gap-1",
@@ -35,8 +35,8 @@ const CodeSidebar = ({
                         )}
                         onClick={() => setActiveTab('submissions')}
                     >
+                        <span className='text-[10px] font-medium' style={{ writingMode: 'vertical-lr', textOrientation: 'mixed', transform: 'rotate(180deg)' }}>Submissions</span>
                         <img src={submissionIcon} alt="submissionIcon" />
-                        <span className='text-sm font-medium' style={{ writingMode: 'vertical-lr', textOrientation: 'mixed', transform: 'rotate(180deg)' }}>Submissions</span>
                     </button>
                     <button
                         className={cn(
@@ -45,12 +45,12 @@ const CodeSidebar = ({
                         )}
                         onClick={() => setActiveTab('description')}
                     >
-                        <FileText size={20} />
-                        <span className='text-sm font-medium' style={{ writingMode: 'vertical-lr', textOrientation: 'mixed', transform: 'rotate(180deg)' }}>Description</span>
+                        <span className='text-[10px] font-medium' style={{ writingMode: 'vertical-lr', textOrientation: 'mixed', transform: 'rotate(180deg)' }}>Description</span>
+                        <FileText size={18} style={{ transform: 'rotate(-90deg)' }} />
                     </button>
                     {/* Collapse button */}
-                    <button onClick={toggleSidebar} className='p-2 rounded-md w-full flex justify-center'>
-                        {isCollapsed ? <img src={sidebarOpenIcon} alt="sidebarOpen Icon" /> : <img src={sidebarCloseIcon} alt="sidebarClose Icon" />}
+                    <button onClick={onCollapseToggle} className='p-2 rounded-md w-full flex justify-center'>
+                        <img src={sidebarOpenIcon} alt="sidebarOpen Icon" />
                     </button>
                 </div>
             ) : (
@@ -83,10 +83,10 @@ const CodeSidebar = ({
                             Submissions
                         </button>
                         <button
-                            onClick={toggleSidebar}
+                            onClick={onCollapseToggle}
                             className='ml-auto'
                         >
-                            {isCollapsed ? <img src={sidebarOpenIcon} alt="sidebarOpen Icon" /> : <img src={sidebarCloseIcon} alt="sidebarClose Icon" />}
+                            <img src={sidebarCloseIcon} alt="sidebarClose Icon" />
                         </button>
                     </div>
 

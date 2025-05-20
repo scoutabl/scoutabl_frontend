@@ -17,9 +17,11 @@ function CodingAssesmentInner() {
         sidebarRef, isResizing
     } = useCodingAssesment();
 
-    const minSidebarWidth = 60;
+    const COLLAPSED_WIDTH = 48; // px
+    const minSidebarWidth = COLLAPSED_WIDTH;
     const minEditorWidth = 200;
     const maxSidebarWidth = window.innerWidth * 0.90;
+    const prevSidebarWidthRef = React.useRef(sidebarWidth);
 
     // Get current question data
     const currentQuestionData = questionsData.find(q => q.id === currentQuestion) || questionsData[0];
@@ -53,13 +55,31 @@ function CodingAssesmentInner() {
         }
     };
 
+    // Update sidebar width and collapse state on resize
     const handleMouseMove = (e) => {
         if (!isResizing.current) return;
         const totalWidth = sidebarRef.current.parentElement.offsetWidth;
         const newWidth = e.clientX - sidebarRef.current.getBoundingClientRect().left;
         const editorWidth = totalWidth - newWidth - 8; // 8px for resizer
-        if (newWidth >= minSidebarWidth && editorWidth >= minEditorWidth && newWidth <= maxSidebarWidth) {
+        if (newWidth <= COLLAPSED_WIDTH) {
+            prevSidebarWidthRef.current = sidebarWidth > COLLAPSED_WIDTH ? sidebarWidth : 400;
+            setIsCollapsed(true);
+            setSidebarWidth(COLLAPSED_WIDTH);
+        } else if (newWidth >= minSidebarWidth && editorWidth >= minEditorWidth && newWidth <= maxSidebarWidth) {
             setSidebarWidth(newWidth);
+            if (isCollapsed) setIsCollapsed(false);
+        }
+    };
+
+    // When user clicks collapse/expand button, toggle and restore width
+    const handleCollapseToggle = () => {
+        if (isCollapsed) {
+            setSidebarWidth(prevSidebarWidthRef.current || 400);
+            setIsCollapsed(false);
+        } else {
+            prevSidebarWidthRef.current = sidebarWidth;
+            setSidebarWidth(COLLAPSED_WIDTH);
+            setIsCollapsed(true);
         }
     };
 
@@ -111,6 +131,7 @@ function CodingAssesmentInner() {
                         currentQuestionData={currentQuestionData}
                         submissionsData={submissionsData}
                         getStatusColor={getStatusColor}
+                        onCollapseToggle={handleCollapseToggle}
                     />
                 </div>
                 {/* Resizer bar */}
