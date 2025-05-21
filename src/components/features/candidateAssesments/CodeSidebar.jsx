@@ -177,17 +177,21 @@ const CodeSidebar = ({
                         </div>
                     ) : (
                         <div className="overflow-y-auto max-h-[calc(100vh-220px)]">
-                            {/* Submissions table header */}
-                            <div className="grid grid-cols-5 text-sm text-gray-600 font-medium mb-2 px-2">
-                                <div>S. No.</div>
-                                <div>Status</div>
-                                <div>Runtime</div>
-                                <div>Memory</div>
-                                <div>Language</div>
+                            {/* Submissions table header and column layout */}
+                            <div className="flex items-center justify-between text-sm text-gray-600 font-medium mb-2 px-2">
+                                <div className="flex items-center gap-2 min-w-[120px]">
+                                    <span className='text-sm text-greyPrimary font-medium'>S. No.</span>
+                                    <span className='text-sm text-greyPrimary font-medium'>Status</span>
+                                </div>
+                                <div className="grid grid-cols-3 gap-4 w-[260px] text-center">
+                                    <span className='text-sm text-greyPrimary font-medium'>Runtime</span>
+                                    <span className='text-sm text-greyPrimary font-medium'>Memory</span>
+                                    <span className='text-sm text-greyPrimary font-medium'>Language</span>
+                                </div>
                             </div>
 
                             {/* Submissions list */}
-                            <div className="space-y-2">
+                            <div className="flex flex-col gap-3 overflow-x-auto">
                                 {submissionsData.map((submission) => (
                                     <div
                                         key={submission.id}
@@ -196,7 +200,7 @@ const CodeSidebar = ({
                                             getStatusColor(submission.status)
                                         )}
                                     >
-                                        <div className="flex items-center gap-2">
+                                        <div className="flex items-center gap-2 min-w-[120px]">
                                             <span className="font-bold text-[1.875rem] text-greyPrimary">{String(submission.id).padStart(2, '0')}</span>
                                             <span className={cn('text-sm text-bold text-[#DA4D2E]',
                                                 {
@@ -205,16 +209,34 @@ const CodeSidebar = ({
                                             >
                                                 {submission.status}</span>
                                         </div>
-                                        <div className="flex items-center gap-2">
-                                            <div className="flex items-center gap-1">
-                                                <Clock size={14} /> {submission.runtime}
+                                        <div className="grid grid-cols-3 gap-4 w-[280px] text-center">
+                                            <div className="flex items-center justify-center gap-1">
+                                                <svg width="15" height="15" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                    <path d="M3.01937 3.02188C1.98303 4.05795 1.33805 5.42125 1.19439 6.87951C1.05072 8.33777 1.41727 9.80069 2.23154 11.019C3.0458 12.2373 4.25738 13.1356 5.65979 13.5609C7.0622 13.9862 8.56873 13.9123 9.9227 13.3516C11.2767 12.7909 12.3944 11.7782 13.0853 10.4859C13.7762 9.19365 13.9975 7.70185 13.7116 6.26469C13.4256 4.82754 12.6501 3.53402 11.5172 2.60451C10.3843 1.675 8.9641 1.16699 7.4986 1.16699" stroke="#333333" stroke-width="2" stroke-linecap="round" />
+                                                    <path d="M7.50085 7.49999L3.49982 3.5" stroke="#333333" stroke-width="2" stroke-linecap="round" />
+                                                    <path d="M7.49982 1.5V2.83333" stroke="#333333" stroke-linecap="round" />
+                                                    <path d="M13.4998 7.5L12.1661 7.5" stroke="#333333" stroke-linecap="round" />
+                                                    <path d="M7.49982 12.167V13.5003" stroke="#333333" stroke-linecap="round" />
+                                                    <path d="M2.83575 7.5L1.50207 7.5" stroke="#333333" stroke-linecap="round" />
+                                                </svg>
+
+                                                <span className='text-xs text-greyPrimary font-medium'>{submission.runtime}</span>
                                             </div>
-                                            <div className="flex items-center gap-1">
-                                                <HardDrive size={14} /> {submission.memory}
+                                            <div className="flex items-center justify-center gap-1">
+                                                <svg width="13" height="13" viewBox="0 0 13 13" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                    <path d="M4.05554 3.2998H6.45203C8.10888 3.2998 9.45203 4.64295 9.45203 6.2998V8.7002C9.45186 9.25234 9.00421 9.7002 8.45203 9.7002H4.05554C3.50336 9.7002 3.05571 9.25234 3.05554 8.7002V4.2998C3.05554 3.74752 3.50326 3.2998 4.05554 3.2998Z" stroke="#333333" stroke-width="2" />
+                                                    <path d="M4.44617 2.90002V0.5" stroke="#333333" stroke-width="2" />
+                                                    <path d="M4.44617 12.4996V10.0996" stroke="#333333" stroke-width="2" />
+                                                    <path d="M8.04773 12.4996V10.0996" stroke="#333333" stroke-width="2" />
+                                                    <path d="M12.2436 8.2998L9.8446 8.2998" stroke="#333333" stroke-width="2" />
+                                                    <path d="M2.64986 8.2998L0.250854 8.2998" stroke="#333333" stroke-width="2" />
+                                                    <path d="M2.64986 4.7002L0.250854 4.7002" stroke="#333333" stroke-width="2" />
+                                                    <path d="M8.05068 1.5C8.47062 1.5 8.88647 1.58275 9.27447 1.74353C9.66247 1.90431 10.015 2.13999 10.312 2.43712C10.6091 2.73425 10.8447 3.08702 11.0054 3.4753C11.1662 3.86358 11.2489 4.27975 11.2489 4.70004" stroke="#333333" stroke-width="2" />
+                                                </svg>
+
+                                                <span className='text-xs text-greyPrimary font-medium text-nowrap'>{submission.memory}</span>
                                             </div>
-                                            <div className="bg-blue-500 text-white px-2 py-0.5 rounded-full text-xs flex items-center gap-1 w-fit">
-                                                <Code size={12} /> {submission.language}
-                                            </div>
+                                            <span className='text-xs text-greyPrimary font-medium pt-1 px-3 bg-[#69B4FF] rounded-full grid place-content-center'>{submission.language}</span>
                                         </div>
                                     </div>
                                 ))}

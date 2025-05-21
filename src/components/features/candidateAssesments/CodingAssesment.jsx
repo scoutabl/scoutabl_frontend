@@ -44,12 +44,12 @@ function CodingAssesmentInner() {
     const getStatusColor = (status) => {
         switch (status) {
             case 'Accepted':
-                return 'bg-green-200 text-green-800';
+                return 'bg-[#BFE2BF] text-[#008B00]';
             case 'Wrong Answer':
-                return 'bg-yellow-200 text-yellow-800';
+                return 'bg-[#F5D2CA] text-[#DA4D2E]';
             case 'Compile Error':
             case 'Runtime Error':
-                return 'bg-red-200 text-red-800';
+                return 'bg-[#F5D2CA] text-[#DA4D2E]';
             default:
                 return 'bg-gray-200 text-gray-800';
         }
