@@ -22,7 +22,7 @@ const CodeSidebar = ({
     const sideBarWidthRef = useRef(0);
     return (
         <aside className={cn(
-            "relative bg-white rounded-[20px] border border-gray-200 shadow-md transition-all duration-300 h-full overflow-x-auto max-h-[767px]",
+            "relative bg-white rounded-[20px] border border-gray-200 shadow-md transition-all duration-300 h-full overflow-auto max-h-[767px]",
             isCollapsed ? "p-3 w-12 min-w-[52px] max-w-[52px]" : "p-6"
         )}>
             {isCollapsed ? (
@@ -112,160 +112,144 @@ const CodeSidebar = ({
 
                     {/* Content based on active tab */}
                     {activeTab === 'description' ? (
-                        <div className="space-y-6 overflow-auto max-h-[548px]">
-                            {/* Question number */}
-                            <div className="flex items-center justify-between mb-4">
-                                <div className="flex items-center gap-2">
-                                    <select
-                                        className="bg-gray-100 border border-gray-300 text-gray-700 rounded-md px-2 py-1 text-sm focus:outline-none"
-                                        value={currentQuestion}
-                                        onChange={(e) => setCurrentQuestion(parseInt(e.target.value))}
-                                    >
-                                        {Array.from({ length: totalQuestions }, (_, i) => (
-                                            <option key={i + 1} value={i + 1}>
-                                                Question {i + 1} of {totalQuestions}
-                                            </option>
+                        <div className="w-full overflow-x-auto">
+                            <div className="space-y-6 min-w-[483px]">
+                                {/* Question number */}
+                                <div className="flex items-center justify-between mb-4">
+                                    <div className="flex items-center gap-2">
+                                        <select
+                                            className="bg-gray-100 border border-gray-300 text-gray-700 rounded-md px-2 py-1 text-sm focus:outline-none"
+                                            value={currentQuestion}
+                                            onChange={(e) => setCurrentQuestion(parseInt(e.target.value))}
+                                        >
+                                            {Array.from({ length: totalQuestions }, (_, i) => (
+                                                <option key={i + 1} value={i + 1}>
+                                                    Question {i + 1} of {totalQuestions}
+                                                </option>
+                                            ))}
+                                        </select>
+                                    </div>
+
+                                    <button className="flex items-center gap-1 px-3 py-1 rounded-full text-purple-600 hover:bg-purple-50 group">
+                                        <div className="h-6 w-6 grid place-content-center rounded-full bg-purple-600 group-hover:bg-purple-700 text-white">
+                                            <HelpCircle size={14} />
+                                        </div>
+                                        <span className="text-sm font-medium">Question info</span>
+                                    </button>
+                                </div>
+                                <h2 className="text-lg font-medium">{currentQuestionData.title}</h2>
+
+                                <div className="space-y-4">
+                                    <h3 className="font-medium">Instructions:</h3>
+                                    <ol className="list-decimal list-inside space-y-2 text-sm text-gray-600">
+                                        {currentQuestionData.instructions.map((instruction, index) => (
+                                            <li key={index} className="pl-2">{instruction}</li>
                                         ))}
-                                    </select>
+                                    </ol>
                                 </div>
 
-                                <button className="flex items-center gap-1 px-3 py-1 rounded-full text-purple-600 hover:bg-purple-50 group">
-                                    <div className="h-6 w-6 grid place-content-center rounded-full bg-purple-600 group-hover:bg-purple-700 text-white">
-                                        <HelpCircle size={14} />
-                                    </div>
-                                    <span className="text-sm font-medium">Question info</span>
-                                </button>
-                            </div>
-                            <h2 className="text-lg font-medium">{currentQuestionData.title}</h2>
-
-                            <div className="space-y-4">
-                                <h3 className="font-medium">Instructions:</h3>
-                                <ol className="list-decimal list-inside space-y-2 text-sm text-gray-600">
-                                    {currentQuestionData.instructions.map((instruction, index) => (
-                                        <li key={index} className="pl-2">{instruction}</li>
+                                {/* test cases */}
+                                <div className="space-y-2">
+                                    <p className="text-sm text-gray-600">
+                                        <span className="font-medium">Test Cases:</span>
+                                    </p>
+                                    {currentQuestionData.testCases.map((testCase, index) => (
+                                        <div key={index}>
+                                            <h3 className="text-sm text-gray-600">Example {index + 1}:</h3>
+                                            <p><strong>Input:</strong> {testCase.input}</p>
+                                            <p><strong>Output:</strong> {testCase.output}</p>
+                                            <p><strong>Explanation:</strong> {testCase.explanation}</p>
+                                        </div>
                                     ))}
-                                </ol>
-                            </div>
+                                </div>
 
-                            {/* test cases */}
-                            <div className="space-y-2">
-                                <p className="text-sm text-gray-600">
-                                    <span className="font-medium">Test Cases:</span>
-                                </p>
-                                {currentQuestionData.testCases.map((testCase, index) => (
-                                    <div key={index}>
-                                        <h3 className="text-sm text-gray-600">Example {index + 1}:</h3>
-                                        <p><strong>Input:</strong> {testCase.input}</p>
-                                        <p><strong>Output:</strong> {testCase.output}</p>
-                                        <p><strong>Explanation:</strong> {testCase.explanation}</p>
+                                {/* Repeated assessment text from the image */}
+                                <div className="space-y-2">
+                                    <p className="text-sm text-gray-600">
+                                        Your solution will be assessed based on functionality, code quality, and performance. Optional: Implement advanced validation, conditional fields, field rearrangement, and i18n support.
+                                    </p>
+                                </div>
+
+                                <div className="space-y-2">
+                                    <p className="text-sm text-gray-600">
+                                        Your solution will be assessed based on functionality, code quality, and performance.
+                                    </p>
+                                </div>
+                                {/* Navigation buttons */}
+                                <div className="flex justify-between mt-auto pt-4">
+                                    <div className="flex space-x-2">
+                                        <button className="w-10 h-10 rounded-full border border-gray-300 flex items-center justify-center text-gray-600 hover:bg-gray-50">
+                                            <MessageSquare size={18} />
+                                        </button>
+                                        <button className="w-10 h-10 rounded-full border border-gray-300 flex items-center justify-center text-gray-600 hover:bg-gray-50">
+                                            <HelpCircle size={18} />
+                                        </button>
                                     </div>
-                                ))}
-                            </div>
 
-                            {/* Repeated assessment text from the image */}
-                            <div className="space-y-2">
-                                <p className="text-sm text-gray-600">
-                                    Your solution will be assessed based on functionality, code quality, and performance. Optional: Implement advanced validation, conditional fields, field rearrangement, and i18n support.
-                                </p>
-                            </div>
-
-                            <div className="space-y-2">
-                                <p className="text-sm text-gray-600">
-                                    Your solution will be assessed based on functionality, code quality, and performance.
-                                </p>
+                                    <div className="flex space-x-2">
+                                        <button className="px-4 py-2 rounded-full border border-purple-600 text-purple-600 font-medium hover:bg-purple-50 flex items-center gap-1">
+                                            <ChevronLeft size={16} />
+                                            Back
+                                        </button>
+                                        <button className="px-4 py-2 rounded-full bg-purple-600 text-white font-medium hover:bg-purple-700 flex items-center gap-1">
+                                            Next
+                                            <ChevronRight size={16} />
+                                        </button>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     ) : (
-                        <div className="overflow-y-auto max-h-[calc(100vh-220px)]">
-                            {/* Submissions table header and column layout */}
-                            <div className="flex items-center justify-between text-sm text-gray-600 font-medium mb-2 px-2">
-                                <div className="flex items-center gap-2 min-w-[120px]">
-                                    <span className='text-sm text-greyPrimary font-medium'>S. No.</span>
-                                    <span className='text-sm text-greyPrimary font-medium'>Status</span>
-                                </div>
-                                <div className="grid grid-cols-3 gap-4 w-[260px] text-center">
-                                    <span className='text-sm text-greyPrimary font-medium'>Runtime</span>
-                                    <span className='text-sm text-greyPrimary font-medium'>Memory</span>
-                                    <span className='text-sm text-greyPrimary font-medium'>Language</span>
-                                </div>
-                            </div>
-
-                            {/* Submissions list */}
-                            <div className="flex flex-col gap-3 overflow-x-auto">
-                                {submissionsData.map((submission) => (
-                                    <div
-                                        key={submission.id}
-                                        className={cn(
-                                            "flex items-center justify-between rounded-lg p-2",
-                                            getStatusColor(submission.status)
-                                        )}
-                                    >
-                                        <div className="flex items-center gap-2 min-w-[120px]">
-                                            <span className="font-bold text-[1.875rem] text-greyPrimary">{String(submission.id).padStart(2, '0')}</span>
-                                            <span className={cn('text-sm text-bold text-[#DA4D2E]',
-                                                {
-                                                    'text-[#008B00]': submission.status === 'Accepted',
-                                                })}
-                                            >
-                                                {submission.status}</span>
-                                        </div>
-                                        <div className="grid grid-cols-3 gap-4 w-[280px] text-center">
-                                            <div className="flex items-center justify-center gap-1">
-                                                <svg width="15" height="15" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                    <path d="M3.01937 3.02188C1.98303 4.05795 1.33805 5.42125 1.19439 6.87951C1.05072 8.33777 1.41727 9.80069 2.23154 11.019C3.0458 12.2373 4.25738 13.1356 5.65979 13.5609C7.0622 13.9862 8.56873 13.9123 9.9227 13.3516C11.2767 12.7909 12.3944 11.7782 13.0853 10.4859C13.7762 9.19365 13.9975 7.70185 13.7116 6.26469C13.4256 4.82754 12.6501 3.53402 11.5172 2.60451C10.3843 1.675 8.9641 1.16699 7.4986 1.16699" stroke="#333333" stroke-width="2" stroke-linecap="round" />
-                                                    <path d="M7.50085 7.49999L3.49982 3.5" stroke="#333333" stroke-width="2" stroke-linecap="round" />
-                                                    <path d="M7.49982 1.5V2.83333" stroke="#333333" stroke-linecap="round" />
-                                                    <path d="M13.4998 7.5L12.1661 7.5" stroke="#333333" stroke-linecap="round" />
-                                                    <path d="M7.49982 12.167V13.5003" stroke="#333333" stroke-linecap="round" />
-                                                    <path d="M2.83575 7.5L1.50207 7.5" stroke="#333333" stroke-linecap="round" />
-                                                </svg>
-
-                                                <span className='text-xs text-greyPrimary font-medium'>{submission.runtime}</span>
-                                            </div>
-                                            <div className="flex items-center justify-center gap-1">
-                                                <svg width="13" height="13" viewBox="0 0 13 13" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                    <path d="M4.05554 3.2998H6.45203C8.10888 3.2998 9.45203 4.64295 9.45203 6.2998V8.7002C9.45186 9.25234 9.00421 9.7002 8.45203 9.7002H4.05554C3.50336 9.7002 3.05571 9.25234 3.05554 8.7002V4.2998C3.05554 3.74752 3.50326 3.2998 4.05554 3.2998Z" stroke="#333333" stroke-width="2" />
-                                                    <path d="M4.44617 2.90002V0.5" stroke="#333333" stroke-width="2" />
-                                                    <path d="M4.44617 12.4996V10.0996" stroke="#333333" stroke-width="2" />
-                                                    <path d="M8.04773 12.4996V10.0996" stroke="#333333" stroke-width="2" />
-                                                    <path d="M12.2436 8.2998L9.8446 8.2998" stroke="#333333" stroke-width="2" />
-                                                    <path d="M2.64986 8.2998L0.250854 8.2998" stroke="#333333" stroke-width="2" />
-                                                    <path d="M2.64986 4.7002L0.250854 4.7002" stroke="#333333" stroke-width="2" />
-                                                    <path d="M8.05068 1.5C8.47062 1.5 8.88647 1.58275 9.27447 1.74353C9.66247 1.90431 10.015 2.13999 10.312 2.43712C10.6091 2.73425 10.8447 3.08702 11.0054 3.4753C11.1662 3.86358 11.2489 4.27975 11.2489 4.70004" stroke="#333333" stroke-width="2" />
-                                                </svg>
-
-                                                <span className='text-xs text-greyPrimary font-medium text-nowrap'>{submission.memory}</span>
-                                            </div>
-                                            <span className='text-xs text-greyPrimary font-medium pt-1 px-3 bg-[#69B4FF] rounded-full grid place-content-center'>{submission.language}</span>
-                                        </div>
+                        <div className="w-full overflow-x-auto">
+                            <div className="space-y-6 min-w-[483px]">
+                                {/* Submissions table header and column layout */}
+                                <div
+                                    className="flex items-center text-sm text-gray-600 font-medium mb-6"
+                                >
+                                    <div className='flex items-center gap-2' style={{ minWidth: 180 }}>
+                                        <span className='text-sm text-greyPrimary font-medium text-nowrap'>S. No.</span>
+                                        <span className='text-sm text-greyPrimary font-medium'>Status</span>
                                     </div>
-                                ))}
+                                    <div className='flex-1 flex'>
+                                        <div className='flex-1 text-sm text-greyPrimary font-medium text-center'>Runtime</div>
+                                        <div className='flex-1 text-sm text-greyPrimary font-medium text-center'>Memory</div>
+                                        <div className='flex-1 text-sm text-greyPrimary font-medium text-center'>Language</div>
+                                    </div>
+                                </div>
+
+                                {/* Submissions list */}
+                                <div className="flex flex-col gap-3 items-center">
+                                    {submissionsData.map((submission) => (
+                                        <div
+                                            key={submission.id}
+                                            className={cn("flex items-center rounded-lg w-full p-[6px]", getStatusColor(submission.status))}
+                                        >
+                                            <div className="flex items-center gap-2" style={{ minWidth: 180 }}>
+                                                <span className="w-10 font-bold text-[1.5rem] text-greyPrimary whitespace-nowrap">{String(submission.id).padStart(2, '0')}</span>
+                                                <span className={cn("w-28 text-sm font-bold whitespace-nowrap", {
+                                                    'text-[#008B00]': submission.status === 'Accepted',
+                                                    'text-[#DA4D2E]': submission.status !== 'Accepted',
+                                                })}>
+                                                    {submission.status}
+                                                </span>
+                                            </div>
+                                            <div className="flex-1 flex items-center gap-1 justify-center">
+                                                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M8 3.33331V8L10.6667 9.33331" stroke="#333333" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /><circle cx="8" cy="8" r="6" stroke="#333333" strokeWidth="1.5" /></svg>
+                                                <span className="text-xs text-greyPrimary font-medium whitespace-nowrap">{submission.runtime}</span>
+                                            </div>
+                                            <div className="flex-1 flex items-center gap-1 justify-center">
+                                                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M4.05554 3.2998H6.45203C8.10888 3.2998 9.45203 4.64295 9.45203 6.2998V8.7002C9.45186 9.25234 9.00421 9.7002 8.45203 9.7002H4.05554C3.50336 9.7002 3.05571 9.25234 3.05554 8.7002V4.2998C3.05554 3.74752 3.50326 3.2998 4.05554 3.2998Z" stroke="#333333" strokeWidth="1.5" /><path d="M4.44617 2.90002V0.5" stroke="#333333" strokeWidth="1.5" /><path d="M4.44617 12.4996V10.0996" stroke="#333333" strokeWidth="1.5" /><path d="M8.04773 12.4996V10.0996" stroke="#333333" strokeWidth="1.5" /><path d="M12.2436 8.2998L9.8446 8.2998" stroke="#333333" strokeWidth="1.5" /><path d="M2.64986 8.2998L0.250854 8.2998" stroke="#333333" strokeWidth="1.5" /><path d="M2.64986 4.7002L0.250854 4.7002" stroke="#333333" strokeWidth="1.5" /><path d="M8.05068 1.5C8.47062 1.5 8.88647 1.58275 9.27447 1.74353C9.66247 1.90431 10.015 2.13999 10.312 2.43712C10.6091 2.73425 10.8447 3.08702 11.0054 3.4753C11.1662 3.86358 11.2489 4.27975 11.2489 4.70004" stroke="#333333" strokeWidth="1.5" /></svg>
+                                                <span className="text-xs text-greyPrimary font-medium whitespace-nowrap">{submission.memory}</span>
+                                            </div>
+                                            <div className="flex-1 flex items-center justify-center">
+                                                <span className="text-xs text-greyPrimary font-medium py-1 px-3 bg-[#69B4FF] rounded-full grid place-content-center text-nowrap">{submission.language}</span>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
                             </div>
                         </div>
                     )}
-
-                    {/* Navigation buttons */}
-                    <div className="flex justify-between mt-auto pt-4">
-                        <div className="flex space-x-2">
-                            <button className="w-10 h-10 rounded-full border border-gray-300 flex items-center justify-center text-gray-600 hover:bg-gray-50">
-                                <MessageSquare size={18} />
-                            </button>
-                            <button className="w-10 h-10 rounded-full border border-gray-300 flex items-center justify-center text-gray-600 hover:bg-gray-50">
-                                <HelpCircle size={18} />
-                            </button>
-                        </div>
-
-                        <div className="flex space-x-2">
-                            <button className="px-4 py-2 rounded-full border border-purple-600 text-purple-600 font-medium hover:bg-purple-50 flex items-center gap-1">
-                                <ChevronLeft size={16} />
-                                Back
-                            </button>
-                            <button className="px-4 py-2 rounded-full bg-purple-600 text-white font-medium hover:bg-purple-700 flex items-center gap-1">
-                                Next
-                                <ChevronRight size={16} />
-                            </button>
-                        </div>
-                    </div>
                 </div>
             )
             }
