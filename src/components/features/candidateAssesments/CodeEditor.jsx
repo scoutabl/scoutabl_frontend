@@ -8,7 +8,7 @@ import { useCodingAssesment } from './CodingAssesmentContext';
 const MIN_OUTPUT_HEIGHT = 60;
 const MIN_EDITOR_HEIGHT = 100;
 
-const CodeEditor = ({ testCases, inputVars, callPattern }) => {
+const CodeEditor = ({ testCases, inputVars, callPattern, collapsed }) => {
     const [value, setValue] = useState('')
     const [language, setLanguage] = useState('python')
     const editorRef = useRef()
@@ -66,7 +66,7 @@ const CodeEditor = ({ testCases, inputVars, callPattern }) => {
         // Fullscreen: only show CodeNavBar and Editor, fill 100% height
         return (
             <div className="flex flex-col h-full w-full" style={{ height: '100vh', width: '100vw', background: '#18181b' }}>
-                <div className='px-6 py-3 bg-purpleSecondary rounded-tl-2xl rounded-tr-2xl flex-shrink-0'>
+                <div className='px-6 py-3 bg-purpleSecondary rounded-tl-2xl rounded-tr-2xl'>
                     <CodeNavBar
                         language={language}
                         onSelect={onSelect}
@@ -99,9 +99,30 @@ const CodeEditor = ({ testCases, inputVars, callPattern }) => {
         )
     }
 
+    if (collapsed) {
+        return (
+            <div className='flex flex-col h-[calc(100vh_-_116px)] min-h-0 overflow-hidden'>
+                <CodeNavBar
+                    collapsed
+                    setLoading={setLoading}
+                    loading={loading}
+                    onFullscreen={() => setIsFullscreen(true)}
+                />
+                <div className="h-2 w-full flex items-center justify-center cursor-row-resize">
+                    <div className="w-12 h-1 rounded-full bg-greyAccent" />
+                </div>
+                <Output
+                    collapsed
+                    activeTab={activeTab}
+                    setActiveTab={setActiveTab}
+                />
+            </div>
+        )
+    }
+
     // Always render the full editor and output, never collapse
     return (
-        <div className="editor-output-container flex flex-col h-full min-h-0 min-w-[400px] overflow-x-auto">
+        <div className="flex flex-col h-full min-h-0 overflow-x-auto">
             <div style={{ height: editorHeight, minHeight: MIN_EDITOR_HEIGHT }} className="rounded-2xl flex flex-col">
                 <CodeNavBar
                     language={language}
@@ -118,6 +139,7 @@ const CodeEditor = ({ testCases, inputVars, callPattern }) => {
                     callPattern={callPattern}
                     onFullscreen={() => setIsFullscreen(true)}
                 />
+                {/* we hide the editor if collapsed */}
                 <div className="flex-1 min-h-0 rounded-bl-2xl rounded-br-2xl overflow-auto border border-gray-200">
                     <Editor
                         language={language}
@@ -129,16 +151,16 @@ const CodeEditor = ({ testCases, inputVars, callPattern }) => {
                         value={value}
                         onChange={(value) => setValue(value)}
                     />
-                </div>
-            </div>
+                </div >
+            </div >
             {/* Resizer bar */}
-            <div
+            < div
                 className="h-2 w-full flex items-center justify-center cursor-row-resize "
                 onMouseDown={handleMouseDown}
                 style={{ minHeight: 8, maxHeight: 8 }}
             >
                 <div className="w-12 h-1 rounded-full bg-greyAccent" />
-            </div>
+            </div >
             <div style={{ flex: 1, minHeight: 0 }}>
                 <Output
                     output={output}
@@ -154,7 +176,7 @@ const CodeEditor = ({ testCases, inputVars, callPattern }) => {
                     collapsed={isOutputCollapsed}
                 />
             </div>
-        </div>
+        </div >
     )
 }
 

@@ -1,4 +1,4 @@
-import React from 'react';
+import { useRef } from 'react';
 import { cn } from '@/lib/utils';
 import AssessmentNavbar from '@/components/shared/AssesmentNavbar';
 import CodeEditor from './CodeEditor';
@@ -14,15 +14,20 @@ function CodingAssesmentInner() {
         sidebarWidth, setSidebarWidth,
         isCollapsed, setIsCollapsed,
         isFullscreen, setIsFullscreen,
-        sidebarRef, isResizing
+        sidebarRef, isResizing,
+        rightPanelWidth, setRightPanelWidth,
+        isRightCollapsed, setIsRightCollapsed
     } = useCodingAssesment();
 
+    const RIGHT_COLLAPSED_WIDTH = 82; //px
+    const minRightPanelWidth = RIGHT_COLLAPSED_WIDTH;
     const COLLAPSED_WIDTH = 48; // px
     const minSidebarWidth = COLLAPSED_WIDTH;
     const minEditorWidth = 200;
     const maxSidebarWidth = window.innerWidth * 0.90;
-    const prevSidebarWidthRef = React.useRef(sidebarWidth);
-
+    const prevSidebarWidthRef = useRef(sidebarWidth);
+    const prevRightPanelWidthRef = useRef(rightPanelWidth);
+    const rightPanelRef = useRef(null);
     // Get current question data
     const currentQuestionData = questionsData.find(q => q.id === currentQuestion) || questionsData[0];
 
@@ -55,24 +60,11 @@ function CodingAssesmentInner() {
         }
     };
 
-    // Update sidebar width and collapse state on resize
-    // const handleMouseMove = (e) => {
-    //     if (!isResizing.current) return;
-    //     const totalWidth = sidebarRef.current.parentElement.offsetWidth;
-    //     const newWidth = e.clientX - sidebarRef.current.getBoundingClientRect().left;
-    //     const editorWidth = totalWidth - newWidth - 8; // 8px for resizer
-    //     if (newWidth <= COLLAPSED_WIDTH) {
-    //         prevSidebarWidthRef.current = sidebarWidth > COLLAPSED_WIDTH ? sidebarWidth : 400;
-    //         setIsCollapsed(true);
-    //         setSidebarWidth(COLLAPSED_WIDTH);
-    //     } else if (newWidth >= minSidebarWidth && editorWidth >= minEditorWidth && newWidth <= maxSidebarWidth) {
-    //         setSidebarWidth(newWidth);
-    //         if (isCollapsed) setIsCollapsed(false);
-    //     }
-    // };
-
+    // handle resizing
     const handleMouseMove = (e) => {
         if (!isResizing.current) return;
+        // handle sidebar resizing
+        if (!sidebarRef.current) return;
         const totalWidth = sidebarRef.current.parentElement.offsetWidth;
         const newWidth = e.clientX - sidebarRef.current.getBoundingClientRect().left;
         const editorWidth = totalWidth - newWidth - 8; // 8px for resizer
@@ -85,6 +77,21 @@ function CodingAssesmentInner() {
             setSidebarWidth(newWidth);
             setIsCollapsed(prev => (prev ? false : prev)); // Always uncollapse if previously collapsed
         }
+
+        // handle right panel resizing
+        const container = rightPanelRef.current;
+        if (!container) return; // Prevents the error!
+        const containerLeft = container.getBoundingClientRect().left;
+        const newContainerWidth = container.getBoundingClientRect().right - e.clientX;
+        if (newContainerWidth <= RIGHT_COLLAPSED_WIDTH) {
+            setIsRightCollapsed(true);
+            setRightPanelWidth(RIGHT_COLLAPSED_WIDTH);
+        } else {
+            setIsRightCollapsed(false);
+            setRightPanelWidth(newContainerWidth);
+        }
+
+
     };
     // When user clicks collapse/expand button, toggle and restore width
     const handleCollapseToggle = () => {
@@ -140,7 +147,6 @@ function CodingAssesmentInner() {
                         maxWidth: maxSidebarWidth,
                         transition: isResizing.current ? 'none' : 'width 0.2s'
                     }}
-                    className="h-full"
                 >
                     <CodeSidebar
                         currentQuestionData={currentQuestionData}
@@ -158,12 +164,32 @@ function CodingAssesmentInner() {
                     <div className="w-1 h-6 rounded-full bg-greyAccent" />
                 </div>
                 {/* Main content area: flex row for editor/output */}
-                <div className='flex-1 h-full min-w-0 overflow-x-auto'>
-                    <div className='h-full min-w-[400px] flex flex-col'>
+                <div className={cn('flex-1 h-full ',
+                    isRightCollapsed ? 'w-[82px] min-w-[82px] max-w-[82px]' : 'overflow-x-auto'
+                )}>
+                    <div
+                        className={
+                            isRightCollapsed
+                                ? ''
+                                : 'h-full flex flex-col flex-1 min-w-0'
+                        }
+                        ref={rightPanelRef}
+                        style={
+                            isRightCollapsed
+                                ? {
+                                    width: rightPanelWidth,
+                                    minWidth: minRightPanelWidth,
+                                    maxWidth: minRightPanelWidth,
+                                    transition: isResizing.current ? 'none' : 'width 0.2s'
+                                }
+                                : {}
+                        }
+                    >
                         <CodeEditor
                             testCases={currentQuestionData.testCases}
                             inputVars={currentQuestionData.inputVars}
                             callPattern={currentQuestionData.callPattern}
+                            collapsed={isRightCollapsed}
                         />
                     </div>
                 </div>

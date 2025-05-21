@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { ChevronDown, Play, RotateCcw, Braces } from 'lucide-react';
+import { ChevronDown, Play, RotateCcw, Braces, CodeXml } from 'lucide-react';
 import { FaCheckCircle } from "react-icons/fa";
 import { fetchLanguageRuntimes, executeCode } from '@/api/monacoCodeApi'
 
@@ -102,6 +102,96 @@ const CodeNavBar = ({
         } finally {
             setLoading && setLoading(false);
         }
+    }
+    if (collapsed) {
+        return (
+            <div className="py-8 w-12 min-w-[82px] max-w-[82px] flex flex-col items-center gap-4 bg-purpleSecondary justify-between rounded-xl">
+                <div style={{ transform: 'rotate(180deg)' }}>
+                    <span
+                        className='text-sm font-medium text-greyPrimary'
+                        style={{
+                            writingMode: 'vertical-lr',
+                            textOrientation: 'mixed',
+                            transform: 'rotate(180deg)',
+                            marginTop: 2
+                        }}
+                    >
+
+                        Code
+                    </span>
+                    <CodeXml style={{ transform: 'rotate(-90deg)' }} />
+                </div>
+                <div className='flex flex-col items-center gap-[2rem]'>
+                    <button
+                        style={{ transform: 'rotate(180deg)' }}
+                        className="relative flex flex-col items-center gap-2 px-2 py-2 text-greyPrimary text-sm font-medium border-b-2 transition-colors duration-200 border-transparent rounded-md hover:bg-white"
+                        onClick={handleRunCode}
+                        disabled={loading}
+                    >
+                        <span
+                            style={{
+                                writingMode: 'vertical-lr',
+                                textOrientation: 'mixed',
+                                transform: 'rotate(180deg)',
+                                marginTop: 2
+                            }}
+                            className='text-greyPrimary font-normal text-sm hidden'>
+                            Run
+                        </span>
+                        {loading ? (
+                            <span className="animate-spin mr-2 w-4 h-4 border-2 border-t-transparent border-purple-600 rounded-full"
+                            ></span>
+                        ) : (
+                            <Play color='#333333' size={20} style={{ transform: 'rotate(-90deg)' }} />
+                        )}
+
+                    </button>
+                    <button
+                        className="flex flex-col items-center gap-2 px-2 py-2 text-greyPrimary text-sm font-medium border-b-2 transition-colors duration-200 border-transparent rounded-md hover:bg-white"
+                        style={{ transform: 'rotate(180deg)' }}>
+                        <span
+                            style={{
+                                writingMode: 'vertical-lr',
+                                textOrientation: 'mixed',
+                                transform: 'rotate(180deg)',
+                                marginTop: 2
+                            }}
+                            className='text-greyPrimary font-normal text-sm hidden'>
+                            Submit
+                        </span>
+                        <FaCheckCircle color='#1EA378' size={20} style={{ transform: 'rotate(-90deg)' }} />
+                    </button>
+                    <button
+                        style={{ transform: 'rotate(180deg)' }}
+                        className="flex flex-col items-center gap-2 px-2 py-2 text-greyPrimary text-sm font-medium border-b-2 transition-colors duration-200 border-transparent rounded-md hover:bg-white">
+                        <span
+                            style={{
+                                writingMode: 'vertical-lr',
+                                textOrientation: 'mixed',
+                                transform: 'rotate(180deg)',
+                                marginTop: 2
+                            }}
+                            className='text-greyPrimary font-normal text-sm hidden'>
+                            Reset
+                        </span>
+                        <RotateCcw color='#EB5757' size={20} style={{ transform: 'rotate(-90deg)' }} />
+                    </button>
+                </div>
+                <div className='flex flex-col items-center gap-[1rem]'>
+                    <button className='py-2 px-3 rounded-[8px] hover:bg-white transition-all duration-300 ease-in' onClick={onFullscreen} title="Fullscreen">
+                        <svg width="15" height="15" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M5.5 1.5H2.83333C2.09695 1.5 1.5 2.09695 1.5 2.83333V5.5M5.5 13.5H2.83333C2.09695 13.5 1.5 12.903 1.5 12.1667V9.5M9.5 1.5H12.1667C12.903 1.5 13.5 2.09695 13.5 2.83333V5.5M13.5 9.5V12.1667C13.5 12.903 12.903 13.5 12.1667 13.5H9.5" stroke="#333333" strokeWidth="1.5" strokeLinecap="round" />
+                        </svg>
+                    </button>
+                    <button
+                        style={{ transform: 'rotate(360deg)' }}
+                        className='py-2 px-3 rounded-[8px] hover:bg-white transition-all duration-300 ease-in'
+                        onClick={onCollapse} title="Collapse">
+                        <ChevronDown />
+                    </button>
+                </div>
+            </div>
+        );
     }
 
     return (

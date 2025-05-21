@@ -12,6 +12,8 @@ export function CodingAssesmentProvider({ children }) {
     const [isFullscreen, setIsFullscreen] = useState(false);
     const sidebarRef = useRef(null);
     const isResizing = useRef(false);
+    const [rightPanelWidth, setRightPanelWidth] = useState(0);
+    const [isRightCollapsed, setIsRightCollapsed] = useState(false);
 
     // Add more shared state as needed
 
@@ -23,7 +25,9 @@ export function CodingAssesmentProvider({ children }) {
             sidebarWidth, setSidebarWidth,
             isCollapsed, setIsCollapsed,
             isFullscreen, setIsFullscreen,
-            sidebarRef, isResizing
+            sidebarRef, isResizing,
+            rightPanelWidth, setRightPanelWidth,
+            isRightCollapsed, setIsRightCollapsed
         }}>
             {children}
         </CodingAssesmentContext.Provider>
