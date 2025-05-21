@@ -20,7 +20,7 @@ const CodeNavBar = ({
     testCases = [], userTestCases = [], inputVars = [],
     selectedCase, setActiveTab, setLoading, loading, callPattern,
     collapsed,
-    onCollapse, onExpand, onFullscreen, onExitFullscreen
+    onCollapse, onFullscreen, onExitFullscreen
 }) => {
     const [open, setIsOpen] = useState(false)
     const [languages, setLanguages] = useState([])
@@ -102,45 +102,6 @@ const CodeNavBar = ({
         } finally {
             setLoading && setLoading(false);
         }
-    }
-
-    if (collapsed) {
-        // Render vertical icon-only navbar, with expand and fullscreen buttons
-        return (
-            <div className="flex flex-col items-center justify-center gap-6 h-full w-full bg-white">
-                <button title="Language" className="p-2 rounded hover:bg-gray-800">
-                    <Braces color='#fff' size={24} />
-                </button>
-                <button title="Run" className="p-2 rounded hover:bg-gray-800">
-                    <Play color='#fff' size={24} />
-                </button>
-                <button title="Submit" className="p-2 rounded hover:bg-gray-800">
-                    <FaCheckCircle color='#1EA378' size={24} />
-                </button>
-                <button title="Reset" className="p-2 rounded hover:bg-gray-800">
-                    <RotateCcw color='#EB5757' size={24} />
-                </button>
-                {/* Expand button */}
-                {onExpand && (
-                    <button title="Expand" className="p-2 rounded hover:bg-gray-800" onClick={onExpand}>
-                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M5 8V5H8" stroke="#fff" strokeWidth="2" strokeLinecap="round" />
-                            <path d="M15 12V15H12" stroke="#fff" strokeWidth="2" strokeLinecap="round" />
-                            <path d="M5 5L10 10" stroke="#fff" strokeWidth="2" strokeLinecap="round" />
-                        </svg>
-                    </button>
-                )}
-                {/* Fullscreen button */}
-                {onFullscreen && (
-                    <button title="Fullscreen" className="p-2 rounded hover:bg-gray-800" onClick={onFullscreen}>
-                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <rect x="3" y="3" width="14" height="14" rx="2" stroke="#fff" strokeWidth="2" />
-                            <path d="M7 7H13V13H7V7Z" stroke="#fff" strokeWidth="2" />
-                        </svg>
-                    </button>
-                )}
-            </div>
-        );
     }
 
     return (

@@ -3,7 +3,7 @@ import { cn } from '@/lib/utils';
 import { ChevronLeft, ChevronRight, FileText, MessageSquare, HelpCircle, Clock, HardDrive, Code, List } from 'lucide-react';
 import sidebarOpenIcon from '/sidebarOpen.svg';
 import sidebarCloseIcon from '/sidebarClose.svg';
-import submissionIcon from '/submissionIcon.svg';
+import menuVerticalIcon from '/menuVertical.svg';
 import { useCodingAssesment } from './CodingAssesmentContext';
 
 const CodeSidebar = ({
@@ -17,12 +17,13 @@ const CodeSidebar = ({
         currentQuestion, setCurrentQuestion,
         totalQuestions,
         isCollapsed,
-        setIsCollapsed
+        setIsCollapsed,
+        sidebarWidth
     } = useCodingAssesment();
     const sideBarWidthRef = useRef(0);
     return (
         <aside className={cn(
-            "relative bg-white rounded-[20px] border border-gray-200 shadow-md transition-all duration-300 h-full overflow-auto max-h-[767px]",
+            "relative bg-white rounded-[20px] border border-gray-200 shadow-md transition-all duration-300 h-full max-h-[767px]",
             isCollapsed ? "p-3 w-12 min-w-[52px] max-w-[52px]" : "p-6"
         )}>
             {isCollapsed ? (
@@ -64,45 +65,52 @@ const CodeSidebar = ({
 
                     {/* Collapse button */}
                     <button onClick={onCollapseToggle} className='p-2 rounded-md w-full flex justify-center group hover:bg-purpleSecondary transition-all duration-300'>
-                        {/* <img src={sidebarOpenIcon} alt="sidebarOpen Icon" className='w-4 h-4 group-hover:scale-110 transition-all duration-300' /> */}
-                        <svg style={{ color: '#000000' }} width="16" height="18" viewBox="0 0 16 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <img src={sidebarOpenIcon} alt="sidebarOpen Icon" className='h-[17.5px] w-[15.42px] group-hover:scale-110 transition-all duration-300' />
+                        {/* <svg style={{ color: '#000000' }} width="16" height="18" viewBox="0 0 16 18" fill="none" xmlns="http://www.w3.org/2000/svg">
                             <path d="M0.5 1.70833C0.5 0.903333 1.15333 0.25 1.95833 0.25H6.54167C6.70743 0.25 6.8664 0.315848 6.98361 0.433058C7.10082 0.550269 7.16667 0.70924 7.16667 0.875C7.16667 1.04076 7.10082 1.19973 6.98361 1.31694C6.8664 1.43415 6.70743 1.5 6.54167 1.5H1.95833C1.90308 1.5 1.85009 1.52195 1.81102 1.56102C1.77195 1.60009 1.75 1.65308 1.75 1.70833V16.2917C1.75 16.4067 1.84333 16.5 1.95833 16.5H6.54167C6.70743 16.5 6.8664 16.5658 6.98361 16.6831C7.10082 16.8003 7.16667 16.9592 7.16667 17.125C7.16667 17.2908 7.10082 17.4497 6.98361 17.5669C6.8664 17.6842 6.70743 17.75 6.54167 17.75H1.95833C1.57156 17.75 1.20063 17.5964 0.927136 17.3229C0.653645 17.0494 0.5 16.6784 0.5 16.2917V1.70833ZM13.8383 9.625H6.95833C6.79257 9.625 6.6336 9.55915 6.51639 9.44194C6.39918 9.32473 6.33333 9.16576 6.33333 9C6.33333 8.83424 6.39918 8.67527 6.51639 8.55806C6.6336 8.44085 6.79257 8.375 6.95833 8.375H13.8383L11.0883 5.47167C10.9788 5.35064 10.921 5.19157 10.9272 5.02846C10.9334 4.86536 11.0032 4.71115 11.1216 4.59882C11.24 4.48649 11.3977 4.42494 11.5609 4.42734C11.7241 4.42975 11.8799 4.4959 11.995 4.61167L15.745 8.57C15.8551 8.68611 15.9164 8.84001 15.9164 9C15.9164 9.15999 15.8551 9.31389 15.745 9.43L11.995 13.3883C11.8799 13.5041 11.7241 13.5703 11.5609 13.5727C11.3977 13.5751 11.24 13.5135 11.1216 13.4012C11.0032 13.2888 10.9334 13.1346 10.9272 12.9715C10.921 12.8084 10.9788 12.6494 11.0883 12.5283L13.8383 9.625Z" fill="#333333" />
-                        </svg>
+                        </svg> */}
 
                     </button>
                 </div>
             ) : (
                 // Expanded view
-                <div className="flex flex-col h-full">
+                <div className="flex flex-col h-full overflow-x-auto">
                     {/* Tabs */}
-                    <div className="flex border-b border-gray-200 mb-4">
+                    <div className="flex items-center gap-6 mb-4 overflow-x-hidden">
                         <button
                             className={cn(
-                                "px-4 py-2 flex items-center gap-2 font-medium",
+                                "px-[6px] py-[5px] flex items-center gap-1 font-medium text-greyPrimary rounded-[8px] text-sm",
                                 activeTab === 'description'
-                                    ? "border-b-2 border-purple-600 text-purple-600"
-                                    : "text-gray-500 hover:text-gray-700"
+                                    ? "bg-purpleSecondary"
+                                    : "bg-white hover:bg-purpleSecondary transition-all duration-300"
                             )}
                             onClick={() => setActiveTab('description')}
                         >
                             <FileText size={16} />
-                            Description
+                            {sidebarWidth > 120 && <span>Description</span>}
                         </button>
                         <button
                             className={cn(
-                                "px-4 py-2 flex items-center gap-2 font-medium",
+                                "px-[6px] py-[5px] flex items-center gap-1 font-medium text-greyPrimary rounded-[8px] text-sm",
                                 activeTab === 'submissions'
-                                    ? "border-b-2 border-purple-600 text-purple-600"
-                                    : "text-gray-500 hover:text-gray-700"
+                                    ? "bg-purpleSecondary"
+                                    : "bg-white hover:bg-purpleSecondary transition-all duration-300"
                             )}
                             onClick={() => setActiveTab('submissions')}
                         >
-                            <img src={submissionIcon} alt="submissionIcon" />
-                            Submissions
+                            <img src={menuVerticalIcon} alt="menuVerticalIcon" />
+                            {sidebarWidth > 120 && <span>Submissions</span>}
                         </button>
-                        <button
+                        {/* <button
                             onClick={onCollapseToggle}
                             className='ml-auto'
+                        >
+                            <img src={sidebarCloseIcon} alt="sidebarClose Icon" />
+                        </button> */}
+                        {/* Collapse button, always visible in top-right */}
+                        <button
+                            onClick={onCollapseToggle}
+                            className="absolute top-[28px] right-4 z-10"
                         >
                             <img src={sidebarCloseIcon} alt="sidebarClose Icon" />
                         </button>
