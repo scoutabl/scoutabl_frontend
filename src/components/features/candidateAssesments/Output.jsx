@@ -73,7 +73,7 @@ const Output = ({
   }
 
   return (
-    <div className="bg-white rounded-2xl shadow  h-full flex flex-col min-w-[400px] overflow-x-auto">
+    <div className="bg-white rounded-2xl shadow  h-full flex flex-col overflow-x-auto">
       {/* Tabs */}
       <OutputNavBar activeTab={activeTab} setActiveTab={setActiveTab} />
       {/* Tab Content */}

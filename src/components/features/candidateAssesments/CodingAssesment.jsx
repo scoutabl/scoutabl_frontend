@@ -19,11 +19,11 @@ function CodingAssesmentInner() {
         isRightCollapsed, setIsRightCollapsed
     } = useCodingAssesment();
 
-    const RIGHT_COLLAPSED_WIDTH = 82; //px
+    const RIGHT_COLLAPSED_WIDTH = 52; //px
     const minRightPanelWidth = RIGHT_COLLAPSED_WIDTH;
     const COLLAPSED_WIDTH = 48; // px
     const minSidebarWidth = COLLAPSED_WIDTH;
-    const minEditorWidth = 200;
+    const minEditorWidth = 52;
     const maxSidebarWidth = window.innerWidth * 0.90;
     const prevSidebarWidthRef = useRef(sidebarWidth);
     const prevRightPanelWidthRef = useRef(rightPanelWidth);
@@ -165,13 +165,13 @@ function CodingAssesmentInner() {
                 </div>
                 {/* Main content area: flex row for editor/output */}
                 <div className={cn('flex-1 h-full ',
-                    isRightCollapsed ? 'w-[82px] min-w-[82px] max-w-[82px]' : 'overflow-x-auto'
+                    isRightCollapsed ? 'w-[52px] min-w-[52px] max-w-[52px]' : 'overflow-x-auto'
                 )}>
                     <div
                         className={
                             isRightCollapsed
                                 ? ''
-                                : 'h-full flex flex-col flex-1 min-w-0'
+                                : 'h-full flex flex-col flex-1'
                         }
                         ref={rightPanelRef}
                         style={

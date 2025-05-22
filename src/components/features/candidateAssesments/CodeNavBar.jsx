@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react'
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { ChevronDown, Play, RotateCcw, Braces, CodeXml } from 'lucide-react';
+import { ChevronDown, Play, RotateCcw, Braces, CodeXml, ChevronUp } from 'lucide-react';
 import { FaCheckCircle } from "react-icons/fa";
 import { fetchLanguageRuntimes, executeCode } from '@/api/monacoCodeApi'
-
+import { cn } from '@/lib/utils';
 const ALLOWED_LANGUAGES = [
     { key: 'python', display: 'Python 3' },
     { key: 'javascript', display: 'JavaScript' },
@@ -20,7 +20,8 @@ const CodeNavBar = ({
     testCases = [], userTestCases = [], inputVars = [],
     selectedCase, setActiveTab, setLoading, loading, callPattern,
     collapsed,
-    onCollapse, onFullscreen, onExitFullscreen
+    onCollapse, onFullscreen, onExitFullscreen,
+    isEditorCollapsed
 }) => {
     const [open, setIsOpen] = useState(false)
     const [languages, setLanguages] = useState([])
@@ -105,7 +106,7 @@ const CodeNavBar = ({
     }
     if (collapsed) {
         return (
-            <div className="py-8 w-12 min-w-[82px] max-w-[82px] flex flex-col items-center gap-4 bg-purpleSecondary justify-between rounded-xl">
+            <div className="py-8 w-12 min-w-[52px] max-w-[52px] flex flex-col items-center gap-4 bg-purpleSecondary justify-between rounded-xl overflow-hidden">
                 <div style={{ transform: 'rotate(180deg)' }}>
                     <span
                         className='text-sm font-medium text-greyPrimary'
@@ -195,7 +196,9 @@ const CodeNavBar = ({
     }
 
     return (
-        <div className='px-6 py-3 bg-purpleSecondary rounded-tl-2xl rounded-tr-2xl flex justify-between min-w-0 overflow-x-auto code-navbar-container'>
+        <div className={cn('px-6 py-3 bg-purpleSecondary rounded-tl-2xl rounded-tr-2xl flex justify-between min-w-0 overflow-x-auto code-navbar-container', {
+            'rounded-2xl': isEditorCollapsed,
+        })}>
             {/* language selector */}
             <Popover open={open} onOpenChange={setIsOpen}>
                 <PopoverTrigger asChild>
@@ -290,11 +293,13 @@ const CodeNavBar = ({
                     ) : (
                         <>
                             {/* collapse button */}
-                            {onCollapse && (
-                                <button className='py-2 px-3 rounded-[8px] hover:bg-white transition-all duration-300 ease-in' onClick={onCollapse} title="Collapse">
-                                    <ChevronDown />
-                                </button>
-                            )}
+                            <button
+                                className='py-2 px-3 rounded-[8px] hover:bg-white transition-all duration-300 ease-in'
+                                onClick={onCollapse}
+                                title={isEditorCollapsed ? "Expand Editor" : "Collapse Editor"}
+                            >
+                                {isEditorCollapsed ? <ChevronDown /> : <ChevronUp />}
+                            </button>
                             {/* fullscreen button */}
                             {onFullscreen && (
                                 <button className='py-2 px-3 rounded-[8px] hover:bg-white transition-all duration-300 ease-in' onClick={onFullscreen} title="Fullscreen">

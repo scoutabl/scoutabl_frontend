@@ -19,6 +19,7 @@ const CodeEditor = ({ testCases, inputVars, callPattern, collapsed }) => {
     const [loading, setLoading] = useState(false)
     const [editorHeight, setEditorHeight] = useState(400); // px, default height
     const [isOutputCollapsed, setIsOutputCollapsed] = useState(false);
+    const [isEditorCollapsed, setIsEditorCollapsed] = useState(false); // New state for editor collapse
     const isResizing = useRef(false);
     const { isFullscreen, setIsFullscreen } = useCodingAssesment();
 
@@ -101,13 +102,14 @@ const CodeEditor = ({ testCases, inputVars, callPattern, collapsed }) => {
 
     if (collapsed) {
         return (
-            <div className='flex flex-col h-[calc(100vh_-_116px)] min-h-0 overflow-hidden'>
+            <div className='flex flex-col h-[calc(100vh_-_116px)] gap-3 min-h-0 overflow-hidden'>
                 <CodeNavBar
                     collapsed
                     setLoading={setLoading}
                     loading={loading}
                     onFullscreen={() => setIsFullscreen(true)}
                 />
+                {/* resizer bar */}
                 <div className="h-2 w-full flex items-center justify-center cursor-row-resize">
                     <div className="w-12 h-1 rounded-full bg-greyAccent" />
                 </div>
@@ -123,7 +125,7 @@ const CodeEditor = ({ testCases, inputVars, callPattern, collapsed }) => {
     // Always render the full editor and output, never collapse
     return (
         <div className="flex flex-col h-full min-h-0 overflow-x-auto">
-            <div style={{ height: editorHeight, minHeight: MIN_EDITOR_HEIGHT }} className="rounded-2xl flex flex-col">
+            <div style={{ height: isEditorCollapsed ? 'auto' : editorHeight, minHeight: isEditorCollapsed ? 'auto' : MIN_EDITOR_HEIGHT }} className="rounded-2xl flex flex-col">
                 <CodeNavBar
                     language={language}
                     onSelect={onSelect}
@@ -138,29 +140,33 @@ const CodeEditor = ({ testCases, inputVars, callPattern, collapsed }) => {
                     loading={loading}
                     callPattern={callPattern}
                     onFullscreen={() => setIsFullscreen(true)}
+                    onCollapse={() => setIsEditorCollapsed(!isEditorCollapsed)}
+                    isEditorCollapsed={isEditorCollapsed}
                 />
                 {/* we hide the editor if collapsed */}
-                <div className="flex-1 min-h-0 rounded-bl-2xl rounded-br-2xl overflow-auto border border-gray-200">
-                    <Editor
-                        language={language}
-                        defaultValue={CODE_SNIPPETS[language]}
-                        height="100%"
-                        width="100%"
-                        theme='vs-dark'
-                        onMount={onMount}
-                        value={value}
-                        onChange={(value) => setValue(value)}
-                    />
-                </div >
-            </div >
+                {!isEditorCollapsed && (
+                    <div className="flex-1 min-h-0 rounded-bl-2xl rounded-br-2xl overflow-auto border border-gray-200">
+                        <Editor
+                            language={language}
+                            defaultValue={CODE_SNIPPETS[language]}
+                            height="100%"
+                            width="100%"
+                            theme='vs-dark'
+                            onMount={onMount}
+                            value={value}
+                            onChange={(value) => setValue(value)}
+                        />
+                    </div>
+                )}
+            </div>
             {/* Resizer bar */}
-            < div
-                className="h-2 w-full flex items-center justify-center cursor-row-resize "
+            <div
+                className="h-2 w-full flex items-center justify-center cursor-row-resize"
                 onMouseDown={handleMouseDown}
                 style={{ minHeight: 8, maxHeight: 8 }}
             >
                 <div className="w-12 h-1 rounded-full bg-greyAccent" />
-            </div >
+            </div>
             <div style={{ flex: 1, minHeight: 0 }}>
                 <Output
                     output={output}
@@ -176,7 +182,7 @@ const CodeEditor = ({ testCases, inputVars, callPattern, collapsed }) => {
                     collapsed={isOutputCollapsed}
                 />
             </div>
-        </div >
+        </div>
     )
 }
 

@@ -1,8 +1,8 @@
 import { useRef } from 'react'
 import { cn } from '@/lib/utils';
 import { ChevronLeft, ChevronRight, FileText, MessageSquare, HelpCircle, Clock, HardDrive, Code, List } from 'lucide-react';
-import sidebarOpenIcon from '/sidebarOpen.svg';
-import sidebarCloseIcon from '/sidebarClose.svg';
+import sidebarOpenIcon from '/openSidebar.svg';
+import sidebarCloseIcon from '/closeSidebar.svg';
 import menuVerticalIcon from '/menuVertical.svg';
 import { useCodingAssesment } from './CodingAssesmentContext';
 
@@ -76,7 +76,7 @@ const CodeSidebar = ({
                 // Expanded view
                 <div className="flex flex-col h-full overflow-x-auto">
                     {/* Tabs */}
-                    <div className="flex items-center gap-6 mb-4 overflow-x-hidden">
+                    <div className="flex items-center gap-6 mb-4 overflow-x-hidden min-h-[40px]">
                         <button
                             className={cn(
                                 "px-[6px] py-[5px] flex items-center gap-1 font-medium text-greyPrimary rounded-[8px] text-sm",
@@ -101,16 +101,9 @@ const CodeSidebar = ({
                             <img src={menuVerticalIcon} alt="menuVerticalIcon" />
                             {sidebarWidth > 120 && <span>Submissions</span>}
                         </button>
-                        {/* <button
-                            onClick={onCollapseToggle}
-                            className='ml-auto'
-                        >
-                            <img src={sidebarCloseIcon} alt="sidebarClose Icon" />
-                        </button> */}
-                        {/* Collapse button, always visible in top-right */}
                         <button
                             onClick={onCollapseToggle}
-                            className="absolute top-[28px] right-4 z-10"
+                            className="absolute top-[28px] right-4 z-10 p-2 rounded-[8px] hover:bg-purpleSecondary transition-all duration-300"
                         >
                             <img src={sidebarCloseIcon} alt="sidebarClose Icon" />
                         </button>
@@ -122,7 +115,7 @@ const CodeSidebar = ({
                     {activeTab === 'description' ? (
                         <div className="h-full w-full overflow-auto flex flex-col gap-3">
                             {/* Question number */}
-                            <div className="flex items-center justify-between mb-4">
+                            <div className="flex items-center justify-between">
                                 <div className="flex items-center gap-2">
                                     <select
                                         className="bg-gray-100 border border-gray-300 text-gray-700 rounded-md px-2 py-1 text-sm focus:outline-none"
@@ -207,7 +200,7 @@ const CodeSidebar = ({
 
                         </div>
                     ) : (
-                        <div className="w-full overflow-x-auto">
+                        <div className="w-full overflow-auto scrollbar-webkit">
                             <div className="space-y-6 min-w-[483px]">
                                 {/* Submissions table header and column layout */}
                                 <div
@@ -225,7 +218,7 @@ const CodeSidebar = ({
                                 </div>
 
                                 {/* Submissions list */}
-                                <div className="flex flex-col gap-3 items-center">
+                                <div className="flex flex-col gap-2 items-center">
                                     {submissionsData.map((submission) => (
                                         <div
                                             key={submission.id}
