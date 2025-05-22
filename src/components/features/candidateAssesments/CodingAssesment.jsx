@@ -163,7 +163,7 @@ function CodingAssesmentInner() {
                 >
                     <div className="w-1 h-6 rounded-full bg-greyAccent" />
                 </div>
-                {/* Main content area: flex row for editor/output */}
+                {/* Main content area: flex row for editor/output
                 <div className={cn('flex-1 h-full ',
                     isRightCollapsed ? 'w-[52px] min-w-[52px] max-w-[52px]' : 'overflow-x-auto'
                 )}>
@@ -173,6 +173,29 @@ function CodingAssesmentInner() {
                                 ? ''
                                 : 'h-full flex flex-col flex-1'
                         }
+                        ref={rightPanelRef}
+                        style={
+                            isRightCollapsed
+                                ? {
+                                    width: rightPanelWidth,
+                                    minWidth: minRightPanelWidth,
+                                    maxWidth: minRightPanelWidth,
+                                    transition: isResizing.current ? 'none' : 'width 0.2s'
+                                }
+                                : {}
+                        }
+                    >
+                        <CodeEditor
+                            testCases={currentQuestionData.testCases}
+                            inputVars={currentQuestionData.inputVars}
+                            callPattern={currentQuestionData.callPattern}
+                            collapsed={isRightCollapsed}
+                        />
+                    </div>
+                </div> */}
+                <div className={cn('flex-1 h-[calc(100vh_-_116px)]', isRightCollapsed ? 'w-[52px] min-w-[52px] max-w-[52px]' : 'overflow-x-auto')}>
+                    <div
+                        className="h-full flex flex-col flex-1 min-h-0"
                         ref={rightPanelRef}
                         style={
                             isRightCollapsed

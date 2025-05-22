@@ -2,9 +2,10 @@ import testCaseIcon from '/testCaseIcon.svg';
 import testResultIcon from '/testResultIcon.svg';
 import { cn } from '@/lib/utils';
 import { ChevronDown } from 'lucide-react';
-const OutputNavBar = ({ activeTab, setActiveTab, collapsed }) => {
+const OutputNavBar = ({ activeTab, setActiveTab, collapsed, isOutputCollapsed, onOutputCollapse }) => {
 
-    if (collapsed) {
+    // Render vertical layout if Output section is vertically collapsed
+    if (isOutputCollapsed) {
         return (
             <div className="py-8 min-w-[52px] max-w-[52px] flex flex-col items-center gap-4 bg-purpleSecondary justify-around rounded-xl overflow-hidden">
                 <button
@@ -33,6 +34,42 @@ const OutputNavBar = ({ activeTab, setActiveTab, collapsed }) => {
                     <span style={{ writingMode: 'vertical-lr', textOrientation: 'mixed', transform: 'rotate(180deg)' }}>Test Result</span>
                     <img src={testResultIcon} alt="testResultIcon" style={{ transform: 'rotate(-90deg)' }} />
                 </button>
+                {/* Fullscreen button - potentially also needed in collapsed state */}
+                {/* <div className='flex flex-col items-center gap-[1rem]'> */}
+                {/*     <button className='py-2 px-3 rounded-[8px] hover:bg-white transition-all duration-300 ease-in' */}
+                {/*         title="Fullscreen"> */}
+                {/*         <svg width="15" height="15" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg"> */}
+                {/*             <path d="M5.5 1.5H2.83333C2.09695 1.5 1.5 2.09695 1.5 2.83333V5.5M5.5 13.5H2.83333C2.09695 13.5 1.5 12.903 1.5 12.1667V9.5M9.5 1.5H12.1667C12.903 1.5 13.5 2.09695 13.5 2.83333V5.5M13.5 9.5V12.1667C13.5 12.903 12.903 13.5 12.1667 13.5H9.5" stroke="#333333" strokeWidth="1.5" strokeLinecap="round" /> */}
+                {/*         </svg> */}
+                {/*     </button> */}
+                {/* </div> */}
+            </div>
+        );
+    }
+
+    // Render vertical layout if entire right panel is horizontally collapsed
+    if (collapsed) {
+        return (
+            <div className="py-8 w-12 min-w-[82px] max-w-[82px] flex flex-col items-center gap-4 bg-purpleSecondary justify-between rounded-xl">
+                <div style={{ transform: 'rotate(180deg)' }}>
+                    <span
+                        className='text-sm font-medium text-greyPrimary'
+                        style={{
+                            writingMode: 'vertical-lr',
+                            textOrientation: 'mixed',
+                            transform: 'rotate(180deg)',
+                            marginTop: 2
+                        }}
+                    >
+
+                        Output
+                    </span>
+                    {/* Assuming you have an icon for Output here, similar to CodeXml in CodeNavBar */}
+                    {/* <CodeXml style={{ transform: 'rotate(-90deg)' }} /> */}
+                </div>
+                <div className='flex flex-col items-center gap-[2rem]'>
+                    {/* Add any specific buttons for collapsed output if needed */}
+                </div>
                 <div className='flex flex-col items-center gap-[1rem]'>
                     <button className='py-2 px-3 rounded-[8px] hover:bg-white transition-all duration-300 ease-in'
                         // onClick={onFullscreen}
@@ -41,20 +78,24 @@ const OutputNavBar = ({ activeTab, setActiveTab, collapsed }) => {
                             <path d="M5.5 1.5H2.83333C2.09695 1.5 1.5 2.09695 1.5 2.83333V5.5M5.5 13.5H2.83333C2.09695 13.5 1.5 12.903 1.5 12.1667V9.5M9.5 1.5H12.1667C12.903 1.5 13.5 2.09695 13.5 2.83333V5.5M13.5 9.5V12.1667C13.5 12.903 12.903 13.5 12.1667 13.5H9.5" stroke="#333333" strokeWidth="1.5" strokeLinecap="round" />
                         </svg>
                     </button>
-                    <button
-                        style={{ transform: 'rotate(360deg)' }}
-                        className='py-2 px-3 rounded-[8px] hover:bg-white transition-all duration-300 ease-in'
-                        // onClick={onCollapse} 
-                        title="Collapse">
-                        <ChevronDown />
-                    </button>
+                    {/* Assuming you might want a collapse button here too when the whole panel is collapsed */}
+                    {/* <button */}
+                    {/*     style={{ transform: 'rotate(360deg)' }} */}
+                    {/*     className='py-2 px-3 rounded-[8px] hover:bg-white transition-all duration-300 ease-in' */}
+                    {/*     title="Collapse"> */}
+                    {/*     <ChevronDown /> */}
+                    {/* </button> */}
                 </div>
             </div>
-        );
+        )
     }
 
+    // Render horizontal layout when neither is collapsed
     return (
-        <div className="flex items-center justify-between gap-4 bg-purpleSecondary px-6 py-3 overflow-x-auto">
+        <div className={cn("flex items-center justify-between gap-4 bg-purpleSecondary px-6 py-3 overflow-x-auto", {
+            // Add a class to fix height when not vertically collapsed
+            'h-12': !isOutputCollapsed, // Example fixed height class, adjust as needed
+        })}>
             <div className='flex items-center gap-4'>
                 <button
                     className={cn(
@@ -89,13 +130,15 @@ const OutputNavBar = ({ activeTab, setActiveTab, collapsed }) => {
                         <path d="M5.5 1.5H2.83333C2.09695 1.5 1.5 2.09695 1.5 2.83333V5.5M5.5 13.5H2.83333C2.09695 13.5 1.5 12.903 1.5 12.1667V9.5M9.5 1.5H12.1667C12.903 1.5 13.5 2.09695 13.5 2.83333V5.5M13.5 9.5V12.1667C13.5 12.903 12.903 13.5 12.1667 13.5H9.5" stroke="#333333" strokeWidth="1.5" strokeLinecap="round" />
                     </svg>
                 </button>
-                <button
-                    style={{ transform: 'rotate(360deg)' }}
-                    className='py-2 px-3 rounded-[8px] hover:bg-white transition-all duration-300 ease-in'
-                    // onClick={onCollapse} 
-                    title="Collapse">
-                    <ChevronDown />
-                </button>
+                {/* This collapse button is for the *output section* vertical collapse */}
+                {/* We need to add a handler for this, possibly passed from CodeEditor */}
+                {/* <button */}
+                {/*     style={{ transform: 'rotate(360deg)' }} */}
+                {/*     className='py-2 px-3 rounded-[8px] hover:bg-white transition-all duration-300 ease-in' */}
+                {/*     onClick={onOutputCollapse} // Pass the handler here */}
+                {/*     title={isOutputCollapsed ? "Expand Output" : "Collapse Output"}> */}
+                {/*     <ChevronDown className={isOutputCollapsed ? "transform rotate-180" : ""} /> */}
+                {/* </button> */}
             </div>
         </div>
     );

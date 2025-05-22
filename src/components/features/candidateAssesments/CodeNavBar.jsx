@@ -4,6 +4,8 @@ import { ChevronDown, Play, RotateCcw, Braces, CodeXml, ChevronUp } from 'lucide
 import { FaCheckCircle } from "react-icons/fa";
 import { fetchLanguageRuntimes, executeCode } from '@/api/monacoCodeApi'
 import { cn } from '@/lib/utils';
+import { motion } from 'framer-motion';
+
 const ALLOWED_LANGUAGES = [
     { key: 'python', display: 'Python 3' },
     { key: 'javascript', display: 'JavaScript' },
@@ -106,7 +108,7 @@ const CodeNavBar = ({
     }
     if (collapsed) {
         return (
-            <div className="py-8 w-12 min-w-[52px] max-w-[52px] flex flex-col items-center gap-4 bg-purpleSecondary justify-between rounded-xl overflow-hidden">
+            <div className="py-8 w-12 min-w-[82px] max-w-[82px] flex flex-col items-center gap-4 bg-purpleSecondary justify-between rounded-xl">
                 <div style={{ transform: 'rotate(180deg)' }}>
                     <span
                         className='text-sm font-medium text-greyPrimary'
@@ -196,7 +198,7 @@ const CodeNavBar = ({
     }
 
     return (
-        <div className={cn('px-6 py-3 bg-purpleSecondary rounded-tl-2xl rounded-tr-2xl flex justify-between min-w-0 overflow-x-auto code-navbar-container', {
+        <div className={cn('h-[51px] px-6 py-3 bg-purpleSecondary rounded-tl-2xl rounded-tr-2xl flex justify-between min-w-0 overflow-x-auto', {
             'rounded-2xl': isEditorCollapsed,
         })}>
             {/* language selector */}
@@ -294,11 +296,17 @@ const CodeNavBar = ({
                         <>
                             {/* collapse button */}
                             <button
-                                className='py-2 px-3 rounded-[8px] hover:bg-white transition-all duration-300 ease-in'
+                                className='py-2 px-3 rounded-[8px] hover:bg-white transition-all duration-300 ease-in-out'
                                 onClick={onCollapse}
                                 title={isEditorCollapsed ? "Expand Editor" : "Collapse Editor"}
                             >
-                                {isEditorCollapsed ? <ChevronDown /> : <ChevronUp />}
+                                <motion.div
+                                    animate={{ rotate: isEditorCollapsed ? 180 : 0 }}
+                                    transition={{ duration: 0.3, ease: 'easeInOut' }}
+                                    style={{ display: 'inline-block' }}
+                                >
+                                    <ChevronDown />
+                                </motion.div>
                             </button>
                             {/* fullscreen button */}
                             {onFullscreen && (

@@ -26,7 +26,9 @@ const Output = ({
   activeTab,
   setActiveTab,
   loading,
-  collapsed
+  isOutputCollapsed,
+  isRightPanelCollapsed,
+  onOutputCollapse
 }) => {
   const [newInput, setNewInput] = useState('');
   const [inputError, setInputError] = useState('');
@@ -66,19 +68,29 @@ const Output = ({
     }
   };
 
-  if (collapsed) {
+  if (isOutputCollapsed) {
     return (
-      <OutputNavBar activeTab={activeTab} setActiveTab={setActiveTab} collapsed />
+      <OutputNavBar
+        activeTab={activeTab}
+        setActiveTab={setActiveTab}
+        isOutputCollapsed={isOutputCollapsed}
+        onOutputCollapse={onOutputCollapse}
+      />
     )
   }
 
   return (
     <div className="bg-white rounded-2xl shadow  h-full flex flex-col overflow-x-auto">
       {/* Tabs */}
-      <OutputNavBar activeTab={activeTab} setActiveTab={setActiveTab} />
+      <OutputNavBar
+        activeTab={activeTab}
+        setActiveTab={setActiveTab}
+        isOutputCollapsed={isOutputCollapsed}
+        onOutputCollapse={onOutputCollapse}
+      />
       {/* Tab Content */}
       {activeTab === 'cases' && (
-        <div className="flex-1 overflow-auto pt-8 min-h-[330px]">
+        <div className="flex-1 overflow-auto pt-8">
           {/* Test case tabs */}
           <div className="flex justify-center items-center gap-2">
             {allCases.map((tc, idx) => (
@@ -172,7 +184,7 @@ const Output = ({
             </div>
           ) : (
             output.length > 0 ? (
-              <div className='w-full flex flex-col gap-4 min-h-[330px]'>
+              <div className='w-full flex flex-col gap-4'>
                 {/* Runtime Error Box */}
                 {result.stdout && result.stdout.toLowerCase().includes('error') ? (
                   <div className="bg-[#FFE5E5] border border-[#FFBABA] rounded-lg p-6 mb-2">
@@ -227,7 +239,7 @@ const Output = ({
                 ) : null}
               </div>
             ) : (
-              <div className="flex-1 flex items-center justify-center min-h-[330px] h-full overflow-hidden">
+              <div className="flex-1 flex items-center justify-center h-full overflow-hidden">
                 <span className="text-gray-400 text-lg text-center">You must run your code first</span>
               </div>
             )
