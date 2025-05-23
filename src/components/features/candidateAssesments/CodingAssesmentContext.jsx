@@ -10,6 +10,7 @@ export function CodingAssesmentProvider({ children }) {
     const [sidebarWidth, setSidebarWidth] = useState(540); // default width
     const [isCollapsed, setIsCollapsed] = useState(false);
     const [isFullscreen, setIsFullscreen] = useState(false);
+    const [isOutputFullscreen, setIsOutputFullscreen] = useState(false)
     const sidebarRef = useRef(null);
     const isResizing = useRef(false);
     const [rightPanelWidth, setRightPanelWidth] = useState(0);
@@ -25,6 +26,7 @@ export function CodingAssesmentProvider({ children }) {
             sidebarWidth, setSidebarWidth,
             isCollapsed, setIsCollapsed,
             isFullscreen, setIsFullscreen,
+            isOutputFullscreen, setIsOutputFullscreen,
             sidebarRef, isResizing,
             rightPanelWidth, setRightPanelWidth,
             isRightCollapsed, setIsRightCollapsed

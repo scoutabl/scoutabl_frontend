@@ -108,7 +108,7 @@ const CodeNavBar = ({
     }
     if (collapsed) {
         return (
-            <div className="py-8 w-12 min-w-[52px] max-w-[52px] flex flex-col items-center gap-4 bg-purpleSecondary justify-between rounded-xl">
+            <div className="py-3 w-12 min-w-[52px] max-w-[52px] flex flex-col items-center gap-4 bg-purpleSecondary justify-between rounded-xl overflow-hidden">
                 <div style={{ transform: 'rotate(180deg)' }}>
                     <span
                         className='text-sm font-medium text-greyPrimary'
@@ -124,7 +124,7 @@ const CodeNavBar = ({
                     </span>
                     <CodeXml style={{ transform: 'rotate(-90deg)' }} />
                 </div>
-                <div className='flex flex-col items-center gap-[2rem]'>
+                {/* <div className='flex flex-col items-center gap-[2rem]'>
                     <button
                         style={{ transform: 'rotate(180deg)' }}
                         className="relative flex flex-col items-center gap-2 px-2 py-2 text-greyPrimary text-sm font-medium border-b-2 transition-colors duration-200 border-transparent rounded-md hover:bg-white"
@@ -179,8 +179,8 @@ const CodeNavBar = ({
                         </span>
                         <RotateCcw color='#EB5757' size={20} style={{ transform: 'rotate(-90deg)' }} />
                     </button>
-                </div>
-                <div className='flex flex-col items-center gap-[1rem]'>
+                </div> */}
+                {/* <div className='flex flex-col items-center gap-[1rem]'>
                     <button className='py-2 px-3 rounded-[8px] hover:bg-white transition-all duration-300 ease-in' onClick={onFullscreen} title="Fullscreen">
                         <svg width="15" height="15" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg">
                             <path d="M5.5 1.5H2.83333C2.09695 1.5 1.5 2.09695 1.5 2.83333V5.5M5.5 13.5H2.83333C2.09695 13.5 1.5 12.903 1.5 12.1667V9.5M9.5 1.5H12.1667C12.903 1.5 13.5 2.09695 13.5 2.83333V5.5M13.5 9.5V12.1667C13.5 12.903 12.903 13.5 12.1667 13.5H9.5" stroke="#333333" strokeWidth="1.5" strokeLinecap="round" />
@@ -192,7 +192,7 @@ const CodeNavBar = ({
                         onClick={onCollapse} title="Collapse">
                         <ChevronDown />
                     </button>
-                </div>
+                </div> */}
             </div>
         );
     }

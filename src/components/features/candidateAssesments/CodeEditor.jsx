@@ -8,6 +8,7 @@ import { useCodingAssesment } from './CodingAssesmentContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import codeUpload from '/codeUpload.svg'
 import githubLight from 'monaco-themes/themes/GitHub Light.json';
+import { cn } from '@/lib/utils';
 const MIN_OUTPUT_HEIGHT = 60;
 const MIN_EDITOR_HEIGHT = 100;
 const RESIZER_HEIGHT = 4;
@@ -28,9 +29,14 @@ const CodeEditor = ({ testCases, inputVars, callPattern, collapsed }) => {
     const [isOutputCollapsed, setIsOutputCollapsed] = useState(false);
     const [isEditorCollapsed, setIsEditorCollapsed] = useState(false); // New state for editor collapse
     const isResizing = useRef(false);
+    const [isDraggingResizer, setIsDraggingResizer] = useState(false); // New state for drag cursor
     const { isFullscreen, setIsFullscreen } = useCodingAssesment();
+    const { isOutputFullscreen, setIsOutputFullscreen } = useCodingAssesment();
     const [currentLine, setCurrentLine] = useState(0);
     const [cursorPosition, setCursorPosition] = useState({ line: 1, column: 1 });
+
+    // New state to remember the last output height before collapsing
+    const [lastOutputHeight, setLastOutputHeight] = useState(null);
 
     // Set initial 50/50 split and layout editor
     useEffect(() => {
@@ -95,63 +101,101 @@ const CodeEditor = ({ testCases, inputVars, callPattern, collapsed }) => {
 
     // Handler for manually collapsing/expanding the Output section
     const handleOutputCollapseButton = () => {
+        const container = containerRef.current;
+        if (!container) return;
+        const containerHeight = container.offsetHeight;
+        const RESIZER_HEIGHT = 4;
+        const OUTPUT_NAVBAR_MIN_HEIGHT = 54;
+
         if (isOutputCollapsed) {
+            // Expanding
             setIsOutputCollapsed(false);
-            setIsEditorCollapsed(false);
-            // No need to set editorHeight here, flex: 1 on output and editor will distribute space
+            setIsEditorCollapsed(false); // Ensure editor is not collapsed either
+
+            // Calculate potential editor height if restoring last output height
+            const potentialEditorHeightFromLast = lastOutputHeight ? containerHeight - lastOutputHeight - RESIZER_HEIGHT : null;
+
+            // If lastOutputHeight is valid and restoring it keeps editor > MIN_EDITOR_HEIGHT
+            if (lastOutputHeight > OUTPUT_NAVBAR_MIN_HEIGHT && potentialEditorHeightFromLast >= MIN_EDITOR_HEIGHT) {
+                // Restore to the remembered output height
+                setEditorHeight(potentialEditorHeightFromLast);
+            } else {
+                // Return to default 50/50 split
+                const half = Math.max(Math.floor(containerHeight / 2), MIN_EDITOR_HEIGHT);
+                setEditorHeight(half);
+            }
+            setLastEditorHeight(editorHeight); // Update last editor height for editor collapse toggle
+
         } else {
+            // Collapsing
+            // Remember the current output height before collapsing
+            const currentOutputHeight = containerHeight - editorHeight - RESIZER_HEIGHT;
+            if (currentOutputHeight > OUTPUT_NAVBAR_MIN_HEIGHT) { // Only remember if it was larger than the collapsed height
+                setLastOutputHeight(currentOutputHeight);
+            }
+
             setIsOutputCollapsed(true);
-            setIsEditorCollapsed(false);
+            setIsEditorCollapsed(false); // Ensure editor is not collapsed when output collapses
+
+            // Editor will take remaining height, handled by rendering logic
         }
     };
 
     // Mouse event handlers for resizing
     const handleMouseDown = (e) => {
+        e.preventDefault(); // Prevent default browser behavior (like text selection)
         isResizing.current = true;
+        setIsDraggingResizer(true); // Set dragging state to true
         document.body.style.cursor = 'row-resize';
         window.addEventListener('mousemove', handleMouseMove);
         window.addEventListener('mouseup', handleMouseUp);
     };
     const handleMouseMove = (e) => {
+        e.preventDefault(); // Prevent default browser behavior (like text selection)
         if (!isResizing.current) return;
         const container = containerRef.current;
         if (!container) return;
         const containerTop = container.getBoundingClientRect().top;
         const containerHeight = container.offsetHeight;
-        const y = e.clientY - containerTop;
+        let y = e.clientY - containerTop; // Use 'let' so we can modify y
 
-        // Collapse editor if dragged near top
-        if (y < MIN_EDITOR_HEIGHT / 2) {
+        // Clamp the y position to the valid range
+        // Minimum y: ensures editor is at least MIN_EDITOR_HEIGHT
+        const minAllowedY = MIN_EDITOR_HEIGHT;
+        // Maximum y: ensures output is at least 54px (OutputNavBar height)
+        const maxAllowedY = containerHeight - 54; // Use 54 directly as it's the min height of OutputNavBar
+
+        // Clamp y to be within the allowed range
+        y = Math.max(minAllowedY, Math.min(y, maxAllowedY));
+
+        // Update collapse states based on clamped y
+        // Only update collapse states if we are exactly at the boundary
+        if (y === minAllowedY) {
             setIsEditorCollapsed(true);
             setIsOutputCollapsed(false);
-            setLastEditorHeight(editorHeight);
-            setEditorHeight(MIN_EDITOR_HEIGHT); // Keep a small height for the navbar to be visible
-            return;
-        }
-        // Collapse output if dragged near bottom
-        if (containerHeight - y < MIN_OUTPUT_HEIGHT / 2) {
-            setIsOutputCollapsed(true);
+        } else if (y === maxAllowedY) {
             setIsEditorCollapsed(false);
-            setEditorHeight(containerHeight - RESIZER_HEIGHT); // Editor takes almost full height above resizer
-            return;
-        }
-        // Normal resize
-        setIsEditorCollapsed(false);
-        setIsOutputCollapsed(false);
-        const newHeight = Math.max(y, MIN_EDITOR_HEIGHT);
-        if (newHeight <= MIN_EDITOR_HEIGHT) {
-            setIsEditorCollapsed(true);
+            setIsOutputCollapsed(true);
+        } else {
+            setIsEditorCollapsed(false);
             setIsOutputCollapsed(false);
-            setLastEditorHeight(editorHeight);
-            setEditorHeight(MIN_EDITOR_HEIGHT);
-            return;
         }
-        setEditorHeight(newHeight);
-        setLastEditorHeight(newHeight);
+
+
+        // Set editor height based on the clamped y position
+        setEditorHeight(y);
+        setLastEditorHeight(y);
+
+        // If not collapsed, remember the current output height for future collapse
+        if (!isOutputCollapsed && y < maxAllowedY) { // Only remember if not fully collapsed to bottom
+            setLastOutputHeight(containerHeight - y - RESIZER_HEIGHT);
+        }
+
         // editor.layout() will be called by ResizeObserver
     };
     const handleMouseUp = () => {
         isResizing.current = false;
+        setIsDraggingResizer(false); // Set dragging state to false
         document.body.style.cursor = '';
         window.removeEventListener('mousemove', handleMouseMove);
         window.removeEventListener('mouseup', handleMouseUp);
@@ -187,41 +231,83 @@ const CodeEditor = ({ testCases, inputVars, callPattern, collapsed }) => {
         }
     };
 
+    //code editor full screen
     if (isFullscreen) {
         // Fullscreen: only show CodeNavBar and Editor, fill 100% height
         return (
-            <div className="flex flex-col h-full w-full" style={{ height: '100vh', width: '100vw', background: '#18181b' }}>
-                <div className='px-6 py-3 bg-purpleSecondary rounded-tl-2xl rounded-tr-2xl'>
-                    <CodeNavBar
-                        language={language}
-                        onSelect={onSelect}
-                        editorRef={editorRef}
-                        setOutput={setOutput}
+            <div
+                className="fixed inset-0 flex items-center justify-center z-50"
+                style={{ background: '#18181b' }}
+            >
+                <div
+                    className="flex flex-col"
+                    style={{ height: '90vh', width: '90vw', background: '#18181b' }}
+                >
+                    <div className='px-6 py-3 bg-purpleSecondary rounded-tl-2xl rounded-tr-2xl'>
+                        <CodeNavBar
+                            language={language}
+                            onSelect={onSelect}
+                            editorRef={editorRef}
+                            setOutput={setOutput}
+                            testCases={testCases}
+                            userTestCases={userTestCases}
+                            inputVars={inputVars}
+                            selectedCase={selectedCase}
+                            setActiveTab={setActiveTab}
+                            setLoading={setLoading}
+                            loading={loading}
+                            callPattern={callPattern}
+                            onExitFullscreen={() => setIsFullscreen(false)}
+                        />
+                    </div>
+                    <div className="flex-1 min-h-0 rounded-bl-2xl rounded-br-2xl overflow-auto border border-gray-200">
+                        <Editor
+                            language={language}
+                            defaultValue={CODE_SNIPPETS[language]}
+                            height="100%"
+                            width="100%"
+                            onMount={onMount}
+                            value={value}
+                            onChange={(value) => {
+                                setValue(value);
+                                setCurrentLine(editorRef.current.getPosition()?.lineNumber || 0);
+                            }}
+                            theme="github-light"
+                            beforeMount={handleEditorBeforeMount}
+                        />
+                    </div>
+                </div>
+            </div>
+        )
+    }
+
+    // Output Full Screen
+    if (isOutputFullscreen) {
+        return (
+            <div
+                className="fixed inset-0 flex items-center justify-center z-50"
+                style={{ background: '#18181b' }}
+            >
+                <div
+                    className="flex flex-col"
+                    style={{ height: '90vh', width: '90vw', background: '#fff' }}
+                >
+                    <Output
+                        output={output}
                         testCases={testCases}
                         userTestCases={userTestCases}
+                        setUserTestCases={setUserTestCases}
                         inputVars={inputVars}
                         selectedCase={selectedCase}
+                        setSelectedCase={setSelectedCase}
+                        activeTab={activeTab}
                         setActiveTab={setActiveTab}
-                        setLoading={setLoading}
                         loading={loading}
-                        callPattern={callPattern}
-                        onExitFullscreen={() => setIsFullscreen(false)}
-                    />
-                </div>
-                <div className="flex-1 min-h-0 rounded-bl-2xl rounded-br-2xl overflow-auto border border-gray-200">
-                    <Editor
-                        language={language}
-                        defaultValue={CODE_SNIPPETS[language]}
-                        height="100%"
-                        width="100%"
-                        onMount={onMount}
-                        value={value}
-                        onChange={(value) => {
-                            setValue(value);
-                            setCurrentLine(editorRef.current.getPosition()?.lineNumber || 0);
-                        }}
-                        theme="github-light"
-                        beforeMount={handleEditorBeforeMount}
+                        isOutputCollapsed={isOutputCollapsed}
+                        isRightPanelCollapsed={collapsed}
+                        onOutputCollapse={handleOutputCollapseButton}
+                        collapsed={collapsed}
+                        onExitFullscreen={() => setIsOutputFullscreen(false)}
                     />
                 </div>
             </div>
@@ -230,29 +316,58 @@ const CodeEditor = ({ testCases, inputVars, callPattern, collapsed }) => {
 
     if (collapsed) {
         return (
-            <div className='flex flex-col h-[calc(100vh_-_116px)] min-h-0 overflow-hidden'>
-                <CodeNavBar
-                    collapsed
-                    setLoading={setLoading}
-                    loading={loading}
-                    onFullscreen={() => setIsFullscreen(true)}
-                />
-                {/* resizer bar */}
-                <div className="h-2 w-full flex items-center justify-center cursor-row-resize">
+            <div ref={containerRef} className='flex flex-col h-full min-h-0'> {/* Use the same outer container structure and ref */}
+                {/* Vertical CodeNavBar Wrapper (Resizable) */}
+                <div
+                    style={{ height: editorHeight, minHeight: 54, transition: 'height 0.2s' }} // Use editorHeight, min height of vertical CodeNavBar
+                    className="flex-shrink-0 flex flex-col items-center bg-purpleSecondary rounded-xl py-3 overflow-hidden" // Add overflow-hidden here as well
+                >
+                    <CodeNavBar
+                        collapsed={collapsed}
+                        setLoading={setLoading}
+                        loading={loading}
+                        onFullscreen={() => setIsFullscreen(true)}
+                        onCollapse={handleCollapseButton}
+                        isEditorCollapsed={isEditorCollapsed}
+                    />
+                </div>
+                {/* Vertical Resizer */}
+                <div
+                    className={cn("py-3 h-1 w-full flex items-center justify-center cursor-row-resize", {
+                        'cursor-row-resize': isDraggingResizer // Conditionally apply cursor class
+                    })}
+                    style={{ minHeight: RESIZER_HEIGHT, maxHeight: RESIZER_HEIGHT }}
+                    onMouseDown={handleMouseDown} // Keep mouse down handler for vertical resize
+                >
                     <div className="w-12 h-1 rounded-full bg-greyAccent" />
                 </div>
-                {/* Only OutputNavBar, not Output */}
-                <OutputNavBar
-                    activeTab={activeTab}
-                    setActiveTab={setActiveTab}
-                    collapsed={true}
-                    collapseDirection="horizontal"
-                />
+                {/* Vertical Output Wrapper (Resizable) */}
+                <div
+                    style={{ flex: 1, minHeight: 54, transition: 'height 0.2s' }} // Take remaining height, min height of OutputNavBar
+                    className="flex flex-col bg-white rounded-xl overflow-hidden" // Add overflow-hidden here
+                >
+                    <Output
+                        output={output}
+                        testCases={testCases}
+                        userTestCases={userTestCases}
+                        setUserTestCases={setUserTestCases}
+                        inputVars={inputVars}
+                        selectedCase={selectedCase}
+                        setSelectedCase={setSelectedCase}
+                        activeTab={activeTab}
+                        setActiveTab={setActiveTab}
+                        loading={loading}
+                        isOutputCollapsed={isOutputCollapsed}
+                        isRightPanelCollapsed={collapsed}
+                        onOutputCollapse={handleOutputCollapseButton}
+                        collapsed={collapsed} // Pass collapsed prop to Output
+                    />
+                </div>
             </div>
         )
     }
 
-    // Always render the full editor and output, never collapse
+    // Expanded horizontal layout
     return (
         <div ref={containerRef} className="flex flex-col h-full min-h-0 overflow-x-auto">
             {/* CodeNavBar always visible */}
@@ -272,15 +387,20 @@ const CodeEditor = ({ testCases, inputVars, callPattern, collapsed }) => {
                 onFullscreen={() => setIsFullscreen(true)}
                 onCollapse={handleCollapseButton}
                 isEditorCollapsed={isEditorCollapsed}
+                collapsed={collapsed}
             />
             {/* Collapsible Editor + Status Bar */}
             <div
                 ref={editorWrapperRef}
-                style={{ height: isEditorCollapsed ? 0 : editorHeight, minHeight: isEditorCollapsed ? 0 : MIN_EDITOR_HEIGHT, transition: 'height 0.2s' }}
+                style={{
+                    height: isEditorCollapsed ? 0 : (isOutputCollapsed ? `calc(100% - ${54 + RESIZER_HEIGHT}px)` : editorHeight),
+                    minHeight: isEditorCollapsed ? 0 : MIN_EDITOR_HEIGHT,
+                    transition: 'height 0.2s'
+                }}
                 className="flex flex-col rounded-bl-2xl rounded-br-2xl bg-white"
             >
                 <AnimatePresence>
-                    {!isEditorCollapsed && (
+                    {!isEditorCollapsed && !collapsed && (
                         <motion.div
                             key="editor"
                             initial={{ opacity: 0 }}
@@ -291,7 +411,6 @@ const CodeEditor = ({ testCases, inputVars, callPattern, collapsed }) => {
                             style={{ overflow: 'hidden' }}
                         >
                             <Editor
-
                                 language={language}
                                 defaultValue={CODE_SNIPPETS[language]}
                                 height="100%"
@@ -309,7 +428,7 @@ const CodeEditor = ({ testCases, inputVars, callPattern, collapsed }) => {
                     )}
                 </AnimatePresence>
                 {/* Status bar */}
-                {!isEditorCollapsed && (
+                {!isEditorCollapsed && !collapsed && (
                     <div className="mb-6 rounded-bl-2xl rounded-br-2xl flex items-center justify-between px-4 py-1 bg-white text-xs text-gray-500">
                         <div className='flex items-center gap-2'>
                             <img src={codeUpload} alt="save" className="w-6 h-6" />
@@ -321,44 +440,40 @@ const CodeEditor = ({ testCases, inputVars, callPattern, collapsed }) => {
             </div>
             {/* Resizer */}
             <div
-                className="my-3 h-1 w-full flex items-center justify-center cursor-row-resize"
+                className={cn("py-3 h-1 w-full flex items-center justify-center cursor-row-resize", {
+                    'cursor-row-resize': isDraggingResizer
+                })}
                 style={{ minHeight: RESIZER_HEIGHT, maxHeight: RESIZER_HEIGHT }}
                 onMouseDown={handleMouseDown}
             >
                 <div className="w-12 h-1 rounded-full bg-greyAccent" />
             </div>
             {/* Output Container */}
-            <div className="flex-1 min-h-0 flex flex-col">
-                <motion.div
-                    animate={{
-                        height: isOutputCollapsed ? RESIZER_HEIGHT + (collapsed ? 0 : 40) : undefined,
-                        opacity: isOutputCollapsed ? 1 : 1, // Always render OutputNavBar, so keep opacity 1
-                    }}
-                    style={{
-                        overflow: 'hidden',
-                        minHeight: isOutputCollapsed ? 0 : MIN_OUTPUT_HEIGHT,
-                        flex: isOutputCollapsed ? 0 : 1,
-                    }}
-                    transition={{ duration: 0.3, ease: 'easeInOut' }}
-                    className="flex-1 min-h-0"
-                >
-                    <Output
-                        output={output}
-                        testCases={testCases}
-                        userTestCases={userTestCases}
-                        setUserTestCases={setUserTestCases}
-                        inputVars={inputVars}
-                        selectedCase={selectedCase}
-                        setSelectedCase={setSelectedCase}
-                        activeTab={activeTab}
-                        setActiveTab={setActiveTab}
-                        loading={loading}
-                        isOutputCollapsed={isOutputCollapsed}
-                        isRightPanelCollapsed={collapsed}
-                        onOutputCollapse={handleOutputCollapseButton}
-                        collapsed={collapsed}
-                    />
-                </motion.div>
+            <div
+                className="flex flex-col"
+                style={{
+                    height: isOutputCollapsed ? 54 : undefined,
+                    flex: isOutputCollapsed ? 0 : 1,
+                    minHeight: isOutputCollapsed ? 54 : MIN_OUTPUT_HEIGHT,
+                    overflow: 'hidden',
+                }}
+            >
+                <Output
+                    output={output}
+                    testCases={testCases}
+                    userTestCases={userTestCases}
+                    setUserTestCases={setUserTestCases}
+                    inputVars={inputVars}
+                    selectedCase={selectedCase}
+                    setSelectedCase={setSelectedCase}
+                    activeTab={activeTab}
+                    setActiveTab={setActiveTab}
+                    loading={loading}
+                    isOutputCollapsed={isOutputCollapsed}
+                    isRightPanelCollapsed={collapsed}
+                    onOutputCollapse={handleOutputCollapseButton}
+                    collapsed={collapsed}
+                />
             </div>
         </div>
     )
