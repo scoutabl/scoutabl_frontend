@@ -108,7 +108,7 @@ const CodeNavBar = ({
     }
     if (collapsed) {
         return (
-            <div className="py-8 w-12 min-w-[82px] max-w-[82px] flex flex-col items-center gap-4 bg-purpleSecondary justify-between rounded-xl">
+            <div className="py-8 w-12 min-w-[52px] max-w-[52px] flex flex-col items-center gap-4 bg-purpleSecondary justify-between rounded-xl">
                 <div style={{ transform: 'rotate(180deg)' }}>
                     <span
                         className='text-sm font-medium text-greyPrimary'
@@ -296,7 +296,7 @@ const CodeNavBar = ({
                         <>
                             {/* collapse button */}
                             <button
-                                className='py-2 px-3 rounded-[8px] hover:bg-white transition-all duration-300 ease-in-out'
+                                className='h-8 w-8 grid place-content-center rounded-[8px] hover:bg-white transition-all duration-300 ease-in-out'
                                 onClick={onCollapse}
                                 title={isEditorCollapsed ? "Expand Editor" : "Collapse Editor"}
                             >
@@ -310,7 +310,7 @@ const CodeNavBar = ({
                             </button>
                             {/* fullscreen button */}
                             {onFullscreen && (
-                                <button className='py-2 px-3 rounded-[8px] hover:bg-white transition-all duration-300 ease-in' onClick={onFullscreen} title="Fullscreen">
+                                <button className='h-8 w-8 grid place-content-center rounded-[8px] hover:bg-white transition-all duration-300 ease-in' onClick={onFullscreen} title="Fullscreen">
                                     <svg width="15" height="15" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg">
                                         <path d="M5.5 1.5H2.83333C2.09695 1.5 1.5 2.09695 1.5 2.83333V5.5M5.5 13.5H2.83333C2.09695 13.5 1.5 12.903 1.5 12.1667V9.5M9.5 1.5H12.1667C12.903 1.5 13.5 2.09695 13.5 2.83333V5.5M13.5 9.5V12.1667C13.5 12.903 12.903 13.5 12.1667 13.5H9.5" stroke="#333333" strokeWidth="1.5" strokeLinecap="round" />
                                     </svg>

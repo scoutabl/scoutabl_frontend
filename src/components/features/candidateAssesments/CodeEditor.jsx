@@ -1,11 +1,12 @@
 import { useRef, useState, useEffect } from 'react'
 import { Editor } from '@monaco-editor/react'
 import CodeNavBar from './CodeNavBar'
+import OutputNavBar from './OutputNavBar'
 import { CODE_SNIPPETS } from '@/lib/constants'
 import Output from './Output'
 import { useCodingAssesment } from './CodingAssesmentContext';
 import { motion, AnimatePresence } from 'framer-motion';
-import monokaiTheme from 'monaco-themes/themes/Monokai.json';
+import codeUpload from '/codeUpload.svg'
 import githubLight from 'monaco-themes/themes/GitHub Light.json';
 const MIN_OUTPUT_HEIGHT = 60;
 const MIN_EDITOR_HEIGHT = 100;
@@ -240,10 +241,12 @@ const CodeEditor = ({ testCases, inputVars, callPattern, collapsed }) => {
                 <div className="h-2 w-full flex items-center justify-center cursor-row-resize">
                     <div className="w-12 h-1 rounded-full bg-greyAccent" />
                 </div>
-                <Output
-                    collapsed
+                {/* Only OutputNavBar, not Output */}
+                <OutputNavBar
                     activeTab={activeTab}
                     setActiveTab={setActiveTab}
+                    collapsed={true}
+                    collapseDirection="horizontal"
                 />
             </div>
         )
@@ -274,7 +277,7 @@ const CodeEditor = ({ testCases, inputVars, callPattern, collapsed }) => {
             <div
                 ref={editorWrapperRef}
                 style={{ height: isEditorCollapsed ? 0 : editorHeight, minHeight: isEditorCollapsed ? 0 : MIN_EDITOR_HEIGHT, transition: 'height 0.2s' }}
-                className="flex flex-col rounded-bl-2xl rounded-br-2xl border border-gray-200 bg-white"
+                className="flex flex-col rounded-bl-2xl rounded-br-2xl bg-white"
             >
                 <AnimatePresence>
                     {!isEditorCollapsed && (
@@ -284,7 +287,7 @@ const CodeEditor = ({ testCases, inputVars, callPattern, collapsed }) => {
                             animate={{ opacity: 1 }}
                             exit={{ opacity: 0 }}
                             transition={{ duration: 0.2 }}
-                            className="flex-1 min-h-0"
+                            className="flex-1 min-h-0 pt-6"
                             style={{ overflow: 'hidden' }}
                         >
                             <Editor
@@ -307,11 +310,10 @@ const CodeEditor = ({ testCases, inputVars, callPattern, collapsed }) => {
                 </AnimatePresence>
                 {/* Status bar */}
                 {!isEditorCollapsed && (
-                    <div className="flex items-center justify-between px-4 py-1 bg-white border-t border-gray-200 text-xs text-gray-500">
-                        <div>
-
-                            <span>Saved</span>
-
+                    <div className="mb-6 rounded-bl-2xl rounded-br-2xl flex items-center justify-between px-4 py-1 bg-white text-xs text-gray-500">
+                        <div className='flex items-center gap-2'>
+                            <img src={codeUpload} alt="save" className="w-6 h-6" />
+                            <span className='text-greyTertiary text-sm'>Saved</span>
                         </div>
                         <span>Ln {cursorPosition.line}, Col {cursorPosition.column}</span>
                     </div>
@@ -330,7 +332,7 @@ const CodeEditor = ({ testCases, inputVars, callPattern, collapsed }) => {
                 <motion.div
                     animate={{
                         height: isOutputCollapsed ? RESIZER_HEIGHT + (collapsed ? 0 : 40) : undefined,
-                        opacity: isOutputCollapsed ? 0 : 1,
+                        opacity: isOutputCollapsed ? 1 : 1, // Always render OutputNavBar, so keep opacity 1
                     }}
                     style={{
                         overflow: 'hidden',
@@ -354,6 +356,7 @@ const CodeEditor = ({ testCases, inputVars, callPattern, collapsed }) => {
                         isOutputCollapsed={isOutputCollapsed}
                         isRightPanelCollapsed={collapsed}
                         onOutputCollapse={handleOutputCollapseButton}
+                        collapsed={collapsed}
                     />
                 </motion.div>
             </div>

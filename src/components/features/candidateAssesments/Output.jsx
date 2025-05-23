@@ -68,13 +68,27 @@ const Output = ({
     }
   };
 
-  if (isOutputCollapsed) {
+  if (isOutputCollapsed && !isRightPanelCollapsed) {
     return (
       <OutputNavBar
         activeTab={activeTab}
         setActiveTab={setActiveTab}
         isOutputCollapsed={isOutputCollapsed}
         onOutputCollapse={onOutputCollapse}
+        collapseDirection="vertical"
+      />
+    )
+  }
+
+  if (isRightPanelCollapsed) {
+    return (
+      <OutputNavBar
+        activeTab={activeTab}
+        setActiveTab={setActiveTab}
+        collapsed={isRightPanelCollapsed}
+        isOutputCollapsed={isOutputCollapsed}
+        onOutputCollapse={onOutputCollapse}
+        collapseDirection="horizontal"
       />
     )
   }

@@ -1,57 +1,59 @@
 import testCaseIcon from '/testCaseIcon.svg';
 import testResultIcon from '/testResultIcon.svg';
 import { cn } from '@/lib/utils';
-import { ChevronDown } from 'lucide-react';
-const OutputNavBar = ({ activeTab, setActiveTab, collapsed, isOutputCollapsed, onOutputCollapse }) => {
-
-    // Render vertical layout if Output section is vertically collapsed
-    if (isOutputCollapsed) {
+import { ChevronDown, ChevronUp } from 'lucide-react';
+import { motion } from 'framer-motion';
+// Add collapseDirection prop
+const OutputNavBar = ({ activeTab, setActiveTab, collapsed, isOutputCollapsed, onOutputCollapse, collapseDirection }) => {
+    // Render horizontal OutputNavBar if vertically collapsed
+    if (collapseDirection === 'vertical') {
         return (
-            <div className="py-8 min-w-[52px] max-w-[52px] flex flex-col items-center gap-4 bg-purpleSecondary justify-around rounded-xl overflow-hidden">
+            <div className="w-full min-h-[52px] max-h-[52px] flex flex-row items-center gap-4 bg-purpleSecondary justify-around rounded-t-xl overflow-hidden">
                 <button
-                    style={{ transform: 'rotate(180deg)' }}
                     className={cn(
-                        "flex flex-col items-center gap-2 px-2 py-2 text-greyPrimary text-sm font-medium border-b-2 transition-colors duration-200 border-transparent rounded-full",
+                        "flex flex-row items-center gap-2 px-2 py-2 text-greyPrimary text-sm font-medium border-b-2 transition-colors duration-200 border-transparent rounded-full",
                         {
                             "bg-white": activeTab === 'cases',
                         }
                     )}
                     onClick={() => setActiveTab && setActiveTab('cases')}
                 >
-                    <span style={{ writingMode: 'vertical-lr', textOrientation: 'mixed', transform: 'rotate(180deg)' }}>Testcase</span>
-                    <img src={testCaseIcon} alt="testCaseIcon" style={{ transform: 'rotate(-90deg)' }} />
+                    <img src={testCaseIcon} alt="testCaseIcon" style={{ transform: 'rotate(0deg)' }} />
+                    <span>Testcase</span>
                 </button>
                 <button
-                    style={{ transform: 'rotate(180deg)' }}
                     className={cn(
-                        "flex flex-col items-center gap-2 px-2 py-2 text-greyPrimary text-sm font-medium border-b-2 transition-colors duration-200 border-transparent rounded-full",
+                        "flex flex-row items-center gap-2 px-2 py-2 text-greyPrimary text-sm font-medium border-b-2 transition-colors duration-200 border-transparent rounded-full",
                         {
                             "bg-white": activeTab === 'results',
                         }
                     )}
                     onClick={() => setActiveTab && setActiveTab('results')}
                 >
-                    <span style={{ writingMode: 'vertical-lr', textOrientation: 'mixed', transform: 'rotate(180deg)' }}>Test Result</span>
-                    <img src={testResultIcon} alt="testResultIcon" style={{ transform: 'rotate(-90deg)' }} />
+                    <img src={testResultIcon} alt="testResultIcon" style={{ transform: 'rotate(0deg)' }} />
+                    <span>Test Result</span>
                 </button>
-                {/* Fullscreen button - potentially also needed in collapsed state */}
-                {/* <div className='flex flex-col items-center gap-[1rem]'> */}
-                {/*     <button className='py-2 px-3 rounded-[8px] hover:bg-white transition-all duration-300 ease-in' */}
-                {/*         title="Fullscreen"> */}
-                {/*         <svg width="15" height="15" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg"> */}
-                {/*             <path d="M5.5 1.5H2.83333C2.09695 1.5 1.5 2.09695 1.5 2.83333V5.5M5.5 13.5H2.83333C2.09695 13.5 1.5 12.903 1.5 12.1667V9.5M9.5 1.5H12.1667C12.903 1.5 13.5 2.09695 13.5 2.83333V5.5M13.5 9.5V12.1667C13.5 12.903 12.903 13.5 12.1667 13.5H9.5" stroke="#333333" strokeWidth="1.5" strokeLinecap="round" /> */}
-                {/*         </svg> */}
-                {/*     </button> */}
-                {/* </div> */}
+                {/* Fullscreen/collapse buttons can be added here if needed */}
             </div>
         );
     }
 
-    // Render vertical layout if entire right panel is horizontally collapsed
-    if (collapsed) {
+    // Render vertical OutputNavBar if horizontally collapsed
+    if (collapseDirection === 'horizontal' || collapsed) {
         return (
-            <div className="py-8 w-12 min-w-[82px] max-w-[82px] flex flex-col items-center gap-4 bg-purpleSecondary justify-between rounded-xl">
-                <div style={{ transform: 'rotate(180deg)' }}>
+            <div className="py-8 w-12 min-w-[52px] max-w-[52px] flex flex-col items-center gap-4 bg-white justify-between rounded-xl">
+                <button
+                    // className="flex flex-col items-center gap-2 px-2 py-2 text-greyPrimary text-sm font-medium border-b-2 transition-colors duration-200 border-transparent rounded-md hover:bg-purpleSecondary"
+
+                    // })}
+                    className={cn("flex flex-col items-center gap-2 px-2 py-2 text-greyPrimary text-sm font-medium border-b-2 transition-colors duration-200 border-transparent rounded-md hover:bg-purpleSecondary",
+                        {
+                            "bg-purpleSecondary": activeTab === 'cases',
+                        }
+                    )}
+                    style={{ transform: 'rotate(180deg)' }}
+                    onClick={() => setActiveTab && setActiveTab('cases')}
+                >
                     <span
                         className='text-sm font-medium text-greyPrimary'
                         style={{
@@ -61,59 +63,67 @@ const OutputNavBar = ({ activeTab, setActiveTab, collapsed, isOutputCollapsed, o
                             marginTop: 2
                         }}
                     >
-
-                        Output
+                        Test Cases
                     </span>
-                    {/* Assuming you have an icon for Output here, similar to CodeXml in CodeNavBar */}
-                    {/* <CodeXml style={{ transform: 'rotate(-90deg)' }} /> */}
-                </div>
-                <div className='flex flex-col items-center gap-[2rem]'>
-                    {/* Add any specific buttons for collapsed output if needed */}
-                </div>
+                    <img src={testCaseIcon} alt="testCaseIcon" style={{ transform: 'rotate(-90deg)' }} />
+                </button>
+                <button
+                    className={cn("flex flex-col items-center gap-2 px-2 py-2 text-greyPrimary text-sm font-medium border-b-2 transition-colors duration-200 border-transparent rounded-md hover:bg-purpleSecondary",
+                        {
+                            "bg-purpleSecondary": activeTab === 'results',
+                        }
+                    )}
+                    style={{ transform: 'rotate(180deg)' }}
+                    onClick={() => setActiveTab && setActiveTab('results')}
+                >
+                    <span
+                        className='text-sm font-medium text-greyPrimary'
+                        style={{
+                            writingMode: 'vertical-lr',
+                            textOrientation: 'mixed',
+                            transform: 'rotate(180deg)',
+                            marginTop: 2
+                        }}
+                    >
+                        Test Results
+                    </span>
+                    <img src={testResultIcon} alt="testResultIcon" style={{ transform: 'rotate(-90deg)' }} />
+                </button>
                 <div className='flex flex-col items-center gap-[1rem]'>
                     <button className='py-2 px-3 rounded-[8px] hover:bg-white transition-all duration-300 ease-in'
-                        // onClick={onFullscreen}
                         title="Fullscreen">
                         <svg width="15" height="15" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg">
                             <path d="M5.5 1.5H2.83333C2.09695 1.5 1.5 2.09695 1.5 2.83333V5.5M5.5 13.5H2.83333C2.09695 13.5 1.5 12.903 1.5 12.1667V9.5M9.5 1.5H12.1667C12.903 1.5 13.5 2.09695 13.5 2.83333V5.5M13.5 9.5V12.1667C13.5 12.903 12.903 13.5 12.1667 13.5H9.5" stroke="#333333" strokeWidth="1.5" strokeLinecap="round" />
                         </svg>
                     </button>
-                    {/* Assuming you might want a collapse button here too when the whole panel is collapsed */}
-                    {/* <button */}
-                    {/*     style={{ transform: 'rotate(360deg)' }} */}
-                    {/*     className='py-2 px-3 rounded-[8px] hover:bg-white transition-all duration-300 ease-in' */}
-                    {/*     title="Collapse"> */}
-                    {/*     <ChevronDown /> */}
-                    {/* </button> */}
                 </div>
             </div>
         )
     }
 
-    // Render horizontal layout when neither is collapsed
+    // Default: Render full OutputNavBar (horizontal)
     return (
-        <div className={cn("flex items-center justify-between gap-4 bg-purpleSecondary px-6 py-3 overflow-x-auto", {
-            // Add a class to fix height when not vertically collapsed
-            'h-12': !isOutputCollapsed, // Example fixed height class, adjust as needed
+        <div className={cn("px-6 py-3 flex items-center justify-between gap-4 bg-white overflow-auto", {
+            'min-h-[52px]': !isOutputCollapsed,
         })}>
             <div className='flex items-center gap-4'>
                 <button
                     className={cn(
-                        "flex items-center gap-2 px-4 py-2 text-greyPrimary text-sm font-medium border-b-2 transition-colors duration-200 border-transparent rounded-full",
+                        "flex items-center gap-2 px-4 py-2 text-greyPrimary text-sm font-medium border-b-2 transition-colors duration-200 border-transparent rounded-md hover:bg-purpleSecondary",
                         {
-                            "bg-white": activeTab === 'cases',
+                            "bg-purpleSecondary": activeTab === 'cases',
                         }
                     )}
                     onClick={() => setActiveTab('cases')}
                 >
                     <img src={testCaseIcon} alt="testCaseIcon" />
-                    Testcase
+                    Test cases
                 </button>
                 <button
                     className={cn(
-                        "flex items-center gap-2 px-4 py-2 text-greyPrimary text-sm font-medium border-b-2 transition-colors duration-200 border-transparent rounded-full",
+                        "flex items-center gap-2 px-4 py-2 text-greyPrimary text-sm font-medium border-b-2 transition-colors duration-200 border-transparent rounded-md hover:bg-purpleSecondary",
                         {
-                            "bg-white": activeTab === 'results',
+                            "bg-purpleSecondary": activeTab === 'results',
                         }
                     )}
                     onClick={() => setActiveTab('results')}
@@ -123,23 +133,27 @@ const OutputNavBar = ({ activeTab, setActiveTab, collapsed, isOutputCollapsed, o
                 </button>
             </div>
             <div className='flex items-center gap-[1rem]'>
-                <button className='py-2 px-3 rounded-[8px] hover:bg-white transition-all duration-300 ease-in'
-                    // onClick={onFullscreen}
+                <button
+                    className='h-8 w-8 grid place-content-center rounded-[8px] hover:bg-purpleSecondary transition-all duration-300 ease-in-out'
+                // onClick={onCollapse}
+                // title={isEditorCollapsed ? "Expand Editor" : "Collapse Editor"}
+                >
+                    <motion.div
+                        // animate={{ rotate: isEditorCollapsed ? 180 : 0 }}
+                        transition={{ duration: 0.3, ease: 'easeInOut' }}
+                        style={{ display: 'inline-block' }}
+                    >
+                        <ChevronUp />
+                    </motion.div>
+                </button>
+                <button className='py-2 px-3 rounded-[8px] hover:bg-purpleSecondary transition-all duration-300 ease-in'
                     title="Fullscreen">
                     <svg width="15" height="15" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg">
                         <path d="M5.5 1.5H2.83333C2.09695 1.5 1.5 2.09695 1.5 2.83333V5.5M5.5 13.5H2.83333C2.09695 13.5 1.5 12.903 1.5 12.1667V9.5M9.5 1.5H12.1667C12.903 1.5 13.5 2.09695 13.5 2.83333V5.5M13.5 9.5V12.1667C13.5 12.903 12.903 13.5 12.1667 13.5H9.5" stroke="#333333" strokeWidth="1.5" strokeLinecap="round" />
                     </svg>
                 </button>
-                {/* This collapse button is for the *output section* vertical collapse */}
-                {/* We need to add a handler for this, possibly passed from CodeEditor */}
-                {/* <button */}
-                {/*     style={{ transform: 'rotate(360deg)' }} */}
-                {/*     className='py-2 px-3 rounded-[8px] hover:bg-white transition-all duration-300 ease-in' */}
-                {/*     onClick={onOutputCollapse} // Pass the handler here */}
-                {/*     title={isOutputCollapsed ? "Expand Output" : "Collapse Output"}> */}
-                {/*     <ChevronDown className={isOutputCollapsed ? "transform rotate-180" : ""} /> */}
-                {/* </button> */}
             </div>
+
         </div>
     );
 };
