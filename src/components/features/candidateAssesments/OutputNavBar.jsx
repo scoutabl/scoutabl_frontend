@@ -103,13 +103,13 @@ const OutputNavBar = ({ activeTab, setActiveTab, collapsed, isOutputCollapsed, o
 
     // Default: Render full OutputNavBar (horizontal)
     return (
-        <div className={cn("px-6 py-3 flex items-center justify-between gap-4 bg-white overflow-auto", {
+        <div className={cn("px-6 py-3 flex items-center justify-between gap-4 bg-white  overflow-x-auto", {
             'min-h-[52px]': !isOutputCollapsed,
         })}>
             <div className='flex items-center gap-4'>
                 <button
                     className={cn(
-                        "flex items-center gap-2 px-4 py-2 text-greyPrimary text-sm font-medium border-b-2 transition-colors duration-200 border-transparent rounded-md hover:bg-purpleSecondary",
+                        "text-nowrap flex items-center gap-2 px-4 py-2 text-greyPrimary text-sm font-medium border-b-2 transition-colors duration-200 border-transparent rounded-md hover:bg-purpleSecondary",
                         {
                             "bg-purpleSecondary": activeTab === 'cases',
                         }
@@ -121,7 +121,7 @@ const OutputNavBar = ({ activeTab, setActiveTab, collapsed, isOutputCollapsed, o
                 </button>
                 <button
                     className={cn(
-                        "flex items-center gap-2 px-4 py-2 text-greyPrimary text-sm font-medium border-b-2 transition-colors duration-200 border-transparent rounded-md hover:bg-purpleSecondary",
+                        "text-nowrap flex items-center gap-2 px-4 py-2 text-greyPrimary text-sm font-medium border-b-2 transition-colors duration-200 border-transparent rounded-md hover:bg-purpleSecondary",
                         {
                             "bg-purpleSecondary": activeTab === 'results',
                         }

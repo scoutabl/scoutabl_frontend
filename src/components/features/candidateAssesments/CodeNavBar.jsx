@@ -198,7 +198,7 @@ const CodeNavBar = ({
     }
 
     return (
-        <div className={cn('h-[51px] px-6 py-3 bg-purpleSecondary rounded-tl-2xl rounded-tr-2xl flex justify-between min-w-0 overflow-x-auto', {
+        <div className={cn('min-h-[51px] px-6 py-3 bg-purpleSecondary rounded-tl-2xl rounded-tr-2xl flex justify-between min-w-0 overflow-x-auto', {
             'rounded-2xl': isEditorCollapsed,
         })}>
             {/* language selector */}
