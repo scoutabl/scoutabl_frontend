@@ -23,7 +23,7 @@ const CodeNavBar = ({
     selectedCase, setActiveTab, setLoading, loading, callPattern,
     collapsed,
     onCollapse, onFullscreen, onExitFullscreen,
-    isEditorCollapsed
+    isEditorCollapsed, onReset
 }) => {
     const [open, setIsOpen] = useState(false)
     const [languages, setLanguages] = useState([])
@@ -278,7 +278,10 @@ const CodeNavBar = ({
                         <FaCheckCircle color='#1EA378' size={20} />
                         <span className='text-greyPrimary font-normal text-sm code-navbar-btn-label'>Submit</span>
                     </button>
-                    <button className='flex gap-[6px] items-center py-2 px-3 rounded-[8px] hover:bg-white transition-all duration-300 ease-in'>
+                    <button
+                        onClick={onReset}
+                        className='flex gap-[6px] items-center py-2 px-3 rounded-[8px] hover:bg-white transition-all duration-300 ease-in'
+                    >
                         <RotateCcw color='#EB5757' size={20} />
                         <span className='text-greyPrimary font-normal text-sm code-navbar-btn-label'>Reset</span>
                     </button>

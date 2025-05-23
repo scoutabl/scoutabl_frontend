@@ -202,7 +202,7 @@ const Output = ({
               </div>
             )}
             {activeTab === 'results' && (
-              <div className="py-2 min-h-0 h-full flex-1 flex flex-col">
+              <div className="px-6 pt-[14px] pb-[30px] min-h-0 h-full flex-1 flex flex-col">
                 {loading ? (
                   <div className="flex-1 flex items-center justify-center min-h-0 h-full">
                     <span className="animate-spin w-8 h-8 border-4 border-t-transparent border-purple-600 rounded-full"></span>
@@ -385,7 +385,7 @@ const Output = ({
             </div>
           )}
           {activeTab === 'results' && (
-            <div className="py-2 min-h-0 h-full flex-1 flex flex-col">
+            <div className="px-6 pt-[14px] min-h-0 h-full flex-1 flex flex-col">
               {loading ? (
                 <div className="flex-1 flex items-center justify-center min-h-0 h-full">
                   <span className="animate-spin w-8 h-8 border-4 border-t-transparent border-purple-600 rounded-full"></span>
@@ -438,7 +438,7 @@ const Output = ({
                         </div>
                         {/* Only show Expected if present */}
                         {hasExpected && (
-                          <div className="flex flex-col gap-2">
+                          <div className="flex flex-col gap-2 pb-[30px]">
                             <span className="font-semibold text-sm text-greyPrimary">Expected</span>
                             <div className="bg-blueSecondary rounded-xl px-5 py-[15px] text-base">{result.expected}</div>
                           </div>

@@ -231,6 +231,17 @@ const CodeEditor = ({ testCases, inputVars, callPattern, collapsed }) => {
         }
     };
 
+    // Add handleReset function
+    const handleReset = () => {
+        setValue('');
+        if (editorRef.current) {
+            editorRef.current.setPosition({ lineNumber: 1, column: 1 });
+            editorRef.current.focus();
+        }
+        setOutput([]);
+        setUserTestCases([]);
+    };
+
     //code editor full screen
     if (isFullscreen) {
         // Fullscreen: only show CodeNavBar and Editor, fill 100% height
@@ -258,12 +269,13 @@ const CodeEditor = ({ testCases, inputVars, callPattern, collapsed }) => {
                             loading={loading}
                             callPattern={callPattern}
                             onExitFullscreen={() => setIsFullscreen(false)}
+                            onReset={handleReset}
                         />
                     </div>
                     <div className="flex-1 min-h-0 rounded-bl-2xl rounded-br-2xl overflow-auto border border-gray-200">
                         <Editor
                             language={language}
-                            defaultValue={CODE_SNIPPETS[language]}
+                            // defaultValue={CODE_SNIPPETS[language]}
                             height="100%"
                             width="100%"
                             onMount={onMount}
@@ -329,6 +341,7 @@ const CodeEditor = ({ testCases, inputVars, callPattern, collapsed }) => {
                         onFullscreen={() => setIsFullscreen(true)}
                         onCollapse={handleCollapseButton}
                         isEditorCollapsed={isEditorCollapsed}
+                        onReset={handleReset}
                     />
                 </div>
                 {/* Vertical Resizer */}
@@ -388,6 +401,7 @@ const CodeEditor = ({ testCases, inputVars, callPattern, collapsed }) => {
                 onCollapse={handleCollapseButton}
                 isEditorCollapsed={isEditorCollapsed}
                 collapsed={collapsed}
+                onReset={handleReset}
             />
             {/* Collapsible Editor + Status Bar */}
             <div
@@ -412,7 +426,7 @@ const CodeEditor = ({ testCases, inputVars, callPattern, collapsed }) => {
                         >
                             <Editor
                                 language={language}
-                                defaultValue={CODE_SNIPPETS[language]}
+                                // defaultValue={CODE_SNIPPETS[language]}
                                 height="100%"
                                 width="100%"
                                 onMount={onMount}
