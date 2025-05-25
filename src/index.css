@@ -190,26 +190,25 @@
     font-family: var(--font-sans);
   }
 
-  .scrollbar-webkit {
+  .scrollbar-webkit::-webkit-scrollbar:vertical {
+    width: 6px;
+  }
 
-    /* Basic scrollbar styling */
-    &::-webkit-scrollbar {
-      width: 6px;
-    }
+  .scrollbar-webkit::-webkit-scrollbar:horizontal {
+    height: 6px;
+  }
 
-    &::-webkit-scrollbar-track {
-      background: transparent;
-    }
+  .scrollbar-webkit::-webkit-scrollbar-track {
+    background: transparent;
+  }
 
-    &::-webkit-scrollbar-thumb {
-      background: #5C5C5C;
-      border-radius: 20px;
-    }
+  .scrollbar-webkit::-webkit-scrollbar-thumb {
+    background: #5C5C5C;
+    border-radius: 20px;
+  }
 
-    /* Hide scrollbar buttons */
-    &::-webkit-scrollbar-button {
-      display: none;
-    }
+  .scrollbar-webkit::-webkit-scrollbar-button {
+    display: none;
   }
 
   /* Special class for extra small scrollbar thumbs */

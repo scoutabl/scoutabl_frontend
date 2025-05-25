@@ -15,7 +15,7 @@ export default function AssessmentNavbar({ currentIndex, total, initialMinutes =
     }, [timeLeft]);
 
     return (
-        <div className='flex items-center justify-between px-12 h-[44px]'>
+        <div className='flex items-center justify-between h-[44px]'>
             <div className='flex gap-1 items-center justify-center'>
                 <img src={logo} alt='scoutabl logo' className='h-[30px] w-[30px]' />
                 <h1 className='text-2xl text-greyPrimary font-bold'>Scoutabl</h1>

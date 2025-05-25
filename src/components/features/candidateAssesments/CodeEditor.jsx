@@ -1,4 +1,4 @@
-import { useRef, useState, useEffect } from 'react'
+import { useRef, useState, useEffect, useLayoutEffect } from 'react'
 import { Editor } from '@monaco-editor/react'
 import CodeNavBar from './CodeNavBar'
 import OutputNavBar from './OutputNavBar'
@@ -36,14 +36,17 @@ const CodeEditor = ({ testCases, inputVars, callPattern, collapsed }) => {
     const [lastOutputHeight, setLastOutputHeight] = useState(null);
 
     // Set initial 50/50 split and layout editor
-    useEffect(() => {
+    useLayoutEffect(() => {
         if (containerRef.current && editorHeight === 0) {
             const totalHeight = containerRef.current.offsetHeight;
-            const half = Math.max(Math.floor(totalHeight / 2), MIN_EDITOR_HEIGHT);
+            const navBarHeight = 60;
+            const resizerHeight = 24;
+            const availableHeight = totalHeight - navBarHeight - resizerHeight;
+            const half = Math.max(Math.floor(availableHeight / 2), MIN_EDITOR_HEIGHT);
             setEditorHeight(half);
             setLastEditorHeight(half);
         }
-    }, [containerRef.current]);
+    }, [editorHeight]);
 
     // Use ResizeObserver to call editor.layout() when the wrapper resizes
     useEffect(() => {

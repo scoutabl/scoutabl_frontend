@@ -1,6 +1,6 @@
 import { useRef } from 'react';
 import { cn } from '@/lib/utils';
-import AssessmentNavbar from '@/components/shared/AssesmentNavbar';
+// import AssessmentNavbar from '@/components/shared/AssesmentNavbar';
 import CodeEditor from './CodeEditor';
 import { questionsData } from '@/lib/codingQuestions';
 import CodeSidebar from './CodeSidebar';
@@ -136,8 +136,8 @@ function CodingAssesmentInner() {
 
     return (
         <>
-            <AssessmentNavbar currentIndex={currentQuestion} total={totalQuestions} timeLeft={100} />
-            <div className='flex gap-3 px-12 py-6 min-w-0 h-calc[100vh_-_116px]'>
+            {/* <AssessmentNavbar currentIndex={currentQuestion} total={totalQuestions} timeLeft={100} /> */}
+            <div className='flex gap-3 py-6 min-w-0 h-[calc(100vh-116px)]'>
                 {/* Sidebar */}
                 <div
                     ref={sidebarRef}
@@ -157,7 +157,7 @@ function CodingAssesmentInner() {
                 </div>
                 {/* Resizer bar */}
                 <div
-                    className='h-[calc(100vh_-_116px)] w-2 flex items-center justify-center cursor-ew-resize transition-colors duration-150 z-20'
+                    className='h-full w-2 flex items-center justify-center cursor-ew-resize transition-colors duration-150 z-20'
                     style={{ minWidth: 8, maxWidth: 8 }}
                     onMouseDown={handleMouseDown}
                 >
@@ -193,7 +193,7 @@ function CodingAssesmentInner() {
                         />
                     </div>
                 </div> */}
-                <div className={cn('flex-1 h-[calc(100vh_-_116px)]', isRightCollapsed ? 'w-[52px] min-w-[52px] max-w-[52px] overflow-hidden' : 'overflow-x-auto')}>
+                <div className={cn('flex-1 h-full', isRightCollapsed ? 'w-[52px] min-w-[52px] max-w-[52px] overflow-hidden' : 'overflow-x-auto')}>
                     <div
                         className="h-full flex flex-col flex-1"
                         ref={rightPanelRef}

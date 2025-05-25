@@ -23,7 +23,7 @@ const CodeSidebar = ({
     const sideBarWidthRef = useRef(0);
     return (
         <aside className={cn(
-            "relative bg-white rounded-[20px] border border-gray-200 shadow-md transition-all duration-300 h-full max-h-[calc(100vh-116px)]",
+            "relative bg-white rounded-[20px] border border-gray-200 shadow-md transition-all duration-300 flex flex-col h-full max-h-[calc(100vh-116px)] min-w-0 overflow-x-auto scrollbar-webkit",
             isCollapsed ? "p-3 w-12 min-w-[52px] max-w-[52px] rounded-xl" : "p-6"
         )}>
             {isCollapsed ? (
@@ -74,7 +74,10 @@ const CodeSidebar = ({
                 </div>
             ) : (
                 // Expanded view
-                <div className="flex flex-col h-full overflow-x-auto">
+                // <div className="flex flex-col h-full">
+
+                // </div>
+                <>
                     {/* Tabs */}
                     <div className="flex items-center gap-6 mb-4 overflow-x-hidden min-h-[40px]">
                         <button
@@ -103,80 +106,76 @@ const CodeSidebar = ({
                         </button>
                         <button
                             onClick={onCollapseToggle}
-                            className="absolute top-[28px] right-4 z-10 p-2 rounded-[8px] hover:bg-purpleSecondary transition-all duration-300"
+                            className="absolute top-[27px] right-4 z-10 p-2 rounded-[8px] hover:bg-purpleSecondary transition-all duration-300"
                         >
                             <img src={sidebarCloseIcon} alt="sidebarClose Icon" />
                         </button>
                     </div>
 
-
-
                     {/* Content based on active tab */}
                     {activeTab === 'description' ? (
-                        <div className="h-full w-full overflow-auto flex flex-col gap-3">
-                            {/* Question number */}
-                            <div className="flex items-center justify-between">
-                                <div className="flex items-center gap-2">
-                                    <select
-                                        className="bg-gray-100 border border-gray-300 text-gray-700 rounded-md px-2 py-1 text-sm focus:outline-none"
-                                        value={currentQuestion}
-                                        onChange={(e) => setCurrentQuestion(parseInt(e.target.value))}
-                                    >
-                                        {Array.from({ length: totalQuestions }, (_, i) => (
-                                            <option key={i + 1} value={i + 1}>
-                                                Question {i + 1} of {totalQuestions}
-                                            </option>
-                                        ))}
-                                    </select>
+                        <>
+                            <div className="flex-1 min-h-0 overflow-y-auto scrollbar-webkit min-w-[400px] ">
+                                {/* Question number */}
+                                <div className="flex items-center justify-between min-w-0 pb-6">
+                                    <div className="flex items-center gap-2 min-w-0">
+                                        <select
+                                            className="bg-gray-100 border border-gray-300 text-gray-700 rounded-md px-2 py-1 text-sm focus:outline-none"
+                                            value={currentQuestion}
+                                            onChange={(e) => setCurrentQuestion(parseInt(e.target.value))}
+                                        >
+                                            {Array.from({ length: totalQuestions }, (_, i) => (
+                                                <option key={i + 1} value={i + 1}>
+                                                    Question {i + 1} of {totalQuestions}
+                                                </option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                    <button className="flex items-center gap-1 px-3 py-1 rounded-full text-purple-600 hover:bg-purple-50 group">
+                                        <div className="h-6 w-6 grid place-content-center rounded-full bg-purple-600 group-hover:bg-purple-700 text-white">
+                                            <HelpCircle size={14} />
+                                        </div>
+                                        <span className="text-sm font-medium">Question info</span>
+                                    </button>
                                 </div>
+                                <div className="flex-1 flex flex-col gap-2 min-h-0 overflow-y-auto">
+                                    {/* question title */}
+                                    {/* <h2 className="text-sm font-medium">{currentQuestionData.title}</h2> */}
 
-                                <button className="flex items-center gap-1 px-3 py-1 rounded-full text-purple-600 hover:bg-purple-50 group">
-                                    <div className="h-6 w-6 grid place-content-center rounded-full bg-purple-600 group-hover:bg-purple-700 text-white">
-                                        <HelpCircle size={14} />
+                                    <div className="space-y-4">
+                                        <h3 className="font-bold text-sm">Instructions:</h3>
+                                        <ol className="list-decimal list-inside space-y-2 text-sm text-greyPrimary">
+                                            {currentQuestionData.instructions.map((instruction, index) => (
+                                                <li key={index} className="pl-2 text-sm text-greyPrimary">{instruction}</li>
+                                            ))}
+                                        </ol>
                                     </div>
-                                    <span className="text-sm font-medium">Question info</span>
-                                </button>
-                            </div>
-                            <h2 className="text-lg font-medium">{currentQuestionData.title}</h2>
 
-                            <div className="space-y-4">
-                                <h3 className="font-medium">Instructions:</h3>
-                                <ol className="list-decimal list-inside space-y-2 text-sm text-gray-600">
-                                    {currentQuestionData.instructions.map((instruction, index) => (
-                                        <li key={index} className="pl-2">{instruction}</li>
-                                    ))}
-                                </ol>
-                            </div>
-
-                            {/* test cases */}
-                            <div className="space-y-2">
-                                <p className="text-sm text-gray-600">
-                                    <span className="font-medium">Test Cases:</span>
-                                </p>
-                                {currentQuestionData.testCases.map((testCase, index) => (
-                                    <div key={index}>
-                                        <h3 className="text-sm text-gray-600">Example {index + 1}:</h3>
-                                        <p><strong>Input:</strong> {testCase.input}</p>
-                                        <p><strong>Output:</strong> {testCase.output}</p>
-                                        <p><strong>Explanation:</strong> {testCase.explanation}</p>
+                                    {/* test cases */}
+                                    <div className="space-y-2">
+                                        <p className="text-sm text-gray-600">
+                                            <span className="font-bold text-sm text-greyPrimary">Test Cases</span>
+                                        </p>
+                                        {currentQuestionData.testCases.map((testCase, index) => (
+                                            <div key={index} className='space-y-1'>
+                                                <h3 className="text-sm text-greyPrimary font-medium">Example:&nbsp;{index + 1}</h3>
+                                                <p className="text-sm text-greyPrimary">Input:&nbsp;{testCase.input}</p>
+                                                <p className="text-sm text-greyPrimary">Output:&nbsp;{testCase.output}</p>
+                                                <p className="text-sm text-greyPrimary">Explanation:&nbsp;{testCase.explanation}</p>
+                                            </div>
+                                        ))}
                                     </div>
-                                ))}
-                            </div>
 
-                            {/* Repeated assessment text from the image */}
-                            <div className="space-y-2">
-                                <p className="text-sm text-gray-600">
-                                    Your solution will be assessed based on functionality, code quality, and performance. Optional: Implement advanced validation, conditional fields, field rearrangement, and i18n support.
-                                </p>
-                            </div>
-
-                            <div className="space-y-2">
-                                <p className="text-sm text-gray-600">
-                                    Your solution will be assessed based on functionality, code quality, and performance.
-                                </p>
+                                    {/* Repeated assessment text from the image */}
+                                    <div className="space-y-2 pt-1">
+                                        <p className="text-sm text-greyPrimary">
+                                            Your solution will be assessed based on functionality, code quality, and performance.
+                                        </p>
+                                    </div>
+                                </div>
                             </div>
                             {/* Navigation buttons */}
-                            <div className="flex justify-between mt-auto pt-4">
+                            <div className="flex justify-between pt-4 flex-wrap flex-shrink-0 min-w-[400px]">
                                 <div className="flex space-x-2">
                                     <button className="w-10 h-10 rounded-full border border-gray-300 flex items-center justify-center text-gray-600 hover:bg-gray-50">
                                         <MessageSquare size={18} />
@@ -197,8 +196,7 @@ const CodeSidebar = ({
                                     </button>
                                 </div>
                             </div>
-
-                        </div>
+                        </>
                     ) : (
                         <div className="w-full overflow-auto scrollbar-webkit">
                             <div className="space-y-6 min-w-[483px]">
@@ -250,7 +248,7 @@ const CodeSidebar = ({
                             </div>
                         </div>
                     )}
-                </div>
+                </>
             )
             }
         </aside >

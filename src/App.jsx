@@ -11,7 +11,7 @@ import { Toaster } from './components/ui/sonner'
 import NotFoundPage from './pages/NotFoundPage';
 import { AnimatePresence } from 'framer-motion';
 import { PageTransition } from './components/PageTransition';
-
+import AssesmentLayout from './layouts/AssesmentLayout';
 // Protected Route component
 const ProtectedRoute = ({ children }) => {
   const { user, loading } = useAuth();
@@ -52,17 +52,13 @@ const RoutesWithTransitions = () => {
       <Route
         path="/login"
         element={
-          <PageTransition>
-            <LoginPage />
-          </PageTransition>
+          <LoginPage />
         }
       />
       <Route
         path="/register"
         element={
-          <PageTransition>
-            <SignupPage />
-          </PageTransition>
+          <SignupPage />
         }
       />
       {/* <Route path='/organization-setup' element={<OrganizationSetupPage />} /> */}
@@ -78,26 +74,30 @@ const RoutesWithTransitions = () => {
           </ProtectedRoute>
         }
       />
-      <Route
-        path="/assesment"
-        element={
-          <ProtectedRoute>
-            <PageTransition>
-              <SkillAssesment />
-            </PageTransition>
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/coding-assesment"
-        element={
-          <ProtectedRoute>
-            <PageTransition>
-              <CodingAssesment />
-            </PageTransition>
-          </ProtectedRoute>
-        }
-      />
+      <Route element={<AssesmentLayout />}>
+        <Route
+          path="/assesment"
+          element={
+            <ProtectedRoute>
+              <PageTransition>
+                <SkillAssesment />
+              </PageTransition>
+            </ProtectedRoute>
+          }
+        />
+      </Route>
+      <Route element={<AssesmentLayout />}>
+        <Route
+          path="/coding-assesment"
+          element={
+            <ProtectedRoute>
+              <PageTransition>
+                <CodingAssesment />
+              </PageTransition>
+            </ProtectedRoute>
+          }
+        />
+      </Route>
       {/* Redirect root to dashboard or login based on auth state */}
       <Route
         path="/"

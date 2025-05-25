@@ -281,7 +281,7 @@ const Output = ({
   return (
     <div
       ref={containerRef}
-      className="bg-white rounded-2xl shadow flex flex-col overflow-x-auto"
+      className="bg-white rounded-xl shadow flex flex-col overflow-x-auto"
       style={{
         overflow: 'hidden',
         height: isOutputCollapsed ? 54 : '100%',
