@@ -319,12 +319,24 @@ const CodeEditor = ({ testCases, inputVars, callPattern, collapsed }) => {
     }
 
     if (collapsed) {
+        // Calculate heights for vertical layout
+        let outputNavBarHeight = 78; // OutputNavBar is 78px tall with padding
+        let containerHeight = containerRef.current ? containerRef.current.offsetHeight : 0;
+        let editorAreaHeight = Math.max(editorHeight, 54); // Clamp to min 54px
+        if (isOutputCollapsed) {
+            editorAreaHeight = containerHeight - outputNavBarHeight;
+            if (editorAreaHeight < 54) editorAreaHeight = 54;
+        }
         return (
-            <div ref={containerRef} className='flex flex-col h-full min-h-0'> {/* Use the same outer container structure and ref */}
+            <div ref={containerRef} className='flex flex-col h-full min-h-0'>
                 {/* Vertical CodeNavBar Wrapper (Resizable) */}
                 <div
-                    style={{ height: editorHeight, minHeight: 54, transition: 'height 0.2s' }} // Use editorHeight, min height of vertical CodeNavBar
-                    className="flex-shrink-0 flex flex-col items-center bg-purpleSecondary rounded-xl py-3 overflow-hidden" // Add overflow-hidden here as well
+                    style={{
+                        height: editorAreaHeight,
+                        minHeight: 54,
+                        transition: 'height 0.2s'
+                    }}
+                    className="flex-shrink-0 flex flex-col items-center bg-purpleSecondary rounded-xl py-3 overflow-hidden"
                 >
                     <CodeNavBar
                         collapsed={collapsed}
@@ -339,20 +351,21 @@ const CodeEditor = ({ testCases, inputVars, callPattern, collapsed }) => {
                 {/* Vertical Resizer */}
                 <div
                     className={cn("py-3 h-1 w-full flex items-center justify-center cursor-row-resize", {
-                        'cursor-row-resize': isDraggingResizer // Conditionally apply cursor class
+                        'cursor-row-resize': isDraggingResizer
                     })}
                     style={{ minHeight: RESIZER_HEIGHT, maxHeight: RESIZER_HEIGHT }}
-                    onMouseDown={handleMouseDown} // Keep mouse down handler for vertical resize
+                    onMouseDown={handleMouseDown}
                 >
                     <div className="w-12 h-1 rounded-full bg-greyAccent" />
                 </div>
                 {/* Vertical Output Wrapper (Resizable) */}
                 <div
                     style={{
-                        flex: 1,
-                        minHeight: 54,
-                        maxHeight: isOutputCollapsed ? 54 : undefined,
-                        transition: 'height 0.2s'
+                        height: isOutputCollapsed ? outputNavBarHeight : containerHeight - editorAreaHeight - RESIZER_HEIGHT,
+                        minHeight: outputNavBarHeight,
+                        maxHeight: isOutputCollapsed ? outputNavBarHeight : undefined,
+                        transition: 'height 0.2s',
+                        overflow: 'hidden',
                     }}
                     className="flex flex-col bg-white rounded-xl overflow-hidden"
                 >
