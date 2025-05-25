@@ -279,7 +279,16 @@ const Output = ({
 
   // Always render OutputNavBar, only render tab content if height > OUTPUT_NAVBAR_MIN_HEIGHT
   return (
-    <div ref={containerRef} className="bg-white rounded-2xl shadow h-full flex flex-col overflow-x-auto min-h-[52px]" style={{ overflow: 'hidden' }}>
+    <div
+      ref={containerRef}
+      className="bg-white rounded-2xl shadow flex flex-col overflow-x-auto"
+      style={{
+        overflow: 'hidden',
+        height: isOutputCollapsed ? 54 : '100%',
+        minHeight: 52,
+        maxHeight: isOutputCollapsed ? 54 : undefined,
+      }}
+    >
       <OutputNavBar
         activeTab={activeTab}
         setActiveTab={setActiveTab}

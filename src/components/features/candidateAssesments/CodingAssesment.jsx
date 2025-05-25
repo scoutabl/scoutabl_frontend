@@ -193,9 +193,9 @@ function CodingAssesmentInner() {
                         />
                     </div>
                 </div> */}
-                <div className={cn('flex-1 h-[calc(100vh_-_116px)]', isRightCollapsed ? 'w-[52px] min-w-[52px] max-w-[52px]' : 'overflow-x-auto')}>
+                <div className={cn('flex-1 h-[calc(100vh_-_116px)]', isRightCollapsed ? 'w-[52px] min-w-[52px] max-w-[52px] overflow-hidden' : 'overflow-x-auto')}>
                     <div
-                        className="h-full flex flex-col flex-1 min-h-0"
+                        className="h-full flex flex-col flex-1"
                         ref={rightPanelRef}
                         style={
                             isRightCollapsed

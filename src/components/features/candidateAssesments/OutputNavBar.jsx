@@ -10,7 +10,7 @@ const OutputNavBar = ({ activeTab, setActiveTab, collapsed, isOutputCollapsed, o
     // Render vertical OutputNavBar if horizontally collapsed
     if (collapseDirection === 'horizontal' || collapsed) {
         return (
-            <div className="py-3 min-w-[52px] max-w-[52px] flex flex-col items-center gap-4 bg-white justify-between rounded-xl overflow-hidden">
+            <div className="min-h-[54px] max-h-[54px] py-3 min-w-[52px] max-w-[52px] flex flex-col items-center gap-4 bg-white justify-between rounded-xl">
                 <button
                     className={cn("flex flex-col items-center gap-2 px-2 py-2 text-greyPrimary text-sm font-medium border-b-2 transition-colors duration-200 border-transparent rounded-md hover:bg-purpleSecondary",
                         {

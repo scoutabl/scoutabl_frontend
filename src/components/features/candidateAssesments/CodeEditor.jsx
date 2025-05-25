@@ -24,14 +24,11 @@ const CodeEditor = ({ testCases, inputVars, callPattern, collapsed }) => {
     const [selectedCase, setSelectedCase] = useState(0)
     const [activeTab, setActiveTab] = useState('cases')
     const [loading, setLoading] = useState(false)
-    const [editorHeight, setEditorHeight] = useState(0); // px, will be set to 50% on mount
-    const [lastEditorHeight, setLastEditorHeight] = useState(0); // remembers last expanded height
     const [isOutputCollapsed, setIsOutputCollapsed] = useState(false);
     const [isEditorCollapsed, setIsEditorCollapsed] = useState(false); // New state for editor collapse
     const isResizing = useRef(false);
     const [isDraggingResizer, setIsDraggingResizer] = useState(false); // New state for drag cursor
-    const { isFullscreen, setIsFullscreen } = useCodingAssesment();
-    const { isOutputFullscreen, setIsOutputFullscreen } = useCodingAssesment();
+    const { isFullscreen, setIsFullscreen, editorHeight, setEditorHeight, lastEditorHeight, setLastEditorHeight, isOutputFullscreen, setIsOutputFullscreen } = useCodingAssesment();
     const [currentLine, setCurrentLine] = useState(0);
     const [cursorPosition, setCursorPosition] = useState({ line: 1, column: 1 });
 
@@ -159,28 +156,23 @@ const CodeEditor = ({ testCases, inputVars, callPattern, collapsed }) => {
         const containerHeight = container.offsetHeight;
         let y = e.clientY - containerTop; // Use 'let' so we can modify y
 
-        // Clamp the y position to the valid range
-        // Minimum y: ensures editor is at least MIN_EDITOR_HEIGHT
         const minAllowedY = MIN_EDITOR_HEIGHT;
-        // Maximum y: ensures output is at least 54px (OutputNavBar height)
-        const maxAllowedY = containerHeight - 54; // Use 54 directly as it's the min height of OutputNavBar
+        const maxAllowedY = containerHeight - 54; // 54 = OutputNavBar min height
 
         // Clamp y to be within the allowed range
         y = Math.max(minAllowedY, Math.min(y, maxAllowedY));
 
-        // Update collapse states based on clamped y
-        // Only update collapse states if we are exactly at the boundary
-        if (y === minAllowedY) {
+        // Use a threshold for collapse
+        if (y <= minAllowedY) {
             setIsEditorCollapsed(true);
             setIsOutputCollapsed(false);
-        } else if (y === maxAllowedY) {
+        } else if (y >= maxAllowedY - 1) { // threshold here
             setIsEditorCollapsed(false);
             setIsOutputCollapsed(true);
         } else {
             setIsEditorCollapsed(false);
             setIsOutputCollapsed(false);
         }
-
 
         // Set editor height based on the clamped y position
         setEditorHeight(y);
@@ -356,8 +348,13 @@ const CodeEditor = ({ testCases, inputVars, callPattern, collapsed }) => {
                 </div>
                 {/* Vertical Output Wrapper (Resizable) */}
                 <div
-                    style={{ flex: 1, minHeight: 54, transition: 'height 0.2s' }} // Take remaining height, min height of OutputNavBar
-                    className="flex flex-col bg-white rounded-xl overflow-hidden" // Add overflow-hidden here
+                    style={{
+                        flex: 1,
+                        minHeight: 54,
+                        maxHeight: isOutputCollapsed ? 54 : undefined,
+                        transition: 'height 0.2s'
+                    }}
+                    className="flex flex-col bg-white rounded-xl overflow-hidden"
                 >
                     <Output
                         output={output}
@@ -373,7 +370,7 @@ const CodeEditor = ({ testCases, inputVars, callPattern, collapsed }) => {
                         isOutputCollapsed={isOutputCollapsed}
                         isRightPanelCollapsed={collapsed}
                         onOutputCollapse={handleOutputCollapseButton}
-                        collapsed={collapsed} // Pass collapsed prop to Output
+                        collapsed={collapsed}
                     />
                 </div>
             </div>

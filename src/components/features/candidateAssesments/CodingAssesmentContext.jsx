@@ -15,8 +15,10 @@ export function CodingAssesmentProvider({ children }) {
     const isResizing = useRef(false);
     const [rightPanelWidth, setRightPanelWidth] = useState(0);
     const [isRightCollapsed, setIsRightCollapsed] = useState(false);
-
     // Add more shared state as needed
+    // Shared state for editor height (for vertical resizer sync)
+    const [editorHeight, setEditorHeight] = useState(0); // px, will be set to 50% on mount
+    const [lastEditorHeight, setLastEditorHeight] = useState(0); // remembers last expanded height
 
     return (
         <CodingAssesmentContext.Provider value={{
@@ -29,7 +31,9 @@ export function CodingAssesmentProvider({ children }) {
             isOutputFullscreen, setIsOutputFullscreen,
             sidebarRef, isResizing,
             rightPanelWidth, setRightPanelWidth,
-            isRightCollapsed, setIsRightCollapsed
+            isRightCollapsed, setIsRightCollapsed,
+            editorHeight, setEditorHeight,
+            lastEditorHeight, setLastEditorHeight
         }}>
             {children}
         </CodingAssesmentContext.Provider>
