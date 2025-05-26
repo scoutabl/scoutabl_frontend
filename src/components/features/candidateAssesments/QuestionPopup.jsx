@@ -1,8 +1,9 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Button } from '@/components/ui/button';
-import { HelpCircle, Check, Video, AlignJustify, BarChart3 } from 'lucide-react';
+import { HelpCircle, Check, ChevronDown } from 'lucide-react';
 import { questions } from '@/lib/questions';
+import { questionsData } from '@/lib/codingQuestions';
 import { cn } from '@/lib/utils';
 import { FaCheckCircle } from "react-icons/fa";
 
@@ -26,24 +27,27 @@ const QuestionStatus = {
     'pending': <div className="w-5 h-5 rounded-full border-2 border-gray-300"></div>
 };
 
-export default function QuestionPopup({ currentQuestionIndex, onQuestionSelect }) {
-    // Track question completion status (for demo purposes)
-    const getQuestionStatus = (index) => {
-        if (index < currentQuestionIndex) return 'completed';
-        if (index === currentQuestionIndex) return 'current';
-        return 'pending';
-    };
-
+export default function QuestionPopup({
+    currentQuestionIndex,
+    onQuestionSelect,
+    mode = 'regular', // 'regular' or 'coding'
+    totalQuestions,
+    getQuestionStatus
+}) {
+    // Use the appropriate questions data based on mode
+    const questionsList = mode === 'coding' ? questionsData : questions;
+    const total = totalQuestions || questionsList.length;
+    const [isOpen, setIsOpen] = useState(false);
     return (
-        <Popover>
+        <Popover open={isOpen} onOpenChange={setIsOpen}>
             <PopoverTrigger asChild>
-                <Button
+                <button
                     variant="ghost"
-                    className="flex items-center gap-2 p-0 h-auto hover:bg-transparent"
+                    className="flex items-center gap-2 py-[6px] px-3 h-auto rounded-full bg-blueSecondary"
                 >
-                    <span className="text-sm font-medium">Question {currentQuestionIndex + 1} of {questions.length}</span>
-                    <HelpCircle className="h-4 w-4 text-purple-600" />
-                </Button>
+                    <span className="text-sm font-medium">Question <strong>{currentQuestionIndex + 1}</strong> of <strong>{total}</strong></span>
+                    <ChevronDown className="h-4 w-4 text-gray-500" />
+                </button>
             </PopoverTrigger>
             <PopoverContent
                 className="p-0 border rounded-lg shadow-lg min-w-[483px]"
@@ -52,34 +56,41 @@ export default function QuestionPopup({ currentQuestionIndex, onQuestionSelect }
             >
                 <div className="bg-blue-50 p-3 rounded-t-lg">
                     <div className="flex items-center justify-between">
-                        <h3 className="text-sm font-medium text-blue-900">Assessment Questions</h3>
-                        <span className="text-xs text-blue-800">{currentQuestionIndex + 1} of {questions.length}</span>
+                        {mode === 'coding' ? (
+                            <h3 className="text-sm font-medium text-blue-900">Coding Questions</h3>
+                        ) : (
+                            <h3 className="text-sm font-medium text-blue-900">Assessment Questions</h3>
+                        )}
+                        {/* <h3 className="text-sm font-medium text-blue-900">{(mode === 'coding' ?)}Assessment Questions</h3> */}
+                        <span className="text-xs text-blue-800">{currentQuestionIndex + 1} of {total}</span>
                     </div>
                 </div>
 
-                <div className="max-h-[450px] overflow-y-auto scrollbar-webkit tiny-thumb">
-                    {questions.map((question, index) => (
+                <div className="max-h-[450px] overflow-y-auto">
+                    {questionsList.map((question, index) => (
                         <div
-                            key={question.questionId}
+                            key={mode === 'coding' ? question.id : question.questionId}
                             className={cn(
-                                "flex items-start gap-3 cursor-pointer  hover:bg-[#E8DEFD] hover:border-b ",
+                                "flex items-start gap-3 cursor-pointer hover:bg-[#E8DEFD] hover:border-b",
                                 index === currentQuestionIndex && "bg-[#E8DEFD]"
                             )}
                             onClick={() => {
                                 onQuestionSelect && onQuestionSelect(index);
-                                // Optionally close the popover after selection
-                                // setOpen(false); 
+                                setIsOpen(false);
                             }}
                         >
-                            {/* {QuestionStatus[getQuestionStatus(index)]} */}
                             <div className="flex-1 px-6 py-4">
                                 <div className="flex gap-1">
                                     <span className="text-sm text-greyPrimary font-bold">Q{index + 1}:</span>
-                                    <span className="text-sm text-greyPrimary text-wrap">{question.questionTitle || "Optional: Implement advanced validation..."}</span>
+                                    <span className="text-sm text-greyPrimary text-wrap">
+                                        {mode === 'coding' ? question.title : question.questionTitle}
+                                    </span>
                                 </div>
                                 <div className="flex items-center gap-2 bg-green-200 max-w-fit px-2 py-1 rounded-full mt-2">
-                                    {QuestionTypeIcons[question.type]}
-                                    <span className="text-xs font-medium capitalize">{question.type}</span>
+                                    {QuestionTypeIcons[mode === 'coding' ? 'coding' : question.type]}
+                                    <span className="text-xs font-medium capitalize">
+                                        {mode === 'coding' ? 'coding' : question.type}
+                                    </span>
                                 </div>
                             </div>
                         </div>

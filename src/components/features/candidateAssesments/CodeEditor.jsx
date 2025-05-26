@@ -13,7 +13,7 @@ const MIN_OUTPUT_HEIGHT = 60;
 const MIN_EDITOR_HEIGHT = 100;
 const RESIZER_HEIGHT = 4;
 
-const CodeEditor = ({ testCases, inputVars, callPattern, collapsed }) => {
+const CodeEditor = ({ testCases, inputVars, callPattern, collapsed, isFullscreen, setIsFullscreen }) => {
     const containerRef = useRef(null);
     const editorWrapperRef = useRef(null);
     const [value, setValue] = useState('')
@@ -28,7 +28,7 @@ const CodeEditor = ({ testCases, inputVars, callPattern, collapsed }) => {
     const [isEditorCollapsed, setIsEditorCollapsed] = useState(false); // New state for editor collapse
     const isResizing = useRef(false);
     const [isDraggingResizer, setIsDraggingResizer] = useState(false); // New state for drag cursor
-    const { isFullscreen, setIsFullscreen, editorHeight, setEditorHeight, lastEditorHeight, setLastEditorHeight, isOutputFullscreen, setIsOutputFullscreen } = useCodingAssesment();
+    const { editorHeight, setEditorHeight, lastEditorHeight, setLastEditorHeight, isOutputFullscreen, setIsOutputFullscreen } = useCodingAssesment();
     const [currentLine, setCurrentLine] = useState(0);
     const [cursorPosition, setCursorPosition] = useState({ line: 1, column: 1 });
 
@@ -237,57 +237,6 @@ const CodeEditor = ({ testCases, inputVars, callPattern, collapsed }) => {
         setUserTestCases([]);
     };
 
-    //code editor full screen
-    if (isFullscreen) {
-        // Fullscreen: only show CodeNavBar and Editor, fill 100% height
-        return (
-            <div
-                className="fixed inset-0 flex items-center justify-center z-50"
-                style={{ background: '#18181b' }}
-            >
-                <div
-                    className="flex flex-col"
-                    style={{ height: '90vh', width: '90vw', background: '#18181b' }}
-                >
-                    <div className='px-6 py-3 bg-purpleSecondary rounded-tl-2xl rounded-tr-2xl'>
-                        <CodeNavBar
-                            language={language}
-                            onSelect={onSelect}
-                            editorRef={editorRef}
-                            setOutput={setOutput}
-                            testCases={testCases}
-                            userTestCases={userTestCases}
-                            inputVars={inputVars}
-                            selectedCase={selectedCase}
-                            setActiveTab={setActiveTab}
-                            setLoading={setLoading}
-                            loading={loading}
-                            callPattern={callPattern}
-                            onExitFullscreen={() => setIsFullscreen(false)}
-                            onReset={handleReset}
-                        />
-                    </div>
-                    <div className="flex-1 min-h-0 rounded-bl-2xl rounded-br-2xl overflow-auto border border-gray-200">
-                        <Editor
-                            language={language}
-                            // defaultValue={CODE_SNIPPETS[language]}
-                            height="100%"
-                            width="100%"
-                            onMount={onMount}
-                            value={value}
-                            onChange={(value) => {
-                                setValue(value);
-                                setCurrentLine(editorRef.current.getPosition()?.lineNumber || 0);
-                            }}
-                            theme="github-light"
-                            beforeMount={handleEditorBeforeMount}
-                        />
-                    </div>
-                </div>
-            </div>
-        )
-    }
-
     // Output Full Screen
     if (isOutputFullscreen) {
         return (
@@ -315,6 +264,49 @@ const CodeEditor = ({ testCases, inputVars, callPattern, collapsed }) => {
                         onOutputCollapse={handleOutputCollapseButton}
                         collapsed={collapsed}
                         onExitFullscreen={() => setIsOutputFullscreen(false)}
+                    />
+                </div>
+            </div>
+        )
+    }
+
+    // LeetCode-style fullscreen: expand editor, hide output
+    if (isFullscreen) {
+        return (
+            <div className="flex flex-col h-full w-full">
+                <CodeNavBar
+                    language={language}
+                    onSelect={onSelect}
+                    editorRef={editorRef}
+                    setOutput={setOutput}
+                    testCases={testCases}
+                    userTestCases={userTestCases}
+                    inputVars={inputVars}
+                    selectedCase={selectedCase}
+                    setActiveTab={setActiveTab}
+                    setLoading={setLoading}
+                    loading={loading}
+                    callPattern={callPattern}
+                    onFullscreen={() => setIsFullscreen(false)}
+                    onCollapse={handleCollapseButton}
+                    isEditorCollapsed={isEditorCollapsed}
+                    collapsed={collapsed}
+                    onReset={handleReset}
+                // Add a button to exit fullscreen
+                />
+                <div className="flex-1 min-h-0 rounded-bl-2xl rounded-br-2xl overflow-auto border border-gray-200">
+                    <Editor
+                        language={language}
+                        height="100%"
+                        width="100%"
+                        onMount={onMount}
+                        value={value}
+                        onChange={(value) => {
+                            setValue(value);
+                            setCurrentLine(editorRef.current.getPosition()?.lineNumber || 0);
+                        }}
+                        theme="github-light"
+                        beforeMount={handleEditorBeforeMount}
                     />
                 </div>
             </div>
@@ -367,7 +359,7 @@ const CodeEditor = ({ testCases, inputVars, callPattern, collapsed }) => {
                         height: isOutputCollapsed ? outputNavBarHeight : containerHeight - editorAreaHeight - RESIZER_HEIGHT,
                         minHeight: outputNavBarHeight,
                         maxHeight: isOutputCollapsed ? outputNavBarHeight : undefined,
-                        transition: 'height 0.2s',
+                        // transition: 'height 0.2s ease-in',
                         overflow: 'hidden',
                     }}
                     className="flex flex-col bg-white rounded-xl overflow-hidden"
@@ -434,7 +426,7 @@ const CodeEditor = ({ testCases, inputVars, callPattern, collapsed }) => {
                             animate={{ opacity: 1 }}
                             exit={{ opacity: 0 }}
                             transition={{ duration: 0.2 }}
-                            className="flex-1 min-h-0 pt-6"
+                            className="flex-1 min-h-0"
                             style={{ overflow: 'hidden' }}
                         >
                             <Editor

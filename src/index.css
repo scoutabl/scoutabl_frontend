@@ -147,6 +147,19 @@
   h3 {
     @apply text-lg font-bold;
   }
+
+  ::-webkit-scrollbar {
+    @apply w-2.5 h-2.5;
+  }
+
+  ::-webkit-scrollbar-track {
+    @apply bg-transparent;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    @apply rounded-full bg-greyAccent border-[1px] border-transparent border-solid bg-clip-padding;
+  }
+
 }
 
 @layer utilities {
@@ -168,12 +181,6 @@
     object-fit: cover;
   }
 
-  /* @media (min-width: 1060px) {
-    .responsive-bg-image {
-      min-width: 836px;
-    }
-  } */
-
   @media (max-width: 1080px) {
     .responsive-bg-image {
       min-width: 600px;
@@ -188,34 +195,6 @@
 
   .font-sans {
     font-family: var(--font-sans);
-  }
-
-  .scrollbar-webkit::-webkit-scrollbar:vertical {
-    width: 6px;
-  }
-
-  .scrollbar-webkit::-webkit-scrollbar:horizontal {
-    height: 6px;
-  }
-
-  .scrollbar-webkit::-webkit-scrollbar-track {
-    background: transparent;
-  }
-
-  .scrollbar-webkit::-webkit-scrollbar-thumb {
-    background: #5C5C5C;
-    border-radius: 20px;
-  }
-
-  .scrollbar-webkit::-webkit-scrollbar-button {
-    display: none;
-  }
-
-  /* Special class for extra small scrollbar thumbs */
-  .tiny-thumb {
-    &::-webkit-scrollbar-thumb {
-      height: 10px !important;
-    }
   }
 }
 

@@ -90,8 +90,6 @@ function CodingAssesmentInner() {
             setIsRightCollapsed(false);
             setRightPanelWidth(newContainerWidth);
         }
-
-
     };
     // When user clicks collapse/expand button, toggle and restore width
     const handleCollapseToggle = () => {
@@ -119,26 +117,10 @@ function CodingAssesmentInner() {
         window.addEventListener('mouseup', handleMouseUp);
     };
 
-    if (isFullscreen) {
-        // Render fullscreen overlay with only CodeEditor
-        return (
-            <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', zIndex: 9999, background: '#18181b' }}>
-                <CodeEditor
-                    testCases={currentQuestionData.testCases}
-                    inputVars={currentQuestionData.inputVars}
-                    callPattern={currentQuestionData.callPattern}
-                    fullscreen={true}
-                    onExitFullscreen={() => setIsFullscreen(false)}
-                />
-            </div>
-        );
-    }
-
     return (
-        <>
-            {/* <AssessmentNavbar currentIndex={currentQuestion} total={totalQuestions} timeLeft={100} /> */}
-            <div className='flex gap-3 py-6 min-w-0 h-[calc(100vh-116px)]'>
-                {/* Sidebar */}
+        <div className='flex gap-3 py-6 min-w-0 h-[calc(100vh-116px)]'>
+            {/* Sidebar: hidden in fullscreen */}
+            {!isFullscreen && (
                 <div
                     ref={sidebarRef}
                     style={{
@@ -155,7 +137,9 @@ function CodingAssesmentInner() {
                         onCollapseToggle={handleCollapseToggle}
                     />
                 </div>
-                {/* Resizer bar */}
+            )}
+            {/* Resizer bar: hidden in fullscreen */}
+            {!isFullscreen && (
                 <div
                     className='h-full w-2 flex items-center justify-center cursor-ew-resize transition-colors duration-150 z-20'
                     style={{ minWidth: 8, maxWidth: 8 }}
@@ -163,61 +147,39 @@ function CodingAssesmentInner() {
                 >
                     <div className="w-1 h-6 rounded-full bg-greyAccent" />
                 </div>
-                {/* Main content area: flex row for editor/output
-                <div className={cn('flex-1 h-full ',
-                    isRightCollapsed ? 'w-[52px] min-w-[52px] max-w-[52px]' : 'overflow-x-auto'
-                )}>
-                    <div
-                        className={
-                            isRightCollapsed
-                                ? ''
-                                : 'h-full flex flex-col flex-1'
-                        }
-                        ref={rightPanelRef}
-                        style={
-                            isRightCollapsed
-                                ? {
-                                    width: rightPanelWidth,
-                                    minWidth: minRightPanelWidth,
-                                    maxWidth: minRightPanelWidth,
-                                    transition: isResizing.current ? 'none' : 'width 0.2s'
-                                }
-                                : {}
-                        }
-                    >
-                        <CodeEditor
-                            testCases={currentQuestionData.testCases}
-                            inputVars={currentQuestionData.inputVars}
-                            callPattern={currentQuestionData.callPattern}
-                            collapsed={isRightCollapsed}
-                        />
-                    </div>
-                </div> */}
-                <div className={cn('flex-1 h-full', isRightCollapsed ? 'w-[52px] min-w-[52px] max-w-[52px] overflow-hidden' : 'overflow-x-auto')}>
-                    <div
-                        className="h-full flex flex-col flex-1"
-                        ref={rightPanelRef}
-                        style={
-                            isRightCollapsed
-                                ? {
-                                    width: rightPanelWidth,
-                                    minWidth: minRightPanelWidth,
-                                    maxWidth: minRightPanelWidth,
-                                    transition: isResizing.current ? 'none' : 'width 0.2s'
-                                }
-                                : {}
-                        }
-                    >
-                        <CodeEditor
-                            testCases={currentQuestionData.testCases}
-                            inputVars={currentQuestionData.inputVars}
-                            callPattern={currentQuestionData.callPattern}
-                            collapsed={isRightCollapsed}
-                        />
-                    </div>
+            )}
+            {/* Main content area: editor expands in fullscreen */}
+            <div className={cn('flex-1 h-full', isRightCollapsed && !isFullscreen ? 'w-[52px] min-w-[52px] max-w-[52px] overflow-hidden' : 'overflow-x-auto')}>
+                <div
+                    className="h-full flex flex-col flex-1"
+                    ref={rightPanelRef}
+                    style={
+                        isRightCollapsed && !isFullscreen
+                            ? {
+                                width: rightPanelWidth,
+                                minWidth: minRightPanelWidth,
+                                maxWidth: minRightPanelWidth,
+                                transition: isResizing.current ? 'none' : 'width 0.2s'
+                            }
+                            : {}
+                    }
+                >
+                    <CodeEditor
+                        testCases={currentQuestionData.testCases}
+                        inputVars={currentQuestionData.inputVars}
+                        callPattern={currentQuestionData.callPattern}
+                        collapsed={isRightCollapsed}
+                        isFullscreen={isFullscreen}
+                        setIsFullscreen={setIsFullscreen}
+                    />
+                    {/* Output panel: hidden in fullscreen */}
+                    {!isFullscreen && (
+                        <></>
+                        // You can add your Output panel here if needed
+                    )}
                 </div>
             </div>
-        </>
+        </div>
     );
 }
 

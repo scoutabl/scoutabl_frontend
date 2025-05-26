@@ -23,11 +23,6 @@ const GradientBackground = () => {
                         src={windowWidth > 1080 ? backgroundImage : backgroundImageSmall}
                         alt="Gradient Background"
                         className="w-full h-full object-cover"
-                    // style={{
-                    //     objectPosition: 'center',
-                    //     maskImage: 'linear-gradient(to bottom, black, black)',
-                    //     WebkitMaskImage: 'linear-gradient(to bottom, black, black)'
-                    // }}
                     />
                 </div>
             </div>

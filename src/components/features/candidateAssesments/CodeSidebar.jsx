@@ -1,11 +1,13 @@
-import { useRef } from 'react'
+import { useState } from 'react'
 import { cn } from '@/lib/utils';
-import { ChevronLeft, ChevronRight, FileText, MessageSquare, HelpCircle, Clock, HardDrive, Code, List } from 'lucide-react';
+import { ChevronLeft, ChevronRight, FileText, CircleHelp, Headphones } from 'lucide-react';
 import sidebarOpenIcon from '/openSidebar.svg';
 import sidebarCloseIcon from '/closeSidebar.svg';
 import menuVerticalIcon from '/menuVertical.svg';
 import { useCodingAssesment } from './CodingAssesmentContext';
-
+import QuestionPopup from '@/components/features/candidateAssesments/QuestionPopup';
+import { questionsData } from '@/lib/codingQuestions';
+import flagIcon from '/flagIcon.svg'
 const CodeSidebar = ({
     currentQuestionData,
     submissionsData,
@@ -20,10 +22,33 @@ const CodeSidebar = ({
         setIsCollapsed,
         sidebarWidth
     } = useCodingAssesment();
-    const sideBarWidthRef = useRef(0);
+    const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
+
+    // Handle question selection from popup
+    const handleQuestionSelect = (index) => {
+        setCurrentQuestionIndex(index);
+        setCurrentQuestion(index + 1); // Update the context with the new question number
+    };
+
+    // Handle navigation
+    const handlePreviousQuestion = () => {
+        if (currentQuestionIndex > 0) {
+            handleQuestionSelect(currentQuestionIndex - 1);
+        }
+    };
+
+    const handleNextQuestion = () => {
+        if (currentQuestionIndex < totalQuestions - 1) {
+            handleQuestionSelect(currentQuestionIndex + 1);
+        }
+    };
+
+    // Get the current question data based on the selected index
+    const selectedQuestionData = questionsData[currentQuestionIndex];
+
     return (
         <aside className={cn(
-            "relative bg-white rounded-[20px] border border-gray-200 shadow-md transition-all duration-300 flex flex-col h-full max-h-[calc(100vh-116px)] min-w-0 overflow-x-auto scrollbar-webkit",
+            "relative bg-white rounded-[20px] border border-gray-200 shadow-md transition-all duration-300 flex flex-col h-full max-h-[calc(100vh-116px)] min-w-0 overflow-x-auto",
             isCollapsed ? "p-3 w-12 min-w-[52px] max-w-[52px] rounded-xl" : "p-6"
         )}>
             {isCollapsed ? (
@@ -115,37 +140,29 @@ const CodeSidebar = ({
                     {/* Content based on active tab */}
                     {activeTab === 'description' ? (
                         <>
-                            <div className="flex-1 min-h-0 overflow-y-auto scrollbar-webkit min-w-[400px] ">
+                            <div className="flex-1 min-h-0 overflow-y-auto min-w-[400px] ">
                                 {/* Question number */}
                                 <div className="flex items-center justify-between min-w-0 pb-6">
                                     <div className="flex items-center gap-2 min-w-0">
-                                        <select
-                                            className="bg-gray-100 border border-gray-300 text-gray-700 rounded-md px-2 py-1 text-sm focus:outline-none"
-                                            value={currentQuestion}
-                                            onChange={(e) => setCurrentQuestion(parseInt(e.target.value))}
-                                        >
-                                            {Array.from({ length: totalQuestions }, (_, i) => (
-                                                <option key={i + 1} value={i + 1}>
-                                                    Question {i + 1} of {totalQuestions}
-                                                </option>
-                                            ))}
-                                        </select>
+                                        <QuestionPopup
+                                            currentQuestionIndex={currentQuestionIndex}
+                                            onQuestionSelect={handleQuestionSelect}
+                                            mode="coding"
+                                            totalQuestions={totalQuestions}
+                                        />
                                     </div>
-                                    <button className="flex items-center gap-1 px-3 py-1 rounded-full text-purple-600 hover:bg-purple-50 group">
-                                        <div className="h-6 w-6 grid place-content-center rounded-full bg-purple-600 group-hover:bg-purple-700 text-white">
-                                            <HelpCircle size={14} />
+                                    <button className="flex items-center gap-1 px-3 py-2 rounded-full text-purplePrimray group hover:bg-purplePrimary transition-all duration-300 ease">
+                                        <div className="h-5 w-5 grid place-content-center rounded-full bg-purplePrimary group-hover:bg-white">
+                                            <span className='text-white group-hover:text-purplePrimary tex-xs font-medium'>?</span>
                                         </div>
-                                        <span className="text-sm font-medium">Question info</span>
+                                        <span className="text-sm font-medium text-purplePrimary group-hover:text-white">Question info</span>
                                     </button>
                                 </div>
                                 <div className="flex-1 flex flex-col gap-2 min-h-0 overflow-y-auto">
-                                    {/* question title */}
-                                    {/* <h2 className="text-sm font-medium">{currentQuestionData.title}</h2> */}
-
                                     <div className="space-y-4">
                                         <h3 className="font-bold text-sm">Instructions:</h3>
                                         <ol className="list-decimal list-inside space-y-2 text-sm text-greyPrimary">
-                                            {currentQuestionData.instructions.map((instruction, index) => (
+                                            {selectedQuestionData.instructions.map((instruction, index) => (
                                                 <li key={index} className="pl-2 text-sm text-greyPrimary">{instruction}</li>
                                             ))}
                                         </ol>
@@ -156,7 +173,7 @@ const CodeSidebar = ({
                                         <p className="text-sm text-gray-600">
                                             <span className="font-bold text-sm text-greyPrimary">Test Cases</span>
                                         </p>
-                                        {currentQuestionData.testCases.map((testCase, index) => (
+                                        {selectedQuestionData.testCases.map((testCase, index) => (
                                             <div key={index} className='space-y-1'>
                                                 <h3 className="text-sm text-greyPrimary font-medium">Example:&nbsp;{index + 1}</h3>
                                                 <p className="text-sm text-greyPrimary">Input:&nbsp;{testCase.input}</p>
@@ -174,23 +191,39 @@ const CodeSidebar = ({
                                     </div>
                                 </div>
                             </div>
-                            {/* Navigation buttons */}
-                            <div className="flex justify-between pt-4 flex-wrap flex-shrink-0 min-w-[400px]">
+                            {/* flag and Navigation buttons */}
+                            <div className="flex items-center justify-between pt-4 flex-wrap flex-shrink-0 min-w-[400px]">
                                 <div className="flex space-x-2">
-                                    <button className="w-10 h-10 rounded-full border border-gray-300 flex items-center justify-center text-gray-600 hover:bg-gray-50">
-                                        <MessageSquare size={18} />
+                                    <button className="w-10 h-10 rounded-full border border-greyPrimary flex items-center justify-center text-greyPrimary hover:bg-gray-200">
+                                        <img src={flagIcon} alt="flag icon" className='w-3 h-[14px]' />
                                     </button>
-                                    <button className="w-10 h-10 rounded-full border border-gray-300 flex items-center justify-center text-gray-600 hover:bg-gray-50">
-                                        <HelpCircle size={18} />
+                                    <button className="w-10 h-10 rounded-full border border-greyPrimary flex items-center justify-center text-greyPrimary hover:bg-gray-200">
+                                        <Headphones size={20} className='text-greyPrimary' />
                                     </button>
+
                                 </div>
 
-                                <div className="flex space-x-2">
-                                    <button className="px-4 py-2 rounded-full border border-purple-600 text-purple-600 font-medium hover:bg-purple-50 flex items-center gap-1">
+                                {/* Navigation buttons */}
+                                <div className="flex items-center gap-4">
+                                    <button
+                                        onClick={handlePreviousQuestion}
+                                        disabled={currentQuestionIndex === 0}
+                                        className={cn(
+                                            "h-10 w-[98px] rounded-full bg-white text-purplePrimary font-medium hover:bg-white/80 flex items-center justify-center gap-1 border border-purplePrimary",
+                                            currentQuestionIndex === 0 && "opacity-50 cursor-not-allowed"
+                                        )}
+                                    >
                                         <ChevronLeft size={16} />
                                         Back
                                     </button>
-                                    <button className="px-4 py-2 rounded-full bg-purple-600 text-white font-medium hover:bg-purple-700 flex items-center gap-1">
+                                    <button
+                                        onClick={handleNextQuestion}
+                                        disabled={currentQuestionIndex === totalQuestions - 1}
+                                        className={cn(
+                                            "h-10 w-[98px] rounded-full bg-purplePrimary text-white font-medium hover:bg-purplePrimary/60 flex items-center justify-center gap-1 transition-all duration-300 ease",
+                                            currentQuestionIndex === totalQuestions - 1 && "opacity-50 cursor-not-allowed"
+                                        )}
+                                    >
                                         Next
                                         <ChevronRight size={16} />
                                     </button>
@@ -198,7 +231,7 @@ const CodeSidebar = ({
                             </div>
                         </>
                     ) : (
-                        <div className="w-full overflow-auto scrollbar-webkit">
+                        <div className="w-full overflow-auto">
                             <div className="space-y-6 min-w-[483px]">
                                 {/* Submissions table header and column layout */}
                                 <div
