@@ -1,13 +1,14 @@
 import { useState } from 'react'
 import { cn } from '@/lib/utils';
-import { ChevronLeft, ChevronRight, FileText, CircleHelp, Headphones } from 'lucide-react';
-import sidebarOpenIcon from '/openSidebar.svg';
-import sidebarCloseIcon from '/closeSidebar.svg';
-import menuVerticalIcon from '/menuVertical.svg';
+import { ChevronLeft, ChevronRight, FileText, Flag, Headphones } from 'lucide-react';
+import SidebarOpenIcon from '@/assets/openSidebar.svg?react';
+import SubmissionIcon from '@/assets/Menu.svg?react'
+import SidebarCloseIcon from '@/assets/closeSidebar.svg?react';
+import SubmissionVerticalIcon from '@/assets/menuVertical.svg?react';
 import { useCodingAssesment } from './CodingAssesmentContext';
 import QuestionPopup from '@/components/features/candidateAssesments/QuestionPopup';
 import { questionsData } from '@/lib/codingQuestions';
-import flagIcon from '/flagIcon.svg'
+import { motion } from 'framer-motion';
 const CodeSidebar = ({
     currentQuestionData,
     submissionsData,
@@ -48,7 +49,7 @@ const CodeSidebar = ({
 
     return (
         <aside className={cn(
-            "relative bg-white rounded-[20px] border border-gray-200 shadow-md transition-all duration-300 flex flex-col h-full max-h-[calc(100vh-116px)] min-w-0 overflow-x-auto",
+            "relative bg-white dark:bg-blackPrimary rounded-[20px] border border-gray-200 shadow-md transition-all duration-300 flex flex-col h-full max-h-[calc(100vh-116px)] min-w-0 overflow-x-auto",
             isCollapsed ? "p-3 w-12 min-w-[52px] max-w-[52px] rounded-xl" : "p-6"
         )}>
             {isCollapsed ? (
@@ -56,13 +57,15 @@ const CodeSidebar = ({
                 <div className="flex flex-col-reverse justify-end gap-3 py-2 h-[calc(100vh-100px)] rounded-xl">
                     <button
                         className={cn(
-                            "p-3 rounded-md w-full flex flex-col items-center justify-center gap-1",
+                            "p-3 rounded-md w-full flex flex-col items-center justify-center gap-1 group",
                             activeTab === 'submissions' ? "bg-purpleSecondary" : "hover:bg-purpleSecondary transition-all duration-300"
                         )}
                         onClick={() => setActiveTab('submissions')}
                     >
-                        <span
-                            className='text-sm font-medium text-greyPrimary'
+                        <span className={cn('text-sm font-medium text-greyPrimary', {
+                            'dark:text-greyPrimary': activeTab === 'submissions',
+                            'dark:text-white group-hover:dark:text-greyPrimary transition-all duration-300': activeTab !== 'submissions'
+                        })}
                             style={{
                                 writingMode: 'vertical-lr',
                                 textOrientation: 'mixed',
@@ -72,45 +75,50 @@ const CodeSidebar = ({
 
                             Submissions
                         </span>
-                        <svg style={{ transform: 'rotate(-90deg)' }} width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <rect x="3.33334" y="4.16699" width="13.3333" height="4.16667" rx="1" stroke="#333333" stroke-width="2" stroke-linejoin="round" />
-                            <rect x="3.33334" y="11.667" width="13.3333" height="4.16667" rx="1" stroke="#333333" stroke-width="2" stroke-linejoin="round" />
-                        </svg>
+                        <SubmissionIcon
+                            className={cn(
+                                "text-greyPrimary dark:text-white group-hover:dark:text-greyPrimary",
+                                activeTab === 'submissions' ? "dark:text-greyPrimary" : "group-hover:dark-text-greyPrimary"
+                            )}
+                        />
                     </button>
                     <button
                         className={cn(
-                            "p-3 rounded-md w-full flex flex-col items-center justify-center gap-1",
+                            "p-3 rounded-md w-full flex flex-col items-center justify-center gap-1 group",
                             activeTab === 'description' ? "bg-purpleSecondary" : "hover:bg-purpleSecondary transition-all duration-300"
                         )}
                         onClick={() => setActiveTab('description')}
                     >
-                        <span className='text-sm font-medium text-greyPrimary' style={{ writingMode: 'vertical-lr', textOrientation: 'mixed', transform: 'rotate(180deg)' }}>Description</span>
-                        <FileText size={18} style={{ transform: 'rotate(-90deg)', color: '#333333' }} />
+                        <span className={cn('text-sm font-medium text-greyPrimary', {
+                            'dark:text-greyPrimary': activeTab === 'description',
+                            'dark:text-white group-hover:dark:text-greyPrimary transition-all duration-300': activeTab !== 'description'
+                        })}
+                            style={{ writingMode: 'vertical-lr', textOrientation: 'mixed', transform: 'rotate(180deg)' }}>Description</span>
+                        <FileText size={18} style={{ transform: 'rotate(-90deg)' }}
+                            className={cn('text-greyPrimary', {
+                                'dark:text-greyPrimary': activeTab === 'description',
+                                'dark:text-white group-hover:dark:text-greyPrimary transition-all duration-300': activeTab !== 'description'
+                            })}
+                        />
                     </button>
-
-                    {/* Collapse button */}
-                    <button onClick={onCollapseToggle} className='p-2 rounded-md w-full flex justify-center group hover:bg-purpleSecondary transition-all duration-300'>
-                        <img src={sidebarOpenIcon} alt="sidebarOpen Icon" className='h-[17.5px] w-[15.42px] group-hover:scale-110 transition-all duration-300' />
-                        {/* <svg style={{ color: '#000000' }} width="16" height="18" viewBox="0 0 16 18" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M0.5 1.70833C0.5 0.903333 1.15333 0.25 1.95833 0.25H6.54167C6.70743 0.25 6.8664 0.315848 6.98361 0.433058C7.10082 0.550269 7.16667 0.70924 7.16667 0.875C7.16667 1.04076 7.10082 1.19973 6.98361 1.31694C6.8664 1.43415 6.70743 1.5 6.54167 1.5H1.95833C1.90308 1.5 1.85009 1.52195 1.81102 1.56102C1.77195 1.60009 1.75 1.65308 1.75 1.70833V16.2917C1.75 16.4067 1.84333 16.5 1.95833 16.5H6.54167C6.70743 16.5 6.8664 16.5658 6.98361 16.6831C7.10082 16.8003 7.16667 16.9592 7.16667 17.125C7.16667 17.2908 7.10082 17.4497 6.98361 17.5669C6.8664 17.6842 6.70743 17.75 6.54167 17.75H1.95833C1.57156 17.75 1.20063 17.5964 0.927136 17.3229C0.653645 17.0494 0.5 16.6784 0.5 16.2917V1.70833ZM13.8383 9.625H6.95833C6.79257 9.625 6.6336 9.55915 6.51639 9.44194C6.39918 9.32473 6.33333 9.16576 6.33333 9C6.33333 8.83424 6.39918 8.67527 6.51639 8.55806C6.6336 8.44085 6.79257 8.375 6.95833 8.375H13.8383L11.0883 5.47167C10.9788 5.35064 10.921 5.19157 10.9272 5.02846C10.9334 4.86536 11.0032 4.71115 11.1216 4.59882C11.24 4.48649 11.3977 4.42494 11.5609 4.42734C11.7241 4.42975 11.8799 4.4959 11.995 4.61167L15.745 8.57C15.8551 8.68611 15.9164 8.84001 15.9164 9C15.9164 9.15999 15.8551 9.31389 15.745 9.43L11.995 13.3883C11.8799 13.5041 11.7241 13.5703 11.5609 13.5727C11.3977 13.5751 11.24 13.5135 11.1216 13.4012C11.0032 13.2888 10.9334 13.1346 10.9272 12.9715C10.921 12.8084 10.9788 12.6494 11.0883 12.5283L13.8383 9.625Z" fill="#333333" />
-                        </svg> */}
-
-                    </button>
+                    <motion.button
+                        onClick={onCollapseToggle}
+                        whileHover={{ scale: 1.1 }}
+                        whileTap={{ scale: 0.98 }}
+                        className='flex items-center justify-center rounded-xl group pb-5'>
+                        <SidebarOpenIcon className="fill-greyPrimary dark:fill-white" />
+                    </motion.button>
                 </div>
             ) : (
-                // Expanded view
-                // <div className="flex flex-col h-full">
-
-                // </div>
                 <>
                     {/* Tabs */}
                     <div className="flex items-center gap-6 mb-4 overflow-x-hidden min-h-[40px]">
                         <button
                             className={cn(
-                                "px-[6px] py-[5px] flex items-center gap-1 font-medium text-greyPrimary rounded-[8px] text-sm",
+                                "px-[6px] py-[5px] flex items-center gap-1 font-medium text-greyPrimary dark:text-white rounded-[8px] text-sm dark:hover:text-greyPrimary",
                                 activeTab === 'description'
-                                    ? "bg-purpleSecondary"
-                                    : "bg-white hover:bg-purpleSecondary transition-all duration-300"
+                                    ? "bg-purpleSecondary dark:text-greyPrimary"
+                                    : "bg-transparent hover:bg-purpleSecondary transition-all duration-300"
                             )}
                             onClick={() => setActiveTab('description')}
                         >
@@ -119,22 +127,29 @@ const CodeSidebar = ({
                         </button>
                         <button
                             className={cn(
-                                "px-[6px] py-[5px] flex items-center gap-1 font-medium text-greyPrimary rounded-[8px] text-sm",
+                                "px-[6px] py-[5px] flex items-center gap-1 font-medium text-greyPrimary dark:text-white rounded-[8px] text-sm dark:hover:text-greyPrimary",
                                 activeTab === 'submissions'
-                                    ? "bg-purpleSecondary"
-                                    : "bg-white hover:bg-purpleSecondary transition-all duration-300"
+                                    ? "bg-purpleSecondary dark:text-greyPrimary"
+                                    : "bg-transparent hover:bg-purpleSecondary transition-all duration-300"
                             )}
                             onClick={() => setActiveTab('submissions')}
                         >
-                            <img src={menuVerticalIcon} alt="menuVerticalIcon" />
+                            <SubmissionVerticalIcon
+                                className={cn(
+                                    "text-greyPrimary dark:text-white group-hover:dark:text-greyPrimary",
+                                    activeTab === 'submissions' ? "dark:text-greyPrimary" : ""
+                                )}
+                            />
                             {sidebarWidth > 120 && <span>Submissions</span>}
                         </button>
-                        <button
+                        <motion.button
                             onClick={onCollapseToggle}
-                            className="absolute top-[27px] right-4 z-10 p-2 rounded-[8px] hover:bg-purpleSecondary transition-all duration-300"
+                            whileHover={{ scale: 1.2 }}
+                            whileTap={{ scale: 0.98 }}
+                            className="absolute top-[27px] right-4 z-10 p-2 rounded-[8px]"
                         >
-                            <img src={sidebarCloseIcon} alt="sidebarClose Icon" />
-                        </button>
+                            <SidebarCloseIcon className="fill-greyPrimary dark:fill-white" />
+                        </motion.button>
                     </div>
 
                     {/* Content based on active tab */}
@@ -153,39 +168,39 @@ const CodeSidebar = ({
                                     </div>
                                     <button className="flex items-center gap-1 px-3 py-2 rounded-full text-purplePrimray group hover:bg-purplePrimary transition-all duration-300 ease">
                                         <div className="h-5 w-5 grid place-content-center rounded-full bg-purplePrimary group-hover:bg-white">
-                                            <span className='text-white group-hover:text-purplePrimary tex-xs font-medium'>?</span>
+                                            <span className='text-white dark:text-black group-hover:text-purplePrimary tex-xs font-medium'>?</span>
                                         </div>
                                         <span className="text-sm font-medium text-purplePrimary group-hover:text-white">Question info</span>
                                     </button>
                                 </div>
                                 <div className="flex-1 flex flex-col gap-2 min-h-0 overflow-y-auto">
                                     <div className="space-y-4">
-                                        <h3 className="font-bold text-sm">Instructions:</h3>
-                                        <ol className="list-decimal list-inside space-y-2 text-sm text-greyPrimary">
+                                        <h3 className="font-bold text-sm text-greyPrimary dark:text-white">Instructions:</h3>
+                                        <ol className="list-decimal list-inside space-y-2 text-sm text-greyPrimary dark:text-white">
                                             {selectedQuestionData.instructions.map((instruction, index) => (
-                                                <li key={index} className="pl-2 text-sm text-greyPrimary">{instruction}</li>
+                                                <li key={index} className="pl-2 text-sm text-greyPrimary dark:text-white">{instruction}</li>
                                             ))}
                                         </ol>
                                     </div>
 
                                     {/* test cases */}
                                     <div className="space-y-2">
-                                        <p className="text-sm text-gray-600">
-                                            <span className="font-bold text-sm text-greyPrimary">Test Cases</span>
-                                        </p>
+
+                                        <h3 className="font-bold text-sm text-greyPrimary dark:text-white">Test Cases</h3>
+
                                         {selectedQuestionData.testCases.map((testCase, index) => (
                                             <div key={index} className='space-y-1'>
-                                                <h3 className="text-sm text-greyPrimary font-medium">Example:&nbsp;{index + 1}</h3>
-                                                <p className="text-sm text-greyPrimary">Input:&nbsp;{testCase.input}</p>
-                                                <p className="text-sm text-greyPrimary">Output:&nbsp;{testCase.output}</p>
-                                                <p className="text-sm text-greyPrimary">Explanation:&nbsp;{testCase.explanation}</p>
+                                                <h3 className="text-sm text-greyPrimary dark:text-white font-medium">Example:&nbsp;{index + 1}</h3>
+                                                <p className="text-sm text-greyPrimary dark:text-white">Input:&nbsp;{testCase.input}</p>
+                                                <p className="text-sm text-greyPrimary dark:text-white">Output:&nbsp;{testCase.output}</p>
+                                                <p className="text-sm text-greyPrimary dark:text-white">Explanation:&nbsp;{testCase.explanation}</p>
                                             </div>
                                         ))}
                                     </div>
 
                                     {/* Repeated assessment text from the image */}
                                     <div className="space-y-2 pt-1">
-                                        <p className="text-sm text-greyPrimary">
+                                        <p className="text-sm text-greyPrimary dark:text-white">
                                             Your solution will be assessed based on functionality, code quality, and performance.
                                         </p>
                                     </div>
@@ -194,29 +209,39 @@ const CodeSidebar = ({
                             {/* flag and Navigation buttons */}
                             <div className="flex items-center justify-between pt-4 flex-wrap flex-shrink-0 min-w-[400px]">
                                 <div className="flex space-x-2">
-                                    <button className="w-10 h-10 rounded-full border border-greyPrimary flex items-center justify-center text-greyPrimary hover:bg-gray-200">
-                                        <img src={flagIcon} alt="flag icon" className='w-3 h-[14px]' />
-                                    </button>
-                                    <button className="w-10 h-10 rounded-full border border-greyPrimary flex items-center justify-center text-greyPrimary hover:bg-gray-200">
-                                        <Headphones size={20} className='text-greyPrimary' />
-                                    </button>
+                                    <motion.button
+                                        whileHover={{ scale: 1.1 }}
+                                        whileTap={{ scale: 0.98 }}
+                                        className="group w-10 h-10 rounded-full border border-greyPrimary flex items-center justify-center text-greyPrimary dark:hover:bg-white dark:border-white">
+                                        <Flag size={20} className='text-greyPrimary dark:text-white group-hover:dark:text-black' />
+                                    </motion.button>
+                                    <motion.button
+                                        whileHover={{ scale: 1.1 }}
+                                        whileTap={{ scale: 0.98 }}
+                                        className="group w-10 h-10 rounded-full border border-greyPrimary flex items-center justify-center text-greyPrimary dark:hover:bg-white dark:border-white">
+                                        <Headphones size={20} className='text-greyPrimary dark:text-white group-hover:dark:text-black' />
+                                    </motion.button>
 
                                 </div>
 
                                 {/* Navigation buttons */}
                                 <div className="flex items-center gap-4">
-                                    <button
+                                    <motion.button
+                                        whileHover={{ scale: 1.1 }}
+                                        whileTap={{ scale: 0.98 }}
                                         onClick={handlePreviousQuestion}
                                         disabled={currentQuestionIndex === 0}
                                         className={cn(
-                                            "h-10 w-[98px] rounded-full bg-white text-purplePrimary font-medium hover:bg-white/80 flex items-center justify-center gap-1 border border-purplePrimary",
+                                            "h-10 w-[98px] rounded-full bg-transparent text-purplePrimary font-medium flex items-center justify-center gap-1 border border-purplePrimary",
                                             currentQuestionIndex === 0 && "opacity-50 cursor-not-allowed"
                                         )}
                                     >
                                         <ChevronLeft size={16} />
                                         Back
-                                    </button>
-                                    <button
+                                    </motion.button>
+                                    <motion.button
+                                        whileHover={{ scale: 1.1 }}
+                                        whileTap={{ scale: 0.98 }}
                                         onClick={handleNextQuestion}
                                         disabled={currentQuestionIndex === totalQuestions - 1}
                                         className={cn(
@@ -226,7 +251,7 @@ const CodeSidebar = ({
                                     >
                                         Next
                                         <ChevronRight size={16} />
-                                    </button>
+                                    </motion.button>
                                 </div>
                             </div>
                         </>
@@ -238,13 +263,13 @@ const CodeSidebar = ({
                                     className="flex items-center text-sm text-gray-600 font-medium mb-6"
                                 >
                                     <div className='flex items-center gap-2' style={{ minWidth: 180 }}>
-                                        <span className='text-sm text-greyPrimary font-medium text-nowrap'>S. No.</span>
-                                        <span className='text-sm text-greyPrimary font-medium'>Status</span>
+                                        <span className='text-sm text-greyPrimary dark:text-white font-medium text-nowrap'>S. No.</span>
+                                        <span className='text-sm text-greyPrimary dark:text-white font-medium'>Status</span>
                                     </div>
                                     <div className='flex-1 flex'>
-                                        <div className='flex-1 text-sm text-greyPrimary font-medium text-center'>Runtime</div>
-                                        <div className='flex-1 text-sm text-greyPrimary font-medium text-center'>Memory</div>
-                                        <div className='flex-1 text-sm text-greyPrimary font-medium text-center'>Language</div>
+                                        <div className='flex-1 text-sm text-greyPrimary dark:text-white font-medium text-center'>Runtime</div>
+                                        <div className='flex-1 text-sm text-greyPrimary dark:text-white font-medium text-center'>Memory</div>
+                                        <div className='flex-1 text-sm text-greyPrimary dark:text-white font-medium text-center'>Language</div>
                                     </div>
                                 </div>
 

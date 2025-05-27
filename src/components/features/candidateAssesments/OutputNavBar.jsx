@@ -1,7 +1,7 @@
 import testCaseIcon from '/testCaseIcon.svg';
 import testResultIcon from '/testResultIcon.svg';
 import { cn } from '@/lib/utils';
-import { ChevronDown, ChevronUp } from 'lucide-react';
+import { ChevronDown, ChevronUp, Minimize } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useCodingAssesment } from './CodingAssesmentContext';
 // Only handle horizontal collapse
@@ -105,37 +105,47 @@ const OutputNavBar = ({ activeTab, setActiveTab, collapsed, isOutputCollapsed, o
                 </button>
             </div>
             <div className='flex items-center gap-[1rem]'>
-                {!fullscreen && (
+                {/* Use onExitFullscreen prop to determine fullscreen state */}
+                {onExitFullscreen ? (
+                    // Show exit fullscreen button (Minimize icon)
                     <button
-                        className='h-8 w-8 grid place-content-center rounded-[8px] hover:bg-purpleSecondary transition-all duration-300 ease-in-out'
-                        onClick={onOutputCollapse}
-                        title={isOutputCollapsed ? "Expand Output" : "Collapse Output"}
+                        className="ml-2 p-2 rounded hover:bg-purpleSecondary duration-300 transition-all"
+                        onClick={onExitFullscreen}
+                        title='Exit Fullscreen'
                     >
-                        <motion.div
-                            animate={{ rotate: isOutputCollapsed ? 0 : 180 }}
-                            transition={{ duration: 0.3, ease: 'easeInOut' }}
-                            style={{ display: 'inline-block' }}
-                        >
-                            <ChevronUp />
-                        </motion.div>
+                        <Minimize className="w-4 h-4 text-greyPrimary" />
                     </button>
+                ) : (
+                    // Show collapse and fullscreen button (SVG icon)
+                    <>
+                        {!fullscreen && ( // Keep existing logic for collapse button visibility
+                            <button
+                                className='h-8 w-8 grid place-content-center rounded-[8px] hover:bg-purpleSecondary transition-all duration-300 ease-in-out'
+                                onClick={onOutputCollapse}
+                                title={isOutputCollapsed ? "Expand Output" : "Collapse Output"}
+                            >
+                                <motion.div
+                                    animate={{ rotate: isOutputCollapsed ? 0 : 180 }}
+                                    transition={{ duration: 0.3, ease: 'easeInOut' }}
+                                    style={{ display: 'inline-block' }}
+                                >
+                                    <ChevronUp />
+                                </motion.div>
+                            </button>
+                        )}
+                        {onFullscreen && ( // Check if onFullscreen prop is provided
+                            <button
+                                className="ml-2 p-2 rounded hover:bg-purpleSecondary duration-300 transition-all"
+                                onClick={onFullscreen}
+                                title='Fullscreen'
+                            >
+                                <svg width="15" height="15" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M5.5 1.5H2.83333C2.09695 1.5 1.5 2.09695 1.5 2.83333V5.5M5.5 13.5H2.83333C2.09695 13.5 1.5 12.903 1.5 12.1667V9.5M9.5 1.5H12.1667C12.903 1.5 13.5 2.09695 13.5 2.83333V5.5M13.5 9.5V12.1667C13.5 12.903 12.903 13.5 12.1667 13.5H9.5" stroke="#333333" strokeWidth="1.5" strokeLinecap="round" />
+                                </svg>
+                            </button>
+                        )}
+                    </>
                 )}
-                <button
-                    className="ml-2 p-2 rounded hover:bg-purpleSecondary duration-300 transition-all"
-                    onClick={fullscreen ? onExitFullscreen : onFullscreen}
-                    title={fullscreen ? 'Exit Fullscreen' : 'Fullscreen'}
-                >
-                    {fullscreen ? (
-                        <svg width="15" height="15" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M2.833 5.5H5.5V2.833M12.167 9.5H9.5V12.167M5.5 2.833L1.5 6.833M9.5 12.167L13.5 8.167" stroke="#333333" strokeWidth="1.5" strokeLinecap="round" />
-                        </svg>
-                    ) : (
-                        <svg width="15" height="15" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M5.5 1.5H2.83333C2.09695 1.5 1.5 2.09695 1.5 2.83333V5.5M5.5 13.5H2.83333C2.09695 13.5 1.5 12.903 1.5 12.1667V9.5M9.5 1.5H12.1667C12.903 1.5 13.5 2.09695 13.5 2.83333V5.5M13.5 9.5V12.1667C13.5 12.903 12.903 13.5 12.1667 13.5H9.5" stroke="#333333" strokeWidth="1.5" strokeLinecap="round" />
-                        </svg>
-                    )}
-                </button>
-
             </div>
         </div>
     );

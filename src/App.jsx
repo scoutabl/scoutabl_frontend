@@ -12,6 +12,7 @@ import NotFoundPage from './pages/NotFoundPage';
 import { AnimatePresence } from 'framer-motion';
 import { PageTransition } from './components/PageTransition';
 import AssesmentLayout from './layouts/AssesmentLayout';
+import { ThemeProvider } from './context/ThemeContext';
 // Protected Route component
 const ProtectedRoute = ({ children }) => {
   const { user, loading } = useAuth();
@@ -119,9 +120,11 @@ function App() {
   return (
     <Router>
       <AuthProvider>
-        <NavigationWrapper>
-          <RoutesWithTransitions />
-        </NavigationWrapper>
+        <ThemeProvider>
+          <NavigationWrapper>
+            <RoutesWithTransitions />
+          </NavigationWrapper>
+        </ThemeProvider>
         <Toaster />
       </AuthProvider>
     </Router>

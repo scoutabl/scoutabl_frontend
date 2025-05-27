@@ -65,6 +65,16 @@ const CodeEditor = ({ testCases, inputVars, callPattern, collapsed, isFullscreen
         };
     }, [editorWrapperRef.current, editorRef.current]); // Re-run if refs change
 
+    // Add this useEffect hook inside the CodeEditor component
+    useEffect(() => {
+        // When exiting fullscreen
+        if (!isFullscreen) {
+            // Ensure loading is false
+            setLoading(false);
+        }
+        // We don't need to do anything when entering fullscreen regarding loading state
+    }, [isFullscreen]); // Depend on isFullscreen state
+
     const onMount = (editor) => {
         editorRef.current = editor;
         editor.focus();
@@ -199,11 +209,6 @@ const CodeEditor = ({ testCases, inputVars, callPattern, collapsed, isFullscreen
     // Update beforeMount handler to use monaco-themes
     const handleEditorBeforeMount = async (monaco) => {
         try {
-            // monaco.editor.defineTheme('monokai-theme', {
-            //     base: 'vs-light', // Monokai is a dark theme, so we use vs-dark as base
-            //     inherit: true,
-            //     ...monokaiTheme
-            // });
             monaco.editor.defineTheme('github-light', {
                 base: 'vs-light',
                 inherit: true,
@@ -211,13 +216,6 @@ const CodeEditor = ({ testCases, inputVars, callPattern, collapsed, isFullscreen
             });
         } catch (error) {
             console.error('Failed to load theme:', error);
-            // Fallback to default theme if loading fails
-            // monaco.editor.defineTheme('monokai-theme', {
-            //     base: 'vs-dark',
-            //     inherit: true,
-            //     colors: {},
-            //     tokenColors: []
-            // });
             monaco.editor.defineTheme('github-light', {
                 base: 'vs-light',
                 inherit: true,
@@ -240,37 +238,30 @@ const CodeEditor = ({ testCases, inputVars, callPattern, collapsed, isFullscreen
     // Output Full Screen
     if (isOutputFullscreen) {
         return (
-            <div
-                className="fixed inset-0 flex items-center justify-center z-50"
-                style={{ background: '#18181b' }}
-            >
-                <div
-                    className="flex flex-col"
-                    style={{ height: '90vh', width: '90vw', background: '#fff' }}
-                >
-                    <Output
-                        output={output}
-                        testCases={testCases}
-                        userTestCases={userTestCases}
-                        setUserTestCases={setUserTestCases}
-                        inputVars={inputVars}
-                        selectedCase={selectedCase}
-                        setSelectedCase={setSelectedCase}
-                        activeTab={activeTab}
-                        setActiveTab={setActiveTab}
-                        loading={loading}
-                        isOutputCollapsed={isOutputCollapsed}
-                        isRightPanelCollapsed={collapsed}
-                        onOutputCollapse={handleOutputCollapseButton}
-                        collapsed={collapsed}
-                        onExitFullscreen={() => setIsOutputFullscreen(false)}
-                    />
-                </div>
+            <div className="flex flex-col h-full w-full"> {/* Container to take full space of the right panel */}
+                <Output
+                    output={output}
+                    testCases={testCases}
+                    userTestCases={userTestCases}
+                    setUserTestCases={setUserTestCases}
+                    inputVars={inputVars}
+                    selectedCase={selectedCase}
+                    setSelectedCase={setSelectedCase}
+                    activeTab={activeTab}
+                    setActiveTab={setActiveTab}
+                    loading={loading}
+                    isOutputCollapsed={false} // Output should not be collapsed in fullscreen
+                    isRightPanelCollapsed={collapsed}
+                    onOutputCollapse={handleOutputCollapseButton} // Keep collapse handler if needed in fullscreen nav
+                    collapsed={collapsed}
+                    onExitFullscreen={() => setIsOutputFullscreen(false)}
+                    isOutputFullscreen={isOutputFullscreen} // Pass the fullscreen state
+                />
             </div>
         )
     }
 
-    // LeetCode-style fullscreen: expand editor, hide output
+    // LeetCode-style codde editor fullscreen: expand editor, hide output
     if (isFullscreen) {
         return (
             <div className="flex flex-col h-full w-full">
@@ -287,14 +278,13 @@ const CodeEditor = ({ testCases, inputVars, callPattern, collapsed, isFullscreen
                     setLoading={setLoading}
                     loading={loading}
                     callPattern={callPattern}
-                    onFullscreen={() => setIsFullscreen(false)}
-                    onCollapse={handleCollapseButton}
-                    isEditorCollapsed={isEditorCollapsed}
-                    collapsed={collapsed}
+                    onExitFullscreen={() => {
+                        setIsFullscreen(false);
+                        setLoading(false);
+                    }}
                     onReset={handleReset}
-                // Add a button to exit fullscreen
                 />
-                <div className="flex-1 min-h-0 rounded-bl-2xl rounded-br-2xl overflow-auto border border-gray-200">
+                <div className="flex-1 min-h-0  overflow-auto">
                     <Editor
                         language={language}
                         height="100%"
@@ -308,6 +298,13 @@ const CodeEditor = ({ testCases, inputVars, callPattern, collapsed, isFullscreen
                         theme="github-light"
                         beforeMount={handleEditorBeforeMount}
                     />
+                </div>
+                <div className="mb-6 rounded-bl-2xl rounded-br-2xl flex items-center justify-between px-4 py-1 bg-white text-xs text-gray-500">
+                    <div className='flex items-center gap-2'>
+                        <img src={codeUpload} alt="save" className="w-6 h-6" />
+                        <span className='text-greyTertiary text-sm'>Saved</span>
+                    </div>
+                    <span>Ln {cursorPosition.line}, Col {cursorPosition.column}</span>
                 </div>
             </div>
         )
@@ -329,7 +326,7 @@ const CodeEditor = ({ testCases, inputVars, callPattern, collapsed, isFullscreen
                     style={{
                         height: editorAreaHeight,
                         minHeight: 54,
-                        transition: 'height 0.2s'
+                        // transition: 'height 0.2s'
                     }}
                     className="flex-shrink-0 flex flex-col items-center bg-purpleSecondary rounded-xl py-3 overflow-hidden"
                 >
@@ -360,7 +357,7 @@ const CodeEditor = ({ testCases, inputVars, callPattern, collapsed, isFullscreen
                         minHeight: outputNavBarHeight,
                         maxHeight: isOutputCollapsed ? outputNavBarHeight : undefined,
                         // transition: 'height 0.2s ease-in',
-                        overflow: 'hidden',
+                        //   overflow: 'hidden',
                     }}
                     className="flex flex-col bg-white rounded-xl overflow-hidden"
                 >
@@ -379,6 +376,7 @@ const CodeEditor = ({ testCases, inputVars, callPattern, collapsed, isFullscreen
                         isRightPanelCollapsed={collapsed}
                         onOutputCollapse={handleOutputCollapseButton}
                         collapsed={collapsed}
+                        onExitFullscreen={() => setIsOutputFullscreen(false)}
                     />
                 </div>
             </div>
@@ -492,6 +490,7 @@ const CodeEditor = ({ testCases, inputVars, callPattern, collapsed, isFullscreen
                     isRightPanelCollapsed={collapsed}
                     onOutputCollapse={handleOutputCollapseButton}
                     collapsed={collapsed}
+                    onExitFullscreen={() => setIsOutputFullscreen(false)}
                 />
             </div>
         </div>

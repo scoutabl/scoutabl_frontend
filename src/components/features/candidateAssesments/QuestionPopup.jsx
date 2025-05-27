@@ -8,7 +8,7 @@ import { cn } from '@/lib/utils';
 import { FaCheckCircle } from "react-icons/fa";
 
 const QuestionTypeIcons = {
-    'rating': <FaCheckCircle color='#590D0F' />,
+    'rating': <FaCheckCircle color='#590D0F' cl />,
     'mcq': <FaCheckCircle color='#13482A' />,
     'single-select': <FaCheckCircle color='#13482A' />,
     'multi-select': <FaCheckCircle color='#590D0F' />,
@@ -16,7 +16,7 @@ const QuestionTypeIcons = {
     'voice': <FaCheckCircle />,
     'long-answer': <FaCheckCircle />,
     'rearrange': <FaCheckCircle />,
-    'coding': <FaCheckCircle />,
+    'coding': <FaCheckCircle className='dark:text-black' />,
     'short-answer': <FaCheckCircle />,
     'true-false': <FaCheckCircle />,
 };
@@ -45,7 +45,7 @@ export default function QuestionPopup({
                     variant="ghost"
                     className="flex items-center gap-2 py-[6px] px-3 h-auto rounded-full bg-blueSecondary"
                 >
-                    <span className="text-sm font-medium">Question <strong>{currentQuestionIndex + 1}</strong> of <strong>{total}</strong></span>
+                    <span className="text-sm font-medium text-greyPrimary">Question <strong>{currentQuestionIndex + 1}</strong> of <strong>{total}</strong></span>
                     <ChevronDown className="h-4 w-4 text-gray-500" />
                 </button>
             </PopoverTrigger>
@@ -57,12 +57,12 @@ export default function QuestionPopup({
                 <div className="bg-blue-50 p-3 rounded-t-lg">
                     <div className="flex items-center justify-between">
                         {mode === 'coding' ? (
-                            <h3 className="text-sm font-medium text-blue-900">Coding Questions</h3>
+                            <h3 className="text-sm font-bold text-greyPrimary">Coding Questions</h3>
                         ) : (
-                            <h3 className="text-sm font-medium text-blue-900">Assessment Questions</h3>
+                            <h3 className="text-sm font-bold text-greyPrimary">Assessment Questions</h3>
                         )}
-                        {/* <h3 className="text-sm font-medium text-blue-900">{(mode === 'coding' ?)}Assessment Questions</h3> */}
-                        <span className="text-xs text-blue-800">{currentQuestionIndex + 1} of {total}</span>
+                        {/* <h3 className="text-sm font-medium text-greyPrimary">{(mode === 'coding' ?)}Assessment Questions</h3> */}
+                        <span className="text-xs text-greyPrimary font-bold">{currentQuestionIndex + 1} of {total}</span>
                     </div>
                 </div>
 
@@ -71,7 +71,7 @@ export default function QuestionPopup({
                         <div
                             key={mode === 'coding' ? question.id : question.questionId}
                             className={cn(
-                                "flex items-start gap-3 cursor-pointer hover:bg-[#E8DEFD] hover:border-b",
+                                "flex items-start gap-3 cursor-pointer hover:bg-[#E8DEFD] hover:border-b group",
                                 index === currentQuestionIndex && "bg-[#E8DEFD]"
                             )}
                             onClick={() => {
@@ -79,16 +79,23 @@ export default function QuestionPopup({
                                 setIsOpen(false);
                             }}
                         >
-                            <div className="flex-1 px-6 py-4">
+                            <div className="flex-1 px-6 py-4 ">
                                 <div className="flex gap-1">
-                                    <span className="text-sm text-greyPrimary font-bold">Q{index + 1}:</span>
-                                    <span className="text-sm text-greyPrimary text-wrap">
+                                    <span className={cn(
+                                        "text-sm text-greyPrimary font-bold dark:text-white group-hover:dark:text-black",
+                                        index === currentQuestionIndex && "dark:text-greyPrimary"
+                                    )}
+                                    >Q{index + 1}:</span>
+                                    <span className={cn(
+                                        "text-sm text-greyPrimary font-regular dark:text-white group-hover:dark:text-black",
+                                        index === currentQuestionIndex && "dark:text-greyPrimary"
+                                    )}>
                                         {mode === 'coding' ? question.title : question.questionTitle}
                                     </span>
                                 </div>
                                 <div className="flex items-center gap-2 bg-green-200 max-w-fit px-2 py-1 rounded-full mt-2">
                                     {QuestionTypeIcons[mode === 'coding' ? 'coding' : question.type]}
-                                    <span className="text-xs font-medium capitalize">
+                                    <span className="text-xs font-medium capitalize dark:text-black">
                                         {mode === 'coding' ? 'coding' : question.type}
                                     </span>
                                 </div>
@@ -97,6 +104,6 @@ export default function QuestionPopup({
                     ))}
                 </div>
             </PopoverContent>
-        </Popover>
+        </Popover >
     );
 } 

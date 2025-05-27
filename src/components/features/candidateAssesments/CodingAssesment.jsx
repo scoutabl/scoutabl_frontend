@@ -16,7 +16,8 @@ function CodingAssesmentInner() {
         isFullscreen, setIsFullscreen,
         sidebarRef, isResizing,
         rightPanelWidth, setRightPanelWidth,
-        isRightCollapsed, setIsRightCollapsed
+        isRightCollapsed, setIsRightCollapsed,
+        isOutputFullscreen, setIsOutputFullscreen
     } = useCodingAssesment();
 
     const RIGHT_COLLAPSED_WIDTH = 52; //px
@@ -120,7 +121,7 @@ function CodingAssesmentInner() {
     return (
         <div className='flex gap-3 py-6 min-w-0 h-[calc(100vh-116px)]'>
             {/* Sidebar: hidden in fullscreen */}
-            {!isFullscreen && (
+            {!isFullscreen && !isOutputFullscreen && (
                 <div
                     ref={sidebarRef}
                     style={{
@@ -139,7 +140,7 @@ function CodingAssesmentInner() {
                 </div>
             )}
             {/* Resizer bar: hidden in fullscreen */}
-            {!isFullscreen && (
+            {(!isFullscreen && !isOutputFullscreen) && (    
                 <div
                     className='h-full w-2 flex items-center justify-center cursor-ew-resize transition-colors duration-150 z-20'
                     style={{ minWidth: 8, maxWidth: 8 }}

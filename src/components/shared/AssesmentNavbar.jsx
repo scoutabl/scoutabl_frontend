@@ -2,9 +2,12 @@ import React, { useEffect, useState } from 'react';
 import logo from '/scoutableBlackLogo.svg'
 import timerLogo from '/timerLogo.svg'
 import { Progress } from '@/components/ui/progress'
+import { Sun, Moon } from 'lucide-react';
+import { useTheme } from '@/context/ThemeContext';
 
 export default function AssessmentNavbar({ currentIndex, total, initialMinutes = 90 }) {
     const [timeLeft, setTimeLeft] = useState(initialMinutes * 60);
+    const { isDarkMode, toggleDarkMode } = useTheme();
 
     useEffect(() => {
         if (timeLeft <= 0) return;
@@ -26,24 +29,37 @@ export default function AssessmentNavbar({ currentIndex, total, initialMinutes =
                 </span>
                 <Progress value={currentIndex + 1} max={total} className='w-[100px] h-3 bg-[#DCD9D9] rounded-full' />
             </div>
-            <div className='flex gap-1 items-center justify-center'>
-                <img src={timerLogo} alt='timer logo' />
-                <span className="mr-2">Time Left:</span>
-                {(() => {
-                    const hours = String(Math.floor(timeLeft / 3600)).padStart(2, '0');
-                    const minutes = String(Math.floor((timeLeft % 3600) / 60)).padStart(2, '0');
-                    const seconds = String(timeLeft % 60).padStart(2, '0');
-                    const boxClass = "bg-greyPrimary text-white p-1 rounded-[5px] text-sm font-bold mx-1 min-w-[40px] text-center border-2 border-[#A4A4A4]";
-                    return (
-                        <span className="flex items-center gap-1">
-                            <span className={boxClass}>{hours}</span>
-                            <span className="text-black font-bold">:</span>
-                            <span className={boxClass}>{minutes}</span>
-                            <span className="text-black font-bold">:</span>
-                            <span className={boxClass}>{seconds}</span>
-                        </span>
-                    );
-                })()}
+            <div className='flex items-center gap-6'>
+                {/* toggle dark mode */}
+                <button
+                    className='h-6 w-6 rounded-full bg-white flex items-center justify-center cursor-pointer border-[4px] border-purplePrimary'
+                    onClick={toggleDarkMode}
+                >
+                    {isDarkMode ? (
+                        <Moon size={10} className='text-purplePrimary' />
+                    ) : (
+                        <Sun size={10} className='text-purplePrimary' />
+                    )}
+                </button>
+                <div className='flex gap-1 items-center justify-center'>
+                    <img src={timerLogo} alt='timer logo' />
+                    <span className="mr-2">Time Left:</span>
+                    {(() => {
+                        const hours = String(Math.floor(timeLeft / 3600)).padStart(2, '0');
+                        const minutes = String(Math.floor((timeLeft % 3600) / 60)).padStart(2, '0');
+                        const seconds = String(timeLeft % 60).padStart(2, '0');
+                        const boxClass = "bg-greyPrimary text-white p-1 rounded-[5px] text-sm font-bold mx-1 min-w-[40px] text-center border-2 border-[#A4A4A4]";
+                        return (
+                            <span className="flex items-center gap-1">
+                                <span className={boxClass}>{hours}</span>
+                                <span className="text-black font-bold">:</span>
+                                <span className={boxClass}>{minutes}</span>
+                                <span className="text-black font-bold">:</span>
+                                <span className={boxClass}>{seconds}</span>
+                            </span>
+                        );
+                    })()}
+                </div>
             </div>
         </div>
     );

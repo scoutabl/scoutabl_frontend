@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { ChevronDown, Play, RotateCcw, Braces, CodeXml, ChevronUp } from 'lucide-react';
-import { FaCheckCircle } from "react-icons/fa";
+import { ChevronDown, Play, RotateCcw, Braces, CodeXml, Minimize } from 'lucide-react';
+import { FaCheckCircle, } from "react-icons/fa";
 import { fetchLanguageRuntimes, executeCode } from '@/api/monacoCodeApi'
 import { cn } from '@/lib/utils';
 import { motion } from 'framer-motion';
@@ -291,9 +291,10 @@ const CodeNavBar = ({
                     {/* Only show exit fullscreen if in fullscreen mode */}
                     {onExitFullscreen ? (
                         <button className='py-2 px-3 rounded-[8px] hover:bg-white transition-all duration-300 ease-in' onClick={onExitFullscreen} title="Exit Fullscreen">
-                            <svg width="15" height="15" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            {/* <svg width="15" height="15" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg">
                                 <path d="M2.833 5.5H5.5V2.833M12.167 9.5H9.5V12.167M5.5 2.833L1.5 6.833M9.5 12.167L13.5 8.167" stroke="#333333" strokeWidth="1.5" strokeLinecap="round" />
-                            </svg>
+                            </svg> */}
+                            <Minimize size={20} color='#333333' />
                         </button>
                     ) : (
                         <>
@@ -317,6 +318,7 @@ const CodeNavBar = ({
                                     <svg width="15" height="15" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg">
                                         <path d="M5.5 1.5H2.83333C2.09695 1.5 1.5 2.09695 1.5 2.83333V5.5M5.5 13.5H2.83333C2.09695 13.5 1.5 12.903 1.5 12.1667V9.5M9.5 1.5H12.1667C12.903 1.5 13.5 2.09695 13.5 2.83333V5.5M13.5 9.5V12.1667C13.5 12.903 12.903 13.5 12.1667 13.5H9.5" stroke="#333333" strokeWidth="1.5" strokeLinecap="round" />
                                     </svg>
+                                    {/* <Minimize size={20} color='#333333' /> */}
                                 </button>
                             )}
                         </>
