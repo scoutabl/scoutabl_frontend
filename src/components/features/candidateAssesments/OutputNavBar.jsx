@@ -10,9 +10,9 @@ const OutputNavBar = ({ activeTab, setActiveTab, collapsed, isOutputCollapsed, o
     // Render vertical OutputNavBar if horizontally collapsed
     if (collapseDirection === 'horizontal' || collapsed) {
         return (
-            <div className="min-h-[54px] max-h-[54px] py-3 min-w-[52px] max-w-[52px] flex flex-col items-center gap-4 bg-white justify-between rounded-xl">
+            <div className="min-h-[54px] py-3 min-w-[52px] max-w-[52px] flex flex-col items-center gap-4 dark:bg-blackPrimary bg-white justify-between rounded-xl">
                 <button
-                    className={cn("flex flex-col items-center gap-2 px-2 py-2 text-greyPrimary text-sm font-medium border-b-2 transition-colors duration-200 border-transparent rounded-md hover:bg-purpleSecondary",
+                    className={cn("flex flex-col items-center gap-2 px-2 py-2 text-greyPrimary text-sm font-medium border-b-2 transition-colors duration-200 border-transparent rounded-md hover:bg-purpleSecondary group",
                         {
                             "bg-purpleSecondary": activeTab === 'cases',
                         }
@@ -21,7 +21,9 @@ const OutputNavBar = ({ activeTab, setActiveTab, collapsed, isOutputCollapsed, o
                     onClick={() => setActiveTab && setActiveTab('cases')}
                 >
                     <span
-                        className='text-sm font-medium text-greyPrimary'
+                        className={cn('text-sm font-medium text-greyPrimary  dark:text-white group-hover:dark:text-greyPrimary',
+                            { 'dark:text-greyPrimary ': activeTab === 'cases', }
+                        )}
                         style={{
                             writingMode: 'vertical-lr',
                             textOrientation: 'mixed',
@@ -34,7 +36,7 @@ const OutputNavBar = ({ activeTab, setActiveTab, collapsed, isOutputCollapsed, o
                     <img src={testCaseIcon} alt="testCaseIcon" style={{ transform: 'rotate(-90deg)' }} />
                 </button>
                 <button
-                    className={cn("flex flex-col items-center gap-2 px-2 py-2 text-greyPrimary text-sm font-medium border-b-2 transition-colors duration-200 border-transparent rounded-md hover:bg-purpleSecondary",
+                    className={cn("flex flex-col items-center gap-2 px-2 py-2 text-greyPrimary text-sm font-medium border-b-2 transition-colors duration-200 border-transparent rounded-md hover:bg-purpleSecondary group",
                         {
                             "bg-purpleSecondary": activeTab === 'results',
                         }
@@ -43,7 +45,9 @@ const OutputNavBar = ({ activeTab, setActiveTab, collapsed, isOutputCollapsed, o
                     onClick={() => setActiveTab && setActiveTab('results')}
                 >
                     <span
-                        className='text-sm font-medium text-greyPrimary'
+                        className={cn('text-sm font-medium text-greyPrimary  dark:text-white group-hover:dark:text-greyPrimary',
+                            { 'dark:text-greyPrimary ': activeTab === 'results', }
+                        )}
                         style={{
                             writingMode: 'vertical-lr',
                             textOrientation: 'mixed',
@@ -55,35 +59,22 @@ const OutputNavBar = ({ activeTab, setActiveTab, collapsed, isOutputCollapsed, o
                     </span>
                     <img src={testResultIcon} alt="testResultIcon" style={{ transform: 'rotate(-90deg)' }} />
                 </button>
-                {/* <button
-                    className="mt-2 p-2 rounded hover:bg-purpleSecondary"
-                    onClick={fullscreen ? onExitFullscreen : onFullscreen}
-                    title={fullscreen ? 'Exit Fullscreen' : 'Fullscreen'}
-                >
-                    {fullscreen ? (
-                        <svg width="18" height="18" viewBox="0 0 24 24"><path d="M9 9h-6v-6h6v2h-4v4h4v2zm6-6h6v6h-2v-4h-4v-2zm6 12v6h-6v-2h4v-4h2zm-12 6h-6v-6h2v4h4v2z" /></svg>
-                    ) : (
-                        <svg width="15" height="15" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M2.833 5.5H5.5V2.833M12.167 9.5H9.5V12.167M5.5 2.833L1.5 6.833M9.5 12.167L13.5 8.167" stroke="#333333" strokeWidth="1.5" strokeLinecap="round" />
-                        </svg>
-                    )}
-                </button> */}
-            </div>
+            </div >
         )
     }
 
     // Default: Render full OutputNavBar (horizontal)
     return (
-        <div className={cn("px-6 flex items-center justify-between gap-4 bg-white min-h-[52px]", {
+        <div className={cn("p-6 flex items-center justify-between gap-4 bg-white dark:bg-blackPrimary min-h-[52px]", {
             'min-h-[52px]': !isOutputCollapsed,
             'rounded-tl-xl rounded-tr-xl pt-6': fullscreen,
         })}>
             <div className='flex items-center gap-4'>
                 <button
                     className={cn(
-                        "text-nowrap flex items-center gap-2 px-4 py-2 text-greyPrimary text-sm font-medium border-b-2 transition-colors duration-200 border-transparent rounded-md hover:bg-purpleSecondary",
+                        "text-nowrap flex items-center gap-2 px-4 py-2 text-greyPrimary dark:text-white hover:dark:text-greyPrimary text-sm font-medium border-b-2 transition-colors duration-200 border-transparent rounded-md hover:bg-purpleSecondary",
                         {
-                            "bg-purpleSecondary": activeTab === 'cases',
+                            "bg-purpleSecondary dark:text-greyPrimary": activeTab === 'cases',
                         }
                     )}
                     onClick={() => setActiveTab('cases')}
@@ -93,9 +84,9 @@ const OutputNavBar = ({ activeTab, setActiveTab, collapsed, isOutputCollapsed, o
                 </button>
                 <button
                     className={cn(
-                        "text-nowrap flex items-center gap-2 px-4 py-2 text-greyPrimary text-sm font-medium border-b-2 transition-colors duration-200 border-transparent rounded-md hover:bg-purpleSecondary",
+                        "text-nowrap flex items-center gap-2 px-4 py-2 text-greyPrimary dark:text-white hover:dark:text-greyPrimary text-sm font-medium border-b-2 transition-colors duration-200 border-transparent rounded-md hover:bg-purpleSecondary",
                         {
-                            "bg-purpleSecondary": activeTab === 'results',
+                            "bg-purpleSecondary dark:text-greyPrimary": activeTab === 'results',
                         }
                     )}
                     onClick={() => setActiveTab('results')}

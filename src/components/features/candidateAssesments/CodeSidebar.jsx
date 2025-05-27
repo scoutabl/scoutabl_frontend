@@ -49,7 +49,7 @@ const CodeSidebar = ({
 
     return (
         <aside className={cn(
-            "relative bg-white dark:bg-blackPrimary rounded-[20px] border border-gray-200 shadow-md transition-all duration-300 flex flex-col h-full max-h-[calc(100vh-116px)] min-w-0 overflow-x-auto",
+            "relative bg-white dark:bg-blackPrimary rounded-[20px] shadow-md transition-all duration-300 flex flex-col h-full max-h-[calc(100vh-116px)] min-w-0 overflow-x-auto",
             isCollapsed ? "p-3 w-12 min-w-[52px] max-w-[52px] rounded-xl" : "p-6"
         )}>
             {isCollapsed ? (

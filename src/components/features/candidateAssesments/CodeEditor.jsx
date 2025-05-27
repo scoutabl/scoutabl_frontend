@@ -1,14 +1,14 @@
 import { useRef, useState, useEffect, useLayoutEffect } from 'react'
 import { Editor } from '@monaco-editor/react'
 import CodeNavBar from './CodeNavBar'
-import OutputNavBar from './OutputNavBar'
-import { CODE_SNIPPETS } from '@/lib/constants'
 import Output from './Output'
 import { useCodingAssesment } from './CodingAssesmentContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import codeUpload from '/codeUpload.svg'
 import githubLight from 'monaco-themes/themes/GitHub Light.json';
+import githubDark from 'monaco-themes/themes/GitHub Dark.json';
 import { cn } from '@/lib/utils';
+import { useTheme } from '@/context/ThemeContext'
 const MIN_OUTPUT_HEIGHT = 60;
 const MIN_EDITOR_HEIGHT = 100;
 const RESIZER_HEIGHT = 4;
@@ -32,6 +32,8 @@ const CodeEditor = ({ testCases, inputVars, callPattern, collapsed, isFullscreen
     const [currentLine, setCurrentLine] = useState(0);
     const [cursorPosition, setCursorPosition] = useState({ line: 1, column: 1 });
 
+
+    const { isDarkMode } = useTheme();
     // New state to remember the last output height before collapsing
     const [lastOutputHeight, setLastOutputHeight] = useState(null);
 
@@ -92,7 +94,6 @@ const CodeEditor = ({ testCases, inputVars, callPattern, collapsed, isFullscreen
 
     const onSelect = (language) => {
         setLanguage(language)
-        setValue(CODE_SNIPPETS[language])
     }
 
     // Collapse button logic
@@ -206,22 +207,18 @@ const CodeEditor = ({ testCases, inputVars, callPattern, collapsed, isFullscreen
         window.removeEventListener('mouseup', handleMouseUp);
     };
 
-    // Update beforeMount handler to use monaco-themes
-    const handleEditorBeforeMount = async (monaco) => {
-        try {
-            monaco.editor.defineTheme('github-light', {
-                base: 'vs-light',
-                inherit: true,
-                ...githubLight
-            });
-        } catch (error) {
-            console.error('Failed to load theme:', error);
-            monaco.editor.defineTheme('github-light', {
-                base: 'vs-light',
-                inherit: true,
-                ...githubLight
-            });
-        }
+    //setting them on editor mount
+    const handleEditorBeforeMount = (monaco) => {
+        monaco.editor.defineTheme('github-light', {
+            base: 'vs-light',
+            inherit: true,
+            ...githubLight
+        });
+        monaco.editor.defineTheme('github-dark', {
+            base: 'vs-dark',
+            inherit: true,
+            ...githubDark
+        });
     };
 
     // Add handleReset function
@@ -295,11 +292,11 @@ const CodeEditor = ({ testCases, inputVars, callPattern, collapsed, isFullscreen
                             setValue(value);
                             setCurrentLine(editorRef.current.getPosition()?.lineNumber || 0);
                         }}
-                        theme="github-light"
+                        theme={isDarkMode ? 'github-dark' : 'github-light'}
                         beforeMount={handleEditorBeforeMount}
                     />
                 </div>
-                <div className="mb-6 rounded-bl-2xl rounded-br-2xl flex items-center justify-between px-4 py-1 bg-white text-xs text-gray-500">
+                <div className="pb-6 rounded-bl-2xl rounded-br-2xl flex items-center justify-between px-4 py-1 bg-white dark:bg-[#24292E] text-xs text-gray-500">
                     <div className='flex items-center gap-2'>
                         <img src={codeUpload} alt="save" className="w-6 h-6" />
                         <span className='text-greyTertiary text-sm'>Saved</span>
@@ -414,7 +411,7 @@ const CodeEditor = ({ testCases, inputVars, callPattern, collapsed, isFullscreen
                     minHeight: isEditorCollapsed ? 0 : MIN_EDITOR_HEIGHT,
                     transition: 'height 0.2s'
                 }}
-                className="flex flex-col rounded-bl-2xl rounded-br-2xl bg-white"
+                className="flex flex-col rounded-bl-2xl rounded-br-2xl bg-white dark:bg-blackPrimary"
             >
                 <AnimatePresence>
                     {!isEditorCollapsed && !collapsed && (
@@ -429,7 +426,7 @@ const CodeEditor = ({ testCases, inputVars, callPattern, collapsed, isFullscreen
                         >
                             <Editor
                                 language={language}
-                                // defaultValue={CODE_SNIPPETS[language]}
+                                defaultValue=''
                                 height="100%"
                                 width="100%"
                                 onMount={onMount}
@@ -438,7 +435,7 @@ const CodeEditor = ({ testCases, inputVars, callPattern, collapsed, isFullscreen
                                     setValue(value);
                                     setCurrentLine(editorRef.current.getPosition()?.lineNumber || 0);
                                 }}
-                                theme="github-light"
+                                theme={isDarkMode ? 'github-dark' : 'github-light'}
                                 beforeMount={handleEditorBeforeMount}
                             />
                         </motion.div>
@@ -446,7 +443,7 @@ const CodeEditor = ({ testCases, inputVars, callPattern, collapsed, isFullscreen
                 </AnimatePresence>
                 {/* Status bar */}
                 {!isEditorCollapsed && !collapsed && (
-                    <div className="mb-6 rounded-bl-2xl rounded-br-2xl flex items-center justify-between px-4 py-1 bg-white text-xs text-gray-500">
+                    <div className="pb-6 rounded-bl-2xl rounded-br-2xl flex items-center justify-between px-4 py-1 bg-white dark:bg-[#24292E] text-xs text-gray-500">
                         <div className='flex items-center gap-2'>
                             <img src={codeUpload} alt="save" className="w-6 h-6" />
                             <span className='text-greyTertiary text-sm'>Saved</span>

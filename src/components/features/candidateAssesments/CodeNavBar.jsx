@@ -205,7 +205,7 @@ const CodeNavBar = ({
             <Popover open={open} onOpenChange={setIsOpen}>
                 <PopoverTrigger asChild>
                     <button
-                        className="flex items-center gap-[6px] p-0 justify-between px-3"
+                        className="flex items-center gap-[6px] p-0 justify-between px-3 text-greyPrimary dark:text-greyPrimary"
                         disabled={loading || !!error}
                     >
                         <Braces color='#333333' size={20} />
@@ -300,7 +300,7 @@ const CodeNavBar = ({
                         <>
                             {/* collapse button */}
                             <button
-                                className='h-8 w-8 grid place-content-center rounded-[8px] hover:bg-white transition-all duration-300 ease-in-out'
+                                className='h-8 w-8 grid place-content-center rounded-[8px] hover:bg-white transition-all duration-300 ease-in-out text-greyPrimary dark:text-greyPrimary'
                                 onClick={onCollapse}
                                 title={isEditorCollapsed ? "Expand Editor" : "Collapse Editor"}
                             >

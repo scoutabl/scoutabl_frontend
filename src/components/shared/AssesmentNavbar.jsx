@@ -1,11 +1,11 @@
 import React, { useEffect, useState } from 'react';
-import logo from '/scoutableBlackLogo.svg'
-import timerLogo from '/timerLogo.svg'
+import Logo from '@/assets/scoutableBlackLogo.svg?react'
+import TimerIcon from '@/assets/timerLogo.svg?react'
 import { Progress } from '@/components/ui/progress'
 import { Sun, Moon } from 'lucide-react';
 import { useTheme } from '@/context/ThemeContext';
 
-export default function AssessmentNavbar({ currentIndex, total, initialMinutes = 90 }) {
+export default function AssessmentNavbar({ currentIndex = 1, total = 15, initialMinutes = 90 }) {
     const [timeLeft, setTimeLeft] = useState(initialMinutes * 60);
     const { isDarkMode, toggleDarkMode } = useTheme();
 
@@ -20,12 +20,12 @@ export default function AssessmentNavbar({ currentIndex, total, initialMinutes =
     return (
         <div className='flex items-center justify-between h-[44px]'>
             <div className='flex gap-1 items-center justify-center'>
-                <img src={logo} alt='scoutabl logo' className='h-[30px] w-[30px]' />
-                <h1 className='text-2xl text-greyPrimary font-bold'>Scoutabl</h1>
+                <Logo className="fill-greyPrimary dark:fill-white" />
+                <h1 className='text-2xl text-greyPrimary dark:text-white font-bold'>Scoutabl</h1>
             </div>
             <div className='flex flex-col gap-1 items-center justify-center'>
-                <span className="text-base font-normal">
-                    Problem Solving <span className='font-bold text-greyPrimary'>({currentIndex + 1}/{total})</span>
+                <span className="text-base font-normal text-greyPrimary dark:text-white">
+                    Problem Solving <strong>({currentIndex + 1}/{total})</strong>
                 </span>
                 <Progress value={currentIndex + 1} max={total} className='w-[100px] h-3 bg-[#DCD9D9] rounded-full' />
             </div>
@@ -42,21 +42,21 @@ export default function AssessmentNavbar({ currentIndex, total, initialMinutes =
                     )}
                 </button>
                 <div className='flex gap-1 items-center justify-center'>
-                    <img src={timerLogo} alt='timer logo' />
-                    <span className="mr-2">Time Left:</span>
+                    <TimerIcon className="text-greyPrimary dark:text-white" />
+                    <span className="text-base font-normal text-greyPrimary dark:text-white">Time Left:</span>
                     {(() => {
                         const hours = String(Math.floor(timeLeft / 3600)).padStart(2, '0');
                         const minutes = String(Math.floor((timeLeft % 3600) / 60)).padStart(2, '0');
                         const seconds = String(timeLeft % 60).padStart(2, '0');
-                        const boxClass = "bg-greyPrimary text-white p-1 rounded-[5px] text-sm font-bold mx-1 min-w-[40px] text-center border-2 border-[#A4A4A4]";
+                        const boxClass = "h-6 w-[30px] grid place-content-center bg-greyPrimary text-white p-1 rounded-[5px] text-sm font-bold text-center border-2 border-[#A4A4A4]";
                         return (
-                            <span className="flex items-center gap-1">
+                            <div className="flex items-center gap-2">
                                 <span className={boxClass}>{hours}</span>
-                                <span className="text-black font-bold">:</span>
+                                <span className="text-black dark:text-white font-bold">:</span>
                                 <span className={boxClass}>{minutes}</span>
-                                <span className="text-black font-bold">:</span>
+                                <span className="text-black dark:text-white font-bold">:</span>
                                 <span className={boxClass}>{seconds}</span>
-                            </span>
+                            </div>
                         );
                     })()}
                 </div>
