@@ -1,16 +1,13 @@
 import { useRef } from 'react';
-import { cn } from '@/lib/utils';
-// import AssessmentNavbar from '@/components/shared/AssesmentNavbar';
-import CodeEditor from './CodeEditor';
-import { questionsData } from '@/lib/codingQuestions';
-import CodeSidebar from './CodeSidebar';
 import { CodingAssesmentProvider, useCodingAssesment } from './CodingAssesmentContext';
+import CodeSidebar from './CodeSidebar';
+import CodeEditor from './CodeEditor';
+import { cn } from '@/lib/utils';
+import { questionsData } from '@/lib/codingQuestions';
 
 function CodingAssesmentInner() {
     const {
-        activeTab, setActiveTab,
         currentQuestion, setCurrentQuestion,
-        totalQuestions,
         sidebarWidth, setSidebarWidth,
         isCollapsed, setIsCollapsed,
         isFullscreen, setIsFullscreen,
@@ -185,6 +182,7 @@ function CodingAssesmentInner() {
 }
 
 export default function CodingAssesment() {
+
     return (
         <CodingAssesmentProvider>
             <CodingAssesmentInner />

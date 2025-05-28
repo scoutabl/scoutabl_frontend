@@ -14,18 +14,6 @@ export const ThemeProvider = ({ children }) => {
         }
     });
 
-    // Effect to apply or remove the 'dark' class on the html element
-    useEffect(() => {
-        const root = document.documentElement;
-        if (isDarkMode) {
-            root.classList.add('dark');
-            localStorage.setItem('theme', 'dark');
-        } else {
-            root.classList.remove('dark');
-            localStorage.setItem('theme', 'light');
-        }
-    }, [isDarkMode]); // Rerun effect when isDarkMode changes
-
     // Function to toggle the theme
     const toggleDarkMode = () => {
         setIsDarkMode(prevMode => !prevMode);

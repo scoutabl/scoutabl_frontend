@@ -7,6 +7,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import codeUpload from '/codeUpload.svg'
 import githubLight from 'monaco-themes/themes/GitHub Light.json';
 import githubDark from 'monaco-themes/themes/GitHub Dark.json';
+// import { customDarkTheme } from './themes/customDarkTheme';
+import { customDarkTheme, customLightTheme } from './codeEditorTheme';
 import { cn } from '@/lib/utils';
 import { useTheme } from '@/context/ThemeContext'
 const MIN_OUTPUT_HEIGHT = 60;
@@ -219,6 +221,8 @@ const CodeEditor = ({ testCases, inputVars, callPattern, collapsed, isFullscreen
             inherit: true,
             ...githubDark
         });
+        monaco.editor.defineTheme('custom-dark', customDarkTheme);
+        monaco.editor.defineTheme('custom-light', customLightTheme);
     };
 
     // Add handleReset function
@@ -435,7 +439,7 @@ const CodeEditor = ({ testCases, inputVars, callPattern, collapsed, isFullscreen
                                     setValue(value);
                                     setCurrentLine(editorRef.current.getPosition()?.lineNumber || 0);
                                 }}
-                                theme={isDarkMode ? 'github-dark' : 'github-light'}
+                                theme={isDarkMode ? 'custom-dark' : 'custom-light'}
                                 beforeMount={handleEditorBeforeMount}
                             />
                         </motion.div>
