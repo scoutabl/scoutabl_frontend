@@ -1,10 +1,15 @@
 import { useState, useEffect } from 'react'
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { ChevronDown, Play, RotateCcw, CodeXml, Minimize, Maximize } from 'lucide-react';
-import { FaCheckCircle, } from "react-icons/fa";
 import { fetchLanguageRuntimes, executeCode } from '@/api/monacoCodeApi'
 import { cn } from '@/lib/utils';
 import { motion } from 'framer-motion';
+import JsonIcon from "@/assets/jsonIcon.svg?react"
+import { Minimize } from 'lucide-react';
+import PlayIcon from '@/assets/playIcon.svg?react'
+import CheckIcon from '@/assets/checkIcon.svg?react'
+import ChevronDown from "@/assets/chevron-down.svg?react"
+import ResetIcon from '@/assets/resetIcon.svg?react'
+import MaximizeIcon from '@/assets/maximizeIcon.svg?react'
 
 const ALLOWED_LANGUAGES = [
     { key: 'python', display: 'Python 3' },
@@ -122,77 +127,8 @@ const CodeNavBar = ({
 
                         Code
                     </span>
-                    <CodeXml style={{ transform: 'rotate(-90deg)' }} className='text-greyPrimary' />
+                    <JsonIcon style={{ transform: 'rotate(-90deg)' }} />
                 </div>
-                {/* <div className='flex flex-col items-center gap-[2rem]'>
-                    <button
-                        style={{ transform: 'rotate(180deg)' }}
-                        className="relative flex flex-col items-center gap-2 px-2 py-2 text-greyPrimary text-sm font-medium border-b-2 transition-colors duration-200 border-transparent rounded-md hover:bg-white"
-                        onClick={handleRunCode}
-                        disabled={loading}
-                    >
-                        <span
-                            style={{
-                                writingMode: 'vertical-lr',
-                                textOrientation: 'mixed',
-                                transform: 'rotate(180deg)',
-                                marginTop: 2
-                            }}
-                            className='text-greyPrimary font-normal text-sm hidden'>
-                            Run
-                        </span>
-                        {loading ? (
-                            <span className="animate-spin mr-2 w-4 h-4 border-2 border-t-transparent border-purple-600 rounded-full"
-                            ></span>
-                        ) : (
-                            <Play color='#333333' size={20} style={{ transform: 'rotate(-90deg)' }} />
-                        )}
-
-                    </button>
-                    <button
-                        className="flex flex-col items-center gap-2 px-2 py-2 text-greyPrimary text-sm font-medium border-b-2 transition-colors duration-200 border-transparent rounded-md hover:bg-white"
-                        style={{ transform: 'rotate(180deg)' }}>
-                        <span
-                            style={{
-                                writingMode: 'vertical-lr',
-                                textOrientation: 'mixed',
-                                transform: 'rotate(180deg)',
-                                marginTop: 2
-                            }}
-                            className='text-greyPrimary font-normal text-sm hidden'>
-                            Submit
-                        </span>
-                        <FaCheckCircle color='#1EA378' size={20} style={{ transform: 'rotate(-90deg)' }} />
-                    </button>
-                    <button
-                        style={{ transform: 'rotate(180deg)' }}
-                        className="flex flex-col items-center gap-2 px-2 py-2 text-greyPrimary text-sm font-medium border-b-2 transition-colors duration-200 border-transparent rounded-md hover:bg-white">
-                        <span
-                            style={{
-                                writingMode: 'vertical-lr',
-                                textOrientation: 'mixed',
-                                transform: 'rotate(180deg)',
-                                marginTop: 2
-                            }}
-                            className='text-greyPrimary font-normal text-sm hidden'>
-                            Reset
-                        </span>
-                        <RotateCcw color='#EB5757' size={20} style={{ transform: 'rotate(-90deg)' }} />
-                    </button>
-                </div> */}
-                {/* <div className='flex flex-col items-center gap-[1rem]'>
-                    <button className='py-2 px-3 rounded-[8px] hover:bg-white transition-all duration-300 ease-in' onClick={onFullscreen} title="Fullscreen">
-                        <svg width="15" height="15" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M5.5 1.5H2.83333C2.09695 1.5 1.5 2.09695 1.5 2.83333V5.5M5.5 13.5H2.83333C2.09695 13.5 1.5 12.903 1.5 12.1667V9.5M9.5 1.5H12.1667C12.903 1.5 13.5 2.09695 13.5 2.83333V5.5M13.5 9.5V12.1667C13.5 12.903 12.903 13.5 12.1667 13.5H9.5" stroke="#333333" strokeWidth="1.5" strokeLinecap="round" />
-                        </svg>
-                    </button>
-                    <button
-                        style={{ transform: 'rotate(360deg)' }}
-                        className='py-2 px-3 rounded-[8px] hover:bg-white transition-all duration-300 ease-in'
-                        onClick={onCollapse} title="Collapse">
-                        <ChevronDown />
-                    </button>
-                </div> */}
             </div>
         );
     }
@@ -208,7 +144,9 @@ const CodeNavBar = ({
                         className="flex items-center gap-[6px] p-0 justify-between px-3 text-greyPrimary dark:text-greyPrimary"
                         disabled={loading || !!error}
                     >
-                        <CodeXml color='#333333' size={20} />
+                        <div className='h-6 w-6 grid place-content-center'>
+                            <JsonIcon className="h-6 w-6" />
+                        </div>
                         <span className="text-sm font-normal text-greyPrimary truncate">
                             {language}
                             <span className="text-xs text-greyPrimary font-normal ml-1">
@@ -218,7 +156,9 @@ const CodeNavBar = ({
                                 })()}
                             </span>
                         </span>
-                        <ChevronDown />
+                        <div className='h-6  w-6 grid place-content-center'>
+                            <ChevronDown />
+                        </div>
                     </button>
                 </PopoverTrigger>
                 <PopoverContent className="rounded-2xl flex flex-col p-0 max-w-[180px] ml-8" sideOffset={12} >
@@ -264,25 +204,26 @@ const CodeNavBar = ({
                 <div className='flex items-center gap-3'>
                     <button
                         onClick={handleRunCode}
-                        className='flex gap-[6px] items-center py-2 px-3 rounded-[8px] hover:bg-white transition-all duration-300 ease-in'
+                        className='flex gap-[6px] items-center py-2 px-3 rounded-xl hover:bg-white transition-all duration-300 ease-in group'
                         disabled={loading}
                     >
                         {loading ? (
                             <span className="animate-spin mr-2 w-4 h-4 border-2 border-t-transparent border-purple-600 rounded-full"></span>
                         ) : (
-                            <Play color='#333333' size={20} />
+                            <PlayIcon className="play-icon dark:text-black" />
                         )}
                         <span className='text-greyPrimary font-normal text-sm code-navbar-btn-label'>Run</span>
                     </button>
-                    <button className='flex gap-[6px] items-center py-2 px-3 rounded-[8px] hover:bg-white transition-all duration-300 ease-in'>
-                        <FaCheckCircle color='#1EA378' size={20} />
+                    <button className='flex gap-[6px] items-center py-2 px-3 rounded-xl hover:bg-white transition-all duration-300 ease-in group'>
+                        <CheckIcon className='check-icon text-[#1EA378]' />
                         <span className='text-greyPrimary font-normal text-sm code-navbar-btn-label'>Submit</span>
                     </button>
                     <button
                         onClick={onReset}
-                        className='flex gap-[6px] items-center py-2 px-3 rounded-[8px] hover:bg-white transition-all duration-300 ease-in'
+                        className='flex gap-[6px] items-center py-2 px-3 rounded-xl hover:bg-white transition-all duration-300 ease-in group'
                     >
-                        <RotateCcw color='#EB5757' size={20} />
+                        {/* <RotateCcw color='#EB5757' size={20} /> */}
+                        <ResetIcon />
                         <span className='text-greyPrimary font-normal text-sm code-navbar-btn-label'>Reset</span>
                     </button>
                 </div>
@@ -312,7 +253,7 @@ const CodeNavBar = ({
                             {/* fullscreen button */}
                             {onFullscreen && (
                                 <button className='h-8 w-8 grid place-content-center rounded-[8px] hover:bg-white transition-all duration-300 ease-in' onClick={onFullscreen} title="Fullscreen">
-                                    <Maximize className="w-4 h-4 text-greyPrimary dark:text-greryPrimary group-hover:dark:text-greyPrimary" />
+                                    <MaximizeIcon className="dark:text-greyPrimary group-hover:dark:text-greyPrimary" />
                                 </button>
                             )}
                         </>

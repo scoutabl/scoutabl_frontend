@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import Logo from '@/assets/scoutableBlackLogo.svg?react'
 import TimerIcon from '@/assets/timerLogo.svg?react'
+import ScoutableVectorLogo from '@/assets/scoutableLogoVector.svg?react'
 import { Progress } from '@/components/ui/progress'
 import { Sun, Moon } from 'lucide-react';
 import { useTheme } from '@/context/ThemeContext';
@@ -19,10 +20,7 @@ export default function AssessmentNavbar({ currentIndex = 1, total = 15, initial
 
     return (
         <div className='flex items-center justify-between h-[44px]'>
-            <div className='flex gap-1 items-center justify-center'>
-                <Logo className="fill-greyPrimary dark:fill-white" />
-                <h1 className='text-2xl text-greyPrimary dark:text-white font-bold'>Scoutabl</h1>
-            </div>
+            <ScoutableVectorLogo />
             <div className='flex flex-col gap-1 items-center justify-center'>
                 <span className="text-base font-normal text-greyPrimary dark:text-white">
                     Problem Solving <strong>({currentIndex + 1}/{total})</strong>

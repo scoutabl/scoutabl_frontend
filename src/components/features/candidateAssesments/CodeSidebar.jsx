@@ -1,16 +1,19 @@
 import { useState } from 'react'
+import { motion } from 'framer-motion';
+import { useCodingAssesment } from './CodingAssesmentContext';
+import QuestionPopup from '@/components/features/candidateAssesments/QuestionPopup';
+import { questionsData } from '@/lib/codingQuestions';
 import { cn } from '@/lib/utils';
-import { ChevronLeft, ChevronRight, FileText, Flag, Headphones } from 'lucide-react';
+import { ChevronLeft, ChevronRight, FileText } from 'lucide-react';
 import SidebarOpenIcon from '@/assets/openSidebar.svg?react';
+import FileIcon from '@/assets/fileIcon.svg?react';
 import SubmissionIcon from '@/assets/Menu.svg?react'
 import SidebarCloseIcon from '@/assets/closeSidebar.svg?react';
 import SubmissionVerticalIcon from '@/assets/menuVertical.svg?react';
 import TimerIcon from '@/assets/timerLogo.svg?react'
 import MemoryIcon from '@/assets/memoryIcon.svg?react'
-import { useCodingAssesment } from './CodingAssesmentContext';
-import QuestionPopup from '@/components/features/candidateAssesments/QuestionPopup';
-import { questionsData } from '@/lib/codingQuestions';
-import { motion } from 'framer-motion';
+import FlagIcon from '@/assets/flagIcon.svg?react'
+import HeadphoneIcon from '@/assets/headphoneIcon.svg?react'
 const CodeSidebar = ({
     currentQuestionData,
     submissionsData,
@@ -77,12 +80,9 @@ const CodeSidebar = ({
 
                             Submissions
                         </span>
-                        <SubmissionIcon
-                            className={cn(
-                                "text-greyPrimary dark:text-white group-hover:dark:text-greyPrimary",
-                                activeTab === 'submissions' ? "dark:text-greyPrimary" : "group-hover:dark-text-greyPrimary"
-                            )}
-                        />
+                        <SubmissionIcon className={cn("text-greyPrimary dark:text-white",
+                            { 'dark:text-greyPrimary': activeTab === 'submissions' }
+                        )} />
                     </button>
                     <button
                         className={cn(
@@ -96,12 +96,15 @@ const CodeSidebar = ({
                             'dark:text-white group-hover:dark:text-greyPrimary transition-all duration-300': activeTab !== 'description'
                         })}
                             style={{ writingMode: 'vertical-lr', textOrientation: 'mixed', transform: 'rotate(180deg)' }}>Description</span>
-                        <FileText size={18} style={{ transform: 'rotate(-90deg)' }}
+                        {/* <FileText size={18} style={{ transform: 'rotate(-90deg)' }}
                             className={cn('text-greyPrimary', {
                                 'dark:text-greyPrimary': activeTab === 'description',
                                 'dark:text-white group-hover:dark:text-greyPrimary transition-all duration-300': activeTab !== 'description'
                             })}
-                        />
+                        /> */}
+                        <FileIcon className={cn("text-greyPrimary dark:text-white rotate-[-90deg] group-hover:fill-black",
+                            { 'dark:text-greyPrimary': activeTab === 'description' }
+                        )} />
                     </button>
                     <motion.button
                         onClick={onCollapseToggle}
@@ -117,31 +120,35 @@ const CodeSidebar = ({
                     <div className="flex items-center gap-6 mb-4 overflow-x-hidden min-h-[40px]">
                         <button
                             className={cn(
-                                "px-[6px] py-[5px] flex items-center gap-1 font-medium text-greyPrimary dark:text-white rounded-[8px] text-sm dark:hover:text-greyPrimary",
+                                "px-[6px] py-[5px] flex items-center gap-1 font-medium text-greyPrimary dark:text-white rounded-[8px] text-sm dark:hover:text-greyPrimary group",
                                 activeTab === 'description'
                                     ? "bg-purpleSecondary dark:text-greyPrimary"
                                     : "bg-transparent hover:bg-purpleSecondary transition-all duration-300"
                             )}
                             onClick={() => setActiveTab('description')}
                         >
-                            <FileText size={16} />
+                            {/* <FileText size={16} /> */}
+                            <FileIcon className="group-hover:fill-black" />
                             {sidebarWidth > 120 && <span>Description</span>}
                         </button>
                         <button
                             className={cn(
-                                "px-[6px] py-[5px] flex items-center gap-1 font-medium text-greyPrimary dark:text-white rounded-[8px] text-sm dark:hover:text-greyPrimary",
+                                "px-[6px] py-[5px] flex items-center gap-1 font-medium text-greyPrimary dark:text-white rounded-[8px] text-sm dark:hover:text-greyPrimary group",
                                 activeTab === 'submissions'
                                     ? "bg-purpleSecondary dark:text-greyPrimary"
                                     : "bg-transparent hover:bg-purpleSecondary transition-all duration-300"
                             )}
                             onClick={() => setActiveTab('submissions')}
                         >
-                            <SubmissionVerticalIcon
+                            {/* <SubmissionVerticalIcon
                                 className={cn(
                                     "text-greyPrimary dark:text-white group-hover:dark:text-greyPrimary",
                                     activeTab === 'submissions' ? "dark:text-greyPrimary" : ""
                                 )}
-                            />
+                            /> */}
+                            <SubmissionIcon className={cn("text-greyPrimary dark:text-white rotate-[90deg]",
+                                { 'dark:text-greyPrimary': activeTab === 'submissions' }
+                            )} />
                             {sidebarWidth > 120 && <span>Submissions</span>}
                         </button>
                         <motion.button
@@ -168,7 +175,7 @@ const CodeSidebar = ({
                                             totalQuestions={totalQuestions}
                                         />
                                     </div>
-                                    <button className="flex items-center gap-1 px-3 py-2 rounded-full text-purplePrimray group hover:bg-purplePrimary transition-all duration-300 ease">
+                                    <button className="flex items-center gap-[6px] px-3 py-2 rounded-full text-purplePrimray group hover:bg-purplePrimary  transition-all duration-300 ease">
                                         <div className="h-5 w-5 grid place-content-center rounded-full bg-purplePrimary group-hover:bg-white">
                                             <span className='text-white dark:text-black group-hover:text-purplePrimary tex-xs font-medium'>?</span>
                                         </div>
@@ -214,14 +221,15 @@ const CodeSidebar = ({
                                     <motion.button
                                         whileHover={{ scale: 1.1 }}
                                         whileTap={{ scale: 0.98 }}
-                                        className="group w-10 h-10 rounded-full border border-greyPrimary flex items-center justify-center text-greyPrimary dark:hover:bg-white dark:border-white">
-                                        <Flag size={20} className='text-greyPrimary dark:text-white group-hover:dark:text-black' />
+                                        className="group w-10 h-10 rounded-full border border-greyPrimary flex items-center justify-center text-greyPrimary dark:hover:bg-white dark:border-white group">
+                                        {/* <Flag size={20} className='text-greyPrimary dark:text-white group-hover:dark:text-black' /> */}
+                                        <FlagIcon className="flag-icon group-hover:fill-black dark:text-white group-hover:dark:text-black" />
                                     </motion.button>
                                     <motion.button
                                         whileHover={{ scale: 1.1 }}
                                         whileTap={{ scale: 0.98 }}
-                                        className="group w-10 h-10 rounded-full border border-greyPrimary flex items-center justify-center text-greyPrimary dark:hover:bg-white dark:border-white">
-                                        <Headphones size={20} className='text-greyPrimary dark:text-white group-hover:dark:text-black' />
+                                        className="group w-10 h-10 rounded-full border border-greyPrimary flex items-center justify-center text-greyPrimary dark:hover:bg-white dark:border-white group">
+                                        <HeadphoneIcon className="dark:text-white" />
                                     </motion.button>
 
                                 </div>

@@ -1,7 +1,9 @@
 import testCaseIcon from '/testCaseIcon.svg';
 import testResultIcon from '/testResultIcon.svg';
 import { cn } from '@/lib/utils';
-import { ChevronDown, ChevronUp, Minimize, Maximize } from 'lucide-react';
+import { ChevronUp, Minimize, Maximize } from 'lucide-react';
+import MaximizeIcon from '@/assets/maximizeIcon.svg?react'
+import ChevronDown from '@/assets/chevron-down.svg?react'
 import { motion } from 'framer-motion';
 import { useCodingAssesment } from './CodingAssesmentContext';
 // Only handle horizontal collapse
@@ -120,7 +122,7 @@ const OutputNavBar = ({ activeTab, setActiveTab, collapsed, isOutputCollapsed, o
                                     transition={{ duration: 0.3, ease: 'easeInOut' }}
                                     style={{ display: 'inline-block' }}
                                 >
-                                    <ChevronUp className='text-greyPrimary dark:text-white group-hover:dark:text-greyPrimary' />
+                                    <ChevronDown className="dark:text-white group-hover:dark:text-greyPrimary" />
                                 </motion.div>
                             </button>
                         )}
@@ -130,7 +132,7 @@ const OutputNavBar = ({ activeTab, setActiveTab, collapsed, isOutputCollapsed, o
                                 onClick={onFullscreen}
                                 title='Fullscreen'
                             >
-                                <Maximize className='h-4 w-4 text-greyPrimary dark:text-white group-hover:dark:text-greyPrimary' />
+                                <MaximizeIcon className="dark:text-white group-hover:dark:text-greyPrimary" />
                             </button>
                         )}
                     </>

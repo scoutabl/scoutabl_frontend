@@ -1,0 +1,5 @@
+<svg width="16" height="15" viewBox="0 0 16 15" fill="none" xmlns="http://www.w3.org/2000/svg">
+<rect class="ear-part" x="11.3333" y="8" width="3.33333" height="5.83333" rx="1.66667" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linejoin="round"/>
+<rect class="ear-part" x="1.33334" y="8" width="3.33333" height="5.83333" rx="1.66667" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linejoin="round"/>
+<path class="arch" d="M14.6667 8.83301C14.6667 6.84388 13.9643 4.93623 12.7141 3.52971C11.4638 2.12318 9.76812 1.33301 8.00001 1.33301C6.2319 1.33301 4.53621 2.12318 3.28597 3.52971C2.03572 4.93623 1.33334 6.84388 1.33334 8.83301" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

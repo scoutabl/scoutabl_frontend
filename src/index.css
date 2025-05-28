@@ -196,6 +196,66 @@
   .font-sans {
     font-family: var(--font-sans);
   }
+
+  .flag-icon {
+    stroke: currentColor;
+    fill: none;
+    transition: fill 0.2s;
+  }
+
+  .dark .flag-icon {
+    color: white;
+  }
+
+  .group:hover .flag-icon,
+  .dark .group:hover .flag-icon {
+    fill: black;
+  }
+
+  .group:hover .ear-part {
+    fill: black;
+    stroke: black;
+  }
+
+  .group:hover .arch {
+    stroke: black;
+  }
+
+  .group:hover .play-icon {
+    fill: black;
+    transition: fill 1s ease;
+  }
+
+  .group:hover .tick {
+    stroke: black;
+    transition: fill 1s ease;
+  }
+
+  .group:hover .reset-icon {
+    stroke: black;
+    transition: fill 1s ease;
+  }
+
+  .group:hover .file-line {
+    stroke: white;
+    transition: fill 1s ease;
+  }
+
+  .group:hover .file-clip {
+    fill: white;
+    transition: fill 1s ease;
+  }
+
+  .group:hover .submission-icon {
+    fill: black;
+    transition: fill 1s ease;
+  }
+
+  .dark .group:hover .submission-icon {
+    stroke: black;
+    fill: black;
+    transition: fill 1s ease;
+  }
 }
 
 @theme {
