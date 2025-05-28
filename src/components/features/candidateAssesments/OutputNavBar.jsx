@@ -1,7 +1,7 @@
 import testCaseIcon from '/testCaseIcon.svg';
 import testResultIcon from '/testResultIcon.svg';
 import { cn } from '@/lib/utils';
-import { ChevronDown, ChevronUp, Minimize } from 'lucide-react';
+import { ChevronDown, ChevronUp, Minimize, Maximize } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useCodingAssesment } from './CodingAssesmentContext';
 // Only handle horizontal collapse
@@ -100,18 +100,18 @@ const OutputNavBar = ({ activeTab, setActiveTab, collapsed, isOutputCollapsed, o
                 {onExitFullscreen ? (
                     // Show exit fullscreen button (Minimize icon)
                     <button
-                        className="ml-2 p-2 rounded hover:bg-purpleSecondary duration-300 transition-all"
+                        className="ml-2 p-2 rounded hover:bg-purpleSecondary duration-300 transition-all group"
                         onClick={onExitFullscreen}
                         title='Exit Fullscreen'
                     >
-                        <Minimize className="w-4 h-4 text-greyPrimary" />
+                        <Minimize className="w-4 h-4 text-greyPrimary dark:text-white group-hover:dark:text-greyPrimary" />
                     </button>
                 ) : (
                     // Show collapse and fullscreen button (SVG icon)
                     <>
                         {!fullscreen && ( // Keep existing logic for collapse button visibility
                             <button
-                                className='h-8 w-8 grid place-content-center rounded-[8px] hover:bg-purpleSecondary transition-all duration-300 ease-in-out'
+                                className='h-8 w-8 grid place-content-center rounded-[8px] hover:bg-purpleSecondary transition-all duration-300 ease-in-out group'
                                 onClick={onOutputCollapse}
                                 title={isOutputCollapsed ? "Expand Output" : "Collapse Output"}
                             >
@@ -120,19 +120,17 @@ const OutputNavBar = ({ activeTab, setActiveTab, collapsed, isOutputCollapsed, o
                                     transition={{ duration: 0.3, ease: 'easeInOut' }}
                                     style={{ display: 'inline-block' }}
                                 >
-                                    <ChevronUp />
+                                    <ChevronUp className='text-greyPrimary dark:text-white group-hover:dark:text-greyPrimary' />
                                 </motion.div>
                             </button>
                         )}
                         {onFullscreen && ( // Check if onFullscreen prop is provided
                             <button
-                                className="ml-2 p-2 rounded hover:bg-purpleSecondary duration-300 transition-all"
+                                className="ml-2 p-2 rounded hover:bg-purpleSecondary duration-300 transition-all group"
                                 onClick={onFullscreen}
                                 title='Fullscreen'
                             >
-                                <svg width="15" height="15" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                    <path d="M5.5 1.5H2.83333C2.09695 1.5 1.5 2.09695 1.5 2.83333V5.5M5.5 13.5H2.83333C2.09695 13.5 1.5 12.903 1.5 12.1667V9.5M9.5 1.5H12.1667C12.903 1.5 13.5 2.09695 13.5 2.83333V5.5M13.5 9.5V12.1667C13.5 12.903 12.903 13.5 12.1667 13.5H9.5" stroke="#333333" strokeWidth="1.5" strokeLinecap="round" />
-                                </svg>
+                                <Maximize className='h-4 w-4 text-greyPrimary dark:text-white group-hover:dark:text-greyPrimary' />
                             </button>
                         )}
                     </>

@@ -5,6 +5,8 @@ import SidebarOpenIcon from '@/assets/openSidebar.svg?react';
 import SubmissionIcon from '@/assets/Menu.svg?react'
 import SidebarCloseIcon from '@/assets/closeSidebar.svg?react';
 import SubmissionVerticalIcon from '@/assets/menuVertical.svg?react';
+import TimerIcon from '@/assets/timerLogo.svg?react'
+import MemoryIcon from '@/assets/memoryIcon.svg?react'
 import { useCodingAssesment } from './CodingAssesmentContext';
 import QuestionPopup from '@/components/features/candidateAssesments/QuestionPopup';
 import { questionsData } from '@/lib/codingQuestions';
@@ -281,24 +283,26 @@ const CodeSidebar = ({
                                             className={cn("flex items-center rounded-lg w-full p-[6px]", getStatusColor(submission.status))}
                                         >
                                             <div className="flex items-center gap-2" style={{ minWidth: 180 }}>
-                                                <span className="w-10 font-bold text-[1.5rem] text-greyPrimary whitespace-nowrap">{String(submission.id).padStart(2, '0')}</span>
+                                                <span className="w-10 font-bold text-[1.5rem] text-greyPrimary dark:text-white whitespace-nowrap">{String(submission.id).padStart(2, '0')}</span>
                                                 <span className={cn("w-28 text-sm font-bold whitespace-nowrap", {
-                                                    'text-[#008B00]': submission.status === 'Accepted',
-                                                    'text-[#DA4D2E]': submission.status !== 'Accepted',
+                                                    'text-[#008B00] dark:text-[#1EA378]': submission.status === 'Accepted',
+                                                    'text-[#DA4D2E] dark:text-[#EB5757]': submission.status !== 'Accepted',
                                                 })}>
                                                     {submission.status}
                                                 </span>
                                             </div>
                                             <div className="flex-1 flex items-center gap-1 justify-center">
-                                                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M8 3.33331V8L10.6667 9.33331" stroke="#333333" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /><circle cx="8" cy="8" r="6" stroke="#333333" strokeWidth="1.5" /></svg>
-                                                <span className="text-xs text-greyPrimary font-medium whitespace-nowrap">{submission.runtime}</span>
+                                                <TimerIcon className="text-greyPrimary dark:text-white h-4 w-4" />
+                                                {/* <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M8 3.33331V8L10.6667 9.33331" stroke="#333333" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /><circle cx="8" cy="8" r="6" stroke="#333333" strokeWidth="1.5" /></svg> */}
+                                                <span className="text-xs text-greyPrimary dark:text-white font-medium whitespace-nowrap">{submission.runtime}</span>
                                             </div>
                                             <div className="flex-1 flex items-center gap-1 justify-center">
-                                                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M4.05554 3.2998H6.45203C8.10888 3.2998 9.45203 4.64295 9.45203 6.2998V8.7002C9.45186 9.25234 9.00421 9.7002 8.45203 9.7002H4.05554C3.50336 9.7002 3.05571 9.25234 3.05554 8.7002V4.2998C3.05554 3.74752 3.50326 3.2998 4.05554 3.2998Z" stroke="#333333" strokeWidth="1.5" /><path d="M4.44617 2.90002V0.5" stroke="#333333" strokeWidth="1.5" /><path d="M4.44617 12.4996V10.0996" stroke="#333333" strokeWidth="1.5" /><path d="M8.04773 12.4996V10.0996" stroke="#333333" strokeWidth="1.5" /><path d="M12.2436 8.2998L9.8446 8.2998" stroke="#333333" strokeWidth="1.5" /><path d="M2.64986 8.2998L0.250854 8.2998" stroke="#333333" strokeWidth="1.5" /><path d="M2.64986 4.7002L0.250854 4.7002" stroke="#333333" strokeWidth="1.5" /><path d="M8.05068 1.5C8.47062 1.5 8.88647 1.58275 9.27447 1.74353C9.66247 1.90431 10.015 2.13999 10.312 2.43712C10.6091 2.73425 10.8447 3.08702 11.0054 3.4753C11.1662 3.86358 11.2489 4.27975 11.2489 4.70004" stroke="#333333" strokeWidth="1.5" /></svg>
-                                                <span className="text-xs text-greyPrimary font-medium whitespace-nowrap">{submission.memory}</span>
+                                                {/* <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M4.05554 3.2998H6.45203C8.10888 3.2998 9.45203 4.64295 9.45203 6.2998V8.7002C9.45186 9.25234 9.00421 9.7002 8.45203 9.7002H4.05554C3.50336 9.7002 3.05571 9.25234 3.05554 8.7002V4.2998C3.05554 3.74752 3.50326 3.2998 4.05554 3.2998Z" stroke="#333333" strokeWidth="1.5" /><path d="M4.44617 2.90002V0.5" stroke="#333333" strokeWidth="1.5" /><path d="M4.44617 12.4996V10.0996" stroke="#333333" strokeWidth="1.5" /><path d="M8.04773 12.4996V10.0996" stroke="#333333" strokeWidth="1.5" /><path d="M12.2436 8.2998L9.8446 8.2998" stroke="#333333" strokeWidth="1.5" /><path d="M2.64986 8.2998L0.250854 8.2998" stroke="#333333" strokeWidth="1.5" /><path d="M2.64986 4.7002L0.250854 4.7002" stroke="#333333" strokeWidth="1.5" /><path d="M8.05068 1.5C8.47062 1.5 8.88647 1.58275 9.27447 1.74353C9.66247 1.90431 10.015 2.13999 10.312 2.43712C10.6091 2.73425 10.8447 3.08702 11.0054 3.4753C11.1662 3.86358 11.2489 4.27975 11.2489 4.70004" stroke="#333333" strokeWidth="1.5" /></svg> */}
+                                                <MemoryIcon className="text-greyPrimary dark:text-white h-4 w-4" />
+                                                <span className="text-xs text-greyPrimary dark:text-white font-medium whitespace-nowrap">{submission.memory}</span>
                                             </div>
                                             <div className="flex-1 flex items-center justify-center">
-                                                <span className="text-xs text-greyPrimary font-medium py-1 px-3 bg-[#69B4FF] rounded-full grid place-content-center text-nowrap">{submission.language}</span>
+                                                <span className="text-xs text-greyPrimary dark:text-white font-medium py-1 px-3 bg-[#69B4FF] dark:bg-[#7C51D4] rounded-full grid place-content-center text-nowrap">{submission.language}</span>
                                             </div>
                                         </div>
                                     ))}

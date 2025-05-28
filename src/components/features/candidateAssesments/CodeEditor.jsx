@@ -356,7 +356,7 @@ const CodeEditor = ({ testCases, inputVars, callPattern, collapsed, isFullscreen
                         // transition: 'height 0.2s ease-in',
                         //   overflow: 'hidden',
                     }}
-                    className="flex flex-col bg-white rounded-xl overflow-hidden"
+                    className="flex flex-col bg-white dark:bg-blackPrimary rounded-xl overflow-hidden"
                 >
                     <Output
                         output={output}

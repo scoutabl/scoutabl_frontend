@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { ChevronDown, Play, RotateCcw, Braces, CodeXml, Minimize } from 'lucide-react';
+import { ChevronDown, Play, RotateCcw, CodeXml, Minimize, Maximize } from 'lucide-react';
 import { FaCheckCircle, } from "react-icons/fa";
 import { fetchLanguageRuntimes, executeCode } from '@/api/monacoCodeApi'
 import { cn } from '@/lib/utils';
@@ -122,7 +122,7 @@ const CodeNavBar = ({
 
                         Code
                     </span>
-                    <CodeXml style={{ transform: 'rotate(-90deg)' }} />
+                    <CodeXml style={{ transform: 'rotate(-90deg)' }} className='text-greyPrimary' />
                 </div>
                 {/* <div className='flex flex-col items-center gap-[2rem]'>
                     <button
@@ -208,7 +208,7 @@ const CodeNavBar = ({
                         className="flex items-center gap-[6px] p-0 justify-between px-3 text-greyPrimary dark:text-greyPrimary"
                         disabled={loading || !!error}
                     >
-                        <Braces color='#333333' size={20} />
+                        <CodeXml color='#333333' size={20} />
                         <span className="text-sm font-normal text-greyPrimary truncate">
                             {language}
                             <span className="text-xs text-greyPrimary font-normal ml-1">
@@ -243,15 +243,15 @@ const CodeNavBar = ({
                                 key={lang}
                                 onClick={() => handleSelect(lang)}
                                 className={`group py-3 flex items-center relative cursor-pointer first:rounded-t-2xl last:rounded-b-2xl overflow-hidden pl-0
-                                    ${isSelected ? "bg-[#E8DEFD] text-[#8B5CF6]" : ""}
-                                    hover:bg-[#E8DEFD] hover:text-[#8B5CF6]`
+                                    ${isSelected ? "bg-[#E8DEFD] dark:bg-[#28203F] text-[#8B5CF6]" : "dark:bg-blackPrimary"}
+                                    hover:bg-[#E8DEFD] dark:hover:bg-[#28203F] hover:text-[#8B5CF6]`
                                 }
                             >
                                 {(isSelected) && (
                                     <div className={`absolute left-0 top-0 h-full w-1 bg-[#8B5CF6] ${barRounding}`} />
                                 )}
                                 <div className={`absolute left-0 top-0 h-full w-1 bg-[#8B5CF6] opacity-0 group-hover:opacity-100 ${barRounding}`} />
-                                <span className={`ml-4 ${isSelected ? "text-[#8B5CF6]" : "text-black"} group-hover:text-[#8B5CF6]`}>
+                                <span className={`ml-4 ${isSelected ? "text-[#8B5CF6]" : "text-black dark:text-white"} group-hover:text-[#8B5CF6]`}>
                                     {display} <span className="ml-2 text-xs text-gray-400">{langObj.version}</span>
                                 </span>
                             </div>
@@ -291,10 +291,7 @@ const CodeNavBar = ({
                     {/* Only show exit fullscreen if in fullscreen mode */}
                     {onExitFullscreen ? (
                         <button className='py-2 px-3 rounded-[8px] hover:bg-white transition-all duration-300 ease-in' onClick={onExitFullscreen} title="Exit Fullscreen">
-                            {/* <svg width="15" height="15" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                <path d="M2.833 5.5H5.5V2.833M12.167 9.5H9.5V12.167M5.5 2.833L1.5 6.833M9.5 12.167L13.5 8.167" stroke="#333333" strokeWidth="1.5" strokeLinecap="round" />
-                            </svg> */}
-                            <Minimize size={20} color='#333333' />
+                            <Minimize className="w-4 h-4 text-greyPrimary dark:text-greryPrimary group-hover:dark:text-greyPrimary" />
                         </button>
                     ) : (
                         <>
@@ -315,10 +312,7 @@ const CodeNavBar = ({
                             {/* fullscreen button */}
                             {onFullscreen && (
                                 <button className='h-8 w-8 grid place-content-center rounded-[8px] hover:bg-white transition-all duration-300 ease-in' onClick={onFullscreen} title="Fullscreen">
-                                    <svg width="15" height="15" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                        <path d="M5.5 1.5H2.83333C2.09695 1.5 1.5 2.09695 1.5 2.83333V5.5M5.5 13.5H2.83333C2.09695 13.5 1.5 12.903 1.5 12.1667V9.5M9.5 1.5H12.1667C12.903 1.5 13.5 2.09695 13.5 2.83333V5.5M13.5 9.5V12.1667C13.5 12.903 12.903 13.5 12.1667 13.5H9.5" stroke="#333333" strokeWidth="1.5" strokeLinecap="round" />
-                                    </svg>
-                                    {/* <Minimize size={20} color='#333333' /> */}
+                                    <Maximize className="w-4 h-4 text-greyPrimary dark:text-greryPrimary group-hover:dark:text-greyPrimary" />
                                 </button>
                             )}
                         </>

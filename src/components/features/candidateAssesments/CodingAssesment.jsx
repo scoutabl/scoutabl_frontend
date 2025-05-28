@@ -50,12 +50,12 @@ function CodingAssesmentInner() {
     const getStatusColor = (status) => {
         switch (status) {
             case 'Accepted':
-                return 'bg-[#BFE2BF] text-[#008B00]';
+                return 'bg-[#BFE2BF] text-[#008B00] dark:bg-[#224D24]';
             case 'Wrong Answer':
-                return 'bg-[#F5D2CA] text-[#DA4D2E]';
+                return 'bg-[#F5D2CA] text-[#DA4D2E] dark:bg-[#291412]';
             case 'Compile Error':
             case 'Runtime Error':
-                return 'bg-[#F5D2CA] text-[#DA4D2E]';
+                return 'bg-[#F5D2CA] text-[#DA4D2E] dark:bg-[#291412]';
             default:
                 return 'bg-gray-200 text-gray-800';
         }
@@ -140,7 +140,7 @@ function CodingAssesmentInner() {
                 </div>
             )}
             {/* Resizer bar: hidden in fullscreen */}
-            {(!isFullscreen && !isOutputFullscreen) && (    
+            {(!isFullscreen && !isOutputFullscreen) && (
                 <div
                     className='h-full w-2 flex items-center justify-center cursor-ew-resize transition-colors duration-150 z-20'
                     style={{ minWidth: 8, maxWidth: 8 }}
