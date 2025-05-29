@@ -38,6 +38,7 @@ const Output = ({
   const [newInput, setNewInput] = useState('');
   const [inputError, setInputError] = useState('');
   const [newExpected, setNewExpected] = useState('');
+  const [outputError, setOutputError] = useState('');
   const [containerHeight, setContainerHeight] = useState(0);
   const containerRef = useRef(null);
   const { setIsOutputFullscreen } = useCodingAssesment();
@@ -50,7 +51,26 @@ const Output = ({
   const hasExpected = typeof result.expected !== 'undefined' && result.expected !== '';
 
   // Add new test case
-  const handleAddTestCase = () => {
+  const handleAddTestCase = (e) => {
+    e.preventDefault(); // Prevents page reload
+    let hasError = false;
+
+    if (!newInput.trim()) {
+      setInputError('Input is required');
+      hasError = true;
+    } else {
+      setInputError('');
+    }
+
+    if (!newExpected.trim()) {
+      setOutputError('Expected output is required');
+      hasError = true;
+    } else {
+      setOutputError('');
+    }
+
+    if (hasError) return;
+
     try {
       const parsed = JSON.parse(newInput);
       if (!Array.isArray(parsed)) throw new Error('Input must be an array');
@@ -58,6 +78,7 @@ const Output = ({
       setNewInput('');
       setNewExpected('');
       setInputError('');
+      setOutputError('');
       setSelectedCase(allCases.length);
     } catch (e) {
       setInputError('Input must be a valid JSON array');
@@ -166,32 +187,44 @@ const Output = ({
               </div>
               {/* Add new test case input */}
               {isAdding && (
-                <div className="flex flex-col gap-2 mb-4">
-                  <label className="text-sm font-semibold">Add New Test Case</label>
-                  <div>
-                    <label className="block text-sm font-medium mb-1">{inputVars[0]} =</label>
+                <form onSubmit={handleAddTestCase} className='p-6 flex flex-col gap-3'>
+                  <div className='flex flex-col gap-2'>
+                    <label htmlFor='input' className='text-base font-medium text-greyPrimary dark:text-white'>{inputVars[0]}=</label>
                     <input
-                      className="border rounded px-2 py-1 text-sm w-full"
+                      id='input'
+                      className={cn(
+                        "border rounded-[8px] p-2 text-sm w-full dark:placeholder:text-white text-greyPrimary dark:text-white",
+                        inputError ? "border-red-500 dark:border-red-500" : "border-black dark:border-white"
+                      )}
                       placeholder="Enter a valid JSON array, e.g. [1,2,3]"
                       value={newInput}
                       onChange={e => setNewInput(e.target.value)}
                     />
-                    <label className="block text-sm font-medium mb-1 mt-2">Expected Output</label>
+                    {inputError && <span className="text-red-500 text-xs">{inputError}</span>}
+                  </div>
+                  <div className='flex flex-col gap-2'>
+                    <label htmlFor='output' className='text-base font-medium text-greyPrimary dark:text-white'>Expected Output</label>
                     <input
-                      className="border rounded px-2 py-1 text-sm w-full"
-                      placeholder="Enter expected output"
+                      id='output'
+                      className={cn(
+                        "border rounded-[8px] p-2 text-sm w-full dark:placeholder:text-white text-greyPrimary dark:text-white",
+                        outputError ? "border-red-500 dark:border-red-500" : "border-black dark:border-white"
+                      )}
+                      placeholder="Enter a valid JSON array, e.g. [1,2,3]"
                       value={newExpected}
                       onChange={e => setNewExpected(e.target.value)}
                     />
+                    {outputError && <span className="text-red-500 text-xs">{outputError}</span>}
                   </div>
-                  <button
-                    className="self-start bg-green-500 text-white px-3 py-1 rounded hover:bg-green-600 text-sm"
-                    onClick={handleAddTestCase}
+                  <motion.button
+                    whileHover={{ scale: 1.1 }}
+                    whileTap={{ scale: 0.98 }}
+                    type="submit"
+                    className="px-3 py-2 rounded-md h-10 w-fit bg-purplePrimary dark:text-black text-white hover:bg-black hover:text-white dark:hover:bg-white dark:hover:text-black transition-colors duration-300"
                   >
                     Add Test Case
-                  </button>
-                  {inputError && <div className="text-red-500 text-xs mt-1">{inputError}</div>}
-                </div>
+                  </motion.button>
+                </form>
               )}
               {/* Show selected test case input */}
               {selectedCase < allCases.length && allCases[selectedCase] && (
@@ -200,15 +233,15 @@ const Output = ({
                     <span className="block font-semibold mb-2 text-base  text-greyPrimary dark:text-white">Input</span>
                     <div className="bg-blueSecondary dark:bg-blackSecondary rounded-lg px-4 py-2 text-base">
                       <div>
-                        <span className="font-semibold block">{inputVars[0]}=</span>
-                        <span className="block">{JSON.stringify(allCases[selectedCase].input, null, 2)}</span>
+                        <span className="font-semibold block text-greyPrimary dark:text-white">{inputVars[0]}=</span>
+                        <span className="block text-greyPrimary dark:text-white">{JSON.stringify(allCases[selectedCase].input, null, 2)}</span>
                       </div>
                     </div>
                   </div>
                   <div className='flex flex-col gap-2'>
                     <span className="block font-semibold mb-2 text-base  text-greyPrimary dark:text-white">Output</span>
                     <div className="bg-blueSecondary dark:bg-blackSecondary rounded-lg px-4 py-2 text-base">
-                      <span className="block">{(allCases[selectedCase].output)}</span>
+                      <span className="block text-greyPrimary dark:text-white">{(allCases[selectedCase].output)}</span>
                     </div>
                   </div>
                 </div>
@@ -250,8 +283,8 @@ const Output = ({
                       <div className="flex flex-col gap-2">
                         {result.input && result.input.map(i => (
                           <div key={i.name} className="bg-blueSecondary rounded-xl px-5 py-[15px] text-base">
-                            <span className="font-semibold block text-sm text-greyPrimary">{i.name}=</span>
-                            <span className="block text-sm text-greyPrimary">{JSON.stringify(i.value, null, 2)}</span>
+                            <span className="font-semibold block text-sm text-greyPrimary dark:text-white">{i.name}=</span>
+                            <span className="block text-sm text-greyPrimary dark:text-white">{JSON.stringify(i.value, null, 2)}</span>
                           </div>
                         ))}
                       </div>

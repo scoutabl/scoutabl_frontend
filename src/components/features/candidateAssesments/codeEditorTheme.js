@@ -30,7 +30,6 @@ export const customLightTheme = {
         { token: "string", foreground: "430B0B" },
         { token: "variable", foreground: "111122" },
         { token: "type", foreground: "000000" }, // String, Schema
-        {token: "bo"}
     ],
     colors: {
         "editor.background": "#FFFFFF",

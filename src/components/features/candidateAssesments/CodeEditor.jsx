@@ -447,7 +447,7 @@ const CodeEditor = ({ testCases, inputVars, callPattern, collapsed, isFullscreen
                 </AnimatePresence>
                 {/* Status bar */}
                 {!isEditorCollapsed && !collapsed && (
-                    <div className="pb-6 rounded-bl-2xl rounded-br-2xl flex items-center justify-between px-4 py-1 bg-white dark:bg-[#24292E] text-xs text-gray-500">
+                    <div className="pb-6 rounded-bl-2xl rounded-br-2xl flex items-center justify-between px-4 py-1 bg-white dark:bg-blackPrimary text-xs text-gray-500">
                         <div className='flex items-center gap-2'>
                             <img src={codeUpload} alt="save" className="w-6 h-6" />
                             <span className='text-greyTertiary text-sm'>Saved</span>

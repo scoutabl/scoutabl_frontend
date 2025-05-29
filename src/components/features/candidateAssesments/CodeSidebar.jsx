@@ -96,12 +96,6 @@ const CodeSidebar = ({
                             'dark:text-white group-hover:dark:text-greyPrimary transition-all duration-300': activeTab !== 'description'
                         })}
                             style={{ writingMode: 'vertical-lr', textOrientation: 'mixed', transform: 'rotate(180deg)' }}>Description</span>
-                        {/* <FileText size={18} style={{ transform: 'rotate(-90deg)' }}
-                            className={cn('text-greyPrimary', {
-                                'dark:text-greyPrimary': activeTab === 'description',
-                                'dark:text-white group-hover:dark:text-greyPrimary transition-all duration-300': activeTab !== 'description'
-                            })}
-                        /> */}
                         <FileIcon className={cn("text-greyPrimary dark:text-white rotate-[-90deg] group-hover:fill-black",
                             { 'dark:text-greyPrimary': activeTab === 'description' }
                         )} />
@@ -111,7 +105,7 @@ const CodeSidebar = ({
                         whileHover={{ scale: 1.1 }}
                         whileTap={{ scale: 0.98 }}
                         className='flex items-center justify-center rounded-xl group pb-5'>
-                        <SidebarOpenIcon className="fill-greyPrimary dark:fill-white" />
+                        <SidebarOpenIcon className="text-greyPrimary dark:text-white" />
                     </motion.button>
                 </div>
             ) : (
@@ -127,7 +121,6 @@ const CodeSidebar = ({
                             )}
                             onClick={() => setActiveTab('description')}
                         >
-                            {/* <FileText size={16} /> */}
                             <FileIcon className="group-hover:fill-black" />
                             {sidebarWidth > 120 && <span>Description</span>}
                         </button>
@@ -140,12 +133,6 @@ const CodeSidebar = ({
                             )}
                             onClick={() => setActiveTab('submissions')}
                         >
-                            {/* <SubmissionVerticalIcon
-                                className={cn(
-                                    "text-greyPrimary dark:text-white group-hover:dark:text-greyPrimary",
-                                    activeTab === 'submissions' ? "dark:text-greyPrimary" : ""
-                                )}
-                            /> */}
                             <SubmissionIcon className={cn("text-greyPrimary dark:text-white rotate-[90deg]",
                                 { 'dark:text-greyPrimary': activeTab === 'submissions' }
                             )} />
@@ -157,7 +144,7 @@ const CodeSidebar = ({
                             whileTap={{ scale: 0.98 }}
                             className="absolute top-[27px] right-4 z-10 p-2 rounded-[8px]"
                         >
-                            <SidebarCloseIcon className="fill-greyPrimary dark:fill-white" />
+                            <SidebarCloseIcon className="text-greyPrimary dark:text-white" />
                         </motion.button>
                     </div>
 
@@ -301,11 +288,9 @@ const CodeSidebar = ({
                                             </div>
                                             <div className="flex-1 flex items-center gap-1 justify-center">
                                                 <TimerIcon className="text-greyPrimary dark:text-white h-4 w-4" />
-                                                {/* <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M8 3.33331V8L10.6667 9.33331" stroke="#333333" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /><circle cx="8" cy="8" r="6" stroke="#333333" strokeWidth="1.5" /></svg> */}
                                                 <span className="text-xs text-greyPrimary dark:text-white font-medium whitespace-nowrap">{submission.runtime}</span>
                                             </div>
                                             <div className="flex-1 flex items-center gap-1 justify-center">
-                                                {/* <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M4.05554 3.2998H6.45203C8.10888 3.2998 9.45203 4.64295 9.45203 6.2998V8.7002C9.45186 9.25234 9.00421 9.7002 8.45203 9.7002H4.05554C3.50336 9.7002 3.05571 9.25234 3.05554 8.7002V4.2998C3.05554 3.74752 3.50326 3.2998 4.05554 3.2998Z" stroke="#333333" strokeWidth="1.5" /><path d="M4.44617 2.90002V0.5" stroke="#333333" strokeWidth="1.5" /><path d="M4.44617 12.4996V10.0996" stroke="#333333" strokeWidth="1.5" /><path d="M8.04773 12.4996V10.0996" stroke="#333333" strokeWidth="1.5" /><path d="M12.2436 8.2998L9.8446 8.2998" stroke="#333333" strokeWidth="1.5" /><path d="M2.64986 8.2998L0.250854 8.2998" stroke="#333333" strokeWidth="1.5" /><path d="M2.64986 4.7002L0.250854 4.7002" stroke="#333333" strokeWidth="1.5" /><path d="M8.05068 1.5C8.47062 1.5 8.88647 1.58275 9.27447 1.74353C9.66247 1.90431 10.015 2.13999 10.312 2.43712C10.6091 2.73425 10.8447 3.08702 11.0054 3.4753C11.1662 3.86358 11.2489 4.27975 11.2489 4.70004" stroke="#333333" strokeWidth="1.5" /></svg> */}
                                                 <MemoryIcon className="text-greyPrimary dark:text-white h-4 w-4" />
                                                 <span className="text-xs text-greyPrimary dark:text-white font-medium whitespace-nowrap">{submission.memory}</span>
                                             </div>

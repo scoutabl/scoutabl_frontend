@@ -9,14 +9,18 @@ export const ThemeProvider = ({ children }) => {
         if (savedTheme) {
             return savedTheme === 'dark';
         } else {
-            // Check system preference
-            return window.matchMedia('(prefers-color-scheme: dark)').matches;
+            // Default to light mode
+            return false;
         }
     });
 
-    // Function to toggle the theme
+    // Function to toggle the theme and save to localStorage
     const toggleDarkMode = () => {
-        setIsDarkMode(prevMode => !prevMode);
+        setIsDarkMode(prevMode => {
+            const newMode = !prevMode;
+            localStorage.setItem('theme', newMode ? 'dark' : 'light');
+            return newMode;
+        });
     };
 
     return (
