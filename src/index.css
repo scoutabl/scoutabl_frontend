@@ -254,6 +254,11 @@
     fill: black;
     transition: fill 1s ease;
   }
+
+  /* .monaco-editor {
+    --vscode-focusBorder: #FFF !important;
+  } */
+
 }
 
 @theme {

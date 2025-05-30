@@ -46,7 +46,7 @@ const CodeEditor = ({ testCases, inputVars, callPattern, collapsed, isFullscreen
             const navBarHeight = 60;
             const resizerHeight = 24;
             const availableHeight = totalHeight - navBarHeight - resizerHeight;
-            const half = Math.max(Math.floor(availableHeight / 2), MIN_EDITOR_HEIGHT);
+            const half = Math.max(Math.floor(availableHeight / 1.5), MIN_EDITOR_HEIGHT);
             setEditorHeight(half);
             setLastEditorHeight(half);
         }
@@ -78,6 +78,7 @@ const CodeEditor = ({ testCases, inputVars, callPattern, collapsed, isFullscreen
         }
         // We don't need to do anything when entering fullscreen regarding loading state
     }, [isFullscreen]); // Depend on isFullscreen state
+
 
     const onMount = (editor) => {
         editorRef.current = editor;
@@ -429,6 +430,7 @@ const CodeEditor = ({ testCases, inputVars, callPattern, collapsed, isFullscreen
                             style={{ overflow: 'hidden' }}
                         >
                             <Editor
+                                className='monaco-editor'
                                 language={language}
                                 defaultValue=''
                                 height="100%"

@@ -19,6 +19,7 @@ export function CodingAssesmentProvider({ children }) {
     // Shared state for editor height (for vertical resizer sync)
     const [editorHeight, setEditorHeight] = useState(0); // px, will be set to 50% on mount
     const [lastEditorHeight, setLastEditorHeight] = useState(0); // remembers last expanded height
+    const [isDragging, setIsDragging] = useState(false);
 
     return (
         <CodingAssesmentContext.Provider value={{
@@ -33,7 +34,8 @@ export function CodingAssesmentProvider({ children }) {
             rightPanelWidth, setRightPanelWidth,
             isRightCollapsed, setIsRightCollapsed,
             editorHeight, setEditorHeight,
-            lastEditorHeight, setLastEditorHeight
+            lastEditorHeight, setLastEditorHeight,
+            isDragging, setIsDragging
         }}>
             {children}
         </CodingAssesmentContext.Provider>

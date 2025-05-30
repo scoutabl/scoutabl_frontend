@@ -7,7 +7,7 @@ import { Progress } from '@/components/ui/progress'
 import { Moon } from 'lucide-react';
 import { useTheme } from '@/context/ThemeContext';
 
-export default function AssessmentNavbar({ currentIndex = 1, total = 15, initialMinutes = 90 }) {
+export default function AssessmentNavbar({ currentIndex = 1, total = 15, initialMinutes = 90, showDarkModeToggle }) {
     const [timeLeft, setTimeLeft] = useState(initialMinutes * 60);
     const { isDarkMode, toggleDarkMode } = useTheme();
 
@@ -21,7 +21,7 @@ export default function AssessmentNavbar({ currentIndex = 1, total = 15, initial
 
     return (
         <div className='flex items-center justify-between h-[44px]'>
-            {isDarkMode ? <ScoutableVectorLogoDark /> : <ScoutableVectorLogoLight />}
+            {showDarkModeToggle && isDarkMode ? <ScoutableVectorLogoDark /> : <ScoutableVectorLogoLight />}
 
             <div className='flex flex-col gap-1 items-center justify-center'>
                 <span className="text-base font-normal text-greyPrimary dark:text-white">
@@ -30,36 +30,38 @@ export default function AssessmentNavbar({ currentIndex = 1, total = 15, initial
                 <Progress value={currentIndex + 1} max={total} className='w-[100px] h-3 bg-[#DCD9D9] rounded-full' />
             </div>
             <div className='flex items-center gap-6'>
-                <button
-                    onClick={toggleDarkMode}
-                    className={`
+                {showDarkModeToggle && (
+                    <button
+                        onClick={toggleDarkMode}
+                        className={`
     w-[42px] h-[24px] flex items-center rounded-full transition-colors duration-300
     bg-purplePrimary relative
   `}
-                    aria-label="Toggle theme"
-                >
-                    <span
-                        className={`
+                        aria-label="Toggle theme"
+                    >
+                        <span
+                            className={`
       absolute left-1 top-1 transition-transform duration-300
       ${isDarkMode ? 'translate-x-[18px]' : 'translate-x-0'}
     `}
-                        style={{
-                            width: 16,
-                            height: 16,
-                            borderRadius: '50%',
-                            background: 'white',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            boxShadow: '0 1px 4px rgba(0,0,0,0.08)'
-                        }}
-                    >
-                        {isDarkMode
-                            ? <Moon size={9} className="text-purplePrimary" />
-                            : <SunIcon />
-                        }
-                    </span>
-                </button>
+                            style={{
+                                width: 16,
+                                height: 16,
+                                borderRadius: '50%',
+                                background: 'white',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                boxShadow: '0 1px 4px rgba(0,0,0,0.08)'
+                            }}
+                        >
+                            {isDarkMode
+                                ? <Moon size={9} className="text-purplePrimary" />
+                                : <SunIcon />
+                            }
+                        </span>
+                    </button>
+                )}
                 <div className='flex gap-1 items-center justify-center'>
                     <TimerIcon className="text-greyPrimary dark:text-white" />
                     <span className="text-base font-normal text-greyPrimary dark:text-white mr-2">Time Left:</span>

@@ -1,4 +1,4 @@
-import { useRef } from 'react';
+import { useRef, useEffect } from 'react';
 import { CodingAssesmentProvider, useCodingAssesment } from './CodingAssesmentContext';
 import CodeSidebar from './CodeSidebar';
 import CodeEditor from './CodeEditor';
@@ -14,7 +14,8 @@ function CodingAssesmentInner() {
         sidebarRef, isResizing,
         rightPanelWidth, setRightPanelWidth,
         isRightCollapsed, setIsRightCollapsed,
-        isOutputFullscreen, setIsOutputFullscreen
+        isOutputFullscreen, setIsOutputFullscreen,
+        isDragging, setIsDragging
     } = useCodingAssesment();
 
     const RIGHT_COLLAPSED_WIDTH = 52; //px
@@ -103,6 +104,7 @@ function CodingAssesmentInner() {
 
     const handleMouseUp = () => {
         isResizing.current = false;
+        setIsDragging(false);
         document.body.style.cursor = '';
         window.removeEventListener('mousemove', handleMouseMove);
         window.removeEventListener('mouseup', handleMouseUp);
@@ -110,10 +112,22 @@ function CodingAssesmentInner() {
 
     const handleMouseDown = (e) => {
         isResizing.current = true;
+        setIsDragging(true);
         document.body.style.cursor = 'ew-resize';
         window.addEventListener('mousemove', handleMouseMove);
         window.addEventListener('mouseup', handleMouseUp);
     };
+
+    useEffect(() => {
+        if (isDragging) {
+            document.body.style.userSelect = 'none';
+        } else {
+            document.body.style.userSelect = '';
+        }
+        return () => {
+            document.body.style.userSelect = '';
+        };
+    }, [isDragging]);
 
     return (
         <div className='flex gap-3 py-6 min-w-0 h-[calc(100vh-116px)]'>

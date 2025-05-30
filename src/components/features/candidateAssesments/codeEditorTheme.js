@@ -10,6 +10,7 @@ export const customDarkTheme = {
         { token: "type", foreground: "FFFFFF" }, // String, Schema
     ],
     colors: {
+        "focusBorder": "#0F1112",
         "editor.background": "#0F1112",
         "editor.foreground": "#FFFFFF",
         "editorLineNumber.foreground": "#555",
@@ -32,6 +33,7 @@ export const customLightTheme = {
         { token: "type", foreground: "000000" }, // String, Schema
     ],
     colors: {
+        "focusBorder": "#FFFFFF",
         "editor.background": "#FFFFFF",
         "editor.foreground": "#1A1A1A",
         "editorLineNumber.foreground": "#B0B0B0",
