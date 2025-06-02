@@ -234,30 +234,31 @@
     transition: fill 1s ease;
   }
 
-  .group:hover .file-line {
+  .group:hover .file-line,
+  .group.active .file-line {
     stroke: white;
     transition: fill 1s ease;
   }
 
-  .group:hover .file-clip {
+  .group:hover .file-clip,
+  .group.active .file-clip {
     fill: white;
     transition: fill 1s ease;
   }
 
-  .group:hover .submission-icon {
-    fill: black;
+  .group:hover .submission-icon,
+  .group.active .submission-icon {
+    fill: var(--color-greyPrimary);
     transition: fill 1s ease;
   }
 
-  .dark .group:hover .submission-icon {
-    stroke: black;
-    fill: black;
+  .dark .group:hover .submission-icon,
+  .dark .group.active .submission-icon {
+    stroke: var(--color-greyPrimary);
+    fill: var(--color-greyPrimary);
     transition: fill 1s ease;
   }
 
-  /* .monaco-editor {
-    --vscode-focusBorder: #FFF !important;
-  } */
 
 }
 

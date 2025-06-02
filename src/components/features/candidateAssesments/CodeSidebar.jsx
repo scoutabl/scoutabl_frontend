@@ -80,7 +80,7 @@ const CodeSidebar = ({
 
                             Submissions
                         </span>
-                        <SubmissionIcon className={cn("text-greyPrimary dark:text-white",
+                        <SubmissionIcon className={cn("text-greyPrimary dark:text-white group",
                             { 'dark:text-greyPrimary': activeTab === 'submissions' }
                         )} />
                     </button>
@@ -96,8 +96,8 @@ const CodeSidebar = ({
                             'dark:text-white group-hover:dark:text-greyPrimary transition-all duration-300': activeTab !== 'description'
                         })}
                             style={{ writingMode: 'vertical-lr', textOrientation: 'mixed', transform: 'rotate(180deg)' }}>Description</span>
-                        <FileIcon className={cn("text-greyPrimary dark:text-white rotate-[-90deg] group-hover:fill-black",
-                            { 'dark:text-greyPrimary': activeTab === 'description' }
+                        <FileIcon className={cn("text-greyPrimary dark:text-white rotate-[-90deg] group-hover:fill-greyPrimary group group-hover:dark:text-greyPrimary",
+                            { 'dark:text-greyPrimary active fill-greyPrimary': activeTab === 'description' },
                         )} />
                     </button>
                     <motion.button
@@ -121,7 +121,9 @@ const CodeSidebar = ({
                             )}
                             onClick={() => setActiveTab('description')}
                         >
-                            <FileIcon className="group-hover:fill-black" />
+                            <FileIcon className={cn("group-hover:fill-greyPrimary group", {
+                                'dark:text-greyPrimary active fill-greyPrimary': activeTab === 'description'
+                            })} />
                             {sidebarWidth > 120 && <span>Description</span>}
                         </button>
                         <button
@@ -133,8 +135,9 @@ const CodeSidebar = ({
                             )}
                             onClick={() => setActiveTab('submissions')}
                         >
-                            <SubmissionIcon className={cn("text-greyPrimary dark:text-white rotate-[90deg]",
-                                { 'dark:text-greyPrimary': activeTab === 'submissions' }
+                            <SubmissionIcon className={cn("text-greyPrimary dark:text-white rotate-[90deg] group",
+                                { 'dark:text-greyPrimary': activeTab === 'submissions' },
+                                { 'active': activeTab === 'submissions' }
                             )} />
                             {sidebarWidth > 120 && <span>Submissions</span>}
                         </button>
