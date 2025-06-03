@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'r
 import SignupPage from './pages/SignupPage'
 import LoginPage from './pages/LoginPage'
 import HomePage from './pages/HomePage'
+import Assesment from './components/features/assesment/Assesment';
 import SkillAssesment from './pages/SkillAssesment'
 import CodingAssesment from './components/features/candidateAssesments/CodingAssesment'
 import { AuthProvider, useAuth } from './context/AuthContext'
@@ -75,9 +76,19 @@ const RoutesWithTransitions = () => {
           </ProtectedRoute>
         }
       />
+      <Route
+        path="/assesment"
+        element={
+          <ProtectedRoute>
+            <PageTransition>
+              <Assesment />
+            </PageTransition>
+          </ProtectedRoute>
+        }
+      />
       <Route element={<AssesmentLayout />}>
         <Route
-          path="/assesment"
+          path="/skill-assesment"
           element={
             <ProtectedRoute>
               <PageTransition>

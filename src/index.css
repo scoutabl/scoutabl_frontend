@@ -10,6 +10,8 @@
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 2px);
+  --radius-2xl: calc(var(--radius) + 6px);
+  --radius-5xl: calc(var(--radius) + 10px);
   --color-backgroundPrimary: #EFF3FD;
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -51,6 +53,7 @@
   --gradientstart: #806BFF;
   --gradientend: #A669FD;
   --radius: 0.625rem;
+  --radius-5xl: calc(var(--radius) + 10px);
   --background: oklch(1 0 0);
   --foreground: oklch(0.145 0 0);
   --card: oklch(1 0 0);
@@ -259,6 +262,29 @@
     transition: fill 1s ease;
   }
 
+  /* assesment styling */
+  .option-grid {
+    padding: 16px;
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 16px;
+    background-color: var(--color-purpleSecondary);
+    border-radius: 20px;
+  }
+
+  @media screen and (max-width:1133px) {
+    .option-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+
+  @media screen and (max-width:767px) {
+    .option-grid {
+      grid-template-columns: repeat(1, minmax(0, 1fr));
+      align-items: center;
+      justify-content: center;
+    }
+  }
 
 }
 

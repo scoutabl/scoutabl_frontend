@@ -91,11 +91,15 @@ const CodeSidebar = ({
                         )}
                         onClick={() => setActiveTab('description')}
                     >
-                        <span className={cn('text-sm font-medium text-greyPrimary', {
-                            'dark:text-greyPrimary': activeTab === 'description',
-                            'dark:text-white group-hover:dark:text-greyPrimary transition-all duration-300': activeTab !== 'description'
-                        })}
-                            style={{ writingMode: 'vertical-lr', textOrientation: 'mixed', transform: 'rotate(180deg)' }}>Description</span>
+                        <span
+                            className={cn('text-sm font-medium text-greyPrimary', {
+                                'dark:text-greyPrimary': activeTab === 'description',
+                                'dark:text-white group-hover:dark:text-greyPrimary transition-all duration-300': activeTab !== 'description'
+                            })}
+                            style={{ writingMode: 'vertical-lr', textOrientation: 'mixed', transform: 'rotate(180deg)' }}
+                        >
+                            Description
+                        </span>
                         <FileIcon className={cn("text-greyPrimary dark:text-white rotate-[-90deg] group-hover:fill-greyPrimary group group-hover:dark:text-greyPrimary",
                             { 'dark:text-greyPrimary active fill-greyPrimary': activeTab === 'description' },
                         )} />
@@ -104,7 +108,8 @@ const CodeSidebar = ({
                         onClick={onCollapseToggle}
                         whileHover={{ scale: 1.1 }}
                         whileTap={{ scale: 0.98 }}
-                        className='flex items-center justify-center rounded-xl group pb-5'>
+                        className='flex items-center justify-center rounded-xl group pb-5'
+                    >
                         <SidebarOpenIcon className="text-greyPrimary dark:text-white" />
                     </motion.button>
                 </div>
