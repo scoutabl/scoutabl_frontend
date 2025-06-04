@@ -138,7 +138,7 @@ const CodeNavBar = ({
             'rounded-2xl': isEditorCollapsed,
         })}>
             {/* language selector */}
-            <Popover open={open} onOpenChange={setIsOpen}>
+            <Popover open={isO} onOpenChange={setIsOpen}>
                 <PopoverTrigger asChild>
                     <button
                         className="flex items-center gap-[6px] p-0 justify-between px-3 text-greyPrimary dark:text-greyPrimary"

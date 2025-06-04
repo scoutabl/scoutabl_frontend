@@ -15,6 +15,7 @@ import DuplicateIcon from '@/assets/duplicateIcon.svg?react'
 import SettingsIcon from '@/assets/settingsIcon.svg?react'
 import TrashIcon from '@/assets/trashIcon.svg?react'
 import { cn } from '@/lib/utils'
+import { Eye, Trash2 } from 'lucide-react'
 const options = [
     {
         title: 'Active Assessments',
@@ -92,6 +93,7 @@ const assesments = [
 
 const Assesment = () => {
     const [isOpen, setIsOpen] = useState(false)
+    const [openPopoverIndex, setOpenPopoverIndex] = useState(null);
     return (
         <section className='py-6 px-[116px] flex flex-col gap-6 bg-backgroundPrimary'>
             {/* header */}
@@ -166,45 +168,19 @@ const Assesment = () => {
                                             'text-[#E68335]': assesment.status.toLowerCase() === 'draft',
                                         })}>{assesment.status}</span>
                                     </div>
-                                    <Popover>
+                                    <Popover
+                                        open={openPopoverIndex === index}
+                                        onOpenChange={(open) => setOpenPopoverIndex(open ? index : null)}
+                                    >
                                         <PopoverTrigger asChild>
                                             <button className='h-[28px] w-[28px] grid place-content-center rounded-full bg-backgroundPrimary'>
                                                 <DotsIcon />
                                             </button>
                                         </PopoverTrigger>
                                         <PopoverContent className='p-0 flex flex-col max-w-[240px] rounded-2xl bg-white'>
-                                            {/* <button className='relative py-3 px-4 flex gap-3 items-center group hover:bg-purpleTertiary rounded-tl-2xl rounded-tr-2xl'>
-                                                <EditIcon />
-                                                <span className='text-greyAccent font-medium text-sm text-nowrap group-hover:text-purplePrimary'>Edit</span>
-                                                <div className='absolute left-0 top-0 h-full w-1 bg-[#8B5CF6] rounded-tl-2xl' />
-                                            </button>
-                                            <button className='py-3 px-4 flex gap-3 items-center'>
-                                                <PreviewIcon />
-                                                <span className='text-greyAccent font-medium text-sm text-nowrap'>Preview</span>
-                                            </button>
-                                            <button className='py-3 px-4 flex gap-3 items-center'>
-                                                <ShareIcon />
-                                                <span className='text-greyAccent font-medium text-sm text-nowrap'>Share Preview Link</span>
-                                            </button>
-                                            <button className='py-3 px-4 flex gap-3 items-center'>
-                                                <InvitationSentIcon />
-                                                <span className='text-greyAccent font-medium text-sm text-nowrap'>Invite Candidates</span>
-                                            </button>
-                                            <button className='py-3 px-4 flex gap-3 items-center'>
-                                                <DuplicateIcon />
-                                                <span className='text-greyAccent font-medium text-sm text-nowrap'>Duplicate</span>
-                                            </button>
-                                            <button className='py-3 px-4 flex gap-3 items-center'>
-                                                <SettingsIcon />
-                                                <span className='text-greyAccent font-medium text-sm text-nowrap'>Settings</span>
-                                            </button>
-                                            <button className='py-3 px-4 flex gap-3 items-center'>
-                                                <TrashIcon />
-                                                <span className='text-greyAccent font-medium text-sm text-nowrap'>Delete Assessment</span>
-                                            </button> */}
                                             {[
                                                 {
-                                                    icon: <EditIcon />,
+                                                    icon: <EditIcon className='text-greyAccent group-hover:text-purplePrimary' />,
                                                     label: 'Edit',
                                                     color: 'text-greyAccent',
                                                     hover: 'group-hover:text-purplePrimary',
@@ -212,75 +188,75 @@ const Assesment = () => {
                                                     rounded: 'rounded-tl-2xl rounded-tr-2xl',
                                                 },
                                                 {
-                                                    icon: <PreviewIcon />,
+                                                    icon: <Eye className='w-4 h-4 text-greyAccent group-hover:text-purplePrimary' />,
                                                     label: 'Preview',
                                                     color: 'text-greyAccent',
-                                                    hover: '',
+                                                    hover: 'group-hover:text-purplePrimary',
                                                     key: 'preview',
                                                 },
                                                 {
-                                                    icon: <ShareIcon />,
+                                                    icon: <ShareIcon className='text-greyAccent group-hover:text-purplePrimary' />,
                                                     label: 'Share Preview Link',
                                                     color: 'text-greyAccent',
-                                                    hover: '',
+                                                    hover: 'group-hover:text-purplePrimary',
                                                     key: 'share',
                                                 },
                                                 {
-                                                    icon: <InvitationSentIcon />,
+                                                    icon: <InvitationSentIcon className='text-greyAccent group-hover:text-purplePrimary' />,
                                                     label: 'Invite Candidates',
                                                     color: 'text-greyAccent',
-                                                    hover: '',
+                                                    hover: 'group-hover:text-purplePrimary',
                                                     key: 'invite',
                                                 },
                                                 {
-                                                    icon: <DuplicateIcon />,
+                                                    icon: <DuplicateIcon className='text-greyAccent group-hover:text-purplePrimary' />,
                                                     label: 'Duplicate',
-                                                    color: 'text-purplePrimary',
-                                                    hover: 'group-hover:bg-[#E8DEFD]',
+                                                    color: 'text-greyAccent',
+                                                    hover: 'group-hover:text-purplePrimary',
                                                     key: 'duplicate',
-                                                    bg: 'bg-[#F6F2FF]',
-                                                    bar: 'bg-[#8B5CF6]'
                                                 },
                                                 {
-                                                    icon: <SettingsIcon />,
+                                                    icon: <SettingsIcon className='text-greyAccent group-hover:text-purplePrimary' />,
                                                     label: 'Settings',
                                                     color: 'text-greyAccent',
-                                                    hover: '',
+                                                    hover: 'group-hover:text-purplePrimary',
                                                     key: 'settings',
                                                 },
                                                 {
-                                                    icon: <TrashIcon />,
+                                                    icon: <Trash2 className='w-5 h-5 text-greyAccent group-hover:text-[#EB5757]' />,
                                                     label: 'Delete Assessment',
-                                                    color: 'text-[#EB5757]',
-                                                    hover: 'group-hover:bg-[#FBDDDD]',
+                                                    color: 'text-greyAccent',
+                                                    hover: 'group-hover:text-[#EB5757]',
                                                     key: 'delete',
-                                                    bg: 'bg-[#FBDDDD]',
                                                     rounded: 'rounded-bl-2xl rounded-br-2xl',
-                                                    bar: 'bg-[#EB5757]'
                                                 },
                                             ].map((item, idx, arr) => {
-                                                const isDuplicate = item.key === 'duplicate';
-                                                const isDelete = item.key === 'delete';
                                                 const isFirst = idx === 0;
                                                 const isLast = idx === arr.length - 1;
                                                 const rounded = item.rounded || (isFirst ? 'rounded-tl-2xl rounded-tr-2xl' : isLast ? 'rounded-bl-2xl rounded-br-2xl' : '');
                                                 return (
                                                     <button
+                                                        onClick={() => setOpenPopoverIndex(null)}
                                                         key={item.key}
-                                                        className={`relative py-3 px-4 flex gap-3 items-center group w-full text-left
-                                                      ${rounded}
-                                                      ${isDuplicate ? 'hover:bg-[#F6F2FF]' : ''}
-                                                      ${isDelete ? 'hover:bg-[#FBDDDD]' : ''}
-                                                    `}
+                                                        className={cn('relative py-3 px-4 flex gap-3 items-center group w-full text-left hover:bg-purpleTertiary', {
+                                                            'hover:bg-[#FBDDDD]': item.key === 'delete',
+
+                                                        })
+
+                                                        }
                                                     >
-                                                        <div
+                                                        {/* <div
                                                             className={`
                                                         absolute left-0 top-0 h-full w-1
                                                         opacity-0 group-hover:opacity-100
                                                         ${isDuplicate ? 'bg-[#8B5CF6]' : isDelete ? 'bg-[#EB5757]' : 'bg-[#8B5CF6]'}
                                                         ${rounded}
+                                                        
                                                       `}
-                                                        />
+                                                        /> */}
+                                                        <div className={cn('absolute left-0 top-0 h-full w-1 opacity-0 group-hover:opacity-100 bg-purplePrimary', {
+                                                            'bg-[#EB5757]': item.key === 'delete'
+                                                        })} />
                                                         {item.icon}
                                                         <span className={`font-medium text-sm text-nowrap ${item.color} ${item.hover}`}>{item.label}</span>
                                                     </button>
@@ -338,7 +314,7 @@ const Assesment = () => {
                     })}
                 </div>
             </div>
-        </section>
+        </section >
     )
 }
 
