@@ -1,4 +1,4 @@
-import { useRef, useEffect } from 'react';
+import { useRef, useEffect, useState } from 'react';
 import { CodingAssesmentProvider, useCodingAssesment } from './CodingAssesmentContext';
 import CodeSidebar from './CodeSidebar';
 import CodeEditor from './CodeEditor';
@@ -129,6 +129,37 @@ function CodingAssesmentInner() {
         };
     }, [isDragging]);
 
+    const CANDIDATETOKEN = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6NSwiY3JlYXRlZF9hdCI6IjIwMjUtMDYtMDUgMTU6MDE6MDIuMjg0MjU2KzAwOjAwIn0.solZupNJAZK85MmbgDaQSqnbNG-ehiX3T8j7s5Zje28'
+    const [currentTestData, setCurrentTestData] = useState(null);
+    // get question
+    useEffect(() => {
+        const fetchQuestion = async () => {
+            try {
+                const response = await fetch('https://dev.scoutabl.com/api/candidate-sessions/current-test/questions/', {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Candidate-Authorization': `Bearer ${CANDIDATETOKEN}`
+                    }
+                })
+                if (!response.ok) {
+                    throw new Error('Failed to fetch question');
+                }
+                const data = await response.json();
+                console.log(data)
+                setCurrentTestData(data)
+                console.log('currentData', currentTestData)
+            } catch (error) {
+                throw new Error('Failed To fetch question')
+            }
+        }
+        fetchQuestion();
+    }, [])
+
+    if (!currentTestData) {
+        return <div>Loading...</div>;
+    }
+
     return (
         <div className='flex gap-3 py-6 min-w-0 h-[calc(100vh-116px)]'>
             {/* Sidebar: hidden in fullscreen */}
@@ -147,6 +178,7 @@ function CodingAssesmentInner() {
                         submissionsData={submissionsData}
                         getStatusColor={getStatusColor}
                         onCollapseToggle={handleCollapseToggle}
+                        currentTestData={currentTestData}
                     />
                 </div>
             )}
@@ -183,6 +215,7 @@ function CodingAssesmentInner() {
                         collapsed={isRightCollapsed}
                         isFullscreen={isFullscreen}
                         setIsFullscreen={setIsFullscreen}
+                        currentTestData={currentTestData}
                     />
                     {/* Output panel: hidden in fullscreen */}
                     {!isFullscreen && (

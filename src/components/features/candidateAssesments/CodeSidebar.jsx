@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { motion } from 'framer-motion';
 import { useCodingAssesment } from './CodingAssesmentContext';
 import QuestionPopup from '@/components/features/candidateAssesments/QuestionPopup';
@@ -15,6 +15,7 @@ import MemoryIcon from '@/assets/memoryIcon.svg?react'
 import FlagIcon from '@/assets/flagIcon.svg?react'
 import HeadphoneIcon from '@/assets/headphoneIcon.svg?react'
 const CodeSidebar = ({
+    currentTestData,
     currentQuestionData,
     submissionsData,
     getStatusColor,
@@ -51,6 +52,11 @@ const CodeSidebar = ({
 
     // Get the current question data based on the selected index
     const selectedQuestionData = questionsData[currentQuestionIndex];
+
+
+    useEffect(() => {
+        console.log('from sidebar', currentTestData.results[0])
+    }, [])
 
     return (
         <aside className={cn(
@@ -179,16 +185,18 @@ const CodeSidebar = ({
                                 </div>
                                 <div className="flex-1 flex flex-col gap-2 min-h-0 overflow-y-auto">
                                     <div className="space-y-4">
-                                        <h3 className="font-bold text-sm text-greyPrimary dark:text-white">Instructions:</h3>
+                                        <h2>{currentTestData.results[0].title}</h2>
+                                        <span>{currentTestData.results[0].content}</span>
+                                        {/* <h3 className="font-bold text-sm text-greyPrimary dark:text-white">Instructions:</h3>
                                         <ol className="list-decimal list-inside space-y-2 text-sm text-greyPrimary dark:text-white">
                                             {selectedQuestionData.instructions.map((instruction, index) => (
                                                 <li key={index} className="pl-2 text-sm text-greyPrimary dark:text-white">{instruction}</li>
                                             ))}
-                                        </ol>
+                                        </ol> */}
                                     </div>
 
                                     {/* test cases */}
-                                    <div className="space-y-2">
+                                    {/* <div className="space-y-2">
 
                                         <h3 className="font-bold text-sm text-greyPrimary dark:text-white">Test Cases</h3>
 
@@ -200,14 +208,14 @@ const CodeSidebar = ({
                                                 <p className="text-sm text-greyPrimary dark:text-white">Explanation:&nbsp;{testCase.explanation}</p>
                                             </div>
                                         ))}
-                                    </div>
+                                    </div> */}
 
                                     {/* Repeated assessment text from the image */}
-                                    <div className="space-y-2 pt-1">
+                                    {/* <div className="space-y-2 pt-1">
                                         <p className="text-sm text-greyPrimary dark:text-white">
                                             Your solution will be assessed based on functionality, code quality, and performance.
                                         </p>
-                                    </div>
+                                    </div> */}
                                 </div>
                             </div>
                             {/* flag and Navigation buttons */}

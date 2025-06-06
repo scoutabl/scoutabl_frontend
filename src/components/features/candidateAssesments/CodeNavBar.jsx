@@ -30,7 +30,7 @@ const CodeNavBar = ({
     onCollapse, onFullscreen, onExitFullscreen,
     isEditorCollapsed, onReset
 }) => {
-    const [open, setIsOpen] = useState(false)
+    const [isOpen, setIsOpen] = useState(false)
     const [languages, setLanguages] = useState([])
     const [error, setError] = useState(null)
 
@@ -138,7 +138,7 @@ const CodeNavBar = ({
             'rounded-2xl': isEditorCollapsed,
         })}>
             {/* language selector */}
-            <Popover open={isO} onOpenChange={setIsOpen}>
+            <Popover open={isOpen} onOpenChange={setIsOpen}>
                 <PopoverTrigger asChild>
                     <button
                         className="flex items-center gap-[6px] p-0 justify-between px-3 text-greyPrimary dark:text-greyPrimary"
