@@ -129,7 +129,7 @@ function CodingAssesmentInner() {
         };
     }, [isDragging]);
 
-    const CANDIDATETOKEN = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6NSwiY3JlYXRlZF9hdCI6IjIwMjUtMDYtMDUgMTU6MDE6MDIuMjg0MjU2KzAwOjAwIn0.solZupNJAZK85MmbgDaQSqnbNG-ehiX3T8j7s5Zje28'
+    const CANDIDATETOKEN = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6NiwiY3JlYXRlZF9hdCI6IjIwMjUtMDYtMDggMDk6MzA6MjcuMDIwNDA3KzAwOjAwIn0.JloLYpQ-zBMWXE4JGT5XnI_2hARKHJNoHRmrJ4D372E'
     const [currentTestData, setCurrentTestData] = useState(null);
     // get question
     useEffect(() => {
