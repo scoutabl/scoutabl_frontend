@@ -129,7 +129,7 @@ function CodingAssesmentInner() {
         };
     }, [isDragging]);
 
-    const CANDIDATETOKEN = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6NiwiY3JlYXRlZF9hdCI6IjIwMjUtMDYtMDggMDk6MzA6MjcuMDIwNDA3KzAwOjAwIn0.JloLYpQ-zBMWXE4JGT5XnI_2hARKHJNoHRmrJ4D372E'
+    const CANDIDATETOKEN = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6NywiY3JlYXRlZF9hdCI6IjIwMjUtMDYtMDkgMTM6MjM6MDEuNTMwODgyKzAwOjAwIn0.9q2-XjZO-kGuhiEieEObuKmlz_bDs_2ZdebHeEgTD7I'
     const [currentTestData, setCurrentTestData] = useState(null);
     // get question
     useEffect(() => {
@@ -146,9 +146,7 @@ function CodingAssesmentInner() {
                     throw new Error('Failed to fetch question');
                 }
                 const data = await response.json();
-                console.log(data)
                 setCurrentTestData(data)
-                console.log('currentData', currentTestData)
             } catch (error) {
                 throw new Error('Failed To fetch question')
             }

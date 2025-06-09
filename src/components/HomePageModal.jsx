@@ -80,8 +80,6 @@ const HomePageModal = ({ onClose }) => {
     };
 
     const handleRoleSelect = (roleId) => {
-        console.log('Selected role:', roleId);
-        console.log('Selected test type:', selectedOption);
         onClose();
     };
 

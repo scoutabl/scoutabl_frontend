@@ -220,7 +220,6 @@ const SignupPage = () => {
             }
 
             const data = await response.json();
-            console.log("OTP resent successfully:", data);
 
             // Set cooldown after successful resend
             setCooldownTime(120); // 2 minutes

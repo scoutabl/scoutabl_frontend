@@ -250,7 +250,6 @@ const LongAnswerQuestion = () => {
 
     const onChange = (content) => {
         setPost(content)
-        console.log(content)
     }
 
     return (

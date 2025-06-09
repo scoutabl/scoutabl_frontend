@@ -45,8 +45,6 @@ export const AuthProvider = ({ children }) => {
 
     const login = async (email, password, rememberMe = false) => {
         try {
-            console.log('Attempting login with:', { email, password }); // Debug log
-
             const response = await fetch('https://dev.scoutabl.com/api/login/', {
                 method: 'POST',
                 headers: {
@@ -59,8 +57,6 @@ export const AuthProvider = ({ children }) => {
                 credentials: 'include'
             });
 
-            console.log('Response status:', response.status);
-
             if (!response.ok) {
                 const errorData = await response.json();
                 console.error('Login error response:', errorData);
@@ -68,7 +64,6 @@ export const AuthProvider = ({ children }) => {
             }
 
             const data = await response.json();
-            console.log('Login success data:', data);
 
             // Set tokens in state
             setAccessToken(data.access);

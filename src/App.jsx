@@ -1,20 +1,24 @@
 import './App.css'
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
-import SignupPage from './pages/SignupPage'
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
+import { AnimatePresence } from 'framer-motion';
+import { Toaster } from './components/ui/sonner'
+import AssesmentLayout from './layouts/AssesmentLayout';
+import { ThemeProvider } from './context/ThemeContext';
+import { PageTransition } from './components/PageTransition';
+import { AuthProvider, useAuth } from './context/AuthContext'
+import { EnumsProvider } from "@/context/EnumsContext";
+import NotFoundPage from './pages/NotFoundPage';
+import AuthNavbar from './components/AuthNavbar'
 import LoginPage from './pages/LoginPage'
+import SignupPage from './pages/SignupPage'
 import HomePage from './pages/HomePage'
 import Assesment from './components/features/assesment/Assesment';
 import CreateAssessmentFlow from './components/features/assesment/CreateAssesmentFlow';
 import SkillAssesment from './pages/SkillAssesment'
 import CodingAssesment from './components/features/candidateAssesments/CodingAssesment'
-import { AuthProvider, useAuth } from './context/AuthContext'
-import AuthNavbar from './components/AuthNavbar'
-import { Toaster } from './components/ui/sonner'
-import NotFoundPage from './pages/NotFoundPage';
-import { AnimatePresence } from 'framer-motion';
-import { PageTransition } from './components/PageTransition';
-import AssesmentLayout from './layouts/AssesmentLayout';
-import { ThemeProvider } from './context/ThemeContext';
+
 // Protected Route component
 const ProtectedRoute = ({ children }) => {
   const { user, loading } = useAuth();
@@ -128,18 +132,25 @@ const RoutesWithTransitions = () => {
   );
 };
 
+const queryClient = new QueryClient();
+
 function App() {
   return (
-    <Router>
-      <AuthProvider>
-        <ThemeProvider>
-          <NavigationWrapper>
-            <RoutesWithTransitions />
-          </NavigationWrapper>
-        </ThemeProvider>
-        <Toaster />
-      </AuthProvider>
-    </Router>
+    <QueryClientProvider client={queryClient}>
+      <EnumsProvider>
+        <Router>
+          <AuthProvider>
+            <ThemeProvider>
+              <NavigationWrapper>
+                <RoutesWithTransitions />
+              </NavigationWrapper>
+            </ThemeProvider>
+            <Toaster />
+          </AuthProvider>
+        </Router>
+      </EnumsProvider>
+      <ReactQueryDevtools initialIsOpen={false} />
+    </QueryClientProvider>
   )
 }
 

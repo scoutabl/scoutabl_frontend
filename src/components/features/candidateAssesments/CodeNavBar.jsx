@@ -1,4 +1,7 @@
 import { useState, useEffect } from 'react'
+import { useMutation, useQuery } from '@tanstack/react-query';
+import { submitCodeToBackend, pollSubmissionStatus } from '@/api/monacoCodeApi';
+import { useEnums } from '@/context/EnumsContext';
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { fetchLanguageRuntimes, executeCode } from '@/api/monacoCodeApi'
 import { cn } from '@/lib/utils';
@@ -22,17 +25,31 @@ const ALLOWED_LANGUAGES = [
     { key: 'php', display: 'PHP' },
 ];
 
+// code navbar code
 const CodeNavBar = ({
     language, onSelect, editorRef, setOutput,
     testCases = [], userTestCases = [], inputVars = [],
     selectedCase, setActiveTab, setLoading, loading, callPattern,
     collapsed,
     onCollapse, onFullscreen, onExitFullscreen,
-    isEditorCollapsed, onReset
+    isEditorCollapsed, onReset, questionId
 }) => {
     const [isOpen, setIsOpen] = useState(false)
     const [languages, setLanguages] = useState([])
     const [error, setError] = useState(null)
+
+    const [shouldPoll, setShouldPoll] = useState(false)
+    const { enums, enumsLoading } = useEnums()
+
+    const [submissionId, setSubmissionId] = useState(null);
+
+    useEffect(() => {
+        console.log('Rendering CodeNavBar', {
+            shouldPoll,
+            submissionId,
+            CQEvaluationStatus: enums?.enums?.CQEvaluationStatus
+        });
+    }, [shouldPoll, submissionId, enums]);
 
     useEffect(() => {
         if (collapsed) return;
@@ -62,55 +79,100 @@ const CodeNavBar = ({
         setIsOpen(false)
     }
 
-    //run code
+    // Submit code mutation
+    const submitMutation = useMutation({
+        mutationFn: submitCodeToBackend,
+        onSuccess: (data) => {
+            setSubmissionId(data.id);
+            setShouldPoll(true);
+            console.log('Polling enabled! submissionId:', data.id);
+        },
+        onError: () => setLoading && setLoading(false),
+    });
+
+    // Polling for result
+    const { data: pollData, isFetching } = useQuery({
+        queryKey: ["pollSubmission", questionId, submissionId],
+        queryFn: () => pollSubmissionStatus({ questionId, submissionId }),
+        enabled: shouldPoll && !!enums && !!enums.enums && !!enums.enums.CQEvaluationStatus && !!submissionId,
+        refetchInterval: (query) => {
+            const response = query?.data;
+            console.log('refetchInterval called!', { response, shouldPoll, submissionId });
+            if (!response || !enums || !enums.enums || !enums.enums.CQEvaluationStatus) return 2000;
+            const status = response.evaluation_status;
+            console.log('Polling status:', status, 'COMPLETED:', enums.enums.CQEvaluationStatus.COMPLETED, 'ERROR:', enums.enums.CQEvaluationStatus.ERROR);
+            return status === enums.enums.CQEvaluationStatus.COMPLETED ||
+                status === enums.enums.CQEvaluationStatus.ERROR
+                ? false
+                : 2000;
+        },
+        onSuccess: (data) => {
+            console.log('onSuccess called with data:', data, 'shouldPoll:', shouldPoll);
+            const status = data.evaluation_status;
+            console.log('Status:', status, 'COMPLETED:', enums.enums.CQEvaluationStatus.COMPLETED);
+            if (
+                status === enums.enums.CQEvaluationStatus.COMPLETED ||
+                status === enums.enums.CQEvaluationStatus.ERROR
+            ) {
+                setShouldPoll(false);
+                console.log('Polling stopped!');
+                setLoading && setLoading(false);
+
+                // Map status/result to readable text
+                const statusText = Object.keys(enums.enums.CQEvaluationStatus).find(
+                    (key) => enums.enums.CQEvaluationStatus[key] === data.evaluation_status
+                );
+                const resultText = Object.keys(enums.enums.CQEvaluationResult).find(
+                    (key) => enums.enums.CQEvaluationResult[key] === data.evaluation_result
+                );
+                const evaluation = data.evaluations?.[0] || {};
+                setOutput &&
+                    setOutput([
+                        {
+                            status: statusText,
+                            result: resultText,
+                            ...data,
+                            ...evaluation,
+                        },
+                    ]);
+            }
+        },
+    });
+
+    // Run code handler
     const handleRunCode = async () => {
-        if (collapsed) return;
+        if (collapsed || enumsLoading) return;
         setLoading && setLoading(true);
-        setActiveTab && setActiveTab('results');
+        setActiveTab && setActiveTab("results");
         const sourceCode = editorRef?.current?.getValue?.();
         if (!sourceCode) {
             setLoading && setLoading(false);
             return;
         }
-        const selected = languages.find(l => l.language === language || l.aliases?.includes(language));
-        const version = selected?.version;
-        if (!version) {
-            setLoading && setLoading(false);
-            return;
-        }
+
+        // Do NOT inject variables for your backend
+        const injectedCode = sourceCode;
+
         const allCases = [...(testCases || []), ...(userTestCases || [])];
         const tc = allCases[selectedCase] || allCases[0];
-        let injectedCode = sourceCode;
-        if (language === 'javascript') {
-            let varLines = '';
-            if (inputVars.length === 1) {
-                varLines = `let ${inputVars[0]} = ${JSON.stringify(tc.input)};`;
-            } else {
-                varLines = inputVars.map((v, i) => `let ${v} = ${JSON.stringify(tc.input[i])};`).join('\n');
-            }
-            injectedCode = `${varLines}\n${sourceCode}\n${callPattern}`;
-        }
-        try {
-            const start = Date.now();
-            const response = await executeCode(language, injectedCode, version);
-            const end = Date.now();
-            const runtime = end - start;
-            const normalize = v => (v === undefined || v === null) ? '' : String(v).trim();
-            const isCorrect = normalize(response.run.output) === normalize(tc.output);
-            setOutput && setOutput([{
-                input: inputVars.length === 1
-                    ? [{ name: inputVars[0], value: tc.input }]
-                    : inputVars.map((v, i) => ({ name: v, value: tc.input[i] })),
-                expected: tc.output,
-                stdout: response.run.stdout?.trim() ?? '',
-                output: response.run.output?.trim() ?? '',
-                isCorrect,
-                runtime,
-            }]);
-        } finally {
-            setLoading && setLoading(false);
-        }
-    }
+
+        const languageId = 6; // JS (adjust as needed)
+
+        const payload = {
+            code: injectedCode,
+            language: languageId,
+            is_test: true,
+            custom_testcases: [
+                {
+                    input: JSON.stringify(tc.input),
+                    output: String(tc.output),
+                },
+            ],
+        };
+
+        submitMutation.mutate({ questionId, payload });
+    };
+
     if (collapsed) {
         return (
             <div className="py-3 w-12 min-w-[52px] max-w-[52px] flex flex-col items-center gap-4 bg-purpleSecondary justify-between rounded-xl overflow-hidden">

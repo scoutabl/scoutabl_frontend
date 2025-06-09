@@ -46,7 +46,6 @@ const LoginPage = () => {
         try {
             setIsLoading(true);
             setError('');
-            console.log('Form values:', values);
 
             const success = await login(values.email, values.password, rememberMe);
             if (!success) {

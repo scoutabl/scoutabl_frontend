@@ -97,6 +97,10 @@ const Output = ({
     }
   };
 
+  useEffect(() => {
+    console.log("Output prop:", output);
+  }, [output])
+
   // Track container height
   useEffect(() => {
     if (!containerRef.current) return;
@@ -255,60 +259,92 @@ const Output = ({
                   <span className="animate-spin w-8 h-8 border-4 border-t-transparent border-purple-600 rounded-full"></span>
                 </div>
               ) : (
+                // output.length > 0 ? (
+                //   <div className='w-full flex flex-col gap-4'>
+                //     {/* Runtime Error Box */}
+                //     {result.stdout && result.stdout.toLowerCase().includes('error') ? (
+                //       <div className="bg-[#FFE5E5] border border-[#FFBABA] rounded-lg p-6 mb-2">
+                //         <pre className="text-[#D7263D] text-base font-mono whitespace-pre-wrap break-all">{result.stdout}</pre>
+                //       </div>
+                //     ) : (
+                //       hasExpected && (
+                //         <div className="flex">
+                //           <span className={cn(
+                //             "font-bold text-lg",
+                //             result.isCorrect ? "text-[#008B00]" : "text-[#EB5757]"
+                //           )}>
+                //             {result.isCorrect ? 'Accepted' : 'Wrong Answer'}
+                //           </span>
+                //           {result.runtime && (
+                //             <span className="text-gray-400 ml-4">Runtime: {result.runtime} ms</span>
+                //           )}
+                //         </div>
+                //       )
+                //     )}
+                //     {/* Last Executed Input */}
+                //     <div>
+                //       <span className="block text-greyPrimary font-semibold mb-2">Input</span>
+                //       <div className="flex flex-col gap-2">
+                //         {result.input && result.input.map(i => (
+                //           <div key={i.name} className="bg-blueSecondary rounded-xl px-5 py-[15px] text-base">
+                //             <span className="font-semibold block text-sm text-greyPrimary dark:text-white">{i.name}=</span>
+                //             <span className="block text-sm text-greyPrimary dark:text-white">{JSON.stringify(i.value, null, 2)}</span>
+                //           </div>
+                //         ))}
+                //       </div>
+                //     </div>
+                //     {/* Only show stdout/output/expected if not error */}
+                //     {!result.stdout || !result.stdout.toLowerCase().includes('error') ? (
+                //       <>
+                //         <div className="flex flex-col gap-2">
+                //           <span className="font-semibold text-sm text-greyPrimary">Stdout</span>
+                //           <div className="bg-blueSecondary rounded-xl px-5 py-[15px] text-base">{result.stdout}</div>
+                //         </div>
+                //         <div className="flex flex-col gap-2">
+                //           <span className="font-semibold text-sm text-greyPrimary">Output</span>
+                //           <div className="bg-blueSecondary rounded-xl px-5 py-[15px] text-base">{result.output}</div>
+                //         </div>
+                //         {/* Only show Expected if present */}
+                //         {hasExpected && (
+                //           <div className="flex flex-col gap-2 pb-[30px]">
+                //             <span className="font-semibold text-sm text-greyPrimary">Expected</span>
+                //             <div className="bg-blueSecondary rounded-xl px-5 py-[15px] text-base">{result.expected}</div>
+                //           </div>
+                //         )}
+                //       </>
+                //     ) : null}
+                //   </div>
+                // ) : (
                 output.length > 0 ? (
                   <div className='w-full flex flex-col gap-4'>
-                    {/* Runtime Error Box */}
-                    {result.stdout && result.stdout.toLowerCase().includes('error') ? (
-                      <div className="bg-[#FFE5E5] border border-[#FFBABA] rounded-lg p-6 mb-2">
-                        <pre className="text-[#D7263D] text-base font-mono whitespace-pre-wrap break-all">{result.stdout}</pre>
-                      </div>
-                    ) : (
-                      hasExpected && (
-                        <div className="flex">
-                          <span className={cn(
-                            "font-bold text-lg",
-                            result.isCorrect ? "text-[#008B00]" : "text-[#EB5757]"
-                          )}>
-                            {result.isCorrect ? 'Accepted' : 'Wrong Answer'}
-                          </span>
-                          {result.runtime && (
-                            <span className="text-gray-400 ml-4">Runtime: {result.runtime} ms</span>
-                          )}
-                        </div>
-                      )
-                    )}
-                    {/* Last Executed Input */}
+                    {/* Show backend status/result */}
                     <div>
-                      <span className="block text-greyPrimary font-semibold mb-2">Input</span>
-                      <div className="flex flex-col gap-2">
-                        {result.input && result.input.map(i => (
-                          <div key={i.name} className="bg-blueSecondary rounded-xl px-5 py-[15px] text-base">
-                            <span className="font-semibold block text-sm text-greyPrimary dark:text-white">{i.name}=</span>
-                            <span className="block text-sm text-greyPrimary dark:text-white">{JSON.stringify(i.value, null, 2)}</span>
-                          </div>
-                        ))}
-                      </div>
+                      <span className="font-bold text-lg">Status: </span>
+                      <span>{output[0].status}</span>
                     </div>
-                    {/* Only show stdout/output/expected if not error */}
-                    {!result.stdout || !result.stdout.toLowerCase().includes('error') ? (
-                      <>
-                        <div className="flex flex-col gap-2">
-                          <span className="font-semibold text-sm text-greyPrimary">Stdout</span>
-                          <div className="bg-blueSecondary rounded-xl px-5 py-[15px] text-base">{result.stdout}</div>
-                        </div>
-                        <div className="flex flex-col gap-2">
-                          <span className="font-semibold text-sm text-greyPrimary">Output</span>
-                          <div className="bg-blueSecondary rounded-xl px-5 py-[15px] text-base">{result.output}</div>
-                        </div>
-                        {/* Only show Expected if present */}
-                        {hasExpected && (
-                          <div className="flex flex-col gap-2 pb-[30px]">
-                            <span className="font-semibold text-sm text-greyPrimary">Expected</span>
-                            <div className="bg-blueSecondary rounded-xl px-5 py-[15px] text-base">{result.expected}</div>
-                          </div>
-                        )}
-                      </>
-                    ) : null}
+                    <div>
+                      <span className="font-bold text-lg">Result: </span>
+                      <span>{output[0].result}</span>
+                    </div>
+                    {/* Show stdout/output/stderr if present */}
+                    {output[0].stdout && (
+                      <div>
+                        <span className="font-semibold text-sm text-greyPrimary">Stdout</span>
+                        <div className="bg-blueSecondary rounded-xl px-5 py-[15px] text-base">{output[0].stdout}</div>
+                      </div>
+                    )}
+                    {output[0].output && (
+                      <div>
+                        <span className="font-semibold text-sm text-greyPrimary">Output</span>
+                        <div className="bg-blueSecondary rounded-xl px-5 py-[15px] text-base">{output[0].output}</div>
+                      </div>
+                    )}
+                    {output[0].stderr && (
+                      <div>
+                        <span className="font-semibold text-sm text-greyPrimary">Stderr</span>
+                        <div className="bg-red-100 rounded-xl px-5 py-[15px] text-base text-red-700">{output[0].stderr}</div>
+                      </div>
+                    )}
                   </div>
                 ) : (
                   <div className="flex-1 flex items-center justify-center h-full overflow-hidden">

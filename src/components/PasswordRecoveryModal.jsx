@@ -93,8 +93,6 @@ const PasswordRecoveryModal = () => {
                 credentials: 'include'
             });
 
-            console.log('Response status:', response.status);
-
             // Check if response is not ok (HTTP error)
             if (!response.ok) {
                 // Try to parse error as JSON first
@@ -110,8 +108,6 @@ const PasswordRecoveryModal = () => {
 
             // If we reach here, the response was successful and should be JSON
             const data = await response.json();
-            console.log('Forgot password response:', data);
-
             setEmailVerificationId(data.email_verification);
             setEmail(values.email);
             setStep('otp');

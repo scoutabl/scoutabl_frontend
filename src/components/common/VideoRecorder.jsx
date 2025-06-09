@@ -65,7 +65,6 @@ export default function VideoRecorder({ onSubmitVideo }) {
             setError(null);
 
             try {
-                console.log("Attempting to access camera and microphone");
                 let mediaStreamObj = await navigator.mediaDevices.getUserMedia({
                     audio: true,
                     video: true
@@ -79,7 +78,6 @@ export default function VideoRecorder({ onSubmitVideo }) {
 
                 try {
                     // Try another set of constraints
-                    console.log("Attempting with simplified constraints");
                     let mediaStreamObj = await navigator.mediaDevices.getUserMedia({
                         audio: true, // Still try with audio
                         video: { facingMode: "user" }
@@ -110,7 +108,6 @@ export default function VideoRecorder({ onSubmitVideo }) {
                     video.onloadedmetadata = async () => {
                         try {
                             await video.play();
-                            console.log("Video is playing");
                             setCameraReady(true);
                         } catch (playError) {
                             console.error("Error playing video:", playError);
@@ -180,7 +177,6 @@ export default function VideoRecorder({ onSubmitVideo }) {
         return () => {
             if (mediaStreamRef.current) {
                 mediaStreamRef.current.getTracks().forEach(track => track.stop());
-                console.log("Camera tracks stopped on cleanup");
             }
 
             // Also clean up SiriWave

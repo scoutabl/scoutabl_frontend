@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { motion } from 'framer-motion';
 import { useCodingAssesment } from './CodingAssesmentContext';
 import QuestionPopup from '@/components/features/candidateAssesments/QuestionPopup';
@@ -53,10 +53,6 @@ const CodeSidebar = ({
     // Get the current question data based on the selected index
     const selectedQuestionData = questionsData[currentQuestionIndex];
 
-
-    useEffect(() => {
-        console.log('from sidebar', currentTestData.results[0])
-    }, [])
 
     return (
         <aside className={cn(

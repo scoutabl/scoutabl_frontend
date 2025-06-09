@@ -15,7 +15,7 @@ const MIN_OUTPUT_HEIGHT = 60;
 const MIN_EDITOR_HEIGHT = 100;
 const RESIZER_HEIGHT = 4;
 
-const CodeEditor = ({ testCases, inputVars, callPattern, collapsed, isFullscreen, setIsFullscreen }) => {
+const CodeEditor = ({ testCases, inputVars, callPattern, collapsed, isFullscreen, setIsFullscreen, questionId = 9, currentTestData }) => {
     const containerRef = useRef(null);
     const editorWrapperRef = useRef(null);
     const [value, setValue] = useState('')
@@ -407,6 +407,7 @@ const CodeEditor = ({ testCases, inputVars, callPattern, collapsed, isFullscreen
                 isEditorCollapsed={isEditorCollapsed}
                 collapsed={collapsed}
                 onReset={handleReset}
+                questionId={currentTestData?.results[0].id}
             />
             {/* Collapsible Editor + Status Bar */}
             <div
