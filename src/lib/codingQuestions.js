@@ -9,7 +9,7 @@ export const questionsData = [
             // ...other instructions
         ],
         testCases: [
-            { input: [3, 2, 1], output: 1, explanation: "Because there are no elements, return -1" }
+            { input: [null, {}, 3], output: 3, explanation: "Because there are no elements, return -1" }
         ],
         constraints: [
             ['arr is a valid JSON array', '0 <= arr.length <= 1000']
