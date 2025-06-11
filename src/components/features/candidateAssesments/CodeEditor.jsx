@@ -15,7 +15,7 @@ const MIN_OUTPUT_HEIGHT = 60;
 const MIN_EDITOR_HEIGHT = 100;
 const RESIZER_HEIGHT = 4;
 
-const CodeEditor = ({ testCases, inputVars, callPattern, collapsed, isFullscreen, setIsFullscreen, questionId = 9, currentTestData }) => {
+const CodeEditor = ({ testCases, inputVars, collapsed, isFullscreen, setIsFullscreen, currentTestData }) => {
     const containerRef = useRef(null);
     const editorWrapperRef = useRef(null);
     const [value, setValue] = useState('')
@@ -279,7 +279,6 @@ const CodeEditor = ({ testCases, inputVars, callPattern, collapsed, isFullscreen
                     setActiveTab={setActiveTab}
                     setLoading={setLoading}
                     loading={loading}
-                    callPattern={callPattern}
                     onExitFullscreen={() => {
                         setIsFullscreen(false);
                         setLoading(false);
@@ -401,7 +400,6 @@ const CodeEditor = ({ testCases, inputVars, callPattern, collapsed, isFullscreen
                 setActiveTab={setActiveTab}
                 setLoading={setLoading}
                 loading={loading}
-                callPattern={callPattern}
                 onFullscreen={() => setIsFullscreen(true)}
                 onCollapse={handleCollapseButton}
                 isEditorCollapsed={isEditorCollapsed}

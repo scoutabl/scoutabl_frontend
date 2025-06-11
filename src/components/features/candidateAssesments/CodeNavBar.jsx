@@ -30,7 +30,7 @@ const ALLOWED_LANGUAGES = [
 const CodeNavBar = ({
     language, onSelect, editorRef, setOutput,
     testCases = [], userTestCases = [], inputVars = [],
-    selectedCase, setActiveTab, setLoading, loading, callPattern,
+    selectedCase, setActiveTab, setLoading, loading,
     collapsed,
     onCollapse, onFullscreen, onExitFullscreen,
     isEditorCollapsed, onReset, questionId

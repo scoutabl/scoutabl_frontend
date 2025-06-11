@@ -14,6 +14,7 @@ import AuthNavbar from './components/AuthNavbar'
 import LoginPage from './pages/LoginPage'
 import SignupPage from './pages/SignupPage'
 import HomePage from './pages/HomePage'
+import { AssessmentProvider } from './context/AssesmentContext';
 import Assesment from './components/features/assesment/Assesment';
 import CreateAssessmentFlow from './components/features/assesment/CreateAssesmentFlow';
 import SkillAssesment from './pages/SkillAssesment'
@@ -82,11 +83,23 @@ const RoutesWithTransitions = () => {
         }
       />
       <Route
-        path="/assesment"
+        path="/assessment"
         element={
           <ProtectedRoute>
             <PageTransition>
               <Assesment />
+            </PageTransition>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/assessment/create/:stepId"
+        element={
+          <ProtectedRoute>
+            <PageTransition>
+              <AssessmentProvider>
+                <CreateAssessmentFlow />
+              </AssessmentProvider>
             </PageTransition>
           </ProtectedRoute>
         }

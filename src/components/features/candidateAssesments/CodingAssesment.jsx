@@ -4,7 +4,8 @@ import CodeSidebar from './CodeSidebar';
 import CodeEditor from './CodeEditor';
 import { cn } from '@/lib/utils';
 import { questionsData } from '@/lib/codingQuestions';
-
+import { useQuery } from '@tanstack/react-query';
+import axios from 'axios';
 function CodingAssesmentInner() {
     const {
         currentQuestion, setCurrentQuestion,
@@ -130,7 +131,7 @@ function CodingAssesmentInner() {
     }, [isDragging]);
 
     const CANDIDATETOKEN = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6NywiY3JlYXRlZF9hdCI6IjIwMjUtMDYtMDkgMTM6MjM6MDEuNTMwODgyKzAwOjAwIn0.9q2-XjZO-kGuhiEieEObuKmlz_bDs_2ZdebHeEgTD7I'
-    const [currentTestData, setCurrentTestData] = useState(null);
+    // const [currentTestData, setCurrentTestData] = useState(null);
     // get question
     useEffect(() => {
         const fetchQuestion = async () => {
@@ -153,6 +154,41 @@ function CodingAssesmentInner() {
         }
         fetchQuestion();
     }, [])
+
+    // Fetch function using axios
+    const fetchQuestionsWithTestCases = async () => {
+        const response = await axios.get('https://dev.scoutabl.com/api/candidate-sessions/current-test/questions/', {
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Candidate-Authorization': `Bearer ${CANDIDATETOKEN}`
+            }
+        });
+        const data = response.data;
+        const question = data.results[0];
+        // Fetch test case files for public_testcases
+        const testCases = await Promise.all(
+            (question.public_testcases || []).map(async (tc) => {
+                const input = tc.input_file ? await axios.get(tc.input_file).then(res => res.data) : '';
+                const output = tc.output_file ? await axios.get(tc.output_file).then(res => res.data) : '';
+                return { ...tc, input, output };
+            })
+        );
+        return {
+            ...question,
+            testCases,
+            inputVars: ['nums'], // adjust as needed
+        };
+    };
+
+    // Use TanStack Query
+    const { data: currentTestData, isLoading, error } = useQuery({
+        queryKey: ['currentTestQuestion'],
+        queryFn: fetchQuestionsWithTestCases,
+        staleTime: 1000 * 60 * 5,
+    });
+
+    if (isLoading) return <div>Loading...</div>;
+    if (error) return <div>Error loading question</div>;
 
     if (!currentTestData) {
         return <div>Loading...</div>;
@@ -207,9 +243,9 @@ function CodingAssesmentInner() {
                     }
                 >
                     <CodeEditor
-                        testCases={currentQuestionData.testCases}
-                        inputVars={currentQuestionData.inputVars}
-                        callPattern={currentQuestionData.callPattern}
+                        testCases={currentTestData.testCases}
+                        inputVars={currentTestData.inputVars}
+                        // callPattern={currentQuestionData.callPattern}
                         collapsed={isRightCollapsed}
                         isFullscreen={isFullscreen}
                         setIsFullscreen={setIsFullscreen}

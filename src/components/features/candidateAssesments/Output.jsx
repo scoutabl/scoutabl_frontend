@@ -3,7 +3,9 @@ import { Plus, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import OutputNavBar from './OutputNavBar';
 import { useCodingAssesment } from './CodingAssesmentContext';
+import { useEnums } from '@/context/EnumsContext';
 import { motion } from 'framer-motion';
+import ClockIcon from '@/assets/clock.svg?react';
 function formatInputValue(val) {
   try {
     if (typeof val === 'string') {
@@ -42,6 +44,7 @@ const Output = ({
   const [containerHeight, setContainerHeight] = useState(0);
   const containerRef = useRef(null);
   const { setIsOutputFullscreen } = useCodingAssesment();
+  const { enums } = useEnums();
 
   const allCases = [...(testCases || []), ...(userTestCases || [])];
   const isAdding = selectedCase === allCases.length;
@@ -98,7 +101,8 @@ const Output = ({
   };
 
   useEffect(() => {
-    console.log("Output prop:", output);
+    console.log("Output prop:", output[0].evaluations[0].result.run);
+    console.log("Output prop:", output[0]);
   }, [output])
 
   // Track container height
@@ -259,73 +263,41 @@ const Output = ({
                   <span className="animate-spin w-8 h-8 border-4 border-t-transparent border-purple-600 rounded-full"></span>
                 </div>
               ) : (
-                // output.length > 0 ? (
-                //   <div className='w-full flex flex-col gap-4'>
-                //     {/* Runtime Error Box */}
-                //     {result.stdout && result.stdout.toLowerCase().includes('error') ? (
-                //       <div className="bg-[#FFE5E5] border border-[#FFBABA] rounded-lg p-6 mb-2">
-                //         <pre className="text-[#D7263D] text-base font-mono whitespace-pre-wrap break-all">{result.stdout}</pre>
-                //       </div>
-                //     ) : (
-                //       hasExpected && (
-                //         <div className="flex">
-                //           <span className={cn(
-                //             "font-bold text-lg",
-                //             result.isCorrect ? "text-[#008B00]" : "text-[#EB5757]"
-                //           )}>
-                //             {result.isCorrect ? 'Accepted' : 'Wrong Answer'}
-                //           </span>
-                //           {result.runtime && (
-                //             <span className="text-gray-400 ml-4">Runtime: {result.runtime} ms</span>
-                //           )}
-                //         </div>
-                //       )
-                //     )}
-                //     {/* Last Executed Input */}
-                //     <div>
-                //       <span className="block text-greyPrimary font-semibold mb-2">Input</span>
-                //       <div className="flex flex-col gap-2">
-                //         {result.input && result.input.map(i => (
-                //           <div key={i.name} className="bg-blueSecondary rounded-xl px-5 py-[15px] text-base">
-                //             <span className="font-semibold block text-sm text-greyPrimary dark:text-white">{i.name}=</span>
-                //             <span className="block text-sm text-greyPrimary dark:text-white">{JSON.stringify(i.value, null, 2)}</span>
-                //           </div>
-                //         ))}
-                //       </div>
-                //     </div>
-                //     {/* Only show stdout/output/expected if not error */}
-                //     {!result.stdout || !result.stdout.toLowerCase().includes('error') ? (
-                //       <>
-                //         <div className="flex flex-col gap-2">
-                //           <span className="font-semibold text-sm text-greyPrimary">Stdout</span>
-                //           <div className="bg-blueSecondary rounded-xl px-5 py-[15px] text-base">{result.stdout}</div>
-                //         </div>
-                //         <div className="flex flex-col gap-2">
-                //           <span className="font-semibold text-sm text-greyPrimary">Output</span>
-                //           <div className="bg-blueSecondary rounded-xl px-5 py-[15px] text-base">{result.output}</div>
-                //         </div>
-                //         {/* Only show Expected if present */}
-                //         {hasExpected && (
-                //           <div className="flex flex-col gap-2 pb-[30px]">
-                //             <span className="font-semibold text-sm text-greyPrimary">Expected</span>
-                //             <div className="bg-blueSecondary rounded-xl px-5 py-[15px] text-base">{result.expected}</div>
-                //           </div>
-                //         )}
-                //       </>
-                //     ) : null}
-                //   </div>
-                // ) : (
-                output.length > 0 ? (
+                output.length > 0 && output[0] ? (
                   <div className='w-full flex flex-col gap-4'>
-                    {/* Show backend status/result */}
-                    <div>
-                      <span className="font-bold text-lg">Status: </span>
-                      <span>{output[0].status}</span>
-                    </div>
-                    <div>
-                      <span className="font-bold text-lg">Result: </span>
-                      <span>{output[0].result}</span>
-                    </div>
+                    {/* Show only result, not status */}
+                    {(() => {
+                      const evaluation = output[0].evaluations && output[0].evaluations[0];
+                      const resultCode = evaluation?.evaluation_result ?? output[0].evaluation_result;
+                      const resultText = enums?.enums?.CQEvaluationResult
+                        ? Object.keys(enums.enums.CQEvaluationResult).find(
+                          key => enums.enums.CQEvaluationResult[key] === resultCode
+                        )
+                        : resultCode;
+                      const isAccepted = resultText === 'SUCCESS';
+                      return (
+                        <div className="flex items-center gap-4">
+                          <span
+                            className={cn(
+                              'font-semibold text-lg  border-r-2 border-[#9E9E9E] pr-[18px]',
+                              {
+                                'text-[#1EA378]': isAccepted,
+                                'text-[#EB5757]': !isAccepted
+                              }
+                            )}
+                          >
+                            {isAccepted ? 'Accepted' : 'Rejected'}
+                          </span>
+                          {/* Optionally, show runtime if available */}
+                          {output[0].result?.run?.time && (
+                            <div className="flex items-center gap-2">
+                              <ClockIcon className="w-4 h-4 text-greyPrimary dark:text-white" />
+                              <span className="text-greyPrimary dark:text-white font-semibold text-sm">Runtime: <strong>{output[0].result.run.time * 1000}</strong> ms</span>
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })()}
                     {/* Show stdout/output/stderr if present */}
                     {output[0].stdout && (
                       <div>
