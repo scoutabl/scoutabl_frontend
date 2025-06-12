@@ -181,8 +181,8 @@ const CodeSidebar = ({
                                 </div>
                                 <div className="flex-1 flex flex-col gap-2 min-h-0 overflow-y-auto">
                                     <div className="space-y-4">
-                                        <h2>{currentTestData.results[0].title}</h2>
-                                        <span>{currentTestData.results[0].content}</span>
+                                        <h2>{currentTestData.title}</h2>
+                                        {/* <span>{currentTestData.results[0].content}</span> */}
                                         {/* <h3 className="font-bold text-sm text-greyPrimary dark:text-white">Instructions:</h3>
                                         <ol className="list-decimal list-inside space-y-2 text-sm text-greyPrimary dark:text-white">
                                             {selectedQuestionData.instructions.map((instruction, index) => (

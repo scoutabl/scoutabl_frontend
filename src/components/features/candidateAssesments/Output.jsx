@@ -52,6 +52,8 @@ const Output = ({
   const result = output[0] || {}; // Only one result at a time
   const isUserTestCase = selectedCase >= (testCases ? testCases.length : 0);
   const hasExpected = typeof result.expected !== 'undefined' && result.expected !== '';
+  const [stdoutValue, setStdoutValue] = useState('');
+  const [stderrValue, setStderrValue] = useState('');
 
   // Add new test case
   const handleAddTestCase = (e) => {
@@ -101,9 +103,26 @@ const Output = ({
   };
 
   useEffect(() => {
-    console.log("Output prop:", output[0].evaluations[0].result.run);
-    console.log("Output prop:", output[0]);
-  }, [output])
+    // Get the stdout_file URL from the output prop
+    const stdoutFileUrl = output[0]?.evaluations?.[0]?.stdout_file;
+    const stderrFileUrl = output[0]?.evaluations?.[0]?.stderr_file;
+    if (stdoutFileUrl) {
+      fetch(stdoutFileUrl)
+        .then(res => res.text())
+        .then(text => setStdoutValue(text))
+        .catch(() => setStdoutValue('Error loading output'));
+    } else {
+      setStdoutValue('');
+    }
+    if (stderrFileUrl) {
+      fetch(stderrFileUrl)
+        .then(res => res.text())
+        .then(text => setStderrValue(text))
+        .catch(() => setStderrValue('Error loading stdError'));
+    } else {
+      setStderrValue('');
+    }
+  }, [output]);
 
   // Track container height
   useEffect(() => {
@@ -299,10 +318,20 @@ const Output = ({
                       );
                     })()}
                     {/* Show stdout/output/stderr if present */}
-                    {output[0].stdout && (
+                    {/* {stderrValue && (
+                      <div className='p-6 rounded-xl bg-[#4D2C28]/80'>
+                        <span className='text-[#FF4E55] text-sm font-medium'>{stderrValue}</span>
+                      </div>
+                    )}
+                    <div>
+                      <span className="font-semibold text-sm text-greyPrimary">Input</span>
+                      <div className="bg-blueSecondary rounded-xl px-5 py-[15px] text-base">{inputVars[0]} = {'\n'}{JSON.stringify(allCases[selectedCase]?.input, null, 2)}</div>
+                    </div>
+
+                    {stdoutValue && (
                       <div>
-                        <span className="font-semibold text-sm text-greyPrimary">Stdout</span>
-                        <div className="bg-blueSecondary rounded-xl px-5 py-[15px] text-base">{output[0].stdout}</div>
+                        <span className="font-semibold text-sm text-greyPrimary">Output</span>
+                        <div className="bg-blueSecondary rounded-xl px-5 py-[15px] text-base">{stdoutValue}</div>
                       </div>
                     )}
                     {output[0].output && (
@@ -315,6 +344,40 @@ const Output = ({
                       <div>
                         <span className="font-semibold text-sm text-greyPrimary">Stderr</span>
                         <div className="bg-red-100 rounded-xl px-5 py-[15px] text-base text-red-700">{output[0].stderr}</div>
+                      </div>
+                    )} */}
+                    {stderrValue ? (
+                      // If there is an error, show error and input only
+                      <div>
+                        <div className='p-6 rounded-xl bg-[#4D2C28]/80 mb-4'>
+                          <span className='text-[#FF4E55] text-sm font-medium'>{stderrValue}</span>
+                        </div>
+                        <div>
+                          <span className="font-semibold text-sm text-greyPrimary">Last Executed Input</span>
+                          <div className="bg-blueSecondary rounded-xl px-5 py-[15px] text-base">
+                            {inputVars[0]} = {'\n'}{JSON.stringify(allCases[selectedCase]?.input, null, 2)}
+                          </div>
+                        </div>
+                      </div>
+                    ) : (
+                      // If no error, show input, output, and expected
+                      <div>
+                        <div>
+                          <span className="font-semibold text-sm text-greyPrimary">Input</span>
+                          <div className="bg-blueSecondary rounded-xl px-5 py-[15px] text-base">
+                            {inputVars[0]} = {'\n'}{JSON.stringify(allCases[selectedCase]?.input, null, 2)}
+                          </div>
+                        </div>
+                        {stdoutValue && (
+                          <div>
+                            <span className="font-semibold text-sm text-greyPrimary">Output</span>
+                            <div className="bg-blueSecondary rounded-xl px-5 py-[15px] text-base">{stdoutValue}</div>
+                          </div>
+                        )}
+                        <div>
+                          <span className="font-semibold text-sm text-greyPrimary">Expected</span>
+                          <div className="bg-blueSecondary rounded-xl px-5 py-[15px] text-base">{allCases[selectedCase]?.output}</div>
+                        </div>
                       </div>
                     )}
                   </div>

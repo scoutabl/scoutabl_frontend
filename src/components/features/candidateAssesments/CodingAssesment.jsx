@@ -130,31 +130,9 @@ function CodingAssesmentInner() {
         };
     }, [isDragging]);
 
-    const CANDIDATETOKEN = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6NywiY3JlYXRlZF9hdCI6IjIwMjUtMDYtMDkgMTM6MjM6MDEuNTMwODgyKzAwOjAwIn0.9q2-XjZO-kGuhiEieEObuKmlz_bDs_2ZdebHeEgTD7I'
-    // const [currentTestData, setCurrentTestData] = useState(null);
-    // get question
-    useEffect(() => {
-        const fetchQuestion = async () => {
-            try {
-                const response = await fetch('https://dev.scoutabl.com/api/candidate-sessions/current-test/questions/', {
-                    method: 'GET',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-Candidate-Authorization': `Bearer ${CANDIDATETOKEN}`
-                    }
-                })
-                if (!response.ok) {
-                    throw new Error('Failed to fetch question');
-                }
-                const data = await response.json();
-                setCurrentTestData(data)
-            } catch (error) {
-                throw new Error('Failed To fetch question')
-            }
-        }
-        fetchQuestion();
-    }, [])
 
+
+    const CANDIDATETOKEN = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6NywiY3JlYXRlZF9hdCI6IjIwMjUtMDYtMDkgMTM6MjM6MDEuNTMwODgyKzAwOjAwIn0.9q2-XjZO-kGuhiEieEObuKmlz_bDs_2ZdebHeEgTD7I'
     // Fetch function using axios
     const fetchQuestionsWithTestCases = async () => {
         const response = await axios.get('https://dev.scoutabl.com/api/candidate-sessions/current-test/questions/', {
@@ -170,15 +148,19 @@ function CodingAssesmentInner() {
             (question.public_testcases || []).map(async (tc) => {
                 const input = tc.input_file ? await axios.get(tc.input_file).then(res => res.data) : '';
                 const output = tc.output_file ? await axios.get(tc.output_file).then(res => res.data) : '';
+                console.log('testfetched', input, output)
                 return { ...tc, input, output };
             })
         );
+
         return {
             ...question,
             testCases,
             inputVars: ['nums'], // adjust as needed
         };
     };
+
+
 
     // Use TanStack Query
     const { data: currentTestData, isLoading, error } = useQuery({
@@ -187,12 +169,20 @@ function CodingAssesmentInner() {
         staleTime: 1000 * 60 * 5,
     });
 
+    useEffect(() => {
+        if (currentTestData) {
+            console.log(currentTestData);
+        }
+    }, [currentTestData]);
+
     if (isLoading) return <div>Loading...</div>;
     if (error) return <div>Error loading question</div>;
 
     if (!currentTestData) {
         return <div>Loading...</div>;
     }
+
+
 
     return (
         <div className='flex gap-3 py-6 min-w-0 h-[calc(100vh-116px)]'>

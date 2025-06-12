@@ -284,6 +284,7 @@ const CodeEditor = ({ testCases, inputVars, collapsed, isFullscreen, setIsFullsc
                         setLoading(false);
                     }}
                     onReset={handleReset}
+                    questionId={currentTestData?.id}
                 />
                 <div className="flex-1 min-h-0  overflow-auto">
                     <Editor
@@ -339,6 +340,7 @@ const CodeEditor = ({ testCases, inputVars, collapsed, isFullscreen, setIsFullsc
                         onCollapse={handleCollapseButton}
                         isEditorCollapsed={isEditorCollapsed}
                         onReset={handleReset}
+                        questionId={currentTestData?.id}
                     />
                 </div>
                 {/* Vertical Resizer */}
@@ -405,7 +407,7 @@ const CodeEditor = ({ testCases, inputVars, collapsed, isFullscreen, setIsFullsc
                 isEditorCollapsed={isEditorCollapsed}
                 collapsed={collapsed}
                 onReset={handleReset}
-                questionId={currentTestData?.results[0].id}
+                questionId={currentTestData?.id}
             />
             {/* Collapsible Editor + Status Bar */}
             <div
