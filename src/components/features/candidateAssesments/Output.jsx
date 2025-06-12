@@ -6,6 +6,7 @@ import { useCodingAssesment } from './CodingAssesmentContext';
 import { useEnums } from '@/context/EnumsContext';
 import { motion } from 'framer-motion';
 import ClockIcon from '@/assets/clock.svg?react';
+
 function formatInputValue(val) {
   try {
     if (typeof val === 'string') {
@@ -54,6 +55,29 @@ const Output = ({
   const hasExpected = typeof result.expected !== 'undefined' && result.expected !== '';
   const [stdoutValue, setStdoutValue] = useState('');
   const [stderrValue, setStderrValue] = useState('');
+  const evaluation = output[0]?.evaluations?.[0];
+  const resultCode = evaluation?.evaluation_result ?? output[0]?.evaluation_result;
+  const resultText = enums?.enums?.CQEvaluationResult
+    ? Object.keys(enums.enums.CQEvaluationResult).find(
+      key => enums.enums.CQEvaluationResult[key] === resultCode
+    )
+    : resultCode;
+
+  const isAccepted = resultText === 'SUCCESS';
+
+  useEffect(() => {
+    console.log(stderrValue)
+  }, [stderrValue])
+
+  // Helper for human-readable error text
+  function getErrorText(resultText) {
+    if (!resultText || resultText === 'SUCCESS') return '';
+    return resultText
+      .split('_')
+      .map(word => word.charAt(0) + word.slice(1).toLowerCase())
+      .join(' ');
+  }
+  const errorText = getErrorText(resultText);
 
   // Add new test case
   const handleAddTestCase = (e) => {
@@ -123,6 +147,17 @@ const Output = ({
       setStderrValue('');
     }
   }, [output]);
+
+  //format errror messages
+  function parseError(stderr) {
+    // Example: /box/main.js:2 returasdn ... SyntaxError: Unexpected token 'this'
+    const lineMatch = stderr.match(/main\\.js:(\\d+)/);
+    const errorTypeMatch = stderr.match(/(\\w*Error): ([^\\n]+)/);
+    const line = lineMatch ? lineMatch[1] : null;
+    const errorType = errorTypeMatch ? errorTypeMatch[1] : null;
+    const errorMsg = errorTypeMatch ? errorTypeMatch[2] : null;
+    return { line, errorType, errorMsg };
+  }
 
   // Track container height
   useEffect(() => {
@@ -259,10 +294,8 @@ const Output = ({
                   <div className='flex flex-col gap-2'>
                     <span className="block font-semibold mb-2 text-base  text-greyPrimary dark:text-white">Input</span>
                     <div className="bg-blueSecondary dark:bg-blackSecondary rounded-lg px-4 py-2 text-base">
-                      <div>
-                        <span className="font-semibold block text-greyPrimary dark:text-white">{inputVars[0]}=</span>
-                        <span className="block text-greyPrimary dark:text-white">{JSON.stringify(allCases[selectedCase].input, null, 2)}</span>
-                      </div>
+                      <span className="font-semibold block text-greyPrimary dark:text-white">{inputVars[0]}=</span>
+                      <span className="block text-greyPrimary dark:text-white">{JSON.stringify(allCases[selectedCase].input, null, 2)}</span>
                     </div>
                   </div>
                   <div className='flex flex-col gap-2'>
@@ -276,7 +309,7 @@ const Output = ({
             </div>
           )}
           {activeTab === 'results' && (
-            <div className="px-6 pt-[14px] min-h-0 h-full flex-1 flex flex-col">
+            <div className="px-6 min-h-0 h-full w-full flex-1 flex flex-col overflow-x-auto min-w-[400px]">
               {loading ? (
                 <div className="flex-1 flex items-center justify-center min-h-0 h-full">
                   <span className="animate-spin w-8 h-8 border-4 border-t-transparent border-purple-600 rounded-full"></span>
@@ -284,82 +317,50 @@ const Output = ({
               ) : (
                 output.length > 0 && output[0] ? (
                   <div className='w-full flex flex-col gap-4'>
-                    {/* Show only result, not status */}
-                    {(() => {
-                      const evaluation = output[0].evaluations && output[0].evaluations[0];
-                      const resultCode = evaluation?.evaluation_result ?? output[0].evaluation_result;
-                      const resultText = enums?.enums?.CQEvaluationResult
-                        ? Object.keys(enums.enums.CQEvaluationResult).find(
-                          key => enums.enums.CQEvaluationResult[key] === resultCode
-                        )
-                        : resultCode;
-                      const isAccepted = resultText === 'SUCCESS';
-                      return (
-                        <div className="flex items-center gap-4">
-                          <span
-                            className={cn(
-                              'font-semibold text-lg  border-r-2 border-[#9E9E9E] pr-[18px]',
-                              {
-                                'text-[#1EA378]': isAccepted,
-                                'text-[#EB5757]': !isAccepted
-                              }
-                            )}
-                          >
-                            {isAccepted ? 'Accepted' : 'Rejected'}
-                          </span>
-                          {/* Optionally, show runtime if available */}
-                          {output[0].result?.run?.time && (
-                            <div className="flex items-center gap-2">
-                              <ClockIcon className="w-4 h-4 text-greyPrimary dark:text-white" />
-                              <span className="text-greyPrimary dark:text-white font-semibold text-sm">Runtime: <strong>{output[0].result.run.time * 1000}</strong> ms</span>
-                            </div>
-                          )}
+                    <div className="flex items-center gap-4">
+                      <span
+                        className={cn(
+                          'font-semibold text-lg border-r-2 border-[#9E9E9E] pr-[18px]',
+                          {
+                            'text-[#1EA378]': isAccepted,
+                            'text-[#EB5757]': !isAccepted
+                          }
+                        )}
+                      >
+                        {isAccepted ? 'Accepted' : 'Rejected'}
+                      </span>
+                      {/* Optionally, show runtime if available */}
+                      {output[0].result?.run?.time && (
+                        <div className="flex items-center gap-2">
+                          <ClockIcon className="w-4 h-4 text-greyPrimary dark:text-white" />
+                          <span className="text-greyPrimary dark:text-white font-semibold text-sm">Runtime: <strong>{output[0].result.run.time * 1000}</strong> ms</span>
                         </div>
-                      );
-                    })()}
-                    {/* Show stdout/output/stderr if present */}
-                    {/* {stderrValue && (
-                      <div className='p-6 rounded-xl bg-[#4D2C28]/80'>
-                        <span className='text-[#FF4E55] text-sm font-medium'>{stderrValue}</span>
-                      </div>
-                    )}
-                    <div>
-                      <span className="font-semibold text-sm text-greyPrimary">Input</span>
-                      <div className="bg-blueSecondary rounded-xl px-5 py-[15px] text-base">{inputVars[0]} = {'\n'}{JSON.stringify(allCases[selectedCase]?.input, null, 2)}</div>
+                      )}
                     </div>
-
-                    {stdoutValue && (
-                      <div>
-                        <span className="font-semibold text-sm text-greyPrimary">Output</span>
-                        <div className="bg-blueSecondary rounded-xl px-5 py-[15px] text-base">{stdoutValue}</div>
-                      </div>
-                    )}
-                    {output[0].output && (
-                      <div>
-                        <span className="font-semibold text-sm text-greyPrimary">Output</span>
-                        <div className="bg-blueSecondary rounded-xl px-5 py-[15px] text-base">{output[0].output}</div>
-                      </div>
-                    )}
-                    {output[0].stderr && (
-                      <div>
-                        <span className="font-semibold text-sm text-greyPrimary">Stderr</span>
-                        <div className="bg-red-100 rounded-xl px-5 py-[15px] text-base text-red-700">{output[0].stderr}</div>
-                      </div>
-                    )} */}
-                    {stderrValue ? (
-                      // If there is an error, show error and input only
-                      <div>
-                        <div className='p-6 rounded-xl bg-[#4D2C28]/80 mb-4'>
-                          <span className='text-[#FF4E55] text-sm font-medium'>{stderrValue}</span>
-                        </div>
-                        <div>
-                          <span className="font-semibold text-sm text-greyPrimary">Last Executed Input</span>
-                          <div className="bg-blueSecondary rounded-xl px-5 py-[15px] text-base">
-                            {inputVars[0]} = {'\n'}{JSON.stringify(allCases[selectedCase]?.input, null, 2)}
+                    {/* Show stdout/output/stderr if present */}
+                    {stderrValue && stderrValue.trim() ? (() => {
+                      const { line, errorType, errorMsg } = parseError(stderrValue);
+                      return (
+                        <div className='flex flex-col gap-6 pb-6'>
+                          <div className='p-6 rounded-xl bg-[#F5D2CA] dark:bg-[#4D2C28]/80 flex flex-col gap-2'>
+                            <span className="text-[#EB5757] text-base font-medium">{errorText}</span>
+                            {line && (
+                              <div className="text-[#FF4E55] font-bold">
+                                Line {line}{errorType ? ` | ${errorType}` : ''}{errorMsg ? `: ${errorMsg}` : ''}
+                              </div>
+                            )}
+                            <span className='text-[#FF4E55] text-sm font-medium whitespace-pre-wrap'>{stderrValue}</span>
+                          </div>
+                          <div className='flex flex-col gap-2'>
+                            <span className="block font-semibold mb-2 text-base  text-purplePrimary dark:text-white">Last Executed Input</span>
+                            <div className="bg-blueSecondary dark:bg-blackSecondary rounded-lg px-4 py-2 text-base">
+                              <span className="font-semibold block text-greyPrimary dark:text-white">{inputVars[0]}=</span>
+                              <span className="block text-greyPrimary dark:text-white">{JSON.stringify(allCases[selectedCase].input, null, 2)}</span>
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    ) : (
+                      );
+                    })() : (
                       // If no error, show input, output, and expected
                       <div>
                         <div>
