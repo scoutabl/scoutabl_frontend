@@ -23,7 +23,14 @@ export const executeCode = async (language, sourceCode, version) => {
 }
 
 export const fetchLanguageRuntimes = async () => {
+
     const response = await API.get("/runtimes");
+    return response.data;
+}
+
+export const fetchLanguages = async () => {
+    const response = await axios.get(`${APIURL}/languages`)
+    console.log('languages fetched', response.data);
     return response.data;
 }
 

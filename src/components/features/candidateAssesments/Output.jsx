@@ -241,7 +241,7 @@ const Output = ({
                     >
                       <Plus className='text-white dark:text-blackPrimary' size={20} />
                     </motion.button>
-                    <span className="absolute -top-[30px] -right-[60px] w-[65px] h-6 bg-purpleSecondary grid place-content-center rounded-tl-md rounded-br-md rounded-tr-md text-sm text-greyPrimary font-bold shadow opacity-0 group-hover:opacity-100 transition-opacity duration-200 ">
+                    <span className="absolute -top-[30px] -right-[60px] w-[65px] h-6 bg-purpleSecondary grid place-content-center rounded-tl-md rounded-br-md rounded-tr-md text-sm text-greyPrimary dark:text-white font-bold shadow opacity-0 group-hover:opacity-100 transition-opacity duration-200 ">
                       {allCases.length > 0 ? `${selectedCase + 1}/${allCases.length}` : '0/0'}
                     </span>
                   </div>
@@ -317,6 +317,32 @@ const Output = ({
               ) : (
                 output.length > 0 && output[0] ? (
                   <div className='w-full flex flex-col gap-4'>
+                    {/* Test case tabs for results, only if accepted and more than one case */}
+                    {isAccepted && allCases.length > 0 && (
+                      <div className="flex justify-center items-center gap-2">
+                        {allCases.map((tc, idx) => (
+                          <div key={idx} className="flex items-center">
+                            <button
+                              className={cn(
+                                "px-4 py-[6px] rounded-full border font-medium text-sm flex items-center gap-2 text-greyPrimary dark:text-white",
+                                selectedCase === idx ? "bg-purpleSecondary border-0 dark:text-greyPrimary" : "bg-white border-[#CCCCCC] dark:bg-transparent"
+                              )}
+                              onClick={() => setSelectedCase(idx)}
+                            >
+                              <span
+                                className={cn(
+                                  "w-2 h-2 rounded-full",
+                                  selectedCase === idx ? "bg-[#1EA378]" : "bg-greyPrimary dark:bg-white"
+                                )}
+                              />
+                              Case {idx + 1}
+                              {/* No remove button here */}
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
                     <div className="flex items-center gap-4">
                       <span
                         className={cn(
@@ -330,12 +356,12 @@ const Output = ({
                         {isAccepted ? 'Accepted' : 'Rejected'}
                       </span>
                       {/* Optionally, show runtime if available */}
-                      {output[0].result?.run?.time && (
-                        <div className="flex items-center gap-2">
-                          <ClockIcon className="w-4 h-4 text-greyPrimary dark:text-white" />
-                          <span className="text-greyPrimary dark:text-white font-semibold text-sm">Runtime: <strong>{output[0].result.run.time * 1000}</strong> ms</span>
-                        </div>
-                      )}
+                      <div className="flex items-center gap-2">
+                        <ClockIcon className="w-4 h-4 text-greyPrimary dark:text-white" />
+                        <span className="text-greyPrimary dark:text-white font-semibold text-sm">Runtime: <strong>{output[0].result.run.time * 1000}</strong> ms</span>
+                      </div>
+                      {/* {result.time && result.memory && (
+                      )} */}
                     </div>
                     {/* Show stdout/output/stderr if present */}
                     {stderrValue && stderrValue.trim() ? (() => {
@@ -343,7 +369,7 @@ const Output = ({
                       return (
                         <div className='flex flex-col gap-6 pb-6'>
                           <div className='p-6 rounded-xl bg-[#F5D2CA] dark:bg-[#4D2C28]/80 flex flex-col gap-2'>
-                            <span className="text-[#EB5757] text-base font-medium">{errorText}</span>
+                            <span className="text-[#EB5757] text-lg font-bold">{errorText}</span>
                             {line && (
                               <div className="text-[#FF4E55] font-bold">
                                 Line {line}{errorType ? ` | ${errorType}` : ''}{errorMsg ? `: ${errorMsg}` : ''}
@@ -352,7 +378,7 @@ const Output = ({
                             <span className='text-[#FF4E55] text-sm font-medium whitespace-pre-wrap'>{stderrValue}</span>
                           </div>
                           <div className='flex flex-col gap-2'>
-                            <span className="block font-semibold mb-2 text-base  text-purplePrimary dark:text-white">Last Executed Input</span>
+                            <span className="block font-semibold mb-2 text-base  text-purplePrimary">Last Executed Input</span>
                             <div className="bg-blueSecondary dark:bg-blackSecondary rounded-lg px-4 py-2 text-base">
                               <span className="font-semibold block text-greyPrimary dark:text-white">{inputVars[0]}=</span>
                               <span className="block text-greyPrimary dark:text-white">{JSON.stringify(allCases[selectedCase].input, null, 2)}</span>
@@ -362,22 +388,22 @@ const Output = ({
                       );
                     })() : (
                       // If no error, show input, output, and expected
-                      <div>
-                        <div>
-                          <span className="font-semibold text-sm text-greyPrimary">Input</span>
-                          <div className="bg-blueSecondary rounded-xl px-5 py-[15px] text-base">
+                      <div className='flex flex-col gap-2 pb-6'>
+                        <div className='flex flex-col gap-1'>
+                          <span className="font-semibold text-sm text-greyPrimary dark:text-white">Input</span>
+                          <div className="bg-blueSecondary dark:bg-blackSecondary rounded-xl px-5 py-[15px] text-base text-greyPrimary dark:text-white">
                             {inputVars[0]} = {'\n'}{JSON.stringify(allCases[selectedCase]?.input, null, 2)}
                           </div>
                         </div>
                         {stdoutValue && (
-                          <div>
-                            <span className="font-semibold text-sm text-greyPrimary">Output</span>
-                            <div className="bg-blueSecondary rounded-xl px-5 py-[15px] text-base">{stdoutValue}</div>
+                          <div className='flex flex-col gap-1'>
+                            <span className="font-semibold text-sm text-greyPrimary dark:text-white">Output</span>
+                            <div className="bg-blueSecondary dark:bg-blackSecondary rounded-xl px-5 py-[15px] text-base text-greyPrimary dark:text-white">{stdoutValue}</div>
                           </div>
                         )}
-                        <div>
-                          <span className="font-semibold text-sm text-greyPrimary">Expected</span>
-                          <div className="bg-blueSecondary rounded-xl px-5 py-[15px] text-base">{allCases[selectedCase]?.output}</div>
+                        <div className='flex flex-col gap-1'>
+                          <span className="font-semibold text-sm text-greyPrimary dark:text-white">Expected</span>
+                          <div className="bg-blueSecondary dark:bg-blackSecondary rounded-xl px-5 py-[15px] text-base text-greyPrimary dark:text-white">{allCases[selectedCase]?.output}</div>
                         </div>
                       </div>
                     )}

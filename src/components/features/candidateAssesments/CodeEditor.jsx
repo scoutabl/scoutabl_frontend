@@ -38,6 +38,12 @@ const CodeEditor = ({ testCases, inputVars, collapsed, isFullscreen, setIsFullsc
     const { isDarkMode } = useTheme();
     // New state to remember the last output height before collapsing
     const [lastOutputHeight, setLastOutputHeight] = useState(null);
+    const [isEditorLoading, setIsEditorLoading] = useState(true);
+
+    useEffect(() => {
+        console.log('codeditor', currentTestData.languages[0].id)
+        console.log('codeditor', currentTestData)
+    }, [currentTestData])
 
     // Set initial 50/50 split and layout editor
     useLayoutEffect(() => {
@@ -93,6 +99,7 @@ const CodeEditor = ({ testCases, inputVars, collapsed, isFullscreen, setIsFullsc
                 column: e.position.column
             });
         });
+        handleEditorDidMount();
     }
 
     const onSelect = (language) => {
@@ -212,6 +219,7 @@ const CodeEditor = ({ testCases, inputVars, collapsed, isFullscreen, setIsFullsc
 
     //setting them on editor mount
     const handleEditorBeforeMount = (monaco) => {
+        handleEditorWillMount();
         monaco.editor.defineTheme('github-light', {
             base: 'vs-light',
             inherit: true,
@@ -235,6 +243,15 @@ const CodeEditor = ({ testCases, inputVars, collapsed, isFullscreen, setIsFullsc
         }
         setOutput([]);
         setUserTestCases([]);
+    };
+
+    // Add this after the onMount function
+    const handleEditorWillMount = () => {
+        setIsEditorLoading(true);
+    };
+
+    const handleEditorDidMount = () => {
+        setIsEditorLoading(false);
     };
 
     // Output Full Screen
@@ -444,6 +461,21 @@ const CodeEditor = ({ testCases, inputVars, collapsed, isFullscreen, setIsFullsc
                                 }}
                                 theme={isDarkMode ? 'custom-dark' : 'custom-light'}
                                 beforeMount={handleEditorBeforeMount}
+                                loading={<div className="h-full w-full bg-white dark:bg-blackPrimary" />}
+                                options={{
+                                    minimap: { enabled: false },
+                                    scrollBeyondLastLine: false,
+                                    fontSize: 14,
+                                    lineNumbers: 'on',
+                                    roundedSelection: false,
+                                    scrollbar: {
+                                        vertical: 'visible',
+                                        horizontal: 'visible',
+                                        useShadows: false,
+                                        verticalScrollbarSize: 10,
+                                        horizontalScrollbarSize: 10
+                                    }
+                                }}
                             />
                         </motion.div>
                     )}

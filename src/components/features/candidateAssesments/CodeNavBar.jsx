@@ -3,7 +3,7 @@ import { useMutation, useQuery } from '@tanstack/react-query';
 import { submitCodeToBackend, pollSubmissionStatus } from '@/api/monacoCodeApi';
 import { useEnums } from '@/context/EnumsContext';
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { fetchLanguageRuntimes, executeCode } from '@/api/monacoCodeApi'
+import { fetchLanguageRuntimes, fetchLanguages } from '@/api/monacoCodeApi'
 import { cn } from '@/lib/utils';
 import { motion } from 'framer-motion';
 import JsonIcon from "@/assets/jsonIcon.svg?react"
@@ -13,18 +13,6 @@ import CheckIcon from '@/assets/checkIcon.svg?react'
 import ChevronDown from "@/assets/chevron-down.svg?react"
 import ResetIcon from '@/assets/resetIcon.svg?react'
 import MaximizeIcon from '@/assets/maximizeIcon.svg?react'
-
-const ALLOWED_LANGUAGES = [
-    { key: 'python', display: 'Python 3' },
-    { key: 'javascript', display: 'JavaScript' },
-    { key: 'typescript', display: 'TypeScript' },
-    { key: 'csharp', display: 'C#' },
-    { key: 'c++', display: 'C++' },
-    { key: 'java', display: 'Java' },
-    { key: 'go', display: 'Go' },
-    { key: 'php', display: 'PHP' },
-];
-
 
 // Fixed code navbar code
 const CodeNavBar = ({
@@ -37,6 +25,7 @@ const CodeNavBar = ({
 }) => {
     const [isOpen, setIsOpen] = useState(false)
     const [languages, setLanguages] = useState([])
+    // const [language, setLanguage] = useState('python3')
     const [error, setError] = useState(null)
 
     const [shouldPoll, setShouldPoll] = useState(false)
@@ -54,26 +43,49 @@ const CodeNavBar = ({
 
     useEffect(() => {
         if (collapsed) return;
-        const getRuntimes = async () => {
-            setLoading && setLoading(true)
-            setError(null)
+        setLoading(true)
+        setError(null)
+        const getRuntimeLang = async () => {
             try {
-                const data = await fetchLanguageRuntimes();
-                // Filter to allowed languages only
-                const filtered = ALLOWED_LANGUAGES.map(({ key, display }) => {
-                    // Find the best match in the fetched data
-                    const match = data.find(l => l.language === key || l.aliases?.includes(key));
-                    return match ? { ...match, display } : null;
-                }).filter(Boolean);
-                setLanguages(filtered)
-            } catch (err) {
+                const data = await fetchLanguages();
+                const languageNamesArr = data.results.map(lang => ({
+                    id: lang.id,
+                    name: lang.code
+                }));
+                setLanguages(languageNamesArr)
+            }
+            catch (err) {
                 setError('Failed to load languages')
             } finally {
-                setLoading && setLoading(false)
+                setLoading(false)
             }
         }
-        getRuntimes();
+        getRuntimeLang();
     }, [collapsed])
+
+    // useEffect(() => {
+    //     if (collapsed) return;
+    //     const getRuntimes = async () => {
+    //         setLoading && setLoading(true)
+    //         setError(null)
+    //         try {
+    //             const data = await fetchLanguageRuntimes();
+    //             // Filter to allowed languages only
+    //             const filtered = ALLOWED_LANGUAGES.map(({ key, display }) => {
+    //                 // Find the best match in the fetched data
+    //                 const match = data.find(l => l.language === key || l.aliases?.includes(key));
+    //                 return match ? { ...match, display } : null;
+    //             }).filter(Boolean);
+    //             setLanguage(filtered)
+    //             console.log('filtered lag', filtered)
+    //         } catch (err) {
+    //             setError('Failed to load languages')
+    //         } finally {
+    //             setLoading && setLoading(false)
+    //         }
+    //     }
+    //     getRuntimes();
+    // }, [collapsed])
 
     const handleSelect = (lang) => {
         onSelect && onSelect(lang);
@@ -245,12 +257,6 @@ const CodeNavBar = ({
                         </div>
                         <span className="text-sm font-normal text-greyPrimary truncate">
                             {language}
-                            <span className="text-xs text-greyPrimary font-normal ml-1">
-                                {loading ? 'Loading...' : error ? 'Error' : (() => {
-                                    const selected = languages.find(l => l.language === language || l.aliases?.includes(language));
-                                    return selected ? selected.version : ''
-                                })()}
-                            </span>
                         </span>
                         <div className='h-6  w-6 grid place-content-center'>
                             <ChevronDown />
@@ -261,11 +267,10 @@ const CodeNavBar = ({
                     {loading && <div className="p-4 text-center text-sm">Loading...</div>}
                     {error && <div className="p-4 text-center text-sm text-red-500">{error}</div>}
                     {!loading && !error && languages.map((langObj, idx) => {
-                        const lang = langObj.language;
-                        const display = langObj.display || lang;
+                        const lang = langObj.name;
                         const isSelected = lang === language;
                         const isFirst = idx === 0;
-                        const isLast = idx === languages.length - 1;
+                        const isLast = idx === language.length - 1;
                         const barRounding = isFirst && isLast
                             ? "rounded-tr-2xl rounded-br-2xl"
                             : isFirst
@@ -288,7 +293,7 @@ const CodeNavBar = ({
                                 )}
                                 <div className={`absolute left-0 top-0 h-full w-1 bg-[#8B5CF6] opacity-0 group-hover:opacity-100 ${barRounding}`} />
                                 <span className={`ml-4 ${isSelected ? "text-[#8B5CF6]" : "text-black dark:text-white"} group-hover:text-[#8B5CF6]`}>
-                                    {display} <span className="ml-2 text-xs text-gray-400">{langObj.version}</span>
+                                    {lang}
                                 </span>
                             </div>
                         );
