@@ -1,11 +1,11 @@
 import { useRef, useEffect, useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import axios from 'axios';
 import { CodingAssesmentProvider, useCodingAssesment } from './CodingAssesmentContext';
 import CodeSidebar from './CodeSidebar';
 import CodeEditor from './CodeEditor';
+import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
-import { questionsData } from '@/lib/codingQuestions';
-import { useQuery } from '@tanstack/react-query';
-import axios from 'axios';
 function CodingAssesmentInner() {
     const {
         currentQuestion, setCurrentQuestion,
@@ -28,8 +28,6 @@ function CodingAssesmentInner() {
     const prevSidebarWidthRef = useRef(sidebarWidth);
     const prevRightPanelWidthRef = useRef(rightPanelWidth);
     const rightPanelRef = useRef(null);
-    // Get current question data
-    const currentQuestionData = questionsData.find(q => q.id === currentQuestion) || questionsData[0];
 
     // Dummy data for submissions
     const submissionsData = [
@@ -135,54 +133,111 @@ function CodingAssesmentInner() {
     const CANDIDATETOKEN = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6NywiY3JlYXRlZF9hdCI6IjIwMjUtMDYtMDkgMTM6MjM6MDEuNTMwODgyKzAwOjAwIn0.9q2-XjZO-kGuhiEieEObuKmlz_bDs_2ZdebHeEgTD7I'
     // Fetch function using axios
     const fetchQuestionsWithTestCases = async () => {
-        const response = await axios.get('https://dev.scoutabl.com/api/candidate-sessions/current-test/questions/', {
-            headers: {
-                'Content-Type': 'application/json',
-                'X-Candidate-Authorization': `Bearer ${CANDIDATETOKEN}`
-            }
-        });
-        const data = response.data;
-        const question = data.results[0];
-        // Fetch test case files for public_testcases
-        const testCases = await Promise.all(
-            (question.public_testcases || []).map(async (tc) => {
-                const input = tc.input_file ? await axios.get(tc.input_file).then(res => res.data) : '';
-                const output = tc.output_file ? await axios.get(tc.output_file).then(res => res.data) : '';
-                console.log('testfetched', input, output)
-                return { ...tc, input, output };
-            })
-        );
+        console.log('Fetching questions...');
+        try {
+            const response = await axios.get('https://dev.scoutabl.com/api/candidate-sessions/current-test/questions/', {
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Candidate-Authorization': `Bearer ${CANDIDATETOKEN}`
+                }
+            });
+            console.log('API Response:', response.data);
+            const data = response.data;
+            const question = data.results[0];
+            // Fetch test case files for public_testcases
+            const testCases = await Promise.all(
+                (question.public_testcases || []).map(async (tc) => {
+                    const input = tc.input_file ? await axios.get(tc.input_file).then(res => res.data) : '';
+                    const output = tc.output_file ? await axios.get(tc.output_file).then(res => res.data) : '';
+                    console.log('Test case fetched:', { input, output });
+                    return { ...tc, input, output };
+                })
+            );
 
-        return {
-            ...question,
-            testCases,
-            inputVars: ['nums'], // adjust as needed
-        };
+            return {
+                ...question,
+                testCases,
+                inputVars: ['nums'], // adjust as needed
+            };
+        } catch (error) {
+            console.error('Error fetching questions:', error);
+            throw error;
+        }
     };
 
-
+    const [isMinLoading, setIsMinLoading] = useState(true);
 
     // Use TanStack Query
     const { data: currentTestData, isLoading, error } = useQuery({
         queryKey: ['currentTestQuestion'],
-        queryFn: fetchQuestionsWithTestCases,
-        staleTime: 1000 * 60 * 5,
+        queryFn: async () => {
+            const startTime = Date.now();
+            const result = await fetchQuestionsWithTestCases();
+            const endTime = Date.now();
+            const elapsedTime = endTime - startTime;
+
+            // Ensure minimum loading time of 1 second
+            if (elapsedTime < 1000) {
+                await new Promise(resolve => setTimeout(resolve, 1000 - elapsedTime));
+            }
+
+            return result;
+        },
+        staleTime: 0, // Disable caching to ensure fresh data on refresh
     });
 
     useEffect(() => {
-        if (currentTestData) {
-            console.log(currentTestData);
+        if (!isLoading) {
+            // Add a small delay before hiding the loading state
+            const timer = setTimeout(() => {
+                setIsMinLoading(false);
+            }, 500);
+            return () => clearTimeout(timer);
+        } else {
+            setIsMinLoading(true);
         }
-    }, [currentTestData]);
+    }, [isLoading]);
 
-    if (isLoading) return <div>Loading...</div>;
+    useEffect(() => {
+        console.log('Loading state:', isLoading);
+        console.log('Min loading state:', isMinLoading);
+        console.log('Error state:', error);
+        console.log('Current test data:', currentTestData);
+    }, [isLoading, isMinLoading, error, currentTestData]);
+
+    //loading component
+    const LoadingComponent = () => {
+        return (
+            <div className='flex gap-3 py-6 min-w-0 h-[calc(100vh-116px)]'>
+                <div className='relative rounded-5xl shadow-md flex flex-col h-full max-h-[calc(100vh-116px)] min-w-0 overflow-x-auto p-6 w-[540px] bg-white'>
+                    <Skeleton className="h-4 w-[250px] mb-4 bg-gray-200" />
+                    <Skeleton className="h-4 w-[200px] mb-4 bg-gray-200" />
+                    <Skeleton className="h-4 w-[300px] mb-4 bg-gray-200" />
+                    <Skeleton className="h-4 w-[280px] mb-4 bg-gray-200" />
+                    <Skeleton className="h-4 w-[320px] bg-gray-200" />
+                </div>
+                <div className='flex flex-col gap-3 flex-1 h-full max-h-[calc(100vh-116px)] overflow-x-auto'>
+                    <div className='p-6 h-[70%] flex flex-col gap-2 bg-white  rounded-5xl'>
+                        <Skeleton className="h-4 w-[250px] mb-4 bg-gray-200" />
+                        <Skeleton className="h-4 w-[200px] mb-4 bg-gray-200" />
+                        <Skeleton className="h-4 w-[300px] mb-4 bg-gray-200" />
+                        <Skeleton className="h-4 w-[280px] bg-gray-200" />
+                    </div>
+                    <div className='p-6 h-[30%] flex flex-col gap-2 mt-4 bg-white  rounded-5xl'>
+                        <Skeleton className="h-4 w-[250px] mb-4 bg-gray-200" />
+                        <Skeleton className="h-4 w-[200px] bg-gray-200" />
+                    </div>
+                </div>
+            </div>
+        )
+    }
+
+    if (isLoading || isMinLoading) return <LoadingComponent />;
     if (error) return <div>Error loading question</div>;
 
     if (!currentTestData) {
-        return <div>Loading...</div>;
+        return <LoadingComponent />;
     }
-
-
 
     return (
         <div className='flex gap-3 py-6 min-w-0 h-[calc(100vh-116px)]'>
@@ -198,7 +253,6 @@ function CodingAssesmentInner() {
                     }}
                 >
                     <CodeSidebar
-                        currentQuestionData={currentQuestionData}
                         submissionsData={submissionsData}
                         getStatusColor={getStatusColor}
                         onCollapseToggle={handleCollapseToggle}
@@ -235,7 +289,6 @@ function CodingAssesmentInner() {
                     <CodeEditor
                         testCases={currentTestData.testCases}
                         inputVars={currentTestData.inputVars}
-                        // callPattern={currentQuestionData.callPattern}
                         collapsed={isRightCollapsed}
                         isFullscreen={isFullscreen}
                         setIsFullscreen={setIsFullscreen}

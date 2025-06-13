@@ -16,7 +16,6 @@ import FlagIcon from '@/assets/flagIcon.svg?react'
 import HeadphoneIcon from '@/assets/headphoneIcon.svg?react'
 const CodeSidebar = ({
     currentTestData,
-    currentQuestionData,
     submissionsData,
     getStatusColor,
     onCollapseToggle
