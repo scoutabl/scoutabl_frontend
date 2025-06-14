@@ -1,11 +1,7 @@
-import { LANGUAGE_VERSIONS } from "@/lib/constants";
 import axios from "axios";
 
-const API = axios.create({
-    baseURL: "https://emkc.org/api/v2/piston"
-})
-
-const CANDIDATETOKEN = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6NywiY3JlYXRlZF9hdCI6IjIwMjUtMDYtMDkgMTM6MjM6MDEuNTMwODgyKzAwOjAwIn0.9q2-XjZO-kGuhiEieEObuKmlz_bDs_2ZdebHeEgTD7I'
+// const CANDIDATETOKEN = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6NywiY3JlYXRlZF9hdCI6IjIwMjUtMDYtMDkgMTM6MjM6MDEuNTMwODgyKzAwOjAwIn0.9q2-XjZO-kGuhiEieEObuKmlz_bDs_2ZdebHeEgTD7I'
+const CANDIDATETOKEN = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6OCwiY3JlYXRlZF9hdCI6IjIwMjUtMDYtMTMgMTY6Mjk6NDAuMTQ1MTkwKzAwOjAwIn0.eFdPGl7trmwAc9UbKbUntHPT-FwYcEn2fTN8jD2bXnM'
 
 const APIURL = 'https://dev.scoutabl.com/api'
 
@@ -19,12 +15,6 @@ export const executeCode = async (language, sourceCode, version) => {
             }
         ],
     })
-    return response.data;
-}
-
-export const fetchLanguageRuntimes = async () => {
-
-    const response = await API.get("/runtimes");
     return response.data;
 }
 
@@ -72,3 +62,16 @@ export const fetchEnums = async () => {
     if (!res.ok) throw new Error("Failed to fetch enums");
     return res.json();
 };
+
+// Get Submission list
+export const fetchSubmissions = async (questionId) => {
+    const res = await fetch(`${APIURL}/candidate/questions/${questionId}/cq-submissions/?is_test=true&ordering=-created_at&page_size=100`, {
+        headers: {
+            'X-Candidate-Authorization': `Bearer ${CANDIDATETOKEN}`
+        }
+    });
+    if (!res.ok) throw new Error("Failed fetch submissions");
+    const data = await res.json();
+    console.log('submission response:', data);
+    return data;
+}

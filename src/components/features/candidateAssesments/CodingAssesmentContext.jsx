@@ -5,6 +5,7 @@ const CodingAssesmentContext = createContext();
 export function CodingAssesmentProvider({ children }) {
     // Shared state
     const [activeTab, setActiveTab] = useState('description');
+    const [sidebarActiveTab, setSidebarActiveTab] = useState('description'); // For sidebar (Description/Submissions)
     const [currentQuestion, setCurrentQuestion] = useState(1);
     const totalQuestions = 15;
     const [sidebarWidth, setSidebarWidth] = useState(540); // default width
@@ -20,9 +21,12 @@ export function CodingAssesmentProvider({ children }) {
     const [editorHeight, setEditorHeight] = useState(0); // px, will be set to 50% on mount
     const [lastEditorHeight, setLastEditorHeight] = useState(0); // remembers last expanded height
     const [isDragging, setIsDragging] = useState(false);
+    // Add submission refresh trigger
+    const [submissionRefreshTrigger, setSubmissionRefreshTrigger] = useState(0);
 
     return (
         <CodingAssesmentContext.Provider value={{
+            sidebarActiveTab, setSidebarActiveTab,
             activeTab, setActiveTab,
             currentQuestion, setCurrentQuestion,
             totalQuestions,
@@ -35,7 +39,8 @@ export function CodingAssesmentProvider({ children }) {
             isRightCollapsed, setIsRightCollapsed,
             editorHeight, setEditorHeight,
             lastEditorHeight, setLastEditorHeight,
-            isDragging, setIsDragging
+            isDragging, setIsDragging,
+            submissionRefreshTrigger, setSubmissionRefreshTrigger
         }}>
             {children}
         </CodingAssesmentContext.Provider>

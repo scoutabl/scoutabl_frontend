@@ -130,7 +130,8 @@ function CodingAssesmentInner() {
 
 
 
-    const CANDIDATETOKEN = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6NywiY3JlYXRlZF9hdCI6IjIwMjUtMDYtMDkgMTM6MjM6MDEuNTMwODgyKzAwOjAwIn0.9q2-XjZO-kGuhiEieEObuKmlz_bDs_2ZdebHeEgTD7I'
+    // const CANDIDATETOKEN = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6NywiY3JlYXRlZF9hdCI6IjIwMjUtMDYtMDkgMTM6MjM6MDEuNTMwODgyKzAwOjAwIn0.9q2-XjZO-kGuhiEieEObuKmlz_bDs_2ZdebHeEgTD7I'
+    const CANDIDATETOKEN = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6OCwiY3JlYXRlZF9hdCI6IjIwMjUtMDYtMTMgMTY6Mjk6NDAuMTQ1MTkwKzAwOjAwIn0.eFdPGl7trmwAc9UbKbUntHPT-FwYcEn2fTN8jD2bXnM'
     // Fetch function using axios
     const fetchQuestionsWithTestCases = async () => {
         console.log('Fetching questions...');
@@ -257,6 +258,7 @@ function CodingAssesmentInner() {
                         getStatusColor={getStatusColor}
                         onCollapseToggle={handleCollapseToggle}
                         currentTestData={currentTestData}
+                        questionId={currentTestData?.id}
                     />
                 </div>
             )}

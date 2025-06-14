@@ -1,34 +1,67 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion';
 import { useCodingAssesment } from './CodingAssesmentContext';
 import QuestionPopup from '@/components/features/candidateAssesments/QuestionPopup';
-import { questionsData } from '@/lib/codingQuestions';
+import { fetchSubmissions, fetchLanguages } from '@/api/monacoCodeApi';
 import { cn } from '@/lib/utils';
 import { ChevronLeft, ChevronRight, FileText } from 'lucide-react';
 import SidebarOpenIcon from '@/assets/openSidebar.svg?react';
 import FileIcon from '@/assets/fileIcon.svg?react';
 import SubmissionIcon from '@/assets/Menu.svg?react'
 import SidebarCloseIcon from '@/assets/closeSidebar.svg?react';
-import SubmissionVerticalIcon from '@/assets/menuVertical.svg?react';
 import TimerIcon from '@/assets/timerLogo.svg?react'
 import MemoryIcon from '@/assets/memoryIcon.svg?react'
 import FlagIcon from '@/assets/flagIcon.svg?react'
 import HeadphoneIcon from '@/assets/headphoneIcon.svg?react'
+import { useEnums } from '@/context/EnumsContext';
+//code sidebar
+
+// Helper function to format result text (similar to getErrorText in Output.jsx)
+function formatResultText(resultText) {
+    if (!resultText || resultText === 'SUCCESS') return 'Accepted'; // Return 'Accepted' for SUCCESS
+    return resultText
+        .split('_')
+        .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+        .join(' ');
+}
+
 const CodeSidebar = ({
     currentTestData,
+    questionId,
     submissionsData,
     getStatusColor,
     onCollapseToggle
 }) => {
     const {
-        activeTab, setActiveTab,
+        sidebarActiveTab, setSidebarActiveTab,
         currentQuestion, setCurrentQuestion,
         totalQuestions,
         isCollapsed,
         setIsCollapsed,
-        sidebarWidth
+        sidebarWidth,
+        submissionRefreshTrigger
     } = useCodingAssesment();
+    const { enums } = useEnums(); // Access enums
     const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
+    const [submissions, setSubmissions] = useState([]);
+    const [languagesMap, setLanguagesMap] = useState({}); // New state for language mapping
+
+    // Fetch languages once on component mount
+    useEffect(() => {
+        const getLanguages = async () => {
+            try {
+                const data = await fetchLanguages();
+                const map = {};
+                data.results.forEach(lang => {
+                    map[lang.id] = lang.name;
+                });
+                setLanguagesMap(map);
+            } catch (error) {
+                console.error('Error fetching languages:', error);
+            }
+        };
+        getLanguages();
+    }, []); // Empty dependency array means this runs once on mount
 
     // Handle question selection from popup
     const handleQuestionSelect = (index) => {
@@ -49,8 +82,65 @@ const CodeSidebar = ({
         }
     };
 
-    // Get the current question data based on the selected index
-    const selectedQuestionData = questionsData[currentQuestionIndex];
+    const getSubmissions = async (questionId) => {
+        console.log("Checking enums for getSubmissions:", enums);
+        if (!enums || !enums.enums.CQEvaluationResult || !languagesMap || Object.keys(languagesMap).length === 0) return;
+
+        try {
+            const responseData = await fetchSubmissions(questionId);
+            const rawSubmissions = responseData.results || responseData;
+
+            const mappedSubmissions = rawSubmissions.map(submission => {
+                const evaluation = submission.evaluations?.[0];
+
+                // Map status
+                let status = 'Unknown';
+                if (evaluation?.evaluation_result !== undefined) {
+                    const resultKey = Object.keys(enums.enums.CQEvaluationResult).find(
+                        key => enums.enums.CQEvaluationResult[key] === evaluation.evaluation_result
+                    );
+                    status = formatResultText(resultKey); // Apply formatting
+                } else if (submission.evaluation_result !== undefined) {
+                    const resultKey = Object.keys(enums.enums.CQEvaluationResult).find(
+                        key => enums.enums.CQEvaluationResult[key] === submission.evaluation_result
+                    );
+                    status = formatResultText(resultKey); // Apply formatting
+                }
+
+
+                // Map runtime
+                const runtime = evaluation?.result?.run?.time ? `${parseFloat(evaluation.result.run.time) * 1000} ms` : 'N/A';
+
+                // Map memory (using max-rss for now, as you mentioned)
+                const memory = evaluation?.result?.run?.['max-rss'] ? `${(parseInt(evaluation.result.run['max-rss']) / 1024).toFixed(2)} MB` : 'N/A';
+
+                // Map language using languagesMap
+                const languageName = languagesMap[submission.language] || 'Unknown';
+
+                return {
+                    id: submission.id,
+                    status: status,
+                    runtime: runtime,
+                    memory: memory,
+                    language: languageName,
+                };
+            });
+            setSubmissions(mappedSubmissions);
+        } catch (error) {
+            console.error('Error fetching submissions:', error);
+        }
+    };
+
+    useEffect(() => {
+        console.log(questionId)
+    }, [questionId])
+
+    useEffect(() => {
+        if (sidebarActiveTab === 'submissions' && questionId && enums && languagesMap && Object.keys(languagesMap).length > 0) {
+            console.log("Fetching submissions due to sidebarActiveTab or submissionRefreshTrigger change");
+            getSubmissions(questionId);
+        }
+    }, [sidebarActiveTab, questionId, submissionRefreshTrigger, enums, languagesMap]); // Add languagesMap to dependencies
 
 
     return (
@@ -64,13 +154,13 @@ const CodeSidebar = ({
                     <button
                         className={cn(
                             "p-3 rounded-md w-full flex flex-col items-center justify-center gap-1 group",
-                            activeTab === 'submissions' ? "bg-purpleSecondary" : "hover:bg-purpleSecondary transition-all duration-300"
+                            sidebarActiveTab === 'submissions' ? "bg-purpleSecondary" : "hover:bg-purpleSecondary transition-all duration-300"
                         )}
-                        onClick={() => setActiveTab('submissions')}
+                        onClick={() => setSidebarActiveTab('submissions')}
                     >
                         <span className={cn('text-sm font-medium text-greyPrimary', {
-                            'dark:text-greyPrimary': activeTab === 'submissions',
-                            'dark:text-white group-hover:dark:text-greyPrimary transition-all duration-300': activeTab !== 'submissions'
+                            'dark:text-greyPrimary': sidebarActiveTab === 'submissions',
+                            'dark:text-white group-hover:dark:text-greyPrimary transition-all duration-300': sidebarActiveTab !== 'submissions'
                         })}
                             style={{
                                 writingMode: 'vertical-lr',
@@ -82,27 +172,27 @@ const CodeSidebar = ({
                             Submissions
                         </span>
                         <SubmissionIcon className={cn("text-greyPrimary dark:text-white group",
-                            { 'dark:text-greyPrimary': activeTab === 'submissions' }
+                            { 'dark:text-greyPrimary': sidebarActiveTab === 'submissions' }
                         )} />
                     </button>
                     <button
                         className={cn(
                             "p-3 rounded-md w-full flex flex-col items-center justify-center gap-1 group",
-                            activeTab === 'description' ? "bg-purpleSecondary" : "hover:bg-purpleSecondary transition-all duration-300"
+                            sidebarActiveTab === 'description' ? "bg-purpleSecondary" : "hover:bg-purpleSecondary transition-all duration-300"
                         )}
-                        onClick={() => setActiveTab('description')}
+                        onClick={() => setSidebarActiveTab('description')}
                     >
                         <span
                             className={cn('text-sm font-medium text-greyPrimary', {
-                                'dark:text-greyPrimary': activeTab === 'description',
-                                'dark:text-white group-hover:dark:text-greyPrimary transition-all duration-300': activeTab !== 'description'
+                                'dark:text-greyPrimary': sidebarActiveTab === 'description',
+                                'dark:text-white group-hover:dark:text-greyPrimary transition-all duration-300': sidebarActiveTab !== 'description'
                             })}
                             style={{ writingMode: 'vertical-lr', textOrientation: 'mixed', transform: 'rotate(180deg)' }}
                         >
                             Description
                         </span>
                         <FileIcon className={cn("text-greyPrimary dark:text-white rotate-[-90deg] group-hover:fill-greyPrimary group group-hover:dark:text-greyPrimary",
-                            { 'dark:text-greyPrimary active fill-greyPrimary': activeTab === 'description' },
+                            { 'dark:text-greyPrimary active fill-greyPrimary': sidebarActiveTab === 'description' },
                         )} />
                     </button>
                     <motion.button
@@ -121,29 +211,29 @@ const CodeSidebar = ({
                         <button
                             className={cn(
                                 "px-[6px] py-[5px] flex items-center gap-1 font-medium text-greyPrimary dark:text-white rounded-[8px] text-sm dark:hover:text-greyPrimary group",
-                                activeTab === 'description'
+                                sidebarActiveTab === 'description'
                                     ? "bg-purpleSecondary dark:text-greyPrimary"
                                     : "bg-transparent hover:bg-purpleSecondary transition-all duration-300"
                             )}
-                            onClick={() => setActiveTab('description')}
+                            onClick={() => setSidebarActiveTab('description')}
                         >
                             <FileIcon className={cn("group-hover:fill-greyPrimary group", {
-                                'dark:text-greyPrimary active fill-greyPrimary': activeTab === 'description'
+                                'dark:text-greyPrimary active fill-greyPrimary': sidebarActiveTab === 'description'
                             })} />
                             {sidebarWidth > 120 && <span>Description</span>}
                         </button>
                         <button
                             className={cn(
                                 "px-[6px] py-[5px] flex items-center gap-1 font-medium text-greyPrimary dark:text-white rounded-[8px] text-sm dark:hover:text-greyPrimary group",
-                                activeTab === 'submissions'
+                                sidebarActiveTab === 'submissions'
                                     ? "bg-purpleSecondary dark:text-greyPrimary"
                                     : "bg-transparent hover:bg-purpleSecondary transition-all duration-300"
                             )}
-                            onClick={() => setActiveTab('submissions')}
+                            onClick={() => setSidebarActiveTab('submissions')}
                         >
                             <SubmissionIcon className={cn("text-greyPrimary dark:text-white rotate-[90deg] group",
-                                { 'dark:text-greyPrimary': activeTab === 'submissions' },
-                                { 'active': activeTab === 'submissions' }
+                                { 'dark:text-greyPrimary': sidebarActiveTab === 'submissions' },
+                                { 'active': sidebarActiveTab === 'submissions' }
                             )} />
                             {sidebarWidth > 120 && <span>Submissions</span>}
                         </button>
@@ -158,7 +248,7 @@ const CodeSidebar = ({
                     </div>
 
                     {/* Content based on active tab */}
-                    {activeTab === 'description' ? (
+                    {sidebarActiveTab === 'description' ? (
                         <>
                             <div className="flex-1 min-h-0 overflow-y-auto min-w-[400px] ">
                                 {/* Question number */}
@@ -183,34 +273,34 @@ const CodeSidebar = ({
                                         <h2>{currentTestData.title}</h2>
                                         {/* <span>{currentTestData.results[0].content}</span> */}
                                         {/* <h3 className="font-bold text-sm text-greyPrimary dark:text-white">Instructions:</h3>
-                                        <ol className="list-decimal list-inside space-y-2 text-sm text-greyPrimary dark:text-white">
-                                            {selectedQuestionData.instructions.map((instruction, index) => (
-                                                <li key={index} className="pl-2 text-sm text-greyPrimary dark:text-white">{instruction}</li>
-                                            ))}
-                                        </ol> */}
+                                            <ol className="list-decimal list-inside space-y-2 text-sm text-greyPrimary dark:text-white">
+                                                {selectedQuestionData.instructions.map((instruction, index) => (
+                                                    <li key={index} className="pl-2 text-sm text-greyPrimary dark:text-white">{instruction}</li>
+                                                ))}
+                                            </ol> */}
                                     </div>
 
                                     {/* test cases */}
                                     {/* <div className="space-y-2">
 
-                                        <h3 className="font-bold text-sm text-greyPrimary dark:text-white">Test Cases</h3>
+                                            <h3 className="font-bold text-sm text-greyPrimary dark:text-white">Test Cases</h3>
 
-                                        {selectedQuestionData.testCases.map((testCase, index) => (
-                                            <div key={index} className='space-y-1'>
-                                                <h3 className="text-sm text-greyPrimary dark:text-white font-medium">Example:&nbsp;{index + 1}</h3>
-                                                <p className="text-sm text-greyPrimary dark:text-white">Input:&nbsp;{testCase.input}</p>
-                                                <p className="text-sm text-greyPrimary dark:text-white">Output:&nbsp;{testCase.output}</p>
-                                                <p className="text-sm text-greyPrimary dark:text-white">Explanation:&nbsp;{testCase.explanation}</p>
-                                            </div>
-                                        ))}
-                                    </div> */}
+                                            {selectedQuestionData.testCases.map((testCase, index) => (
+                                                <div key={index} className='space-y-1'>
+                                                    <h3 className="text-sm text-greyPrimary dark:text-white font-medium">Example:&nbsp;{index + 1}</h3>
+                                                    <p className="text-sm text-greyPrimary dark:text-white">Input:&nbsp;{testCase.input}</p>
+                                                    <p className="text-sm text-greyPrimary dark:text-white">Output:&nbsp;{testCase.output}</p>
+                                                    <p className="text-sm text-greyPrimary dark:text-white">Explanation:&nbsp;{testCase.explanation}</p>
+                                                </div>
+                                            ))}
+                                        </div> */}
 
                                     {/* Repeated assessment text from the image */}
                                     {/* <div className="space-y-2 pt-1">
-                                        <p className="text-sm text-greyPrimary dark:text-white">
-                                            Your solution will be assessed based on functionality, code quality, and performance.
-                                        </p>
-                                    </div> */}
+                                            <p className="text-sm text-greyPrimary dark:text-white">
+                                                Your solution will be assessed based on functionality, code quality, and performance.
+                                            </p>
+                                        </div> */}
                                 </div>
                             </div>
                             {/* flag and Navigation buttons */}
@@ -270,7 +360,7 @@ const CodeSidebar = ({
                                 <div
                                     className="flex items-center text-sm text-gray-600 font-medium mb-6"
                                 >
-                                    <div className='flex items-center gap-2' style={{ minWidth: 180 }}>
+                                    <div className='flex items-center gap-3' style={{ minWidth: 180 }}>
                                         <span className='text-sm text-greyPrimary dark:text-white font-medium text-nowrap'>S. No.</span>
                                         <span className='text-sm text-greyPrimary dark:text-white font-medium'>Status</span>
                                     </div>
@@ -283,12 +373,12 @@ const CodeSidebar = ({
 
                                 {/* Submissions list */}
                                 <div className="flex flex-col gap-2 items-center">
-                                    {submissionsData.map((submission) => (
+                                    {submissions.map((submission) => (
                                         <div
                                             key={submission.id}
                                             className={cn("flex items-center rounded-lg w-full p-[6px]", getStatusColor(submission.status))}
                                         >
-                                            <div className="flex items-center gap-2" style={{ minWidth: 180 }}>
+                                            <div className="flex items-center gap-3" style={{ minWidth: 180 }}>
                                                 <span className="w-10 font-bold text-[1.5rem] text-greyPrimary dark:text-white whitespace-nowrap">{String(submission.id).padStart(2, '0')}</span>
                                                 <span className={cn("w-28 text-sm font-bold whitespace-nowrap", {
                                                     'text-[#008B00] dark:text-[#1EA378]': submission.status === 'Accepted',

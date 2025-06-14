@@ -3,7 +3,7 @@ import { useMutation, useQuery } from '@tanstack/react-query';
 import { submitCodeToBackend, pollSubmissionStatus } from '@/api/monacoCodeApi';
 import { useEnums } from '@/context/EnumsContext';
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { fetchLanguageRuntimes, fetchLanguages } from '@/api/monacoCodeApi'
+import { fetchLanguages } from '@/api/monacoCodeApi'
 import { cn } from '@/lib/utils';
 import { motion } from 'framer-motion';
 import JsonIcon from "@/assets/jsonIcon.svg?react"
@@ -13,7 +13,7 @@ import CheckIcon from '@/assets/checkIcon.svg?react'
 import ChevronDown from "@/assets/chevron-down.svg?react"
 import ResetIcon from '@/assets/resetIcon.svg?react'
 import MaximizeIcon from '@/assets/maximizeIcon.svg?react'
-
+import { useCodingAssesment } from './CodingAssesmentContext';
 // Fixed code navbar code
 const CodeNavBar = ({
     language, onSelect, editorRef, setOutput,
@@ -32,6 +32,10 @@ const CodeNavBar = ({
     const { enums, enumsLoading } = useEnums()
 
     const [submissionId, setSubmissionId] = useState(null);
+    // New state to track the active action for loading spinner
+    const [currentAction, setCurrentAction] = useState(null); // 'run' or 'submit'
+
+    const { setSidebarActiveTab, setSubmissionRefreshTrigger } = useCodingAssesment();
 
     useEffect(() => {
         console.log('Rendering CodeNavBar', {
@@ -100,7 +104,10 @@ const CodeNavBar = ({
             setShouldPoll(true);
             console.log('Polling enabled! submissionId:', data.id);
         },
-        onError: () => setLoading && setLoading(false),
+        onError: () => {
+            setLoading && setLoading(false);
+            setCurrentAction(null); // Reset current action on error
+        },
     });
 
     // Polling for result
@@ -150,9 +157,10 @@ const CodeNavBar = ({
         console.log('useEffect - Status:', status, 'COMPLETED:', COMPLETED, 'ERROR:', ERROR);
 
         if (status === COMPLETED || status === ERROR) {
-            setShouldPoll(false); // Stop polling
+            setShouldPoll(false);
             console.log('Polling stopped in useEffect!');
-            setLoading && setLoading(false);
+            setLoading && setLoading(false); // This sets the parent loading to false
+            setCurrentAction(null); // Reset current action when polling completes
 
             // Map status/result to readable text
             const statusText = Object.keys(enums.enums.CQEvaluationStatus).find(
@@ -178,18 +186,23 @@ const CodeNavBar = ({
             console.log('Setting output:', [outputData]);
 
             setOutput && setOutput([outputData]);
+            // Trigger submission refresh after successful submission
+            setSubmissionRefreshTrigger(prev => prev + 1);
         }
-    }, [pollData, enums, setLoading, setOutput]);
+    }, [pollData, enums, setLoading, setOutput, setSubmissionRefreshTrigger]);
 
-    // Run code handler
-    const handleRunCode = async () => {
-        if (collapsed || enumsLoading) return;
-        setLoading && setLoading(true);
+
+    // Common function for code execution
+    const executeCode = async (isTest) => {
+        if (collapsed || enumsLoading) return false;
+
+        setLoading && setLoading(true); // Prop from parent
         setActiveTab && setActiveTab("results");
         const sourceCode = editorRef?.current?.getValue?.();
         if (!sourceCode) {
             setLoading && setLoading(false);
-            return;
+            setCurrentAction(null); // Reset action if no source code
+            return false;
         }
 
         // Reset polling state before new submission
@@ -207,7 +220,7 @@ const CodeNavBar = ({
         const payload = {
             code: injectedCode,
             language: languageId,
-            is_test: true,
+            is_test: isTest,
             custom_testcases: [
                 {
                     input: JSON.stringify(tc.input),
@@ -216,8 +229,20 @@ const CodeNavBar = ({
             ],
         };
         submitMutation.mutate({ questionId, payload });
+        return true;
+    }
+
+    // Run code handler
+    const handleRunCode = async () => {
+        setCurrentAction('run');
+        executeCode(false); // is_test = false for run
     };
 
+    // Submit code handler
+    const handleSubmit = async () => {
+        setSidebarActiveTab('submissions');
+        executeCode(true); // is_test = true for submit
+    };
 
     if (collapsed) {
         return (
@@ -306,17 +331,25 @@ const CodeNavBar = ({
                     <button
                         onClick={handleRunCode}
                         className='flex gap-[6px] items-center py-2 px-3 rounded-xl hover:bg-white transition-all duration-300 ease-in group'
-                        disabled={loading}
+                        disabled={submitMutation.isPending && currentAction !== 'run'}
                     >
-                        {loading ? (
+                        {(submitMutation.isPending && currentAction === 'run') ? (
                             <span className="animate-spin mr-2 w-4 h-4 border-2 border-t-transparent border-purple-600 rounded-full"></span>
                         ) : (
                             <PlayIcon className="play-icon dark:text-black" />
                         )}
                         <span className='text-greyPrimary font-normal text-sm code-navbar-btn-label'>Run</span>
                     </button>
-                    <button className='flex gap-[6px] items-center py-2 px-3 rounded-xl hover:bg-white transition-all duration-300 ease-in group'>
-                        <CheckIcon className='check-icon text-[#1EA378]' />
+                    <button
+                        onClick={handleSubmit}
+                        className='flex gap-[6px] items-center py-2 px-3 rounded-xl hover:bg-white transition-all duration-300 ease-in group'
+                        disabled={submitMutation.isPending && currentAction !== 'submit'}
+                    >
+                        {(submitMutation.isPending && currentAction === 'submit') ? (
+                            <span className="animate-spin mr-2 w-4 h-4 border-2 border-t-transparent border-purple-600 rounded-full"></span>
+                        ) : (
+                            <CheckIcon className='check-icon text-[#1EA378]' />
+                        )}
                         <span className='text-greyPrimary font-normal text-sm code-navbar-btn-label'>Submit</span>
                     </button>
                     <button
