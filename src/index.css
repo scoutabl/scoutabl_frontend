@@ -161,6 +161,10 @@
     @apply rounded-full bg-greyAccent border-[1px] border-transparent border-solid bg-clip-padding;
   }
 
+  ::-webkit-scrollbar-corner {
+    @apply dark:bg-blackPrimary
+  }
+
 }
 
 @layer utilities {

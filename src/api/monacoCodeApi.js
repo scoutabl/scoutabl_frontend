@@ -20,7 +20,6 @@ export const executeCode = async (language, sourceCode, version) => {
 
 export const fetchLanguages = async () => {
     const response = await axios.get(`${APIURL}/languages`)
-    console.log('languages fetched', response.data);
     return response.data;
 }
 
@@ -40,7 +39,6 @@ export const submitCodeToBackend = async ({ questionId, payload }) => {
 
 // GET: Poll for submission status/result
 export const pollSubmissionStatus = async ({ questionId, submissionId }) => {
-    console.log('Polling API called for', questionId, submissionId);
     const res = await fetch(`${APIURL}/candidate/questions/${questionId}/cq-submissions/${submissionId}/`, {
         headers: {
             'X-Candidate-Authorization': `Bearer ${CANDIDATETOKEN}`
@@ -48,7 +46,6 @@ export const pollSubmissionStatus = async ({ questionId, submissionId }) => {
     });
     if (!res.ok) throw new Error("Failed to poll submission");
     const data = await res.json();
-    console.log('Polling API response:', data);
     return data;
 };
 
@@ -72,6 +69,5 @@ export const fetchSubmissions = async (questionId) => {
     });
     if (!res.ok) throw new Error("Failed fetch submissions");
     const data = await res.json();
-    console.log('submission response:', data);
     return data;
 }

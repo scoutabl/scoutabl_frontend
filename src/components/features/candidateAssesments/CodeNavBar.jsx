@@ -16,7 +16,7 @@ import MaximizeIcon from '@/assets/maximizeIcon.svg?react'
 import { useCodingAssesment } from './CodingAssesmentContext';
 // Fixed code navbar code
 const CodeNavBar = ({
-    language, onSelect, editorRef, setOutput,
+    currentTestData, language, onSelect, editorRef, setOutput,
     testCases = [], userTestCases = [], inputVars = [],
     selectedCase, setActiveTab, setLoading, loading,
     collapsed,
@@ -38,24 +38,20 @@ const CodeNavBar = ({
     const { setSidebarActiveTab, setSubmissionRefreshTrigger } = useCodingAssesment();
 
     useEffect(() => {
-        console.log('Rendering CodeNavBar', {
-            shouldPoll,
-            submissionId,
-            CQEvaluationStatus: enums?.enums?.CQEvaluationStatus
-        });
-    }, [shouldPoll, submissionId, enums]);
-
-    useEffect(() => {
         if (collapsed) return;
         setLoading(true)
         setError(null)
         const getRuntimeLang = async () => {
             try {
                 const data = await fetchLanguages();
-                const languageNamesArr = data.results.map(lang => ({
-                    id: lang.id,
-                    name: lang.code
-                }));
+                // Filter languages to only include those in currentTestData.languages
+                const allowedLanguageIds = currentTestData?.languages?.map(lang => lang.id) || [];
+                const languageNamesArr = data.results
+                    .filter(lang => allowedLanguageIds.includes(lang.id))
+                    .map(lang => ({
+                        id: lang.id,
+                        name: lang.code
+                    }));
                 setLanguages(languageNamesArr)
             }
             catch (err) {
@@ -65,31 +61,7 @@ const CodeNavBar = ({
             }
         }
         getRuntimeLang();
-    }, [collapsed])
-
-    // useEffect(() => {
-    //     if (collapsed) return;
-    //     const getRuntimes = async () => {
-    //         setLoading && setLoading(true)
-    //         setError(null)
-    //         try {
-    //             const data = await fetchLanguageRuntimes();
-    //             // Filter to allowed languages only
-    //             const filtered = ALLOWED_LANGUAGES.map(({ key, display }) => {
-    //                 // Find the best match in the fetched data
-    //                 const match = data.find(l => l.language === key || l.aliases?.includes(key));
-    //                 return match ? { ...match, display } : null;
-    //             }).filter(Boolean);
-    //             setLanguage(filtered)
-    //             console.log('filtered lag', filtered)
-    //         } catch (err) {
-    //             setError('Failed to load languages')
-    //         } finally {
-    //             setLoading && setLoading(false)
-    //         }
-    //     }
-    //     getRuntimes();
-    // }, [collapsed])
+    }, [collapsed, currentTestData?.languages])
 
     const handleSelect = (lang) => {
         onSelect && onSelect(lang);
@@ -102,7 +74,6 @@ const CodeNavBar = ({
         onSuccess: (data) => {
             setSubmissionId(data.id);
             setShouldPoll(true);
-            console.log('Polling enabled! submissionId:', data.id);
         },
         onError: () => {
             setLoading && setLoading(false);
@@ -117,13 +88,6 @@ const CodeNavBar = ({
         enabled: shouldPoll && !!enums?.enums?.CQEvaluationStatus && !!submissionId,
         refetchInterval: (query) => {
             const data = query?.state?.data; // Use query.state.data instead of query.data
-            console.log('refetchInterval called!', {
-                data,
-                shouldPoll,
-                submissionId,
-                status: data?.evaluation_status
-            });
-
             // If no data yet, continue polling
             if (!data || !enums?.enums?.CQEvaluationStatus) {
                 return 2000;
@@ -132,11 +96,8 @@ const CodeNavBar = ({
             const status = data.evaluation_status;
             const { COMPLETED, ERROR } = enums.enums.CQEvaluationStatus;
 
-            console.log('Checking status:', status, 'COMPLETED:', COMPLETED, 'ERROR:', ERROR);
-
             // Stop polling if completed or error
             if (status === COMPLETED || status === ERROR) {
-                console.log('Stopping polling - status is final');
                 return false; // This stops the polling
             }
 
@@ -154,11 +115,8 @@ const CodeNavBar = ({
         const status = pollData.evaluation_status;
         const { COMPLETED, ERROR } = enums.enums.CQEvaluationStatus;
 
-        console.log('useEffect - Status:', status, 'COMPLETED:', COMPLETED, 'ERROR:', ERROR);
-
         if (status === COMPLETED || status === ERROR) {
             setShouldPoll(false);
-            console.log('Polling stopped in useEffect!');
             setLoading && setLoading(false); // This sets the parent loading to false
             setCurrentAction(null); // Reset current action when polling completes
 
@@ -172,8 +130,6 @@ const CodeNavBar = ({
                     (key) => enums.enums.CQEvaluationResult[key] === pollData.evaluation_result
                 )
                 : null;
-
-            console.log('resultText:', resultText);
             const evaluation = pollData.evaluations?.[0] || {};
 
             const outputData = {
@@ -182,9 +138,6 @@ const CodeNavBar = ({
                 ...pollData,
                 ...evaluation,
             };
-
-            console.log('Setting output:', [outputData]);
-
             setOutput && setOutput([outputData]);
             // Trigger submission refresh after successful submission
             setSubmissionRefreshTrigger(prev => prev + 1);
@@ -215,7 +168,15 @@ const CodeNavBar = ({
         const allCases = [...(testCases || []), ...(userTestCases || [])];
         const tc = allCases[selectedCase] || allCases[0];
 
-        const languageId = 6; // JS (adjust as needed)
+        // Find the selected language's ID from the allowed languages
+        const selectedLang = currentTestData?.languages?.find(lang => lang.code === language);
+        const languageId = selectedLang?.id;
+
+        if (!languageId) {
+            setLoading && setLoading(false);
+            setCurrentAction(null);
+            return false;
+        }
 
         const payload = {
             code: injectedCode,
@@ -235,14 +196,18 @@ const CodeNavBar = ({
     // Run code handler
     const handleRunCode = async () => {
         setCurrentAction('run');
-        executeCode(false); // is_test = false for run
+        executeCode(true); // is_test = true for run
     };
 
     // Submit code handler
     const handleSubmit = async () => {
         setSidebarActiveTab('submissions');
-        executeCode(true); // is_test = true for submit
+        executeCode(false); // is_test = false for submit
     };
+
+    useEffect(() => {
+        console.log('Fetched lang', languages)
+    }, [languages])
 
     if (collapsed) {
         return (

@@ -8,7 +8,7 @@ export function CodingAssesmentProvider({ children }) {
     const [sidebarActiveTab, setSidebarActiveTab] = useState('description'); // For sidebar (Description/Submissions)
     const [currentQuestion, setCurrentQuestion] = useState(1);
     const totalQuestions = 15;
-    const [sidebarWidth, setSidebarWidth] = useState(540); // default width
+    const [sidebarWidth, setSidebarWidth] = useState(543); // default width
     const [isCollapsed, setIsCollapsed] = useState(false);
     const [isFullscreen, setIsFullscreen] = useState(false);
     const [isOutputFullscreen, setIsOutputFullscreen] = useState(false)

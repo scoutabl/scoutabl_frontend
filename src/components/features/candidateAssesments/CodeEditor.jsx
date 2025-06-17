@@ -19,7 +19,7 @@ const CodeEditor = ({ testCases, inputVars, collapsed, isFullscreen, setIsFullsc
     const containerRef = useRef(null);
     const editorWrapperRef = useRef(null);
     const [value, setValue] = useState('')
-    const [language, setLanguage] = useState('python')
+    const [language, setLanguage] = useState(currentTestData?.languages?.[0]?.code || 'python')
     const editorRef = useRef()
     const [output, setOutput] = useState([])
     const [userTestCases, setUserTestCases] = useState([])
@@ -40,11 +40,6 @@ const CodeEditor = ({ testCases, inputVars, collapsed, isFullscreen, setIsFullsc
     const [lastOutputHeight, setLastOutputHeight] = useState(null);
     const [isEditorLoading, setIsEditorLoading] = useState(true);
 
-    useEffect(() => {
-        console.log('codeditor', currentTestData.languages[0].id)
-        console.log('codeditor', currentTestData)
-    }, [currentTestData])
-
     // Set initial 50/50 split and layout editor
     useLayoutEffect(() => {
         if (containerRef.current && editorHeight === 0) {
@@ -57,6 +52,10 @@ const CodeEditor = ({ testCases, inputVars, collapsed, isFullscreen, setIsFullsc
             setLastEditorHeight(half);
         }
     }, [editorHeight]);
+
+    useEffect(() => {
+        console.log(currentTestData.languages)
+    }, [currentTestData])
 
     // Use ResizeObserver to call editor.layout() when the wrapper resizes
     useEffect(() => {
@@ -302,6 +301,7 @@ const CodeEditor = ({ testCases, inputVars, collapsed, isFullscreen, setIsFullsc
                     }}
                     onReset={handleReset}
                     questionId={currentTestData?.id}
+                    currentTestData={currentTestData}
                 />
                 <div className="flex-1 min-h-0  overflow-auto">
                     <Editor
@@ -358,6 +358,7 @@ const CodeEditor = ({ testCases, inputVars, collapsed, isFullscreen, setIsFullsc
                         isEditorCollapsed={isEditorCollapsed}
                         onReset={handleReset}
                         questionId={currentTestData?.id}
+                        currentTestData={currentTestData}
                     />
                 </div>
                 {/* Vertical Resizer */}
@@ -425,6 +426,7 @@ const CodeEditor = ({ testCases, inputVars, collapsed, isFullscreen, setIsFullsc
                 collapsed={collapsed}
                 onReset={handleReset}
                 questionId={currentTestData?.id}
+                currentTestData={currentTestData}
             />
             {/* Collapsible Editor + Status Bar */}
             <div

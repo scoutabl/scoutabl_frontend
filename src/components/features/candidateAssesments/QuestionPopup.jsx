@@ -54,7 +54,7 @@ export default function QuestionPopup({
                 sideOffset={5}
                 align="start"
             >
-                <div className="bg-blue-50 p-3 rounded-t-lg">
+                <div className="bg-blue-50 dark:bg-amber-800 p-3 rounded-t-lg">
                     <div className="flex items-center justify-between">
                         {mode === 'coding' ? (
                             <h3 className="text-sm font-bold text-greyPrimary">Coding Questions</h3>
@@ -71,7 +71,7 @@ export default function QuestionPopup({
                         <div
                             key={mode === 'coding' ? question.id : question.questionId}
                             className={cn(
-                                "flex items-start gap-3 cursor-pointer hover:bg-[#E8DEFD] hover:border-b group",
+                                "flex items-start gap-3 cursor-pointer dark:hover:bg-amber-700 hover:bg-[#E8DEFD] hover:border-b group rounded-b-lg",
                                 index === currentQuestionIndex && "bg-[#E8DEFD]"
                             )}
                             onClick={() => {

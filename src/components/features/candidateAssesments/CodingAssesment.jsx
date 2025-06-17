@@ -134,7 +134,6 @@ function CodingAssesmentInner() {
     const CANDIDATETOKEN = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6OCwiY3JlYXRlZF9hdCI6IjIwMjUtMDYtMTMgMTY6Mjk6NDAuMTQ1MTkwKzAwOjAwIn0.eFdPGl7trmwAc9UbKbUntHPT-FwYcEn2fTN8jD2bXnM'
     // Fetch function using axios
     const fetchQuestionsWithTestCases = async () => {
-        console.log('Fetching questions...');
         try {
             const response = await axios.get('https://dev.scoutabl.com/api/candidate-sessions/current-test/questions/', {
                 headers: {
@@ -142,7 +141,6 @@ function CodingAssesmentInner() {
                     'X-Candidate-Authorization': `Bearer ${CANDIDATETOKEN}`
                 }
             });
-            console.log('API Response:', response.data);
             const data = response.data;
             const question = data.results[0];
             // Fetch test case files for public_testcases
@@ -150,7 +148,6 @@ function CodingAssesmentInner() {
                 (question.public_testcases || []).map(async (tc) => {
                     const input = tc.input_file ? await axios.get(tc.input_file).then(res => res.data) : '';
                     const output = tc.output_file ? await axios.get(tc.output_file).then(res => res.data) : '';
-                    console.log('Test case fetched:', { input, output });
                     return { ...tc, input, output };
                 })
             );
@@ -161,7 +158,6 @@ function CodingAssesmentInner() {
                 inputVars: ['nums'], // adjust as needed
             };
         } catch (error) {
-            console.error('Error fetching questions:', error);
             throw error;
         }
     };
@@ -199,34 +195,27 @@ function CodingAssesmentInner() {
         }
     }, [isLoading]);
 
-    useEffect(() => {
-        console.log('Loading state:', isLoading);
-        console.log('Min loading state:', isMinLoading);
-        console.log('Error state:', error);
-        console.log('Current test data:', currentTestData);
-    }, [isLoading, isMinLoading, error, currentTestData]);
-
     //loading component
     const LoadingComponent = () => {
         return (
             <div className='flex gap-3 py-6 min-w-0 h-[calc(100vh-116px)]'>
-                <div className='relative rounded-5xl shadow-md flex flex-col h-full max-h-[calc(100vh-116px)] min-w-0 overflow-x-auto p-6 w-[540px] bg-white'>
-                    <Skeleton className="h-4 w-[250px] mb-4 bg-gray-200" />
-                    <Skeleton className="h-4 w-[200px] mb-4 bg-gray-200" />
-                    <Skeleton className="h-4 w-[300px] mb-4 bg-gray-200" />
-                    <Skeleton className="h-4 w-[280px] mb-4 bg-gray-200" />
-                    <Skeleton className="h-4 w-[320px] bg-gray-200" />
+                <div className='relative rounded-5xl shadow-md flex flex-col h-full max-h-[calc(100vh-116px)] min-w-0 overflow-x-auto p-6 w-[540px] bg-white dark:bg-blackPrimary'>
+                    <Skeleton className="h-4 w-[250px] mb-4 bg-gray-300 dark:bg-gray-500" />
+                    <Skeleton className="h-4 w-[200px] mb-4 bg-gray-300 dark:bg-gray-500" />
+                    <Skeleton className="h-4 w-[300px] mb-4 bg-gray-300 dark:bg-gray-500" />
+                    <Skeleton className="h-4 w-[280px] mb-4 bg-gray-300 dark:bg-gray-500" />
+                    <Skeleton className="h-4 w-[320px] bg-gray-300 dark:bg-gray-500" />
                 </div>
                 <div className='flex flex-col gap-3 flex-1 h-full max-h-[calc(100vh-116px)] overflow-x-auto'>
-                    <div className='p-6 h-[70%] flex flex-col gap-2 bg-white  rounded-5xl'>
-                        <Skeleton className="h-4 w-[250px] mb-4 bg-gray-200" />
-                        <Skeleton className="h-4 w-[200px] mb-4 bg-gray-200" />
-                        <Skeleton className="h-4 w-[300px] mb-4 bg-gray-200" />
-                        <Skeleton className="h-4 w-[280px] bg-gray-200" />
+                    <div className='p-6 h-[70%] flex flex-col gap-2 bg-white  rounded-5xl dark:bg-blackPrimary'>
+                        <Skeleton className="h-4 w-[250px] mb-4 bg-gray-300 dark:bg-gray-500" />
+                        <Skeleton className="h-4 w-[200px] mb-4 bg-gray-300 dark:bg-gray-500" />
+                        <Skeleton className="h-4 w-[300px] mb-4 bg-gray-300 dark:bg-gray-500" />
+                        <Skeleton className="h-4 w-[280px] bg-gray-300 dark:bg-gray-500" />
                     </div>
-                    <div className='p-6 h-[30%] flex flex-col gap-2 mt-4 bg-white  rounded-5xl'>
-                        <Skeleton className="h-4 w-[250px] mb-4 bg-gray-200" />
-                        <Skeleton className="h-4 w-[200px] bg-gray-200" />
+                    <div className='p-6 h-[30%] flex flex-col gap-2 mt-4 bg-white  rounded-5xl dark:bg-blackPrimary'>
+                        <Skeleton className="h-4 w-[250px] mb-4 bg-gray-300 dark:bg-gray-500" />
+                        <Skeleton className="h-4 w-[200px] bg-gray-300 dark:bg-gray-500" />
                     </div>
                 </div>
             </div>

@@ -83,7 +83,6 @@ const CodeSidebar = ({
     };
 
     const getSubmissions = async (questionId) => {
-        console.log("Checking enums for getSubmissions:", enums);
         if (!enums || !enums.enums.CQEvaluationResult || !languagesMap || Object.keys(languagesMap).length === 0) return;
 
         try {
@@ -132,12 +131,7 @@ const CodeSidebar = ({
     };
 
     useEffect(() => {
-        console.log(questionId)
-    }, [questionId])
-
-    useEffect(() => {
         if (sidebarActiveTab === 'submissions' && questionId && enums && languagesMap && Object.keys(languagesMap).length > 0) {
-            console.log("Fetching submissions due to sidebarActiveTab or submissionRefreshTrigger change");
             getSubmissions(questionId);
         }
     }, [sidebarActiveTab, questionId, submissionRefreshTrigger, enums, languagesMap]); // Add languagesMap to dependencies
@@ -270,7 +264,7 @@ const CodeSidebar = ({
                                 </div>
                                 <div className="flex-1 flex flex-col gap-2 min-h-0 overflow-y-auto">
                                     <div className="space-y-4">
-                                        <h2>{currentTestData.title}</h2>
+                                        <h2 className='text-xl font-bold text-greyPrimary dark:text-white'>{currentTestData.title}</h2>
                                         {/* <span>{currentTestData.results[0].content}</span> */}
                                         {/* <h3 className="font-bold text-sm text-greyPrimary dark:text-white">Instructions:</h3>
                                             <ol className="list-decimal list-inside space-y-2 text-sm text-greyPrimary dark:text-white">
