@@ -21,7 +21,8 @@ const CodeNavBar = ({
     selectedCase, setActiveTab, setLoading, loading,
     collapsed,
     onCollapse, onFullscreen, onExitFullscreen,
-    isEditorCollapsed, onReset, questionId
+    isEditorCollapsed, onReset, questionId,
+    saveCodeToLocalStorage
 }) => {
     const [isOpen, setIsOpen] = useState(false)
     const [languages, setLanguages] = useState([])
@@ -200,11 +201,14 @@ const CodeNavBar = ({
     // Run code handler
     const handleRunCode = async () => {
         setCurrentAction('run');
+        saveCodeToLocalStorage && saveCodeToLocalStorage();
         executeCode(true); // is_test = true for run
     };
 
     // Submit code handler
     const handleSubmit = async () => {
+        setCurrentAction('submit');
+        saveCodeToLocalStorage && saveCodeToLocalStorage();
         executeCode(false); // is_test = false for submit
     };
 
@@ -294,9 +298,9 @@ const CodeNavBar = ({
                 <div className='flex items-center gap-3'>
                     <button
                         onClick={handleRunCode}
-                        className='flex gap-[6px] items-center py-2 px-3 rounded-xl hover:bg-white transition-all duration-300 ease-in group'
-                        // disabled={submitMutation.isPending && currentAction !== 'run'}
-                        disabled={loading && currentAction !== 'run'}
+                        className={`flex gap-[6px] items-center py-2 px-3 rounded-xl hover:bg-white transition-all duration-300 ease-in group
+                            ${(loading && currentAction === 'submit') ? 'cursor-not-allowed opacity-60' : ''}`}
+                        disabled={loading && currentAction === 'submit'}
                     >
                         {(loading && currentAction === 'run') ? (
                             <span className="animate-spin mr-2 w-4 h-4 border-2 border-t-transparent border-purple-600 rounded-full"></span>
@@ -307,8 +311,9 @@ const CodeNavBar = ({
                     </button>
                     <button
                         onClick={handleSubmit}
-                        className='flex gap-[6px] items-center py-2 px-3 rounded-xl hover:bg-white transition-all duration-300 ease-in group'
-                        disabled={loading && currentAction !== 'submit'}
+                        className={`flex gap-[6px] items-center py-2 px-3 rounded-xl hover:bg-white transition-all duration-300 ease-in group
+                            ${(loading && currentAction === 'run') ? 'cursor-not-allowed opacity-60' : ''}`}
+                        disabled={loading && currentAction === 'run'}
                     >
                         {(loading && currentAction === 'submit') ? (
                             <span className="animate-spin mr-2 w-4 h-4 border-2 border-t-transparent border-purple-600 rounded-full"></span>
@@ -319,7 +324,9 @@ const CodeNavBar = ({
                     </button>
                     <button
                         onClick={onReset}
-                        className='flex gap-[6px] items-center py-2 px-3 rounded-xl hover:bg-white transition-all duration-300 ease-in group'
+                        className={`flex gap-[6px] items-center py-2 px-3 rounded-xl hover:bg-white transition-all duration-300 ease-in group
+                            ${(loading && (currentAction === 'run' || currentAction === 'submit')) ? 'cursor-not-allowed opacity-60' : ''}`}
+                        disabled={loading && (currentAction === 'run' || currentAction === 'submit')}
                     >
                         {/* <RotateCcw color='#EB5757' size={20} /> */}
                         <ResetIcon />

@@ -57,6 +57,7 @@ const CodeEditor = ({ testCases, inputVars, collapsed, isFullscreen, setIsFullsc
     // New state to remember the last output height before collapsing
     const [lastOutputHeight, setLastOutputHeight] = useState(null);
     const [isEditorLoading, setIsEditorLoading] = useState(true);
+    const [saveStatus, setSaveStatus] = useState('Saved'); // 'Saving...' | 'Saved'
 
     // Set initial 50/50 split and layout editor
     useLayoutEffect(() => {
@@ -98,9 +99,34 @@ const CodeEditor = ({ testCases, inputVars, collapsed, isFullscreen, setIsFullsc
         // We don't need to do anything when entering fullscreen regarding loading state
     }, [isFullscreen]); // Depend on isFullscreen state
 
+    // Load code from localStorage on mount or when question/language changes
+    useEffect(() => {
+        const key = `code_${currentTestData?.id}_${language}`;
+        const savedCode = localStorage.getItem(key);
+        if (savedCode && editorRef.current && editorRef.current.setValue) {
+            editorRef.current.setValue(savedCode);
+            setValue(savedCode);
+        }
+    }, [currentTestData?.id, language, editorRef]);
+
+    // Save code to localStorage and update status
+    const saveCodeToLocalStorage = () => {
+        setSaveStatus('Saving...');
+        const code = editorRef?.current?.getValue?.() || '';
+        const key = `code_${currentTestData?.id}_${language}`;
+        localStorage.setItem(key, code);
+        setTimeout(() => setSaveStatus('Saved'), 500); // Simulate save delay
+    };
 
     const onMount = (editor) => {
         editorRef.current = editor;
+        // Load code from localStorage here
+        const key = `code_${currentTestData?.id}_${language}`;
+        const savedCode = localStorage.getItem(key);
+        if (savedCode) {
+            editor.setValue(savedCode);
+            setValue(savedCode);
+        }
         editor.focus();
         setCursorPosition({
             line: editor.getPosition()?.lineNumber || 1,
@@ -267,6 +293,18 @@ const CodeEditor = ({ testCases, inputVars, collapsed, isFullscreen, setIsFullsc
         setIsEditorLoading(false);
     };
 
+    // Patch CodeNavBar handlers to save code
+    const handleRunCode = async () => {
+        setCurrentAction && setCurrentAction('run');
+        saveCodeToLocalStorage();
+        executeCode && executeCode(true);
+    };
+    const handleSubmit = async () => {
+        setCurrentAction && setCurrentAction('submit');
+        saveCodeToLocalStorage();
+        executeCode && executeCode(false);
+    };
+
     // Output Full Screen
     if (isOutputFullscreen) {
         return (
@@ -316,6 +354,7 @@ const CodeEditor = ({ testCases, inputVars, collapsed, isFullscreen, setIsFullsc
                     onReset={handleReset}
                     questionId={currentTestData?.id}
                     currentTestData={currentTestData}
+                    saveCodeToLocalStorage={saveCodeToLocalStorage}
                 />
                 <div className="flex-1 min-h-0  overflow-auto">
                     <Editor
@@ -335,7 +374,7 @@ const CodeEditor = ({ testCases, inputVars, collapsed, isFullscreen, setIsFullsc
                 <div className="pb-6 rounded-bl-2xl rounded-br-2xl flex items-center justify-between px-4 py-1 bg-white dark:bg-[#24292E] text-xs text-gray-500">
                     <div className='flex items-center gap-2'>
                         <img src={codeUpload} alt="save" className="w-6 h-6" />
-                        <span className='text-greyTertiary text-sm'>Saved</span>
+                        <span className='text-greyTertiary text-sm'>{saveStatus}</span>
                     </div>
                     <span>Ln {cursorPosition.line}, Col {cursorPosition.column}</span>
                 </div>
@@ -373,6 +412,7 @@ const CodeEditor = ({ testCases, inputVars, collapsed, isFullscreen, setIsFullsc
                         onReset={handleReset}
                         questionId={currentTestData?.id}
                         currentTestData={currentTestData}
+                        saveCodeToLocalStorage={saveCodeToLocalStorage}
                     />
                 </div>
                 {/* Vertical Resizer */}
@@ -441,6 +481,7 @@ const CodeEditor = ({ testCases, inputVars, collapsed, isFullscreen, setIsFullsc
                 onReset={handleReset}
                 questionId={currentTestData?.id}
                 currentTestData={currentTestData}
+                saveCodeToLocalStorage={saveCodeToLocalStorage}
             />
             {/* Collapsible Editor + Status Bar */}
             <div
@@ -501,7 +542,7 @@ const CodeEditor = ({ testCases, inputVars, collapsed, isFullscreen, setIsFullsc
                     <div className="pb-6 rounded-bl-2xl rounded-br-2xl flex items-center justify-between px-4 py-1 bg-white dark:bg-blackPrimary text-xs text-gray-500">
                         <div className='flex items-center gap-2'>
                             <img src={codeUpload} alt="save" className="w-6 h-6" />
-                            <span className='text-greyTertiary text-sm'>Saved</span>
+                            <span className='text-greyTertiary text-sm'>{saveStatus}</span>
                         </div>
                         <span>Ln {cursorPosition.line}, Col {cursorPosition.column}</span>
                     </div>

@@ -63,10 +63,6 @@ const CodeSidebar = ({
         getLanguages();
     }, []); // Empty dependency array means this runs once on mount
 
-    useEffect(() => {
-        console.log(currentTestData)
-    })
-
     // Handle question selection from popup
     const handleQuestionSelect = (index) => {
         setCurrentQuestionIndex(index);

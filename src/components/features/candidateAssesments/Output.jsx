@@ -124,9 +124,6 @@ const Output = ({
 
   useEffect(() => {
     console.log("output", output[0]?.result?.eval[0]?.expected, output[0]?.result?.eval[0]?.value)
-    // console.log("output", output[0]?.result?.[0]?.stdout_file,
-    //   "expected", output[0]?.evaluations?.[0]?.stdout_file,
-    //   "main output", output[0]
 
   }, [output[0]?.result.eval]);
 
