@@ -119,6 +119,10 @@ const CodeNavBar = ({
             setShouldPoll(false);
             setLoading && setLoading(false); // This sets the parent loading to false
             setCurrentAction(null); // Reset current action when polling completes
+            if (currentAction === 'submit') {
+                setSidebarActiveTab('submissions');
+            }
+            setCurrentAction(null); // Reset current action when polling completes
 
             // Map status/result to readable text
             const statusText = Object.keys(enums.enums.CQEvaluationStatus).find(
@@ -142,7 +146,7 @@ const CodeNavBar = ({
             // Trigger submission refresh after successful submission
             setSubmissionRefreshTrigger(prev => prev + 1);
         }
-    }, [pollData, enums, setLoading, setOutput, setSubmissionRefreshTrigger]);
+    }, [pollData, enums, setLoading, setOutput, setSubmissionRefreshTrigger, setSidebarActiveTab]);
 
 
     // Common function for code execution
@@ -201,13 +205,8 @@ const CodeNavBar = ({
 
     // Submit code handler
     const handleSubmit = async () => {
-        setSidebarActiveTab('submissions');
         executeCode(false); // is_test = false for submit
     };
-
-    useEffect(() => {
-        console.log('Fetched lang', languages)
-    }, [languages])
 
     if (collapsed) {
         return (
@@ -296,9 +295,10 @@ const CodeNavBar = ({
                     <button
                         onClick={handleRunCode}
                         className='flex gap-[6px] items-center py-2 px-3 rounded-xl hover:bg-white transition-all duration-300 ease-in group'
-                        disabled={submitMutation.isPending && currentAction !== 'run'}
+                        // disabled={submitMutation.isPending && currentAction !== 'run'}
+                        disabled={loading && currentAction !== 'run'}
                     >
-                        {(submitMutation.isPending && currentAction === 'run') ? (
+                        {(loading && currentAction === 'run') ? (
                             <span className="animate-spin mr-2 w-4 h-4 border-2 border-t-transparent border-purple-600 rounded-full"></span>
                         ) : (
                             <PlayIcon className="play-icon dark:text-black" />
@@ -308,9 +308,9 @@ const CodeNavBar = ({
                     <button
                         onClick={handleSubmit}
                         className='flex gap-[6px] items-center py-2 px-3 rounded-xl hover:bg-white transition-all duration-300 ease-in group'
-                        disabled={submitMutation.isPending && currentAction !== 'submit'}
+                        disabled={loading && currentAction !== 'submit'}
                     >
-                        {(submitMutation.isPending && currentAction === 'submit') ? (
+                        {(loading && currentAction === 'submit') ? (
                             <span className="animate-spin mr-2 w-4 h-4 border-2 border-t-transparent border-purple-600 rounded-full"></span>
                         ) : (
                             <CheckIcon className='check-icon text-[#1EA378]' />

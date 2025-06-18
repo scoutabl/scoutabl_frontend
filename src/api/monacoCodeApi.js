@@ -1,7 +1,7 @@
 import axios from "axios";
 
 // const CANDIDATETOKEN = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6NywiY3JlYXRlZF9hdCI6IjIwMjUtMDYtMDkgMTM6MjM6MDEuNTMwODgyKzAwOjAwIn0.9q2-XjZO-kGuhiEieEObuKmlz_bDs_2ZdebHeEgTD7I'
-const CANDIDATETOKEN = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6OCwiY3JlYXRlZF9hdCI6IjIwMjUtMDYtMTMgMTY6Mjk6NDAuMTQ1MTkwKzAwOjAwIn0.eFdPGl7trmwAc9UbKbUntHPT-FwYcEn2fTN8jD2bXnM'
+const CANDIDATETOKEN = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6OSwiY3JlYXRlZF9hdCI6IjIwMjUtMDYtMTggMTI6MzM6MjUuNzM5MzUwKzAwOjAwIn0.zwZmeUQwcBUscQ0PqaxoXxreCPBUJD8kXsD-TqldhaI'
 
 const APIURL = 'https://dev.scoutabl.com/api'
 
@@ -62,7 +62,7 @@ export const fetchEnums = async () => {
 
 // Get Submission list
 export const fetchSubmissions = async (questionId) => {
-    const res = await fetch(`${APIURL}/candidate/questions/${questionId}/cq-submissions/?is_test=true&ordering=-created_at&page_size=100`, {
+    const res = await fetch(`${APIURL}/candidate/questions/${questionId}/cq-submissions/?is_test=false&ordering=-created_at&page_size=100`, {
         headers: {
             'X-Candidate-Authorization': `Bearer ${CANDIDATETOKEN}`
         }

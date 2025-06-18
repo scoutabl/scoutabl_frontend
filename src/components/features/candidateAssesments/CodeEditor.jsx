@@ -15,11 +15,29 @@ const MIN_OUTPUT_HEIGHT = 60;
 const MIN_EDITOR_HEIGHT = 100;
 const RESIZER_HEIGHT = 4;
 
+// Monaco language mapping
+const monacoLanguageMap = {
+    python3: 'python',
+    python: 'python',
+    nodejs: 'javascript',
+    js: 'javascript',
+    javascript: 'javascript',
+    cpp: 'cpp',
+    java: 'java',
+    csharp: 'csharp',
+    ruby: 'ruby',
+    go: 'go',
+    php: 'php',
+    swift: 'swift',
+    kotlin: 'kotlin',
+    // add more as needed
+};
+
 const CodeEditor = ({ testCases, inputVars, collapsed, isFullscreen, setIsFullscreen, currentTestData }) => {
     const containerRef = useRef(null);
     const editorWrapperRef = useRef(null);
     const [value, setValue] = useState('')
-    const [language, setLanguage] = useState(currentTestData?.languages?.[0]?.code || 'python')
+    const [language, setLanguage] = useState(currentTestData?.languages?.[0]?.code)
     const editorRef = useRef()
     const [output, setOutput] = useState([])
     const [userTestCases, setUserTestCases] = useState([])
@@ -52,10 +70,6 @@ const CodeEditor = ({ testCases, inputVars, collapsed, isFullscreen, setIsFullsc
             setLastEditorHeight(half);
         }
     }, [editorHeight]);
-
-    useEffect(() => {
-        console.log(currentTestData.languages)
-    }, [currentTestData])
 
     // Use ResizeObserver to call editor.layout() when the wrapper resizes
     useEffect(() => {
@@ -305,7 +319,7 @@ const CodeEditor = ({ testCases, inputVars, collapsed, isFullscreen, setIsFullsc
                 />
                 <div className="flex-1 min-h-0  overflow-auto">
                     <Editor
-                        language={language}
+                        language={monacoLanguageMap[language] || language}
                         height="100%"
                         width="100%"
                         onMount={onMount}
@@ -314,7 +328,7 @@ const CodeEditor = ({ testCases, inputVars, collapsed, isFullscreen, setIsFullsc
                             setValue(value);
                             setCurrentLine(editorRef.current.getPosition()?.lineNumber || 0);
                         }}
-                        theme={isDarkMode ? 'github-dark' : 'github-light'}
+                        theme={isDarkMode ? 'custom-dark' : 'custom-light'}
                         beforeMount={handleEditorBeforeMount}
                     />
                 </div>
@@ -451,7 +465,7 @@ const CodeEditor = ({ testCases, inputVars, collapsed, isFullscreen, setIsFullsc
                         >
                             <Editor
                                 className='monaco-editor'
-                                language={language}
+                                language={monacoLanguageMap[language] || language}
                                 defaultValue=''
                                 height="100%"
                                 width="100%"

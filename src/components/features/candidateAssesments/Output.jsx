@@ -65,10 +65,6 @@ const Output = ({
 
   const isAccepted = resultText === 'SUCCESS';
 
-  useEffect(() => {
-    console.log(stderrValue)
-  }, [stderrValue])
-
   // Helper for human-readable error text
   function getErrorText(resultText) {
     if (!resultText || resultText === 'SUCCESS') return '';
@@ -125,6 +121,14 @@ const Output = ({
       setSelectedCase(Math.max(0, selectedCase - 1));
     }
   };
+
+  useEffect(() => {
+    console.log("output", output[0]?.result?.eval[0]?.expected, output[0]?.result?.eval[0]?.value)
+    // console.log("output", output[0]?.result?.[0]?.stdout_file,
+    //   "expected", output[0]?.evaluations?.[0]?.stdout_file,
+    //   "main output", output[0]
+
+  }, [output[0]?.result.eval]);
 
   useEffect(() => {
     // Get the stdout_file URL from the output prop
@@ -395,15 +399,14 @@ const Output = ({
                             {inputVars[0]} = {'\n'}{JSON.stringify(allCases[selectedCase]?.input, null, 2)}
                           </div>
                         </div>
-                        {stdoutValue && (
-                          <div className='flex flex-col gap-1'>
-                            <span className="font-semibold text-sm text-greyPrimary dark:text-white">Output</span>
-                            <div className="bg-blueSecondary dark:bg-blackSecondary rounded-xl px-5 py-[15px] text-base text-greyPrimary dark:text-white">{stdoutValue}</div>
-                          </div>
-                        )}
+                        <div className='flex flex-col gap-1'>
+                          <span className="font-semibold text-sm text-greyPrimary dark:text-white">Output</span>
+                          {/* <div className="bg-blueSecondary dark:bg-blackSecondary rounded-xl px-5 py-[15px] text-base text-greyPrimary dark:text-white">({stdoutValue} || {output[0]?.result?.eval[0]?.value})</div> */}
+                          <div className="bg-blueSecondary dark:bg-blackSecondary rounded-xl px-5 py-[15px] text-base text-greyPrimary dark:text-white"> {stdoutValue || output[0]?.result?.eval?.[0]?.value}</div>
+                        </div>
                         <div className='flex flex-col gap-1'>
                           <span className="font-semibold text-sm text-greyPrimary dark:text-white">Expected</span>
-                          <div className="bg-blueSecondary dark:bg-blackSecondary rounded-xl px-5 py-[15px] text-base text-greyPrimary dark:text-white">{allCases[selectedCase]?.output}</div>
+                          <div className="bg-blueSecondary dark:bg-blackSecondary rounded-xl px-5 py-[15px] text-base text-greyPrimary dark:text-white">{output[0]?.result?.eval?.[0]?.expected || allCases[selectedCase]?.output}</div>
                         </div>
                       </div>
                     )}

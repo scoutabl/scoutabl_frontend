@@ -131,7 +131,7 @@ function CodingAssesmentInner() {
 
 
     // const CANDIDATETOKEN = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6NywiY3JlYXRlZF9hdCI6IjIwMjUtMDYtMDkgMTM6MjM6MDEuNTMwODgyKzAwOjAwIn0.9q2-XjZO-kGuhiEieEObuKmlz_bDs_2ZdebHeEgTD7I'
-    const CANDIDATETOKEN = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6OCwiY3JlYXRlZF9hdCI6IjIwMjUtMDYtMTMgMTY6Mjk6NDAuMTQ1MTkwKzAwOjAwIn0.eFdPGl7trmwAc9UbKbUntHPT-FwYcEn2fTN8jD2bXnM'
+    const CANDIDATETOKEN = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6OSwiY3JlYXRlZF9hdCI6IjIwMjUtMDYtMTggMTI6MzM6MjUuNzM5MzUwKzAwOjAwIn0.zwZmeUQwcBUscQ0PqaxoXxreCPBUJD8kXsD-TqldhaI'
     // Fetch function using axios
     const fetchQuestionsWithTestCases = async () => {
         try {
@@ -223,7 +223,7 @@ function CodingAssesmentInner() {
     }
 
     if (isLoading || isMinLoading) return <LoadingComponent />;
-    if (error) return <div>Error loading question</div>;
+    if (error) return <div className='h-[calc(100vh-116px)] flex flex-col items-center justify-center text-2xl text-bold text-red-700'>Error loading question</div>;
 
     if (!currentTestData) {
         return <LoadingComponent />;
