@@ -6,6 +6,7 @@ import CodeSidebar from './CodeSidebar';
 import CodeEditor from './CodeEditor';
 import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
+import { fetchLanguages } from '@/api/monacoCodeApi';
 function CodingAssesmentInner() {
     const {
         currentQuestion, setCurrentQuestion,
@@ -28,6 +29,7 @@ function CodingAssesmentInner() {
     const prevSidebarWidthRef = useRef(sidebarWidth);
     const prevRightPanelWidthRef = useRef(rightPanelWidth);
     const rightPanelRef = useRef(null);
+    const [languageTemplates, setLanguageTemplates] = useState({});
 
     // Dummy data for submissions
     const submissionsData = [
@@ -128,6 +130,20 @@ function CodingAssesmentInner() {
         };
     }, [isDragging]);
 
+    //fetch default template
+    useEffect(() => {
+        async function loadLanguages() {
+            const langs = await fetchLanguages();
+            // Create a map: { python3: "def main(): ...", swift: "import Foundation..." }
+            const templates = {};
+            langs.results.forEach(lang => {
+                templates[lang.code] = lang.default_template?.content || '';
+            });
+            setLanguageTemplates(templates);
+        }
+        loadLanguages();
+    }, []);
+
 
 
     // const CANDIDATETOKEN = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6NywiY3JlYXRlZF9hdCI6IjIwMjUtMDYtMDkgMTM6MjM6MDEuNTMwODgyKzAwOjAwIn0.9q2-XjZO-kGuhiEieEObuKmlz_bDs_2ZdebHeEgTD7I'
@@ -198,7 +214,7 @@ function CodingAssesmentInner() {
     //loading component
     const LoadingComponent = () => {
         return (
-            <div className='flex gap-3 py-6 min-w-0 h-[calc(100vh-116px)]'>
+            <div className='flex gap-8 py-6 min-w-0 h-[calc(100vh-116px)]'>
                 <div className='relative rounded-5xl shadow-md flex flex-col h-full max-h-[calc(100vh-116px)] min-w-0 overflow-x-auto p-6 w-[540px] bg-white dark:bg-blackPrimary'>
                     <Skeleton className="h-4 w-[250px] mb-4 bg-gray-300 dark:bg-gray-500" />
                     <Skeleton className="h-4 w-[200px] mb-4 bg-gray-300 dark:bg-gray-500" />
@@ -284,6 +300,7 @@ function CodingAssesmentInner() {
                         isFullscreen={isFullscreen}
                         setIsFullscreen={setIsFullscreen}
                         currentTestData={currentTestData}
+                        languageTemplates={languageTemplates}
                     />
                     {/* Output panel: hidden in fullscreen */}
                     {!isFullscreen && (

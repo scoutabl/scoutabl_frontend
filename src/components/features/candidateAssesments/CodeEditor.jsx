@@ -33,7 +33,7 @@ const monacoLanguageMap = {
     // add more as needed
 };
 
-const CodeEditor = ({ testCases, inputVars, collapsed, isFullscreen, setIsFullscreen, currentTestData }) => {
+const CodeEditor = ({ testCases, inputVars, collapsed, isFullscreen, setIsFullscreen, currentTestData, languageTemplates }) => {
     const containerRef = useRef(null);
     const editorWrapperRef = useRef(null);
     const [value, setValue] = useState('')
@@ -108,6 +108,23 @@ const CodeEditor = ({ testCases, inputVars, collapsed, isFullscreen, setIsFullsc
             setValue(savedCode);
         }
     }, [currentTestData?.id, language, editorRef]);
+
+    //set default template code when language changes
+    useEffect(() => {
+        const key = `code_${currentTestData?.id}_${language}`;
+        const savedCode = localStorage.getItem(key);
+        if (savedCode) {
+            setValue(savedCode);
+            if (editorRef.current && editorRef.current.setValue) {
+                editorRef.current.setValue(savedCode);
+            }
+        } else if (languageTemplates?.[language]) {
+            setValue(languageTemplates[language]);
+            if (editorRef.current && editorRef.current.setValue) {
+                editorRef.current.setValue(languageTemplates[language]);
+            }
+        }
+    }, [language, currentTestData?.id, languageTemplates]);
 
     // Save code to localStorage and update status
     const saveCodeToLocalStorage = () => {
@@ -359,6 +376,7 @@ const CodeEditor = ({ testCases, inputVars, collapsed, isFullscreen, setIsFullsc
                 <div className="flex-1 min-h-0  overflow-auto">
                     <Editor
                         language={monacoLanguageMap[language] || language}
+                        defaultValue={languageTemplates?.[language] || ''}
                         height="100%"
                         width="100%"
                         onMount={onMount}
@@ -507,7 +525,7 @@ const CodeEditor = ({ testCases, inputVars, collapsed, isFullscreen, setIsFullsc
                             <Editor
                                 className='monaco-editor'
                                 language={monacoLanguageMap[language] || language}
-                                defaultValue=''
+                                defaultValue={languageTemplates?.[language] || ''}
                                 height="100%"
                                 width="100%"
                                 onMount={onMount}
