@@ -228,6 +228,19 @@ const Output = ({
                       )}
                     />
                     Case {idx + 1}
+                    {/* Show delete button for user-added test cases */}
+                    {idx >= (testCases ? testCases.length : 0) && (
+                      <div className='ml-1 h-4 w-4 grid place-content-center group hover:bg-red-900 rounded-full'>
+                        <X
+                          onClick={e => {
+                            e.stopPropagation();
+                            handleRemoveTestCase(idx);
+                          }}
+                          size={12}
+                          className='text-black group-hover:text-white dark:text-white group-hover:dark:text-black'
+                        />
+                      </div>
+                    )}
                   </button>
                 ))}
                 <div className='flex flex-col items-center gap-1'>
