@@ -43,12 +43,12 @@ const Output = ({
   const [newExpected, setNewExpected] = useState('');
   const [outputError, setOutputError] = useState('');
   const [containerHeight, setContainerHeight] = useState(0);
+  const [showAddForm, setShowAddForm] = useState(false);
   const containerRef = useRef(null);
   const { setIsOutputFullscreen } = useCodingAssesment();
   const { enums } = useEnums();
 
   const allCases = [...(testCases || []), ...(userTestCases || [])];
-  const isAdding = selectedCase === allCases.length;
 
   const result = output[0] || {}; // Only one result at a time
   const isUserTestCase = selectedCase >= (testCases ? testCases.length : 0);
@@ -104,6 +104,7 @@ const Output = ({
       setNewExpected('');
       setInputError('');
       setOutputError('');
+      setShowAddForm(false);
       setSelectedCase(allCases.length);
     } catch (e) {
       setInputError('Input must be a valid JSON array');
@@ -199,7 +200,7 @@ const Output = ({
       {/* New container for the tab content - conditionally rendered */}
       {containerHeight > OUTPUT_NAVBAR_MIN_HEIGHT && !isRightPanelCollapsed && (
         <div
-          className="flex-1 flex flex-col overflow-auto"
+          className="flex-1 flex flex-col overflow-auto pt-6"
         >
           {/* Tab Content */}
           {activeTab === 'cases' && (
@@ -208,28 +209,26 @@ const Output = ({
               {/* Test case tabs */}
               <div className="flex justify-center items-center gap-2">
                 {allCases.map((tc, idx) => (
-                  <div key={idx} className="flex items-center">
-                    <button
+                  <button
+                    key={idx}
+                    className={cn(
+                      "group px-4 py-[6px] rounded-full border font-medium text-sm flex items-center gap-2 text-greyPrimary dark:text-white transition-all duration-200",
+                      selectedCase === idx
+                        ? "bg-purpleSecondary border-transparent dark:text-greyPrimary"
+                        : "bg-white border-[#CCCCCC] dark:bg-transparent hover:bg-purpleSecondary hover:border-transparent dark:hover:bg-purpleSecondary dark:hover:text-greyPrimary"
+                    )}
+                    onClick={() => setSelectedCase(idx)}
+                  >
+                    <span
                       className={cn(
-                        "px-4 py-[6px] rounded-full border font-medium text-sm flex items-center gap-2 text-greyPrimary dark:text-white",
-                        selectedCase === idx ? "bg-purpleSecondary border-0 dark:text-greyPrimary" : "bg-white border-[#CCCCCC] dark:bg-transparent"
+                        "w-2 h-2 rounded-full transition-all duration-200",
+                        selectedCase === idx
+                          ? "bg-[#1EA378]"
+                          : "bg-greyPrimary dark:bg-white group-hover:bg-[#1EA378] dark:group-hover:bg-[#1EA378]"
                       )}
-                      onClick={() => setSelectedCase(idx)}
-                    >
-                      <span
-                        className={cn(
-                          "w-2 h-2 rounded-full",
-                          selectedCase === idx ? "bg-[#1EA378]" : "bg-greyPrimary dark:bg-white"
-                        )}
-                      />
-                      Case {idx + 1}
-                      {idx >= (testCases ? testCases.length : 0) && (
-                        <div className='ml-1 h-4 w-4 grid place-content-center group hover:bg-red-900 rounded-full'>
-                          <X onClick={e => { e.stopPropagation(); handleRemoveTestCase(idx); }} size={12} className='text-black group-hover:text-white' />
-                        </div>
-                      )}
-                    </button>
-                  </div>
+                    />
+                    Case {idx + 1}
+                  </button>
                 ))}
                 <div className='flex flex-col items-center gap-1'>
                   <div className="group relative flex items-center">
@@ -237,19 +236,19 @@ const Output = ({
                       whileHover={{ scale: 1.2 }}
                       whileTap={{ scale: 0.98 }}
                       className="ml-2 rounded-full bg-greyPrimary dark:bg-white grid place-content-center h-6 w-6"
-                      onClick={() => setSelectedCase(allCases.length)}
+                      onClick={() => setShowAddForm(true)}
                       title="Add new test case"
                     >
                       <Plus className='text-white dark:text-blackPrimary' size={20} />
                     </motion.button>
-                    <span className="absolute -top-[30px] -right-[60px] w-[65px] h-6 bg-purpleSecondary grid place-content-center rounded-tl-md rounded-br-md rounded-tr-md text-sm text-greyPrimary dark:text-white font-bold shadow opacity-0 group-hover:opacity-100 transition-opacity duration-200 ">
+                    <span className="absolute -top-[28px] -right-[60px] w-[65px] h-6 bg-purpleSecondary grid place-content-center rounded-tl-md rounded-br-md rounded-tr-md text-sm text-greyPrimary font-bold shadow opacity-0 group-hover:opacity-100 transition-opacity duration-200">
                       {allCases.length > 0 ? `${selectedCase + 1}/${allCases.length}` : '0/0'}
                     </span>
                   </div>
                 </div>
               </div>
               {/* Add new test case input */}
-              {isAdding && (
+              {showAddForm && (
                 <form onSubmit={handleAddTestCase} className='p-6 flex flex-col gap-3'>
                   <div className='flex flex-col gap-2'>
                     <label htmlFor='input' className='text-base font-medium text-greyPrimary dark:text-white'>{inputVars[0]}=</label>
@@ -279,18 +278,27 @@ const Output = ({
                     />
                     {outputError && <span className="text-red-500 text-xs">{outputError}</span>}
                   </div>
-                  <motion.button
-                    whileHover={{ scale: 1.1 }}
-                    whileTap={{ scale: 0.98 }}
-                    type="submit"
-                    className="px-3 py-2 rounded-md h-10 w-fit bg-purplePrimary dark:text-black text-white hover:bg-black hover:text-white dark:hover:bg-white dark:hover:text-black transition-colors duration-300"
-                  >
-                    Add Test Case
-                  </motion.button>
+                  <div className="flex gap-2">
+                    <motion.button
+                      whileHover={{ scale: 1.1 }}
+                      whileTap={{ scale: 0.98 }}
+                      type="submit"
+                      className="px-3 py-2 rounded-md h-10 w-fit bg-purplePrimary dark:text-black text-white hover:bg-black hover:text-white dark:hover:bg-white dark:hover:text-black transition-colors duration-300"
+                    >
+                      Add Test Case
+                    </motion.button>
+                    <button
+                      type="button"
+                      className="ml-2 px-3 py-2 rounded-md h-10 w-fit bg-gray-300 text-black hover:bg-gray-400"
+                      onClick={() => setShowAddForm(false)}
+                    >
+                      Cancel
+                    </button>
+                  </div>
                 </form>
               )}
               {/* Show selected test case input */}
-              {selectedCase < allCases.length && allCases[selectedCase] && (
+              {!showAddForm && selectedCase < allCases.length && allCases[selectedCase] && (
                 <div className="flex flex-col p-6 gap-6">
                   <div className='flex flex-col gap-2'>
                     <span className="block font-semibold mb-2 text-base  text-greyPrimary dark:text-white">Input</span>
@@ -322,24 +330,27 @@ const Output = ({
                     {isAccepted && allCases.length > 0 && (
                       <div className="flex justify-center items-center gap-2">
                         {allCases.map((tc, idx) => (
-                          <div key={idx} className="flex items-center">
-                            <button
+                          <button
+                            key={idx}
+                            className={cn(
+                              "group px-4 py-[6px] rounded-full border font-medium text-sm flex items-center gap-2 text-greyPrimary dark:text-white transition-all duration-200",
+                              selectedCase === idx
+                                ? "bg-purpleSecondary border-transparent dark:text-greyPrimary"
+                                : "bg-white border-[#CCCCCC] dark:bg-transparent hover:bg-purpleSecondary hover:border-transparent dark:hover:bg-purpleSecondary dark:hover:text-greyPrimary"
+                            )}
+                            onClick={() => setSelectedCase(idx)}
+                          >
+                            <span
                               className={cn(
-                                "px-4 py-[6px] rounded-full border font-medium text-sm flex items-center gap-2 text-greyPrimary dark:text-white",
-                                selectedCase === idx ? "bg-purpleSecondary border-0 dark:text-greyPrimary" : "bg-white border-[#CCCCCC] dark:bg-transparent"
+                                "w-2 h-2 rounded-full transition-all duration-200",
+                                selectedCase === idx
+                                  ? "bg-[#1EA378]"
+                                  : "bg-greyPrimary dark:bg-white group-hover:bg-[#1EA378] dark:group-hover:bg-[#1EA378]"
                               )}
-                              onClick={() => setSelectedCase(idx)}
-                            >
-                              <span
-                                className={cn(
-                                  "w-2 h-2 rounded-full",
-                                  selectedCase === idx ? "bg-[#1EA378]" : "bg-greyPrimary dark:bg-white"
-                                )}
-                              />
-                              Case {idx + 1}
-                              {/* No remove button here */}
-                            </button>
-                          </div>
+                            />
+                            Case {idx + 1}
+                            {/* No remove button here */}
+                          </button>
                         ))}
                       </div>
                     )}
@@ -393,7 +404,13 @@ const Output = ({
                         <div className='flex flex-col gap-1'>
                           <span className="font-semibold text-sm text-greyPrimary dark:text-white">Input</span>
                           <div className="bg-blueSecondary dark:bg-blackSecondary rounded-xl px-5 py-[15px] text-base text-greyPrimary dark:text-white">
-                            {inputVars[0]} = {'\n'}{JSON.stringify(allCases[selectedCase]?.input, null, 2)}
+                            {/* {inputVars[0]} = {'\n'}{JSON.stringify(allCases[selectedCase]?.input, null, 2)} */}
+                            {/* {inputVars[0]} = {'\n'}{JSON.stringify(allCases[selectedCase]?.input).replace(/,/g, ', ').replace(/^\[/, '[ ').replace(/]$/, ' ]')} */}
+                            {/* <pre>
+                              {inputVars[0]} = {' \n'}{JSON.stringify(allCases[selectedCase]?.input, null, 2).replace(/^/, ' ')}
+                            </pre> */}
+                            <span className="font-semibold block text-greyPrimary dark:text-white">{inputVars[0]}=</span>
+                            <span className="block text-greyPrimary dark:text-white">{JSON.stringify(allCases[selectedCase].input, null, 2)}</span>
                           </div>
                         </div>
                         <div className='flex flex-col gap-1'>

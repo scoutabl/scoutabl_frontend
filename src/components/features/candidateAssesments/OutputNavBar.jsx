@@ -67,10 +67,14 @@ const OutputNavBar = ({ activeTab, setActiveTab, collapsed, isOutputCollapsed, o
 
     // Default: Render full OutputNavBar (horizontal)
     return (
-        <div className={cn("p-6 flex items-center justify-between gap-4 bg-white dark:bg-blackPrimary min-h-[52px]", {
-            'min-h-[52px]': !isOutputCollapsed,
-            'rounded-tl-xl rounded-tr-xl pt-6': fullscreen,
-        })}>
+        <div
+            className={cn(
+                "flex items-center justify-between gap-4 bg-white dark:bg-blackPrimary min-h-[52px] min-w-0 overflow-x-auto",
+                isOutputCollapsed
+                    ? "p-6"
+                    : "px-6 pt-6"
+            )}
+        >
             <div className='flex items-center gap-4'>
                 <button
                     className={cn(

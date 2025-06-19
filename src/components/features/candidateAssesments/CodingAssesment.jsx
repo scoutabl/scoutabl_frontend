@@ -80,12 +80,13 @@ function CodingAssesmentInner() {
 
         // handle right panel resizing
         const container = rightPanelRef.current;
-        if (!container) return; // Prevents the error!
+        if (!container) return;
         const containerLeft = container.getBoundingClientRect().left;
         const newContainerWidth = container.getBoundingClientRect().right - e.clientX;
+
         if (newContainerWidth <= RIGHT_COLLAPSED_WIDTH) {
             setIsRightCollapsed(true);
-            setRightPanelWidth(RIGHT_COLLAPSED_WIDTH);
+            setRightPanelWidth(RIGHT_COLLAPSED_WIDTH); // lock at 52px
         } else {
             setIsRightCollapsed(false);
             setRightPanelWidth(newContainerWidth);
@@ -278,7 +279,7 @@ function CodingAssesmentInner() {
                 </div>
             )}
             {/* Main content area: editor expands in fullscreen */}
-            <div className={cn('flex-1 h-full', isRightCollapsed && !isFullscreen ? 'w-[52px] min-w-[52px] max-w-[52px] overflow-hidden' : 'overflow-x-auto')}>
+            <div className={cn('flex-1 h-full min-w-[52px]', isRightCollapsed && !isFullscreen ? 'w-[52px] min-w-[52px] max-w-[52px] overflow-hidden' : 'overflow-x-auto')}>
                 <div
                     className="h-full flex flex-col flex-1"
                     ref={rightPanelRef}
@@ -290,7 +291,10 @@ function CodingAssesmentInner() {
                                 maxWidth: minRightPanelWidth,
                                 transition: isResizing.current ? 'none' : 'width 0.2s'
                             }
-                            : {}
+                            : {
+                                minWidth: minRightPanelWidth, // always enforce min width
+                                transition: isResizing.current ? 'none' : 'width 0.2s'
+                            }
                     }
                 >
                     <CodeEditor
