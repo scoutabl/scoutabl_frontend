@@ -1,4 +1,4 @@
-import { useRef, useState, useEffect, useLayoutEffect } from 'react'
+import { useRef, useState, useEffect, useLayoutEffect, useMemo } from 'react'
 import { Editor } from '@monaco-editor/react'
 import CodeNavBar from './CodeNavBar'
 import Output from './Output'
@@ -7,7 +7,6 @@ import { motion, AnimatePresence } from 'framer-motion';
 import codeUpload from '/codeUpload.svg'
 import githubLight from 'monaco-themes/themes/GitHub Light.json';
 import githubDark from 'monaco-themes/themes/GitHub Dark.json';
-// import { customDarkTheme } from './themes/customDarkTheme';
 import { customDarkTheme, customLightTheme } from './codeEditorTheme';
 import { cn } from '@/lib/utils';
 import { useTheme } from '@/context/ThemeContext'
@@ -30,7 +29,6 @@ const monacoLanguageMap = {
     php: 'php',
     swift: 'swift',
     kotlin: 'kotlin',
-    // add more as needed
 };
 
 const CodeEditor = ({ testCases, inputVars, collapsed, isFullscreen, setIsFullscreen, currentTestData, languageTemplates }) => {
@@ -45,9 +43,9 @@ const CodeEditor = ({ testCases, inputVars, collapsed, isFullscreen, setIsFullsc
     const [activeTab, setActiveTab] = useState('cases')
     const [loading, setLoading] = useState(false)
     const [isOutputCollapsed, setIsOutputCollapsed] = useState(false);
-    const [isEditorCollapsed, setIsEditorCollapsed] = useState(false); // New state for editor collapse
+    const [isEditorCollapsed, setIsEditorCollapsed] = useState(false); 
     const isResizing = useRef(false);
-    const [isDraggingResizer, setIsDraggingResizer] = useState(false); // New state for drag cursor
+    const [isDraggingResizer, setIsDraggingResizer] = useState(false);
     const { editorHeight, setEditorHeight, lastEditorHeight, setLastEditorHeight, isOutputFullscreen, setIsOutputFullscreen } = useCodingAssesment();
     const [currentLine, setCurrentLine] = useState(0);
     const [cursorPosition, setCursorPosition] = useState({ line: 1, column: 1 });
@@ -58,8 +56,72 @@ const CodeEditor = ({ testCases, inputVars, collapsed, isFullscreen, setIsFullsc
     const [lastOutputHeight, setLastOutputHeight] = useState(null);
     const [isEditorLoading, setIsEditorLoading] = useState(true);
     const [saveStatus, setSaveStatus] = useState('Saved'); // 'Saving...' | 'Saved'
+    const [editInput, setEditInput] = useState('');
+    const [editOutput, setEditOutput] = useState('');
+    const [questionId, setQuestionId] = useState(currentTestData?.id || '');
+    const allCases = useMemo(
+        () => [...(testCases || []), ...(userTestCases || [])],
+        [testCases, userTestCases]
+    );
 
-    // Set initial 50/50 split and layout editor
+    const lastSelectedCaseRef = useRef(selectedCase);
+    const getStorageKey = (questionId, caseIndex) => {
+        return `edited_testcase_${questionId}_${caseIndex}`;
+    };
+    const saveEditedValues = (input, output, caseIndex) => {
+        const storageKey = getStorageKey(questionId, caseIndex);
+        localStorage.setItem(storageKey, JSON.stringify({ input, output }));
+    };
+
+    // useEffect(() => {
+    //     if (
+    //         allCases[selectedCase] &&
+    //         (lastSelectedCaseRef.current !== selectedCase || editInput === '' || editOutput === '')
+    //     ) {
+    //         const formattedInput = `[${allCases[selectedCase].input.map((item, i) => i === 0 ? JSON.stringify(item) : ' ' + JSON.stringify(item)).join(',')}]`;
+    //         const output = allCases[selectedCase].output || '';
+    //         setEditInput(formattedInput);
+    //         setEditOutput(output);
+    //         lastSelectedCaseRef.current = selectedCase;
+    //     }
+    //     // eslint-disable-next-line
+    // }, [selectedCase, allCases]);
+
+    const handleEditInputChange = (newInput) => {
+        setEditInput(newInput);
+        saveEditedValues(newInput, editOutput, selectedCase);
+        console.log('editInput updated:', newInput);
+    };
+
+    const handleEditOutputChange = (newOutput) => {
+        setEditOutput(newOutput);
+        saveEditedValues(editInput, newOutput, selectedCase);
+        console.log('editOutput updated:', newOutput);
+    };
+
+    useEffect(() => {
+        if (allCases[selectedCase]) {
+            // Check if we have stored edited values first
+            const storageKey = getStorageKey(questionId, selectedCase);
+            const storedData = localStorage.getItem(storageKey);
+
+            if (storedData) {
+                // Use stored edited values
+                const { input, output } = JSON.parse(storedData);
+                setEditInput(input);
+                setEditOutput(output);
+            } else if (lastSelectedCaseRef.current !== selectedCase || editInput === '' || editOutput === '') {
+                // Use backend values only if no stored values
+                const formattedInput = `[${allCases[selectedCase].input.map((item, i) => i === 0 ? JSON.stringify(item) : ' ' + JSON.stringify(item)).join(',')}]`;
+                const output = allCases[selectedCase].output || '';
+                setEditInput(formattedInput);
+                setEditOutput(output);
+            }
+            lastSelectedCaseRef.current = selectedCase;
+        }
+    }, [selectedCase, allCases, questionId]);
+
+    // Set initial 50/50 split and layout editorFR
     useLayoutEffect(() => {
         if (containerRef.current && editorHeight === 0) {
             const totalHeight = containerRef.current.offsetHeight;
@@ -310,22 +372,10 @@ const CodeEditor = ({ testCases, inputVars, collapsed, isFullscreen, setIsFullsc
         setIsEditorLoading(false);
     };
 
-    // Patch CodeNavBar handlers to save code
-    const handleRunCode = async () => {
-        setCurrentAction && setCurrentAction('run');
-        saveCodeToLocalStorage();
-        executeCode && executeCode(true);
-    };
-    const handleSubmit = async () => {
-        setCurrentAction && setCurrentAction('submit');
-        saveCodeToLocalStorage();
-        executeCode && executeCode(false);
-    };
-
     // Output Full Screen
     if (isOutputFullscreen) {
         return (
-            <div className="flex flex-col h-full w-full"> {/* Container to take full space of the right panel */}
+            <div className="flex flex-col h-full w-full"> 
                 <Output
                     output={output}
                     testCases={testCases}
@@ -337,12 +387,16 @@ const CodeEditor = ({ testCases, inputVars, collapsed, isFullscreen, setIsFullsc
                     activeTab={activeTab}
                     setActiveTab={setActiveTab}
                     loading={loading}
-                    isOutputCollapsed={false} // Output should not be collapsed in fullscreen
+                    isOutputCollapsed={false} 
                     isRightPanelCollapsed={collapsed}
-                    onOutputCollapse={handleOutputCollapseButton} // Keep collapse handler if needed in fullscreen nav
+                    onOutputCollapse={handleOutputCollapseButton} 
                     collapsed={collapsed}
                     onExitFullscreen={() => setIsOutputFullscreen(false)}
-                    isOutputFullscreen={isOutputFullscreen} // Pass the fullscreen state
+                    isOutputFullscreen={isOutputFullscreen} 
+                    editInput={editInput}
+                    editOutput={editOutput}
+                    onEditInputChange={handleEditInputChange}
+                    onEditOutputChange={handleEditOutputChange}
                 />
             </div>
         )
@@ -372,8 +426,12 @@ const CodeEditor = ({ testCases, inputVars, collapsed, isFullscreen, setIsFullsc
                     questionId={currentTestData?.id}
                     currentTestData={currentTestData}
                     saveCodeToLocalStorage={saveCodeToLocalStorage}
+                    activeTab={activeTab}
+                    editInput={editInput}
+                    editOutput={editOutput}
+                    value={value}
                 />
-                <div className="flex-1 min-h-0  overflow-auto">
+                <div className="flex-1 min-h-0 overflow-auto pt-6">
                     <Editor
                         language={monacoLanguageMap[language] || language}
                         defaultValue={languageTemplates?.[language] || ''}
@@ -402,9 +460,9 @@ const CodeEditor = ({ testCases, inputVars, collapsed, isFullscreen, setIsFullsc
 
     if (collapsed) {
         // Calculate heights for vertical layout
-        let outputNavBarHeight = 78; // OutputNavBar is 78px tall with padding
+        let outputNavBarHeight = 78;
         let containerHeight = containerRef.current ? containerRef.current.offsetHeight : 0;
-        let editorAreaHeight = Math.max(editorHeight, 54); // Clamp to min 54px
+        let editorAreaHeight = Math.max(editorHeight, 54); 
         if (isOutputCollapsed) {
             editorAreaHeight = containerHeight - outputNavBarHeight;
             if (editorAreaHeight < 54) editorAreaHeight = 54;
@@ -416,7 +474,6 @@ const CodeEditor = ({ testCases, inputVars, collapsed, isFullscreen, setIsFullsc
                     style={{
                         height: editorAreaHeight,
                         minHeight: 54,
-                        // transition: 'height 0.2s'
                     }}
                     className="flex-shrink-0 flex flex-col items-center bg-purpleSecondary rounded-xl py-3 overflow-hidden"
                 >
@@ -431,6 +488,10 @@ const CodeEditor = ({ testCases, inputVars, collapsed, isFullscreen, setIsFullsc
                         questionId={currentTestData?.id}
                         currentTestData={currentTestData}
                         saveCodeToLocalStorage={saveCodeToLocalStorage}
+                        activeTab={activeTab}
+                        editInput={editInput}
+                        editOutput={editOutput}
+                        value={value}
                     />
                 </div>
                 {/* Vertical Resizer */}
@@ -449,8 +510,6 @@ const CodeEditor = ({ testCases, inputVars, collapsed, isFullscreen, setIsFullsc
                         height: isOutputCollapsed ? outputNavBarHeight : containerHeight - editorAreaHeight - RESIZER_HEIGHT,
                         minHeight: outputNavBarHeight,
                         maxHeight: isOutputCollapsed ? outputNavBarHeight : undefined,
-                        // transition: 'height 0.2s ease-in',
-                        //   overflow: 'hidden',
                     }}
                     className="flex flex-col bg-white dark:bg-blackPrimary rounded-xl overflow-hidden"
                 >
@@ -470,6 +529,9 @@ const CodeEditor = ({ testCases, inputVars, collapsed, isFullscreen, setIsFullsc
                         onOutputCollapse={handleOutputCollapseButton}
                         collapsed={collapsed}
                         onExitFullscreen={() => setIsOutputFullscreen(false)}
+                        editInput={editInput}
+                        editOutput={editOutput}
+                        onEditInputChange={handleEditInputChange} onEditOutputChange={handleEditOutputChange}
                     />
                 </div>
             </div>
@@ -500,6 +562,10 @@ const CodeEditor = ({ testCases, inputVars, collapsed, isFullscreen, setIsFullsc
                 questionId={currentTestData?.id}
                 currentTestData={currentTestData}
                 saveCodeToLocalStorage={saveCodeToLocalStorage}
+                activeTab={activeTab}
+                editInput={editInput}
+                editOutput={editOutput}
+                value={value}
             />
             {/* Collapsible Editor + Status Bar */}
             <div
@@ -519,7 +585,7 @@ const CodeEditor = ({ testCases, inputVars, collapsed, isFullscreen, setIsFullsc
                             animate={{ opacity: 1 }}
                             exit={{ opacity: 0 }}
                             transition={{ duration: 0.2 }}
-                            className="flex-1 min-h-0"
+                            className="flex-1 min-h-0 pt-6"
                             style={{ overflow: 'hidden' }}
                         >
                             <Editor
@@ -602,6 +668,10 @@ const CodeEditor = ({ testCases, inputVars, collapsed, isFullscreen, setIsFullsc
                     onOutputCollapse={handleOutputCollapseButton}
                     collapsed={collapsed}
                     onExitFullscreen={() => setIsOutputFullscreen(false)}
+                    editInput={editInput}
+                    editOutput={editOutput}
+                    onEditInputChange={handleEditInputChange}
+                    onEditOutputChange={handleEditOutputChange}
                 />
             </div>
         </div>

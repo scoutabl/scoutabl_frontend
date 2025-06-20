@@ -22,7 +22,11 @@ const CodeNavBar = ({
     collapsed,
     onCollapse, onFullscreen, onExitFullscreen,
     isEditorCollapsed, onReset, questionId,
-    saveCodeToLocalStorage
+    saveCodeToLocalStorage,
+    activeTab,
+    editInput,
+    editOutput,
+    value,
 }) => {
     const [isOpen, setIsOpen] = useState(false)
     const [languages, setLanguages] = useState([])
@@ -149,39 +153,44 @@ const CodeNavBar = ({
         }
     }, [pollData, enums, setLoading, setOutput, setSubmissionRefreshTrigger, setSidebarActiveTab]);
 
-
-    // Common function for code execution
     const executeCode = async (isTest) => {
-        if (collapsed || enumsLoading) return false;
-
-        setLoading && setLoading(true); // Prop from parent
-        setActiveTab && setActiveTab("results");
-        const sourceCode = editorRef?.current?.getValue?.();
-        if (!sourceCode) {
-            setLoading && setLoading(false);
-            setCurrentAction(null); // Reset action if no source code
+        console.log('execyteCode called with isTest:', isTest);
+        if (enumsLoading) {
+            console.log('enumsLoading, aborting');
             return false;
         }
 
-        // Reset polling state before new submission
-        setShouldPoll(false);
-        setSubmissionId(null);
-
-        // Do NOT inject variables for your backend
-        const injectedCode = sourceCode;
-
-        const allCases = [...(testCases || []), ...(userTestCases || [])];
-        const tc = allCases[selectedCase] || allCases[0];
-
-        // Find the selected language's ID from the allowed languages
-        const selectedLang = currentTestData?.languages?.find(lang => lang.code === language);
-        const languageId = selectedLang?.id;
-
-        if (!languageId) {
+        setLoading && setLoading(true);
+        setActiveTab && setActiveTab("results");
+        const sourceCode = value;
+        console.log('sourceCode:', sourceCode);
+        if (!sourceCode) {
+            console.log('No source code, aborting');
             setLoading && setLoading(false);
             setCurrentAction(null);
             return false;
         }
+
+        setShouldPoll(false);
+        setSubmissionId(null);
+
+        const injectedCode = sourceCode;
+        const allCases = [...(testCases || []), ...(userTestCases || [])];
+        const tc = allCases[selectedCase] || allCases[0];
+
+        const selectedLang = currentTestData?.languages?.find(lang => lang.code === language);
+        const languageId = selectedLang?.id;
+        console.log('languageId:', languageId);
+
+        if (!languageId) {
+            console.log('No languageId, aborting');
+            setLoading && setLoading(false);
+            setCurrentAction(null);
+            return false;
+        }
+
+        let inputToSend = typeof editInput === 'string' && editInput !== '' ? editInput : JSON.stringify(tc.input);
+        let outputToSend = typeof editOutput === 'string' && editOutput !== '' ? editOutput : String(tc.output);
 
         const payload = {
             code: injectedCode,
@@ -189,14 +198,16 @@ const CodeNavBar = ({
             is_test: isTest,
             custom_testcases: [
                 {
-                    input: JSON.stringify(tc.input),
-                    output: String(tc.output),
+                    input: inputToSend,
+                    output: outputToSend,
                 },
             ],
         };
+
+        console.log('payload:', payload);
         submitMutation.mutate({ questionId, payload });
         return true;
-    }
+    };
 
     // Run code handler
     const handleRunCode = async () => {

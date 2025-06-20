@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react'
+import React, { useState, useRef, useEffect, useMemo } from 'react'
 import { Plus, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import OutputNavBar from './OutputNavBar';
@@ -6,18 +6,6 @@ import { useCodingAssesment } from './CodingAssesmentContext';
 import { useEnums } from '@/context/EnumsContext';
 import { motion } from 'framer-motion';
 import ClockIcon from '@/assets/clock.svg?react';
-
-function formatInputValue(val) {
-  try {
-    if (typeof val === 'string') {
-      const parsed = JSON.parse(val);
-      return JSON.stringify(parsed, null, 2);
-    }
-    return JSON.stringify(val, null, 2);
-  } catch {
-    return val;
-  }
-}
 
 const OUTPUT_NAVBAR_MIN_HEIGHT = 54;
 
@@ -36,7 +24,11 @@ const Output = ({
   isRightPanelCollapsed,
   onOutputCollapse,
   onExitFullscreen,
-  isOutputFullscreen
+  isOutputFullscreen,
+  editInput,
+  editOutput,
+  onEditInputChange,
+  onEditOutputChange
 }) => {
   const [newInput, setNewInput] = useState('');
   const [inputError, setInputError] = useState('');
@@ -48,7 +40,11 @@ const Output = ({
   const { setIsOutputFullscreen } = useCodingAssesment();
   const { enums } = useEnums();
 
-  const allCases = [...(testCases || []), ...(userTestCases || [])];
+  // Memoize allCases
+  const allCases = useMemo(
+    () => [...(testCases || []), ...(userTestCases || [])],
+    [testCases, userTestCases]
+  );
 
   const result = output[0] || {}; // Only one result at a time
   const isUserTestCase = selectedCase >= (testCases ? testCases.length : 0);
@@ -106,6 +102,8 @@ const Output = ({
       setOutputError('');
       setShowAddForm(false);
       setSelectedCase(allCases.length);
+      onEditInputChange(JSON.stringify(parsed, null, 2));
+      onEditOutputChange(String(newExpected));
     } catch (e) {
       setInputError('Input must be a valid JSON array');
     }
@@ -148,6 +146,7 @@ const Output = ({
     } else {
       setStderrValue('');
     }
+    console.log("stdoutValue", stdoutValue, "stderrValue", stderrValue);
   }, [output]);
 
   //format errror messages
@@ -204,7 +203,6 @@ const Output = ({
         >
           {/* Tab Content */}
           {activeTab === 'cases' && (
-            // This div still has padding, but its parent is conditionally rendered
             <div className="flex-1">
               {/* Test case tabs */}
               <div className="flex justify-center items-center gap-2">
@@ -314,17 +312,23 @@ const Output = ({
               {!showAddForm && selectedCase < allCases.length && allCases[selectedCase] && (
                 <div className="flex flex-col p-6 gap-6">
                   <div className='flex flex-col gap-2'>
-                    <span className="block font-semibold mb-2 text-base  text-greyPrimary dark:text-white">Input</span>
-                    <div className="bg-blueSecondary dark:bg-blackSecondary rounded-lg px-4 py-2 text-base">
-                      <span className="font-semibold block text-greyPrimary dark:text-white">{inputVars[0]}=</span>
-                      <span className="block text-greyPrimary dark:text-white">{JSON.stringify(allCases[selectedCase].input, null, 2)}</span>
+                    <span className="block font-semibold mb-2 text-base text-greyPrimary dark:text-white">Input</span>
+                    <div className='px-4 py-2 bg-blueSecondary dark:bg-blackSecondary rounded-lg'>
+                      <span className='block text-base text-greyPrimary dark:text-white mb-2'>{inputVars[0]}&nbsp;=</span>
+                      <input
+                        className="p-2 bg-blueSecondary dark:bg-[#1A2A2F] rounded-lg text-base text-greyPrimary dark:text-white w-full"
+                        value={editInput}
+                        onChange={e => onEditInputChange(e.target.value)}
+                      />
                     </div>
                   </div>
                   <div className='flex flex-col gap-2'>
-                    <span className="block font-semibold mb-2 text-base  text-greyPrimary dark:text-white">Output</span>
-                    <div className="bg-blueSecondary dark:bg-blackSecondary rounded-lg px-4 py-2 text-base">
-                      <span className="block text-greyPrimary dark:text-white">{(allCases[selectedCase].output)}</span>
-                    </div>
+                    <span className="block font-semibold mb-2 text-base text-greyPrimary dark:text-white">Output</span>
+                    <input
+                      className="bg-blueSecondary dark:bg-blackSecondary rounded-lg px-4 py-2 text-base text-greyPrimary dark:text-white"
+                      value={editOutput}
+                      onChange={e => onEditOutputChange(e.target.value)}
+                    />
                   </div>
                 </div>
               )}
@@ -406,7 +410,7 @@ const Output = ({
                             <span className="block font-semibold mb-2 text-base  text-purplePrimary">Last Executed Input</span>
                             <div className="bg-blueSecondary dark:bg-blackSecondary rounded-lg px-4 py-2 text-base">
                               <span className="font-semibold block text-greyPrimary dark:text-white">{inputVars[0]}=</span>
-                              <span className="block text-greyPrimary dark:text-white">{JSON.stringify(allCases[selectedCase].input, null, 2)}</span>
+                              <span className="block text-greyPrimary dark:text-white">{editInput}</span>
                             </div>
                           </div>
                         </div>
@@ -417,23 +421,17 @@ const Output = ({
                         <div className='flex flex-col gap-1'>
                           <span className="font-semibold text-sm text-greyPrimary dark:text-white">Input</span>
                           <div className="bg-blueSecondary dark:bg-blackSecondary rounded-xl px-5 py-[15px] text-base text-greyPrimary dark:text-white">
-                            {/* {inputVars[0]} = {'\n'}{JSON.stringify(allCases[selectedCase]?.input, null, 2)} */}
-                            {/* {inputVars[0]} = {'\n'}{JSON.stringify(allCases[selectedCase]?.input).replace(/,/g, ', ').replace(/^\[/, '[ ').replace(/]$/, ' ]')} */}
-                            {/* <pre>
-                              {inputVars[0]} = {' \n'}{JSON.stringify(allCases[selectedCase]?.input, null, 2).replace(/^/, ' ')}
-                            </pre> */}
                             <span className="font-semibold block text-greyPrimary dark:text-white">{inputVars[0]}=</span>
-                            <span className="block text-greyPrimary dark:text-white">{JSON.stringify(allCases[selectedCase].input, null, 2)}</span>
+                            <span className="block text-greyPrimary dark:text-white">{editInput}</span>
                           </div>
                         </div>
                         <div className='flex flex-col gap-1'>
                           <span className="font-semibold text-sm text-greyPrimary dark:text-white">Output</span>
-                          {/* <div className="bg-blueSecondary dark:bg-blackSecondary rounded-xl px-5 py-[15px] text-base text-greyPrimary dark:text-white">({stdoutValue} || {output[0]?.result?.eval[0]?.value})</div> */}
                           <div className="bg-blueSecondary dark:bg-blackSecondary rounded-xl px-5 py-[15px] text-base text-greyPrimary dark:text-white"> {stdoutValue || output[0]?.result?.eval?.[0]?.value}</div>
                         </div>
                         <div className='flex flex-col gap-1'>
                           <span className="font-semibold text-sm text-greyPrimary dark:text-white">Expected</span>
-                          <div className="bg-blueSecondary dark:bg-blackSecondary rounded-xl px-5 py-[15px] text-base text-greyPrimary dark:text-white">{output[0]?.result?.eval?.[0]?.expected || allCases[selectedCase]?.output}</div>
+                          <div className="bg-blueSecondary dark:bg-blackSecondary rounded-xl px-5 py-[15px] text-base text-greyPrimary dark:text-white">{output[0]?.result?.eval?.[0]?.expected || editOutput}</div>
                         </div>
                       </div>
                     )}
