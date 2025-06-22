@@ -28,7 +28,9 @@ const Output = ({
   editInput,
   editOutput,
   onEditInputChange,
-  onEditOutputChange
+  onEditOutputChange,
+  outputErrorMessage,
+  setOutputErrorMessage
 }) => {
   const [newInput, setNewInput] = useState('');
   const [inputError, setInputError] = useState('');
@@ -318,7 +320,11 @@ const Output = ({
                       <input
                         className="p-2 bg-blueSecondary dark:bg-[#1A2A2F] rounded-lg text-base text-greyPrimary dark:text-white w-full"
                         value={editInput}
-                        onChange={e => onEditInputChange(e.target.value)}
+                        onChange={e => {
+                          onEditInputChange(e.target.value);
+                          setOutputErrorMessage && setOutputErrorMessage('');
+                        }}
+                        placeholder='Enter Testcase input'
                       />
                     </div>
                   </div>
@@ -327,7 +333,11 @@ const Output = ({
                     <input
                       className="bg-blueSecondary dark:bg-blackSecondary rounded-lg px-4 py-2 text-base text-greyPrimary dark:text-white"
                       value={editOutput}
-                      onChange={e => onEditOutputChange(e.target.value)}
+                      onChange={e => {
+                        onEditOutputChange(e.target.value);
+                        setOutputErrorMessage && setOutputErrorMessage('');
+                      }}
+                      placeholder='Enter Testcase output'
                     />
                   </div>
                 </div>
@@ -336,6 +346,11 @@ const Output = ({
           )}
           {activeTab === 'results' && (
             <div className="px-6 min-h-0 h-full w-full flex-1 flex flex-col overflow-x-auto min-w-[400px]">
+              {outputErrorMessage && (
+                <div className="p-4 mb-4 bg-red-900 text-white rounded text-center font-semibold">
+                  {outputErrorMessage}
+                </div>
+              )}
               {loading ? (
                 <div className="flex-1 flex items-center justify-center min-h-0 h-full">
                   <span className="animate-spin w-8 h-8 border-4 border-t-transparent border-purple-600 rounded-full"></span>

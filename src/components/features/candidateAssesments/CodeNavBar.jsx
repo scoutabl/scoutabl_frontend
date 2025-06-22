@@ -27,6 +27,7 @@ const CodeNavBar = ({
     editInput,
     editOutput,
     value,
+    setOutputErrorMessage,
 }) => {
     const [isOpen, setIsOpen] = useState(false)
     const [languages, setLanguages] = useState([])
@@ -211,16 +212,30 @@ const CodeNavBar = ({
 
     // Run code handler
     const handleRunCode = async () => {
+        if (!editInput.trim() || !editOutput.trim()) {
+            setOutputErrorMessage && setOutputErrorMessage('Test case input and output cannot be empty. Please enter a value.');
+            setActiveTab && setActiveTab('results');
+            console.log(setOutputErrorMessage)
+            return;
+        }
+        setOutputErrorMessage && setOutputErrorMessage('');
         setCurrentAction('run');
         saveCodeToLocalStorage && saveCodeToLocalStorage();
-        executeCode(true); // is_test = true for run
+        executeCode(true);
     };
 
     // Submit code handler
     const handleSubmit = async () => {
+        if (!editInput.trim() || !editOutput.trim()) {
+            setOutputErrorMessage && setOutputErrorMessage('Test case input and output cannot be empty. Please enter a value.');
+            setActiveTab && setActiveTab('results');
+            return;
+        }
+        setOutputErrorMessage && setOutputErrorMessage('');
         setCurrentAction('submit');
         saveCodeToLocalStorage && saveCodeToLocalStorage();
-        executeCode(false); // is_test = false for submit
+        executeCode(false);
+
     };
 
     if (collapsed) {
