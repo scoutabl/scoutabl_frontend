@@ -6,7 +6,7 @@ import { useCodingAssesment } from './CodingAssesmentContext';
 import { useEnums } from '@/context/EnumsContext';
 import { motion } from 'framer-motion';
 import ClockIcon from '@/assets/clock.svg?react';
-
+import { Skeleton } from '@/components/ui/skeleton';
 const OUTPUT_NAVBAR_MIN_HEIGHT = 54;
 
 const Output = ({
@@ -32,12 +32,7 @@ const Output = ({
   outputErrorMessage,
   setOutputErrorMessage
 }) => {
-  const [newInput, setNewInput] = useState('');
-  const [inputError, setInputError] = useState('');
-  const [newExpected, setNewExpected] = useState('');
-  const [outputError, setOutputError] = useState('');
   const [containerHeight, setContainerHeight] = useState(0);
-  const [showAddForm, setShowAddForm] = useState(false);
   const containerRef = useRef(null);
   const { setIsOutputFullscreen } = useCodingAssesment();
   const { enums } = useEnums();
@@ -249,69 +244,33 @@ const Output = ({
                       whileHover={{ scale: 1.2 }}
                       whileTap={{ scale: 0.98 }}
                       className="ml-2 rounded-full bg-greyPrimary dark:bg-white grid place-content-center h-6 w-6"
-                      onClick={() => setShowAddForm(true)}
-                      title="Add new test case"
+                      onClick={() => {
+                        // Clone the currently selected test case
+                        if (allCases[selectedCase]) {
+                          const cloned = {
+                            input: Array.isArray(allCases[selectedCase].input)
+                              ? [...allCases[selectedCase].input]
+                              : allCases[selectedCase].input,
+                            output: allCases[selectedCase].output
+                          };
+                          setUserTestCases([...userTestCases, cloned]);
+                          setSelectedCase(allCases.length); // select the new case
+                          onEditInputChange(JSON.stringify(cloned.input, null, 2));
+                          onEditOutputChange(String(cloned.output));
+                        }
+                      }}
+                      title="Clone current test case"
                     >
                       <Plus className='text-white dark:text-blackPrimary' size={20} />
                     </motion.button>
-                    <span className="absolute -top-[28px] -right-[60px] w-[65px] h-6 bg-purpleSecondary grid place-content-center rounded-tl-md rounded-br-md rounded-tr-md text-sm text-greyPrimary font-bold shadow opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                      {allCases.length > 0 ? `${selectedCase + 1}/${allCases.length}` : '0/0'}
+                    <span className="absolute -top-[28px] -right-[60px] w-[90px] h-6 bg-purpleSecondary grid place-content-center rounded-tl-md rounded-br-md rounded-tr-md text-sm text-greyPrimary font-bold shadow opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                      Clone Case
                     </span>
                   </div>
                 </div>
               </div>
-              {/* Add new test case input */}
-              {showAddForm && (
-                <form onSubmit={handleAddTestCase} className='p-6 flex flex-col gap-3'>
-                  <div className='flex flex-col gap-2'>
-                    <label htmlFor='input' className='text-base font-medium text-greyPrimary dark:text-white'>{inputVars[0]}=</label>
-                    <input
-                      id='input'
-                      className={cn(
-                        "border rounded-[8px] p-2 text-sm w-full dark:placeholder:text-white text-greyPrimary dark:text-white",
-                        inputError ? "border-red-500 dark:border-red-500" : "border-black dark:border-white"
-                      )}
-                      placeholder="Enter a valid JSON array, e.g. [1,2,3]"
-                      value={newInput}
-                      onChange={e => setNewInput(e.target.value)}
-                    />
-                    {inputError && <span className="text-red-500 text-xs">{inputError}</span>}
-                  </div>
-                  <div className='flex flex-col gap-2'>
-                    <label htmlFor='output' className='text-base font-medium text-greyPrimary dark:text-white'>Expected Output</label>
-                    <input
-                      id='output'
-                      className={cn(
-                        "border rounded-[8px] p-2 text-sm w-full dark:placeholder:text-white text-greyPrimary dark:text-white",
-                        outputError ? "border-red-500 dark:border-red-500" : "border-black dark:border-white"
-                      )}
-                      placeholder="Enter a valid JSON array, e.g. [1,2,3]"
-                      value={newExpected}
-                      onChange={e => setNewExpected(e.target.value)}
-                    />
-                    {outputError && <span className="text-red-500 text-xs">{outputError}</span>}
-                  </div>
-                  <div className="flex gap-2">
-                    <motion.button
-                      whileHover={{ scale: 1.1 }}
-                      whileTap={{ scale: 0.98 }}
-                      type="submit"
-                      className="px-3 py-2 rounded-md h-10 w-fit bg-purplePrimary dark:text-black text-white hover:bg-black hover:text-white dark:hover:bg-white dark:hover:text-black transition-colors duration-300"
-                    >
-                      Add Test Case
-                    </motion.button>
-                    <button
-                      type="button"
-                      className="ml-2 px-3 py-2 rounded-md h-10 w-fit bg-gray-300 text-black hover:bg-gray-400"
-                      onClick={() => setShowAddForm(false)}
-                    >
-                      Cancel
-                    </button>
-                  </div>
-                </form>
-              )}
               {/* Show selected test case input */}
-              {!showAddForm && selectedCase < allCases.length && allCases[selectedCase] && (
+              {selectedCase < allCases.length && allCases[selectedCase] && (
                 <div className="flex flex-col p-6 gap-6">
                   <div className='flex flex-col gap-2'>
                     <span className="block font-semibold mb-2 text-base text-greyPrimary dark:text-white">Input</span>
@@ -346,14 +305,23 @@ const Output = ({
           )}
           {activeTab === 'results' && (
             <div className="px-6 min-h-0 h-full w-full flex-1 flex flex-col overflow-x-auto min-w-[400px]">
-              {outputErrorMessage && (
-                <div className="p-4 mb-4 bg-red-900 text-white rounded text-center font-semibold">
-                  {outputErrorMessage}
+              {outputErrorMessage ? (
+                <div className="flex flex-col gap-3">
+                  <span className='text-xl font-semibold text-[#FF4E55]'>Invalid Testcase</span>
+                  <div className='bg-[#412624] py-4 px-3 rounded-xl text-base text-[#FF4E55]'>
+                    {outputErrorMessage}
+                  </div>
                 </div>
-              )}
-              {loading ? (
-                <div className="flex-1 flex items-center justify-center min-h-0 h-full">
-                  <span className="animate-spin w-8 h-8 border-4 border-t-transparent border-purple-600 rounded-full"></span>
+              ) : loading ? (
+                <div className="flex-1 flex flex-col gap-4 min-h-0 h-full">
+                  {/* <span className="animate-spin w-8 h-8 border-4 border-t-transparent border-purple-600 rounded-full"></span> */}
+                  <Skeleton className="h-8 w-[93px] pt-6 bg-gray-300 dark:bg-gray-500 rounded-full mx-auto" />
+                  <div className='flex flex-col gap-6'>
+                    <Skeleton className="h-9 w-full max-w-[200px] bg-gray-300 dark:bg-gray-500 rounded-xl" />
+                    <Skeleton className="h-9 w-full bg-gray-300 dark:bg-gray-500 rounded-xl" />
+                    <Skeleton className="h-9 w-full bg-gray-300 dark:bg-gray-500 rounded-xl" />
+                    <Skeleton className="h-9 w-full bg-gray-300 dark:bg-gray-500 rounded-xl" />
+                  </div>
                 </div>
               ) : (
                 output.length > 0 && output[0] ? (

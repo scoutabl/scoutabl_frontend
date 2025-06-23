@@ -43,13 +43,13 @@ const CodeEditor = ({ testCases, inputVars, collapsed, isFullscreen, setIsFullsc
     const [activeTab, setActiveTab] = useState('cases')
     const [loading, setLoading] = useState(false)
     const [isOutputCollapsed, setIsOutputCollapsed] = useState(false);
-    const [isEditorCollapsed, setIsEditorCollapsed] = useState(false); 
+    const [isEditorCollapsed, setIsEditorCollapsed] = useState(false);
     const isResizing = useRef(false);
     const [isDraggingResizer, setIsDraggingResizer] = useState(false);
     const { editorHeight, setEditorHeight, lastEditorHeight, setLastEditorHeight, isOutputFullscreen, setIsOutputFullscreen } = useCodingAssesment();
     const [currentLine, setCurrentLine] = useState(0);
     const [cursorPosition, setCursorPosition] = useState({ line: 1, column: 1 });
-
+    const [outputErrorMessage, setOutputErrorMessage] = useState('');
 
     const { isDarkMode } = useTheme();
     // New state to remember the last output height before collapsing
@@ -375,7 +375,7 @@ const CodeEditor = ({ testCases, inputVars, collapsed, isFullscreen, setIsFullsc
     // Output Full Screen
     if (isOutputFullscreen) {
         return (
-            <div className="flex flex-col h-full w-full"> 
+            <div className="flex flex-col h-full w-full">
                 <Output
                     output={output}
                     testCases={testCases}
@@ -387,16 +387,18 @@ const CodeEditor = ({ testCases, inputVars, collapsed, isFullscreen, setIsFullsc
                     activeTab={activeTab}
                     setActiveTab={setActiveTab}
                     loading={loading}
-                    isOutputCollapsed={false} 
+                    isOutputCollapsed={false}
                     isRightPanelCollapsed={collapsed}
-                    onOutputCollapse={handleOutputCollapseButton} 
+                    onOutputCollapse={handleOutputCollapseButton}
                     collapsed={collapsed}
                     onExitFullscreen={() => setIsOutputFullscreen(false)}
-                    isOutputFullscreen={isOutputFullscreen} 
+                    isOutputFullscreen={isOutputFullscreen}
                     editInput={editInput}
                     editOutput={editOutput}
                     onEditInputChange={handleEditInputChange}
                     onEditOutputChange={handleEditOutputChange}
+                    outputErrorMessage={outputErrorMessage}
+                    setOutputErrorMessage={setOutputErrorMessage}
                 />
             </div>
         )
@@ -430,6 +432,8 @@ const CodeEditor = ({ testCases, inputVars, collapsed, isFullscreen, setIsFullsc
                     editInput={editInput}
                     editOutput={editOutput}
                     value={value}
+                    outputErrorMessage={outputErrorMessage}
+                    setOutputErrorMessage={setOutputErrorMessage}
                 />
                 <div className="flex-1 min-h-0 overflow-auto pt-6">
                     <Editor
@@ -462,7 +466,7 @@ const CodeEditor = ({ testCases, inputVars, collapsed, isFullscreen, setIsFullsc
         // Calculate heights for vertical layout
         let outputNavBarHeight = 78;
         let containerHeight = containerRef.current ? containerRef.current.offsetHeight : 0;
-        let editorAreaHeight = Math.max(editorHeight, 54); 
+        let editorAreaHeight = Math.max(editorHeight, 54);
         if (isOutputCollapsed) {
             editorAreaHeight = containerHeight - outputNavBarHeight;
             if (editorAreaHeight < 54) editorAreaHeight = 54;
@@ -492,6 +496,8 @@ const CodeEditor = ({ testCases, inputVars, collapsed, isFullscreen, setIsFullsc
                         editInput={editInput}
                         editOutput={editOutput}
                         value={value}
+                        outputErrorMessage={outputErrorMessage}
+                        setOutputErrorMessage={setOutputErrorMessage}
                     />
                 </div>
                 {/* Vertical Resizer */}
@@ -531,7 +537,10 @@ const CodeEditor = ({ testCases, inputVars, collapsed, isFullscreen, setIsFullsc
                         onExitFullscreen={() => setIsOutputFullscreen(false)}
                         editInput={editInput}
                         editOutput={editOutput}
-                        onEditInputChange={handleEditInputChange} onEditOutputChange={handleEditOutputChange}
+                        onEditInputChange={handleEditInputChange} 
+                        onEditOutputChange={handleEditOutputChange}
+                        outputErrorMessage={outputErrorMessage}
+                        setOutputErrorMessage={setOutputErrorMessage}
                     />
                 </div>
             </div>
@@ -566,6 +575,8 @@ const CodeEditor = ({ testCases, inputVars, collapsed, isFullscreen, setIsFullsc
                 editInput={editInput}
                 editOutput={editOutput}
                 value={value}
+                outputErrorMessage={outputErrorMessage}
+                setOutputErrorMessage={setOutputErrorMessage}
             />
             {/* Collapsible Editor + Status Bar */}
             <div
@@ -672,6 +683,8 @@ const CodeEditor = ({ testCases, inputVars, collapsed, isFullscreen, setIsFullsc
                     editOutput={editOutput}
                     onEditInputChange={handleEditInputChange}
                     onEditOutputChange={handleEditOutputChange}
+                    outputErrorMessage={outputErrorMessage}
+                    setOutputErrorMessage={setOutputErrorMessage}
                 />
             </div>
         </div>

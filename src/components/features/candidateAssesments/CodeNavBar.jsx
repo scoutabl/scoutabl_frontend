@@ -215,7 +215,7 @@ const CodeNavBar = ({
         if (!editInput.trim() || !editOutput.trim()) {
             setOutputErrorMessage && setOutputErrorMessage('Test case input and output cannot be empty. Please enter a value.');
             setActiveTab && setActiveTab('results');
-            console.log(setOutputErrorMessage)
+            console.log("setOutputErrorMessage", setOutputErrorMessage)
             return;
         }
         setOutputErrorMessage && setOutputErrorMessage('');
