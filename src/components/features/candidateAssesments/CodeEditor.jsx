@@ -73,19 +73,7 @@ const CodeEditor = ({ testCases, inputVars, collapsed, isFullscreen, setIsFullsc
         localStorage.setItem(storageKey, JSON.stringify({ input, output }));
     };
 
-    // useEffect(() => {
-    //     if (
-    //         allCases[selectedCase] &&
-    //         (lastSelectedCaseRef.current !== selectedCase || editInput === '' || editOutput === '')
-    //     ) {
-    //         const formattedInput = `[${allCases[selectedCase].input.map((item, i) => i === 0 ? JSON.stringify(item) : ' ' + JSON.stringify(item)).join(',')}]`;
-    //         const output = allCases[selectedCase].output || '';
-    //         setEditInput(formattedInput);
-    //         setEditOutput(output);
-    //         lastSelectedCaseRef.current = selectedCase;
-    //     }
-    //     // eslint-disable-next-line
-    // }, [selectedCase, allCases]);
+    const skipNextEffectRef = useRef(false);
 
     const handleEditInputChange = (newInput) => {
         setEditInput(newInput);
@@ -100,6 +88,10 @@ const CodeEditor = ({ testCases, inputVars, collapsed, isFullscreen, setIsFullsc
     };
 
     useEffect(() => {
+        if (skipNextEffectRef.current) {
+            skipNextEffectRef.current = false;
+            return;
+        }
         if (allCases[selectedCase]) {
             // Check if we have stored edited values first
             const storageKey = getStorageKey(questionId, selectedCase);
@@ -121,7 +113,6 @@ const CodeEditor = ({ testCases, inputVars, collapsed, isFullscreen, setIsFullsc
         }
     }, [selectedCase, allCases, questionId]);
 
-    // Set initial 50/50 split and layout editorFR
     useLayoutEffect(() => {
         if (containerRef.current && editorHeight === 0) {
             const totalHeight = containerRef.current.offsetHeight;
@@ -399,6 +390,7 @@ const CodeEditor = ({ testCases, inputVars, collapsed, isFullscreen, setIsFullsc
                     onEditOutputChange={handleEditOutputChange}
                     outputErrorMessage={outputErrorMessage}
                     setOutputErrorMessage={setOutputErrorMessage}
+                    skipNextEffectRef={skipNextEffectRef}
                 />
             </div>
         )
@@ -537,10 +529,11 @@ const CodeEditor = ({ testCases, inputVars, collapsed, isFullscreen, setIsFullsc
                         onExitFullscreen={() => setIsOutputFullscreen(false)}
                         editInput={editInput}
                         editOutput={editOutput}
-                        onEditInputChange={handleEditInputChange} 
+                        onEditInputChange={handleEditInputChange}
                         onEditOutputChange={handleEditOutputChange}
                         outputErrorMessage={outputErrorMessage}
                         setOutputErrorMessage={setOutputErrorMessage}
+                        skipNextEffectRef={skipNextEffectRef}
                     />
                 </div>
             </div>
@@ -685,6 +678,7 @@ const CodeEditor = ({ testCases, inputVars, collapsed, isFullscreen, setIsFullsc
                     onEditOutputChange={handleEditOutputChange}
                     outputErrorMessage={outputErrorMessage}
                     setOutputErrorMessage={setOutputErrorMessage}
+                    skipNextEffectRef={skipNextEffectRef}
                 />
             </div>
         </div>

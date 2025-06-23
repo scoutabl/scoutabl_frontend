@@ -30,7 +30,8 @@ const Output = ({
   onEditInputChange,
   onEditOutputChange,
   outputErrorMessage,
-  setOutputErrorMessage
+  setOutputErrorMessage,
+  skipNextEffectRef
 }) => {
   const [containerHeight, setContainerHeight] = useState(0);
   const containerRef = useRef(null);
@@ -245,26 +246,37 @@ const Output = ({
                       whileTap={{ scale: 0.98 }}
                       className="ml-2 rounded-full bg-greyPrimary dark:bg-white grid place-content-center h-6 w-6"
                       onClick={() => {
-                        // Clone the currently selected test case
-                        if (allCases[selectedCase]) {
-                          const cloned = {
-                            input: Array.isArray(allCases[selectedCase].input)
-                              ? [...allCases[selectedCase].input]
-                              : allCases[selectedCase].input,
-                            output: allCases[selectedCase].output
-                          };
-                          setUserTestCases([...userTestCases, cloned]);
-                          setSelectedCase(allCases.length); // select the new case
-                          onEditInputChange(JSON.stringify(cloned.input, null, 2));
-                          onEditOutputChange(String(cloned.output));
+                        // Clone the current input/output values
+                        let input;
+                        try {
+                          input = JSON.parse(editInput);
+                          if (!Array.isArray(input)) throw new Error('Input must be a JSON array');
+                          console.log('input from output', input)
+                        } catch (e) {
+                          setOutputErrorMessage && setOutputErrorMessage('Cannot clone: Input must be a valid JSON array.');
+                          return;
                         }
+                        if (!editOutput.trim()) {
+                          setOutputErrorMessage && setOutputErrorMessage('Cannot clone: Output cannot be empty.');
+                          return;
+                        }
+                        setOutputErrorMessage && setOutputErrorMessage('');
+                        const cloned = {
+                          input,
+                          output: editOutput
+                        };
+                        setUserTestCases([...userTestCases, cloned]);
+                        if (skipNextEffectRef) skipNextEffectRef.current = true;
+                        setSelectedCase(allCases.length); // select the new case
+                        onEditInputChange(editInput);
+                        onEditOutputChange(editOutput);
                       }}
                       title="Clone current test case"
                     >
                       <Plus className='text-white dark:text-blackPrimary' size={20} />
                     </motion.button>
                     <span className="absolute -top-[28px] -right-[60px] w-[90px] h-6 bg-purpleSecondary grid place-content-center rounded-tl-md rounded-br-md rounded-tr-md text-sm text-greyPrimary font-bold shadow opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                      Clone Case
+                      {`${allCases.length} / ${allCases.length}`}
                     </span>
                   </div>
                 </div>
