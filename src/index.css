@@ -328,6 +328,8 @@
   --animate-shine: shine 3s ease-out infinite;
   --animate-gradient-flow: gradientFlow 10s ease infinite;
 
+
+  
   @keyframes shine {
     0% {
       background-position: 200% 0;
