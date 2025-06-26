@@ -149,6 +149,10 @@
     @apply text-lg font-bold;
   }
 
+  h5 {
+    @apply text-2xl font-semibold text-greyPrimary
+  }
+
   ::-webkit-scrollbar {
     @apply w-2.5 h-2.5;
   }
@@ -329,7 +333,7 @@
   --animate-gradient-flow: gradientFlow 10s ease infinite;
 
 
-  
+
   @keyframes shine {
     0% {
       background-position: 200% 0;

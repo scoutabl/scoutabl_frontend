@@ -14,7 +14,10 @@ const buttonVariants = cva(
         secondary: 'bg-[#FFFFFF] text-purplePrimary',
         ghost: 'hover:bg-accent hover:text-accent-foreground',
         link: 'text-primary underline-offset-4 hover:underline',
-        primary: 'bg-purplePrimary text-[#FFFFFF]  text-purplePrimary transition-all duration-300'
+        primary: 'bg-purplePrimary text-[#FFFFFF] text-purplePrimary transition-all duration-300',
+        back: 'min-h-9 min-w-[98px] py-8 flex items-center gap-2 text-sm font-medium bg-transparent text-purplePrimary border-[1px] border-[solid] border-purplePrimary rounded-full',
+        next: 'min-h-9 min-w-[98px] py-8 flex items-center gap-2 text-sm font-medium bg-purplePrimary text-white rounded-full',
+
       },
       effect: {
         expandIcon: 'group gap-0 relative',

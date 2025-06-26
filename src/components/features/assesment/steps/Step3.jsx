@@ -1,7 +1,16 @@
 import React, { useState } from 'react'
-import AiIcon from '@/assets/AiIcon.svg?react'
-import { Button } from '@/components/ui/button'
 import { motion } from 'framer-motion'
+import { Button } from '@/components/ui/button'
+import {
+    Select,
+    SelectContent,
+    SelectGroup,
+    SelectItem,
+    SelectLabel,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select"
+import AiIcon from '@/assets/AiIcon.svg?react'
 import TickIcon from '@/assets/tick.svg?react'
 import MultiSelect from '@/assets/multiSelect.svg?react'
 import RatingIcon from '@/assets/ratingIcon.svg?react'
@@ -15,6 +24,13 @@ import VideoIcon from '@/assets/videoIcon.svg?react'
 import AudioIcon from '@/assets/audioIcon.svg?react'
 import PlusIcon from '@/assets/plusIcon.svg?react'
 import TrashIcon from '@/assets/trashIcon.svg?react'
+import EditIcon from '@/assets/editquestion.svg?react'
+import DuplicateIcon from '@/assets/duplicateIcon.svg?react'
+import NoTestIcon from '@/assets/noTestIcon.svg?react'
+import ChevronLeftIcon from '@/assets/chevronLeft.svg?react'
+import ChevronRightIcon from '@/assets/chevronRight.svg?react'
+import { Eye } from 'lucide-react'
+
 const Step3 = () => {
     const [questionSequence, setQuestionSequence] = useState([])
     return (
@@ -66,7 +82,30 @@ const Step3 = () => {
                                 }>
                                 <PlusIcon className="h-[10px] w-[10px] group-hover:rotate-[-12deg]" />
                             </motion.button>
+                            <dialog className='p-6 bg-white rounded-5xl border-[1px] border-[rgba(224,224,224,0.65)] [box-shadow:0px_16px_24px_rgba(0,_0,_0,_0.06),_0px_2px_6px_rgba(0,_0,_0,_0.04)]'>
+                                <div className='flex itekmcer justify-between items-center mb-4'>
+                                    <div className='flex items-center gap-2'>
+                                        <span className='text-lg font-semibold text-greyPrimary'>New Question:</span>
+                                        <Select>
+                                            <SelectTrigger className="w-[180px]">
+                                                <SelectValue placeholder="Select a fruit" />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                <SelectGroup>
+                                                    <SelectLabel>Fruits</SelectLabel>
+                                                    <SelectItem value="apple">Apple</SelectItem>
+                                                    <SelectItem value="banana">Banana</SelectItem>
+                                                    <SelectItem value="blueberry">Blueberry</SelectItem>
+                                                    <SelectItem value="grapes">Grapes</SelectItem>
+                                                    <SelectItem value="pineapple">Pineapple</SelectItem>
+                                                </SelectGroup>
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
+                                </div>
+                            </dialog>
                         </div>
+
                         <div className="flex items-center gap-2 px-4 py-[9.5px] bg-purpleSecondary rounded-full w-full group hover:bg-greyPrimary transition-all duration-300 ease-in">
                             <div className='h-5 w-5 grid place-content-center bg-white rounded-[6px]'>
                                 <MultiSelect className="h-[14px] w-[14px]" />
@@ -218,49 +257,155 @@ const Step3 = () => {
             <div className='p-4 flex flex-col gap-4 rounded-5xl bg-white border-[1px] border-[rgba(224,224,224,0.65)] [box-shadow:0px_16px_24px_rgba(0,_0,_0,_0.06),_0px_2px_6px_rgba(0,_0,_0,_0.04)]'>
                 {questionSequence.length > 0
                     ?
-                    <div className='flex items-center justify-between'>
-                        <h3 className='text-lg font-semibold text-greyPrimary'>Question Sequence</h3>
-                        <div className='flex items-center gap-4'>
-                            <div className='flex items-center gap-2'>
-                                <input type="checkbox" name="randomize" id="randomize" />
-                                <label htmlFor="randomize" className='text-sm font-medium text-greyAccent'>Randomize Order</label>
+                    <div className='flex flex-col gap-4'>
+                        <div className='flex items-center justify-between'>
+                            <h3 className='text-lg font-semibold text-greyPrimary'>Question Sequence</h3>
+                            <div className='flex items-center gap-4'>
+                                <div className='flex items-center gap-2'>
+                                    <input type="checkbox" name="randomize" id="randomize" />
+                                    <label htmlFor="randomize" className='text-sm font-medium text-greyAccent'>Randomize Order</label>
+                                </div>
+                                <div>
+                                    <span className='font-semibold text-sm text-greyPrimary'>Total Score:&nbsp;</span>
+                                    <span>900</span>
+                                </div>
+                                <motion.button
+                                    className='h-8 w-8 rounded-full grid place-content-center border border-[#E0E0E0]'
+                                    whileHover={{ scale: 1.1 }}
+                                    whileTap={{ scale: 0.9 }}
+                                >
+                                    <TrashIcon className="text-green-500 font-bold" />
+                                </motion.button>
                             </div>
-                            <div>
-                                <span className='font-semibold text-sm text-greyPrimary'>Total Score:&nbsp;</span>
-                                <span>900</span>
+                        </div>
+                        <div className="py-3 px-5 grid grid-cols-[minmax(60px,86px)_minmax(200px,1fr)_minmax(80px,103px)_minmax(120px,198px)_minmax(120px,196px)] gap-4 items-center bg-purpleSecondary rounded-xl">
+                            {/* Header */}
+                            <div className="font-medium">No.</div>
+                            <div className="font-medium">Question</div>
+                            <div className="font-medium">Time</div>
+                            <div className="font-medium">Type</div>
+                            <div className="font-medium">Action</div>
+                        </div>
+                        <div className="py-3 border border-black px-5 grid grid-cols-[minmax(60px,86px)_minmax(200px,1fr)_minmax(80px,103px)_minmax(120px,198px)_minmax(120px,196px)] gap-4 items-center bg-backgroundPrimary rounded-xl">
+                            {/* Header */}
+                            <div className="font-medium min-w-8 flex items-center justify-center rounded-full border-purplePrimary">01</div>
+                            <div className="flex items-center gap-6">
+                                <input type="checkbox" name="questionTitle" id="questionTitle" />
+                                <label htmlFor="questionTitle" className='truncate'>Have you previously worketnfhjworketnfhjworketnfhjworketnfhjworketnfhj....</label>
                             </div>
-                            <motion.button
-                                className='h-8 w-8 rounded-full grid place-content-center border border-[#E0E0E0]'
-                                whileHover={{ scale: 1.1 }}
-                                whileTap={{ scale: 0.9 }}
-                            >
-                                <TrashIcon />
-                            </motion.button>
+                            <div className="font-medium">023 min</div>
+                            <div className="font-medium min-w-[150px] rounded-full bg-[#D8FEE3] px-[6px] py-[5.5px] text-[#13482A]">Single Select</div>
+                            <div className="flex items-center gap-2">
+                                <motion.button
+                                    className='w-8 h-8 grid place-content-center bg-white rounded-full'
+                                    whileHover={{ scale: 1.1 }}
+                                    whileTap={{ scale: 0.9 }}
+                                >
+                                    <Eye className='text-greyPrimary font-normal' size={16} />
+                                </motion.button>
+                                <motion.button
+                                    className='w-8 h-8 grid place-content-center bg-white rounded-full'
+                                    whileHover={{ scale: 1.1 }}
+                                    whileTap={{ scale: 0.9 }}
+                                >
+                                    <DuplicateIcon className="w-4 h-4" />
+                                </motion.button>
+                                <motion.button
+                                    className='w-8 h-8 grid place-content-center bg-white rounded-full'
+                                    whileHover={{ scale: 1.1 }}
+                                    whileTap={{ scale: 0.9 }}
+                                >
+                                    <EditIcon className="w-4 h-4" />
+                                </motion.button>
+                                <motion.button
+                                    className='w-8 h-8 grid place-content-center bg-white rounded-full'
+                                    whileHover={{ scale: 1.1 }}
+                                    whileTap={{ scale: 0.9 }}
+                                >
+                                    <TrashIcon className="w-4 h-4" />
+                                </motion.button>
+                            </div>
                         </div>
                     </div>
                     :
-                    <div className='flex items-center justify-between'>
-                        <h3 className='text-lg font-semibold text-greyPrimary'>Question Sequence</h3>
-                        <div className='flex items-center gap-4'>
+                    <div className='flex flex-col gap-4'>
+                        <div className='flex items-center justify-between'>
+                            <h3 className='text-lg font-semibold text-greyPrimary'>Question Sequence</h3>
                             <div className='flex items-center gap-2'>
                                 <input type="checkbox" name="randomize" id="randomize" />
                                 <label htmlFor="randomize" className='text-sm font-medium text-greyAccent'>Randomize Order</label>
                             </div>
-                            {/* <div>
-                                <span className='font-semibold text-sm text-greyPrimary'>Total Score:&nbsp;</span>
-                                <span>900</span>
+                        </div>
+                        {/* <div className="py-3 px-5 grid grid-cols-[minmax(60px,86px)_minmax(200px,1fr)_minmax(80px,103px)_minmax(120px,198px)_minmax(120px,196px)] gap-4 items-center bg-purpleSecondary rounded-xl">
+
+                            <div className="font-medium">No.</div>
+                            <div className="font-medium">Question</div>
+                            <div className="font-medium">Time</div>
+                            <div className="font-medium">Type</div>
+                            <div className="font-medium">Action</div>
+                        </div>
+                        <div className="py-3 border border-black px-5 grid grid-cols-[minmax(60px,86px)_minmax(200px,1fr)_minmax(80px,103px)_minmax(120px,198px)_minmax(120px,196px)] gap-4 items-center bg-backgroundPrimary rounded-xl">
+
+                            <div className="font-medium min-w-8 flex items-center justify-center rounded-full border-purplePrimary">01</div>
+                            <div className="flex items-center gap-6">
+                                <input type="checkbox" name="questionTitle" id="questionTitle" />
+                                <label htmlFor="questionTitle" className='truncate'>Have you previously worketnfhjworketnfhjworketnfhjworketnfhjworketnfhj....</label>
                             </div>
-                            <motion.button
-                                className='h-8 w-8 rounded-full grid place-content-center border border-[#E0E0E0]'
-                                whileHover={{ scale: 1.1 }}
-                                whileTap={{ scale: 0.9 }}
-                            >
-                                <TrashIcon />
-                            </motion.button> */}
+                            <div className="font-medium">023 min</div>
+                            <div className="font-medium min-w-[150px] rounded-full bg-[#D8FEE3] px-[6px] py-[5.5px] text-[#13482A]">Single Select</div>
+                            <div className="flex items-center gap-2">
+                                <motion.button
+                                    className='w-8 h-8 grid place-content-center bg-white rounded-full'
+                                    whileHover={{ scale: 1.1 }}
+                                    whileTap={{ scale: 0.9 }}
+                                >
+                                    <Eye className='text-greyPrimary font-normal' size={16} />
+                                </motion.button>
+                                <motion.button
+                                    className='w-8 h-8 grid place-content-center bg-white rounded-full'
+                                    whileHover={{ scale: 1.1 }}
+                                    whileTap={{ scale: 0.9 }}
+                                >
+                                    <DuplicateIcon className="w-4 h-4" />
+                                </motion.button>
+                                <motion.button
+                                    className='w-8 h-8 grid place-content-center bg-white rounded-full'
+                                    whileHover={{ scale: 1.1 }}
+                                    whileTap={{ scale: 0.9 }}
+                                >
+                                    <EditIcon className="w-4 h-4" />
+                                </motion.button>
+                                <motion.button
+                                    className='w-8 h-8 grid place-content-center bg-white rounded-full'
+                                    whileHover={{ scale: 1.1 }}
+                                    whileTap={{ scale: 0.9 }}
+                                >
+                                    <TrashIcon className="w-4 h-4" />
+                                </motion.button>
+                            </div>
+                        </div> */}
+                        <div className='flex flex-col items-center justify-center gap-6'>
+                            <NoTestIcon />
+                            <div>
+                                <h5 className='pb-[6px] text-center'>You haven’t added test yet!</h5>
+                                <span className='text-greyAccent text-sm font-medium text-center block'>Stay productive by creating a task.</span>
+                            </div>
+                            <Button effect="expandIcon" icon={PlusIcon} iconPlacement="right" className="px-4 py-2 rounded-xl bg-purplePrimary hover:bg-[#EEF2FC] text-sm font-medium hover:text-purplePrimary text-white border border-transparent hover:border-purplePrimary [&_svg]:size-3">
+                                Add from Library
+                            </Button>
                         </div>
                     </div>
                 }
-
+            </div>
+            <div className='flex items-center justify-between'>
+                <Button variant="back" effect="shineHover">
+                    <ChevronLeftIcon />
+                    Back
+                </Button>
+                <Button variant="next" effect="shineHover">
+                    Next
+                    <ChevronRightIcon />
+                </Button>
             </div>
         </div>
     )
