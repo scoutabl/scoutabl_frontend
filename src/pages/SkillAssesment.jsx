@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import WaveformComponent from '@/components/WavesurferComponent';
 import RichText from '@/components/RichText';
+import RichTextEditor from '@/components/RichTextEditor';
 import VideoRecorder from '@/components/common/VideoRecorder';
 import { FaQuestion } from "react-icons/fa6";
 import QuestionPopup from '@/components/features/candidateAssesments/QuestionPopup';
@@ -253,7 +254,8 @@ const LongAnswerQuestion = () => {
     }
 
     return (
-        <RichText content={post} onChange={onChange} />
+        // <RichText content={post} onChange={onChange} />
+        <RichTextEditor content={post} onChange={onChange} />
     )
 };
 

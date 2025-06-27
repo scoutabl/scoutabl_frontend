@@ -314,8 +314,9 @@
   }
 }
 
-@theme {
 
+@theme {
+  
   /* colors */
   --color-bluePrimary: #0084FF;
   --color-blueSecondary: #E2EAFF;

@@ -26,6 +26,7 @@
     "@tanstack/react-query-devtools": "^5.80.6",
     "@tiptap/extension-code": "^2.12.0",
     "@tiptap/extension-color": "^2.12.0",
+    "@tiptap/extension-font-family": "^2.23.0",
     "@tiptap/extension-highlight": "^2.12.0",
     "@tiptap/extension-image": "^2.12.0",
     "@tiptap/extension-link": "^2.12.0",
