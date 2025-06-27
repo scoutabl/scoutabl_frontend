@@ -1,27 +1,7 @@
 import React, { useState } from 'react'
 import { motion } from 'framer-motion'
 import { Button } from '@/components/ui/button'
-import {
-    Select,
-    SelectContent,
-    SelectGroup,
-    SelectItem,
-    SelectLabel,
-    SelectTrigger,
-    SelectValue,
-} from "@/components/ui/select"
 import AiIcon from '@/assets/AiIcon.svg?react'
-import TickIcon from '@/assets/tick.svg?react'
-import MultiSelect from '@/assets/multiSelect.svg?react'
-import RatingIcon from '@/assets/ratingIcon.svg?react'
-import RearrangeIcon from '@/assets/rearrangeIcon.svg?react'
-import NumericInputIcon from '@/assets/numericInputIcon.svg?react'
-import EssayIcon from '@/assets/essayIcon.svg?react'
-import CodeIcon from '@/assets/codeIcon.svg?react'
-import MsExcelIcon from '@/assets/msExcelIcon.svg?react'
-import GoogleSheetsIcon from '@/assets/googleSheetsIcon.svg?react'
-import VideoIcon from '@/assets/videoIcon.svg?react'
-import AudioIcon from '@/assets/audioIcon.svg?react'
 import PlusIcon from '@/assets/plusIcon.svg?react'
 import TrashIcon from '@/assets/trashIcon.svg?react'
 import EditIcon from '@/assets/editquestion.svg?react'
@@ -30,9 +10,10 @@ import NoTestIcon from '@/assets/noTestIcon.svg?react'
 import ChevronLeftIcon from '@/assets/chevronLeft.svg?react'
 import ChevronRightIcon from '@/assets/chevronRight.svg?react'
 import { Eye } from 'lucide-react'
-
+import QuestionCards from '../QuestionCards'
 const Step3 = () => {
     const [questionSequence, setQuestionSequence] = useState([])
+
     return (
         <div className='flex flex-col gap-6 px-[116px] py-6'>
             <div className='flex items-center justify-between'>
@@ -66,7 +47,7 @@ const Step3 = () => {
                     <Button className="px-4 py-2 rounded-xl bg-purplePrimary hover:bg-[#EEF2FC] text-sm font-medium hover:text-purplePrimary text-white transition-all duration-300 ease-in border border-purplePrimary">Add from Library</Button>
                 </div>
             </div>
-            <div className='grid grid-cols-4 bg-white rounded-5xl border-[1px] border-[rgba(224,224,224,0.65)] [box-shadow:0px_16px_24px_rgba(0,_0,_0,_0.06),_0px_2px_6px_rgba(0,_0,_0,_0.04)]'>
+            {/* <div className='grid grid-cols-4 bg-white rounded-5xl border-[1px] border-[rgba(224,224,224,0.65)] [box-shadow:0px_16px_24px_rgba(0,_0,_0,_0.06),_0px_2px_6px_rgba(0,_0,_0,_0.04)]'>
                 <div className='pl-6 py-6 border-r border-[EBEBEB] w-full pr-6'>
                     <h3 className='pb-3 text-sm text-greyPrimary font-semibold'>Choice Based</h3>
                     <div className='flex flex-col items-center gap-3'>
@@ -76,7 +57,7 @@ const Step3 = () => {
                             </div>
                             <span className='text-sm font-semibold text-greyPrimary group-hover:text-white transition-all duration-300 ease-in'>Single Select</span>
                             <motion.button
-                                className='h-6 w-6 grid place-content-center bg-white rounded-full ml-auto '
+                                className='h-6 w-6 grid place-content-center bg-white rounded-full ml-auto '    
                                 whileHover={{ scale: 1.1 }}
                                 whileTap={{ scale: 0.9 }
                                 }>
@@ -253,7 +234,8 @@ const Step3 = () => {
                         </div>
                     </div>
                 </div>
-            </div>
+            </div> */}
+            <QuestionCards />
             <div className='p-4 flex flex-col gap-4 rounded-5xl bg-white border-[1px] border-[rgba(224,224,224,0.65)] [box-shadow:0px_16px_24px_rgba(0,_0,_0,_0.06),_0px_2px_6px_rgba(0,_0,_0,_0.04)]'>
                 {questionSequence.length > 0
                     ?
@@ -410,5 +392,6 @@ const Step3 = () => {
         </div>
     )
 }
+
 
 export default Step3
