@@ -19,7 +19,11 @@ import {
 } from '@/components/ui/select';
 import AiIcon from '@/assets/AiIcon.svg?react'
 import PlusIcon from '@/assets/plusIcon.svg?react'
+import PurpleStarIcon from '@/assets/purpleStar.svg?react'
 import RichTextEditor from '@/components/RichTextEditor';
+import NumericInputIcon from '@/assets/numericInputIcon.svg?react'
+import RatingIcon from '@/assets/ratingIcon.svg?react'
+import LikertIcon from '@/assets/smileyIcon.svg?react'
 
 // Numeric Input Answer Component
 const NumericInputAnswers = ({ correctAnswer, onAnswerChange }) => {
@@ -105,33 +109,47 @@ const RatingScaleAnswers = ({ scale, selectedRating, onRatingChange }) => {
             { value: 5, label: 'Excellent', stars: 5 },
         ],
         'likert': [
-            { value: 1, label: 'Strongly Disagree' },
+            { value: 1, label: 'Strongly Disagree', icon: <PlusIcon /> },
             { value: 2, label: 'Disagree' },
             { value: 3, label: 'Neutral' },
             { value: 4, label: 'Agree' },
             { value: 5, label: 'Strongly Agree' },
         ],
-        'numeric': Array.from({ length: 10 }, (_, i) => ({
+        'numeric': Array.from({ length: 5 }, (_, i) => ({
             value: i + 1,
             label: `${i + 1}`,
         })),
     };
 
-    const scaleOptions = scales[scale] || scales['star-rating'];
+    // const scaleOptions = scales[scale] || scales['star-rating'];
+    const [scaleOptions, setScaleOptions] = useState(scales[scale] || scales['star-rating'])
 
+    const [activeTab, setActiveTab] = useState('rating');
     return (
         <div className="space-y-4">
             <div className="flex items-center gap-4 mb-4">
                 <span className="text-sm font-medium text-gray-700">Select a scale</span>
                 <div className="flex gap-2">
-                    <button className="px-3 py-1 text-xs bg-purple-100 text-purple-700 rounded-full">
-                        ⭐ Star Rating (1-5)
+                    <button
+                        onClick={() => { setActiveTab('star-rating'), setScaleOptions(scales['star-rating']) }}
+                        className="flex items-center px-3 gap-2 py-[6px] text-sm font-medium bg-white text-purplePrimary rounded-full border border-purplePrimary"
+                    >
+                        <RatingIcon className="text-purplePrimary w-4 h-4" />
+                        Star Rating (1-5)
                     </button>
-                    <button className="px-3 py-1 text-xs bg-gray-100 text-gray-600 rounded-full">
-                        📊 Likert Scale
+                    <button
+                        onClick={() => { setActiveTab('likert'), setScaleOptions(scales['likert']) }}
+                        className="flex items-center px-3 gap-2 py-[6px] text-sm font-medium bg-white text-purplePrimary rounded-full border border-purplePrimary"
+                    >
+                        <LikertIcon className="text-purplePrimary w-4 h-4" />
+                        Likert Scale
                     </button>
-                    <button className="px-3 py-1 text-xs bg-gray-100 text-gray-600 rounded-full">
-                        🔢 Numeric Scale
+                    <button
+                        onClick={() => { setActiveTab('numeric'), setScaleOptions(scales['numeric']) }}
+                        className="flex items-center px-3 gap-2 py-[6px] text-sm font-medium bg-white text-purplePrimary rounded-full border border-purplePrimary"
+                    >
+                        <NumericInputIcon className="text-purplePrimary w-3 h-3" />
+                        Numeric Scale
                     </button>
                 </div>
             </div>
@@ -141,15 +159,15 @@ const RatingScaleAnswers = ({ scale, selectedRating, onRatingChange }) => {
                     <div
                         key={option.value}
                         className={`flex items-center gap-3 p-3 border rounded-lg cursor-pointer transition-colors ${selectedRating === option.value
-                            ? 'border-purple-500 bg-purple-50'
-                            : 'border-gray-200 hover:bg-gray-50'
+                            ? 'border-purplePrimary bg-purple-50'
+                            : 'border-gray-200 hover:bg-purple-50 hover:border-purplePrimary'
                             }`}
                         onClick={() => onRatingChange(option.value)}
                     >
                         {option.stars && (
-                            <div className="flex gap-1">
+                            <div className="flex gap-2">
                                 {Array.from({ length: option.stars }, (_, i) => (
-                                    <span key={i} className="text-yellow-400">⭐</span>
+                                    <PurpleStarIcon key={i} className="text-purplePrimary" />
                                 ))}
                             </div>
                         )}
@@ -157,6 +175,24 @@ const RatingScaleAnswers = ({ scale, selectedRating, onRatingChange }) => {
                     </div>
                 ))}
             </div>
+            {/* <div className="space-y-3">
+                {scaleOptions.map((option) => (
+                    <div
+                        key={option.value}
+                        className='flex items-center gap-3'
+                        onClick={() => onRatingChange(option.value)}
+                    >
+                        {option.stars && (
+                            <div className="min-h-8 py-[6px] px-3 flex gap-2 border border-purplePrimary rounded-full">
+                                {Array.from({ length: option.stars }, (_, i) => (
+                                    <PurpleStarIcon key={i} />
+                                ))}
+                            </div>
+                        )}
+                        <div className="p-3 w-full rounded-[12px] font-medium text-gray-800 border border-[#E0E0E0]">{option.label}</div>
+                    </div>
+                ))}
+            </div> */}
         </div>
     );
 };
@@ -325,7 +361,7 @@ const QuestionModal = ({
                     </div>
                     {/* Right Panel - Settings */}
                     <div className="flex-1">
-                        <div className='p-3 flex flex-col gap-3 rounded-2xl bg-blueSecondary'>
+                        <div className='mb-6 p-3 flex flex-col gap-3 rounded-2xl bg-blueSecondary'>
                             <div className='flex items-center justify-between'>
                                 <div className='flex'>
                                     <label
@@ -398,7 +434,7 @@ const QuestionModal = ({
                             whileHover={{ scale: 1.05 }}
                             whileTap={{ scale: 0.95 }}
                             onClick={handleSave}
-                            className="ml-auto w-[124px] h-[37px] grid place-content-center bg-[#1EA378] text-white rounded-full text-sm font-medium"
+                            className="mt-4 ml-auto w-[124px] h-[37px] grid place-content-center bg-[#1EA378] text-white rounded-full text-sm font-medium"
                         >
                             Add Question
                         </motion.button>

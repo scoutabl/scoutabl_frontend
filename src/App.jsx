@@ -16,7 +16,7 @@ import SignupPage from './pages/SignupPage'
 import HomePage from './pages/HomePage'
 import { AssessmentProvider } from './context/AssesmentContext';
 import Assesment from './components/features/assesment/Assesment';
-import CreateAssessmentFlow from './components/features/assesment/CreateAssesmentFlow';
+import CreateAssessmentFlow from './components/features/assesment/create/CreateAssesmentFlow';
 import SkillAssesment from './pages/SkillAssesment'
 import CodingAssesment from './components/features/candidateAssesments/CodingAssesment'
 

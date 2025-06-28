@@ -5,10 +5,10 @@ const CodingAssesmentContext = createContext();
 export function CodingAssesmentProvider({ children }) {
     // Shared state
     const [activeTab, setActiveTab] = useState('description');
-    const [sidebarActiveTab, setSidebarActiveTab] = useState('description'); // For sidebar (Description/Submissions)
+    const [sidebarActiveTab, setSidebarActiveTab] = useState('description'); 
     const [currentQuestion, setCurrentQuestion] = useState(1);
     const totalQuestions = 15;
-    const [sidebarWidth, setSidebarWidth] = useState(543); // default width
+    const [sidebarWidth, setSidebarWidth] = useState(543); 
     const [isCollapsed, setIsCollapsed] = useState(false);
     const [isFullscreen, setIsFullscreen] = useState(false);
     const [isOutputFullscreen, setIsOutputFullscreen] = useState(false)
@@ -16,12 +16,9 @@ export function CodingAssesmentProvider({ children }) {
     const isResizing = useRef(false);
     const [rightPanelWidth, setRightPanelWidth] = useState(0);
     const [isRightCollapsed, setIsRightCollapsed] = useState(false);
-    // Add more shared state as needed
-    // Shared state for editor height (for vertical resizer sync)
-    const [editorHeight, setEditorHeight] = useState(0); // px, will be set to 50% on mount
-    const [lastEditorHeight, setLastEditorHeight] = useState(0); // remembers last expanded height
+    const [editorHeight, setEditorHeight] = useState(0); 
+    const [lastEditorHeight, setLastEditorHeight] = useState(0); 
     const [isDragging, setIsDragging] = useState(false);
-    // Add submission refresh trigger
     const [submissionRefreshTrigger, setSubmissionRefreshTrigger] = useState(0);
 
     return (
