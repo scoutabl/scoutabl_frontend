@@ -17,6 +17,8 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
+import { Input } from '@/components/ui/input';
+import { Checkbox } from '@/components/ui/checkbox';
 import AiIcon from '@/assets/AiIcon.svg?react'
 import PlusIcon from '@/assets/plusIcon.svg?react'
 import PurpleStarIcon from '@/assets/purpleStar.svg?react'
@@ -24,6 +26,13 @@ import RichTextEditor from '@/components/RichTextEditor';
 import NumericInputIcon from '@/assets/numericInputIcon.svg?react'
 import RatingIcon from '@/assets/ratingIcon.svg?react'
 import LikertIcon from '@/assets/smileyIcon.svg?react'
+import Emoji1 from '@/assets/emoji1.svg?react'
+import Emoji2 from '@/assets/emoji2.svg?react'
+import Emoji3 from '@/assets/emoji3.svg?react'
+import Emoji4 from '@/assets/emoji4.svg?react'
+import Emoji5 from '@/assets/emoji5.svg?react'
+import DeleteIcon from '@/assets/trashIcon.svg?react'
+import { cn } from '@/lib/utils';
 
 // Numeric Input Answer Component
 const NumericInputAnswers = ({ correctAnswer, onAnswerChange }) => {
@@ -45,7 +54,7 @@ const NumericInputAnswers = ({ correctAnswer, onAnswerChange }) => {
                     <option value="equal-to">Equal to</option>
                     <option value="between">Between</option>
                 </select>
-                <input
+                <Input
                     type="number"
                     value={correctAnswer}
                     onChange={(e) => onAnswerChange(e.target.value)}
@@ -58,45 +67,6 @@ const NumericInputAnswers = ({ correctAnswer, onAnswerChange }) => {
     );
 };
 
-// Single Select Answer Component
-const SingleSelectAnswers = ({ answers, selectedAnswer, onAnswerChange, shuffleOptions }) => {
-    return (
-        <div className="mt-6">
-            <div className="flex items-center justify-between mb-4">
-                <span className="text-base font-semibold text-greyPrimary">Select right answer</span>
-                {shuffleOptions && (
-                    <label className="flex items-center gap-2 text-sm text-gray-600">
-                        <input type="checkbox" className="rounded" />
-                        Shuffle options
-                    </label>
-                )}
-            </div>
-            <div className='flex flex-col gap-4 '>
-                {answers.map((answer, index) => (
-                    <div key={index} className="flex items-center gap-2">
-                        <input
-                            type="radio"
-                            name="answer"
-                            value={answer.id}
-                            checked={selectedAnswer === answer.id}
-                            onChange={(e) => onAnswerChange(e.target.value)}
-                            className="w-4 h-4 text-blue-600"
-                        />
-                        <span className="p-3 flex-1 rounded-2xl text-greyAccent font-medium text-sm border border-[#E0E0E0]">{answer.text}</span>
-
-                        <button className="mt-4 text-gray-400 hover:text-gray-600">
-                            <X className="w-4 h-4" />
-                        </button>
-                    </div>
-                ))}
-            </div>
-
-            <button className="py-[17.5px] flex items-center gap-3 text-[#0077C2] text-sm font-medium">
-                <PlusIcon /> Add Options
-            </button>
-        </div>
-    );
-};
 
 // Rating Scale Answer Component
 const RatingScaleAnswers = ({ scale, selectedRating, onRatingChange }) => {
@@ -109,11 +79,11 @@ const RatingScaleAnswers = ({ scale, selectedRating, onRatingChange }) => {
             { value: 5, label: 'Excellent', stars: 5 },
         ],
         'likert': [
-            { value: 1, label: 'Strongly Disagree', icon: <PlusIcon /> },
-            { value: 2, label: 'Disagree' },
-            { value: 3, label: 'Neutral' },
-            { value: 4, label: 'Agree' },
-            { value: 5, label: 'Strongly Agree' },
+            { value: 1, label: 'Strongly Disagree', icon: <Emoji1 /> },
+            { value: 2, label: 'Disagree', icon: <Emoji2 /> },
+            { value: 3, label: 'Neutral', icon: <Emoji3 /> },
+            { value: 4, label: 'Agree', icon: <Emoji4 /> },
+            { value: 5, label: 'Strongly Agree', icon: <Emoji5 /> },
         ],
         'numeric': Array.from({ length: 5 }, (_, i) => ({
             value: i + 1,
@@ -132,23 +102,38 @@ const RatingScaleAnswers = ({ scale, selectedRating, onRatingChange }) => {
                 <div className="flex gap-2">
                     <button
                         onClick={() => { setActiveTab('star-rating'), setScaleOptions(scales['star-rating']) }}
-                        className="flex items-center px-3 gap-2 py-[6px] text-sm font-medium bg-white text-purplePrimary rounded-full border border-purplePrimary"
+                        className={cn("flex items-center px-3 gap-2 py-[6px] text-sm font-medium bg-white hover:bg-purplePrimary text-purplePrimary hover:text-white rounded-full border border-purplePrimary transition-all duration-300 ease-in group hover:cursor-pointer",
+                            { 'bg-purplePrimary text-white': activeTab === 'star-rating' }
+                        )}
                     >
-                        <RatingIcon className="text-purplePrimary w-4 h-4" />
+                        <RatingIcon
+                            className={cn("text-purplePrimary w-4 h-4 group-hover:text-white transition-all duration-300 ease-in",
+                                { 'text-white': activeTab === 'star-rating' }
+                            )} />
                         Star Rating (1-5)
                     </button>
                     <button
                         onClick={() => { setActiveTab('likert'), setScaleOptions(scales['likert']) }}
-                        className="flex items-center px-3 gap-2 py-[6px] text-sm font-medium bg-white text-purplePrimary rounded-full border border-purplePrimary"
+                        className={cn("flex items-center px-3 gap-2 py-[6px] text-sm font-medium bg-white hover:bg-purplePrimary text-purplePrimary hover:text-white rounded-full border border-purplePrimary transition-all duration-300 ease-in group hover:cursor-pointer",
+                            { 'bg-purplePrimary text-white': activeTab === 'likert' }
+                        )}
                     >
-                        <LikertIcon className="text-purplePrimary w-4 h-4" />
+                        <LikertIcon
+                            className={cn("text-purplePrimary w-4 h-4 group-hover:text-white transition-all duration-300 ease-in",
+                                { 'text-white': activeTab === 'likert' }
+                            )} />
                         Likert Scale
                     </button>
                     <button
                         onClick={() => { setActiveTab('numeric'), setScaleOptions(scales['numeric']) }}
-                        className="flex items-center px-3 gap-2 py-[6px] text-sm font-medium bg-white text-purplePrimary rounded-full border border-purplePrimary"
+                        className={cn("flex items-center px-3 gap-2 py-[6px] text-sm font-medium bg-white hover:bg-purplePrimary text-purplePrimary hover:text-white rounded-full border border-purplePrimary transition-all duration-300 ease-in group hover:cursor-pointer",
+                            { 'bg-purplePrimary text-white': activeTab === 'numeric' }
+                        )}
                     >
-                        <NumericInputIcon className="text-purplePrimary w-3 h-3" />
+                        <NumericInputIcon
+                            className={cn("text-purplePrimary w-4 h-4 group-hover:text-white transition-all duration-300 ease-in",
+                                { 'text-white': activeTab === 'numeric' }
+                            )} />
                         Numeric Scale
                     </button>
                 </div>
@@ -164,6 +149,7 @@ const RatingScaleAnswers = ({ scale, selectedRating, onRatingChange }) => {
                             }`}
                         onClick={() => onRatingChange(option.value)}
                     >
+
                         {option.stars && (
                             <div className="flex gap-2">
                                 {Array.from({ length: option.stars }, (_, i) => (
@@ -171,6 +157,12 @@ const RatingScaleAnswers = ({ scale, selectedRating, onRatingChange }) => {
                                 ))}
                             </div>
                         )}
+                        {option.icon && (
+                            <div className="w-6 h-6 flex items-center justify-center">
+                                {option.icon}
+                            </div>
+                        )
+                        }
                         <span className="font-medium text-gray-800">{option.label}</span>
                     </div>
                 ))}
@@ -197,6 +189,124 @@ const RatingScaleAnswers = ({ scale, selectedRating, onRatingChange }) => {
     );
 };
 
+
+// Single Select Answer Component
+const SingleSelectAnswers = ({
+    answers,
+    selectedAnswer,
+    onAnswerChange,
+    onAnswersChange,
+    showShuffleToggle
+}) => {
+    const [shuffleEnabled, setShuffleEnabled] = useState(false);
+    const [shuffledOptions, setShuffledOptions] = useState([]);
+
+    useEffect(() => {
+        if (shuffleEnabled) {
+            // Shuffle only when enabled
+            const shuffled = [...answers]
+                .map(value => ({ value, sort: Math.random() }))
+                .sort((a, b) => a.sort - b.sort)
+                .map(({ value }) => value);
+            setShuffledOptions(shuffled);
+        } else {
+            setShuffledOptions([]);
+        }
+    }, [shuffleEnabled, answers]);
+
+    const handleShuffleToggle = (checked) => {
+        setShuffleEnabled(checked);
+    };
+
+    const handleAddOption = () => {
+        // Find the highest existing ID and add 1
+        const maxId = Math.max(...answers.map(answer => parseInt(answer.id) || 0));
+        const newAnswer = {
+            id: (maxId + 1).toString(),
+            text: ''
+        };
+        onAnswersChange([...answers, newAnswer]);
+    };
+
+    const handleRemoveOption = (answerId) => {
+        if (answers.length <= 2) {
+            alert('You must have at least 2 options');
+            return;
+        }
+
+        const updatedAnswers = answers.filter(answer => answer.id !== answerId);
+        onAnswersChange(updatedAnswers);
+
+        // If the removed answer was selected, clear the selection
+        if (selectedAnswer === answerId) {
+            onAnswerChange('');
+        }
+    };
+
+    const handleAnswerTextChange = (answerId, newText) => {
+        const updatedAnswers = answers.map(answer =>
+            answer.id === answerId ? { ...answer, text: newText } : answer
+        );
+        onAnswersChange(updatedAnswers);
+    };
+
+    const optionsToRender = shuffleEnabled ? shuffledOptions : answers;
+
+    return (
+        <div className="flex flex-col gap-4">
+            <div className="flex items-center justify-between">
+                <span className="text-base font-semibold text-greyPrimary">Select right answer</span>
+                {showShuffleToggle && (
+                    <div className='flex items-center gap-1 group'>
+                        <Checkbox
+                            name="shuffleSingleSelectOptions"
+                            id="shuffleSingleSelectOptions"
+                            checked={shuffleEnabled}
+                            onCheckedChange={handleShuffleToggle}
+                        />
+                        <label htmlFor='shuffleSingleSelectOptions' className="text-greyAccent font-medium text-sm group-hover:text-purplePrimary duration-300 transition-colors ease-in cursor-pointer">
+                            Shuffle options
+                        </label>
+                    </div>
+                )}
+            </div>
+            <div className='flex flex-col gap-4 '>
+                {optionsToRender.map((answer, index) => (
+                    <div key={answer.id} className="flex items-center gap-2 peer">
+                        <Input
+                            type="radio"
+                            name="answer"
+                            value={answer.id}
+                            checked={selectedAnswer === answer.id}
+                            onChange={(e) => onAnswerChange(e.target.value)}
+                            className="w-4 h-4 text-blue-600"
+                        />
+                        <Input
+                            type="text"
+                            value={answer.text}
+                            onChange={(e) => handleAnswerTextChange(answer.id, e.target.value)}
+                            className="p-3 flex-1 rounded-xl text-greyAccent font-medium text-sm border border-[#E0E0E0] focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                            placeholder={`Option ${index + 1}`}
+                        />
+                        <motion.button
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
+                            onClick={() => handleRemoveOption(answer.id)}
+                            className="text-greyPrimary transition-colors disabled:opacity-50 group"
+                            disabled={answers.length <= 2}
+                        >
+                            <DeleteIcon className="w-4 h-4 text-greyPrimary group-hover:text-[#EB5757] transition-colors duration-300 ease-in" />
+                        </motion.button>
+                    </div>
+                ))}
+            </div>
+            <button onClick={handleAddOption} className="py-[17.5px] flex items-center gap-3 text-[#0077C2] text-sm font-medium">
+                <PlusIcon /> Add Options
+            </button>
+        </div>
+    );
+};
+
 // Main Reusable Question Modal Component
 const QuestionModal = ({
     trigger,
@@ -214,28 +324,50 @@ const QuestionModal = ({
     const [selectedAnswer, setSelectedAnswer] = useState(initialData.selectedAnswer || '');
     const [selectedRating, setSelectedRating] = useState(initialData.selectedRating || null);
     const [correctAnswer, setCorrectAnswer] = useState(initialData.correctAnswer || '000.00');
-    const [post, setPost] = useState("")
-    // Sample answers for single select (would come from props in real implementation)
-    const singleSelectAnswers = [
-        { id: 'yes', text: 'Yes' },
-        { id: 'no1', text: 'No' },
-        { id: 'no2', text: 'No' },
-        { id: 'no3', text: 'No' },
-    ];
+    const [post, setPost] = useState(initialData.question || initialQuestion);
+    // Dynamic answers state - Initialize with default answers or from initialData
+    const [singleSelectAnswers, setSingleSelectAnswers] = useState(
+        initialData.answers || [
+            { id: '1', text: 'Yes' },
+            { id: '2', text: 'No' },
+        ]
+    );
 
     const handleSave = () => {
+        // Validation
+        if (!post.trim()) {
+            alert('Please enter a question');
+            return;
+        }
+
+        if (questionType === 'single-select') {
+            if (!selectedAnswer) {
+                alert('Please select the correct answer');
+                return;
+            }
+
+            if (singleSelectAnswers.some(answer => !answer.text.trim())) {
+                alert('All answer options must have text');
+                return;
+            }
+        }
+
         const questionData = {
             questionType,
-            question,
+            question: post,
             timeToAnswer,
             customScore,
             isCompulsory,
             saveToLibrary,
-            ...(questionType === 'single-select' && { selectedAnswer }),
+            ...(questionType === 'single-select' && {
+                selectedAnswer,
+                answers: singleSelectAnswers
+            }),
             ...(questionType === 'rating' && { selectedRating }),
             ...(questionType === 'numeric-input' && { correctAnswer }),
         };
 
+        console.log('Saving question:', questionData);
         onSave?.(questionData);
         setIsOpen(false);
     };
@@ -251,12 +383,14 @@ const QuestionModal = ({
     const renderAnswerSection = () => {
         switch (questionType) {
             case 'single-select':
+            case 'multi-select':
                 return (
                     <SingleSelectAnswers
                         answers={singleSelectAnswers}
                         selectedAnswer={selectedAnswer}
                         onAnswerChange={setSelectedAnswer}
-                        shuffleOptions={true}
+                        onAnswersChange={setSingleSelectAnswers}
+                        showShuffleToggle={true}
                     />
                 );
             case 'rating':
@@ -287,7 +421,7 @@ const QuestionModal = ({
                 {trigger}
             </DialogTrigger>
 
-            <DialogContent className="p-6 min-w-[1208px] max-h-[720px]">
+            <DialogContent className="p-6 min-w-[1208px] max-h-[720px] overflow-y-auto">
                 {/* Header */}
                 <div className="flex items-center justify-between mb-4">
                     <DialogTitle className="flex items-center gap-2">
@@ -324,12 +458,12 @@ const QuestionModal = ({
                                 <span className="text-purple-600 text-sm">💡</span>
                             </div>
                             <div className="text-sm text-[#7C7C7C]">
-                                <strong className='font-semibold'>Pro Tip:&nbsp;</strong>Scoutabl’s AI suggests tests by matching skills in asedfa awd awd. asedfaas edfaased faasedf aasedfa.
+                                <strong className='font-semibold'>Pro Tip:&nbsp;</strong>Scoutabl's AI suggests tests by matching skills in asedfa awd awd. asedfaas edfaased faasedf aasedfa.
                             </div>
                         </div> */}
                         <div className='bg-purpleQuaternary rounded-2xl px-4 py-3 flex gap-2 mb-4'>
                             <AiIcon className='w-4 h-' />
-                            <span className='text-[#7C7C7C] font-normal text-sm block'><span className='bg-gradient-to-r from-[#806BFF] to-[#A669FD] inline-block text-transparent bg-clip-text text-sm font-semibold'>Pro Tip:&nbsp;</span>Scoutabl’s AI suggests tests by matching skills in your job description with related tests.</span>
+                            <span className='text-[#7C7C7C] font-normal text-sm block'><span className='bg-gradient-to-r from-[#806BFF] to-[#A669FD] inline-block text-transparent bg-clip-text text-sm font-semibold'>Pro Tip:&nbsp;</span>Scoutabl's AI suggests tests by matching skills in your job description with related tests.</span>
                         </div>
 
                         {/* Question Input */}
@@ -356,7 +490,7 @@ const QuestionModal = ({
                                 onChange={(e) => setQuestion(e.target.value)}
                                 placeholder="Enter your question here..."
                             /> */}
-                            <RichTextEditor content={post} onChange={handleTextEditorOnChange} />
+                            <RichTextEditor content={post} onChange={handleTextEditorOnChange} wordCountToggle={false} />
                         </div>
                     </div>
                     {/* Right Panel - Settings */}
@@ -371,18 +505,19 @@ const QuestionModal = ({
                                         Time to Answer
                                         <span className='text-[#E45270]'>*</span>
                                     </label>
-                                    <input
+                                    <Input
                                         type="number"
                                         name="timeToAnswer"
                                         id="timeToAnswer"
                                         placeholder='120 Min'
                                         className='px-3 py-2 max-h-10 max-w-[114px] text-base font-medium text-greyAccent bg-white rounded-tr-md rounded-br-md'
+                                        onChange={(e) => setTimeToAnswer(e.target.value)}
                                     />
                                 </div>
                                 <div className="flex items-center gap-8">
                                     <span className="text-base font-medium text-greyPrimary">Compulsory Question</span>
                                     <label className="relative inline-flex items-center cursor-pointer">
-                                        <input
+                                        <Input
                                             type="checkbox"
                                             checked={isCompulsory}
                                             onChange={(e) => setIsCompulsory(e.target.checked)}
@@ -403,18 +538,19 @@ const QuestionModal = ({
                                         Set Custom Score
                                         <span className='text-[#E45270]'>*</span>
                                     </label>
-                                    <input
+                                    <Input
                                         type="number"
                                         name="customScore"
                                         id="customScore"
                                         placeholder='120'
                                         className='px-3 py-2 max-h-10 max-w-[114px] text-base font-medium text-greyAccent bg-white rounded-tr-md rounded-br-md'
+                                        onChange={(e) => setCustomScore(e.target.value)}
                                     />
                                 </div>
                                 <div className="flex items-center justify-between gap-4">
                                     <span className="text-base font-medium text-greyPrimary">Save question to library</span>
                                     <label className="relative inline-flex items-center cursor-pointer">
-                                        <input
+                                        <Input
                                             type="checkbox"
                                             checked={saveToLibrary}
                                             onChange={(e) => setSaveToLibrary(e.target.checked)}
@@ -429,7 +565,9 @@ const QuestionModal = ({
                         </div>
 
                         {/* Answer Section */}
-                        {renderAnswerSection()}
+                        <div className='p-4 bg-white rounded-2xl border border-[#E0E0E0]'>
+                            {renderAnswerSection()}
+                        </div>
                         <motion.button
                             whileHover={{ scale: 1.05 }}
                             whileTap={{ scale: 0.95 }}

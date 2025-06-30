@@ -611,7 +611,7 @@ const MenuBar = ({ editor }) => {
     );
 };
 
-const RichTextEditor = ({ content = '', onChange = () => { } }) => {
+const RichTextEditor = ({ content = '', onChange = () => { }, wordCountToggle }) => {
     const [wordCount, setWordCount] = useState(0);
 
     const editor = useEditor({
@@ -680,7 +680,7 @@ const RichTextEditor = ({ content = '', onChange = () => { } }) => {
             {/* <div className="flex-1 min-h-0 bg-backgroundPrimary">
                 <EditorContent editor={editor} className="h-full" />
             </div> */}
-            <div className="flex-1 min-h-0 bg-white overflow-hidden">
+            <div className="flex-1 min-h-0 bg-backgroundPrimary overflow-hidden rounded-bl-5xl rounded-br-5xl">
                 <EditorContent
                     editor={editor}
                     className="h-full overflow-y-auto"
@@ -691,9 +691,11 @@ const RichTextEditor = ({ content = '', onChange = () => { } }) => {
                     }}
                 />
             </div>
-            <div className="p-6 bg-backgroundPrimary rounded-bl-5xl rounded-br-5xl">
-                <span>{wordCount} words</span>
-            </div>
+            {wordCountToggle && (
+                <div className="p-6 bg-backgroundPrimary rounded-bl-5xl rounded-br-5xl">
+                    <span>{wordCount} words</span>
+                </div>
+            )}
         </div>
 
     );

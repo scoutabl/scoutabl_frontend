@@ -18,6 +18,7 @@ import GradientBackground from '@/components/GradientBackground';
 import googleIcon from '/googleIcon.svg'
 import micorosoftIcon from '/microsoftIcon.svg'
 import { Eye, EyeOff } from 'lucide-react';
+import { Checkbox } from '@/components/ui/checkbox';
 
 const LoginPage = () => {
     const { login } = useAuth();
@@ -25,6 +26,7 @@ const LoginPage = () => {
     const [isLoading, setIsLoading] = useState(false);
     const [rememberMe, setRememberMe] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
+    const [_, setLoggedInUser] = useState(null);
     const formSchema = z.object({
         email: z
             .string()
@@ -42,18 +44,21 @@ const LoginPage = () => {
         }
     })
 
-    async function onSubmit(values) {
+    const onSubmit = async (values) => {
         try {
             setIsLoading(true);
             setError('');
 
-            const success = await login(values.email, values.password, rememberMe);
-            if (!success) {
+            const user = await login(values.email, values.password, rememberMe);
+
+            if (!user) {
                 setError('Invalid email or password. Please try again.');
+            } else {
+                setLoggedInUser(user);
             }
         } catch (error) {
-            console.error('Login submission error:', error);
-            setError('An error occurred during login. Please try again.');
+            console.error('🚀 Login submission error:', error);
+            setError(error.message);
         } finally {
             setIsLoading(false);
         }
@@ -130,17 +135,15 @@ const LoginPage = () => {
                                 </div>
                             )}
                             <div className='flex items-center justify-between mt-1'>
-                                <div className='flex items-center justify-start gap-2'>
-                                    <input
-                                        className='appearance-none w-[clamp(0.875rem,2vw,1rem)] h-[clamp(0.875rem,2vw,1rem)] bg-white border-2 rounded border-black outline checked:bg-purple-800'
-                                        type="checkbox"
+                                <div className='flex items-center justify-start gap-2 group'>
+                                    <Checkbox
                                         name="rememberMe"
                                         id="rememberMe"
                                         checked={rememberMe}
-                                        onChange={(e) => setRememberMe(e.target.checked)}
                                         disabled={isLoading}
+                                        onCheckedChange={setRememberMe}
                                     />
-                                    <label className='text-primarytext text-[clamp(0.75rem,1.5vw,0.875rem)] font-medium' htmlFor="rememberMe">Remember me</label>
+                                    <label className='text-primarytext text-[clamp(0.75rem,1.5vw,0.875rem)] font-medium group-hover:text-purplePrimary duration-300 transition-colors ease-in cursor-pointer' htmlFor="rememberMe">Remember me</label>
                                 </div>
                                 <PasswordRecoveryModal />
                             </div>

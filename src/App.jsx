@@ -1,5 +1,7 @@
+// export default App
 import './App.css'
-import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import { useEffect } from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
 import { AnimatePresence } from 'framer-motion';
@@ -20,7 +22,8 @@ import CreateAssessmentFlow from './components/features/assesment/create/CreateA
 import SkillAssesment from './pages/SkillAssesment'
 import CodingAssesment from './components/features/candidateAssesments/CodingAssesment'
 
-// Protected Route component
+
+// Protected Route component for authenticated users
 const ProtectedRoute = ({ children }) => {
   const { user, loading } = useAuth();
 
@@ -35,9 +38,34 @@ const ProtectedRoute = ({ children }) => {
   return children;
 };
 
+// Auth Route component - prevents authenticated users from accessing login/register
+const AuthRoute = ({ children }) => {
+  const { user, loading, isAuthenticated } = useAuth();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    // Only redirect if not loading and user is authenticated
+    if (!loading && isAuthenticated) {
+      navigate('/dashboard', { replace: true });
+    }
+  }, [user, loading, isAuthenticated, navigate]);
+
+  // Show loading while checking auth status
+  if (loading) {
+    return <div>Loading...</div>;
+  }
+
+  // If user is authenticated, don't render children (redirect handled by useEffect)
+  if (isAuthenticated) {
+    return null;
+  }
+
+  // Render children if user is not authenticated
+  return children;
+};
+
 // Navigation wrapper component
 const NavigationWrapper = ({ children }) => {
-  // const { user } = useAuth();
   const location = useLocation();
   const isAuthPage = ['/login', '/register'].includes(location.pathname);
 
@@ -57,21 +85,29 @@ const RoutesWithTransitions = () => {
 
   return (
     <Routes location={location} key={location.pathname}>
+      {/* Auth routes - only accessible when not logged in */}
       <Route
         path="/login"
         element={
-          <LoginPage />
+          <AuthRoute>
+            <PageTransition>
+              <LoginPage />
+            </PageTransition>
+          </AuthRoute>
         }
       />
       <Route
         path="/register"
         element={
-          <SignupPage />
+          <AuthRoute>
+            <PageTransition>
+              <SignupPage />
+            </PageTransition>
+          </AuthRoute>
         }
       />
-      {/* <Route path='/organization-setup' element={<OrganizationSetupPage />} /> */}
 
-      {/* Protected routes */}
+      {/* Protected routes - only accessible when logged in */}
       <Route
         path="/dashboard"
         element={
@@ -128,7 +164,8 @@ const RoutesWithTransitions = () => {
           }
         />
       </Route>
-      {/* Redirect root to dashboard or login based on auth state */}
+
+      {/* Redirect root based on auth state */}
       <Route
         path="/"
         element={<Navigate to="/dashboard" replace />}

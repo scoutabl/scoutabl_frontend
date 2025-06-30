@@ -9,11 +9,11 @@ import { cn } from '@/lib/utils';
 import { questions } from '../lib/questions';
 import { Headphones, Flag, ChevronLeft, ChevronRight } from 'lucide-react';
 import gradientRatingCurve from '/gradientRatingCurve.svg'
-import emoji1 from '/emoji1.svg'
-import emoji2 from '/emoji2.svg'
-import emoji3 from '/emoji3.svg'
-import emoji4 from '/emoji4.svg'
-import emoji5 from '/emoji5.svg'
+import Emoji1 from '@/assets/emoji1.svg?react'
+import Emoji2 from '@/assets/emoji2.svg?react'
+import Emoji3 from '@/assets/emoji3.svg?react'
+import Emoji4 from '@/assets/emoji4.svg?react'
+import Emoji5 from '@/assets/emoji5.svg?react'
 import CodingAssesment from '@/components/features/candidateAssesments/CodingAssesment';
 import AssessmentNavbar from '@/components/shared/AssesmentNavbar';
 
@@ -45,17 +45,17 @@ const RatingQuestion = ({ onAnswer, selectedAnswer }) => {
     const [rating, setRating] = useState(selectedAnswer || 0);
 
     const emojis = [
-        { img: emoji1, value: -2 },
-        { img: emoji2, value: -1 },
-        { img: emoji3, value: 0 },
-        { img: emoji4, value: 1 },
-        { img: emoji5, value: 2 },
+        { icon: <Emoji1 className="h-[60px] w-[60px]" />, value: -2 },
+        { icon: <Emoji2 className="h-[60px] w-[60px]" />, value: -1 },
+        { icon: <Emoji3 className="h-[60px] w-[60px]" />, value: 0 },
+        { icon: <Emoji4 className="h-[60px] w-[60px]" />, value: 1 },
+        { icon: <Emoji5 className="h-[60px] w-[60px]" />, value: 2 },
     ];
     return (
         <div className='w-full min-h-[205px] flex items-center justify-center [box-shadow:0px_16px_24px_rgba(0,_0,_0,_0.06),_0px_2px_6px_rgba(0,_0,_0,_0.04)] rounded-[28px] border border-[rgba(224,224,224,0.65)]'>
             <div className='relative max-w-[469px] flex flex-col items-center justify-center'>
                 <img src={gradientRatingCurve} alt="rating curve" className="absolute left-0 right-0 mx-auto" />
-                <div className='flex items-center gap-10 relative z-10'>
+                <div className='flex items-center gap-6 relative z-10'>
                     {emojis.map((emoji, idx) => (
                         <button
                             key={idx}
@@ -64,11 +64,11 @@ const RatingQuestion = ({ onAnswer, selectedAnswer }) => {
                                 onAnswer(emoji.value);
                             }}
                         >
-                            <img src={emoji.img} alt={`rating-${emoji.value}`}
-                                className={cn("w-[60px] h-[60px] p-px border-4 border-transparent rounded-full",
-                                    { 'border-purplePrimary': rating === emoji.value }
-                                )}
-                            />
+                            <div className={cn("w-[73px] h-[73px] grid place-content-center p-px border-4 border-transparent rounded-full",
+                                { 'border-purplePrimary': rating === emoji.value }
+                            )}>
+                                {emoji.icon}
+                            </div>
                         </button>
                     ))}
                 </div>
@@ -255,7 +255,7 @@ const LongAnswerQuestion = () => {
 
     return (
         // <RichText content={post} onChange={onChange} />
-        <RichTextEditor content={post} onChange={onChange} />
+        <RichTextEditor content={post} onChange={onChange} wordCountToggle={true} />
     )
 };
 
