@@ -26,6 +26,7 @@ function SelectTrigger({
   className,
   size = "default",
   children,
+  chevronColor = "text-greyPrimary",
   ...props
 }) {
   return (
@@ -39,7 +40,8 @@ function SelectTrigger({
       {...props}>
       {children}
       <SelectPrimitive.Icon asChild>
-        <ChevronDownIcon className="size-4 opacity-50" />
+        <ChevronDownIcon className={cn("size-4", chevronColor)} />
+
       </SelectPrimitive.Icon>
     </SelectPrimitive.Trigger>)
   );

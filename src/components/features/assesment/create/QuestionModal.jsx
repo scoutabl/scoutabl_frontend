@@ -1,11 +1,13 @@
 // QuestionModal.jsx
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { X, Clock, BookOpen, Shuffle } from 'lucide-react';
+import CodingQuestionContent from './CodingQuestionContent';
+import { X } from 'lucide-react';
 import {
     Dialog,
     DialogContent,
     DialogHeader,
+    DialogDescription,
     DialogTitle,
     DialogTrigger,
     DialogClose,
@@ -35,30 +37,31 @@ import DeleteIcon from '@/assets/trashIcon.svg?react'
 import { cn } from '@/lib/utils';
 
 // Numeric Input Answer Component
-const NumericInputAnswers = ({ correctAnswer, onAnswerChange }) => {
+const NumericInputAnswers = ({ correctAnswer, onAnswerChange, numericCondition,
+    onConditionChange }) => {
     return (
         <div className="space-y-4">
             <div className="mb-4">
-                <span className="text-sm font-medium text-gray-700">Correct it</span>
+                <span className="text-base font-semibold text-greyPrimary">Correct if</span>
             </div>
-
             <div className="flex items-center gap-4">
-                <span className="text-sm text-gray-600">Answer is</span>
-                <select
-                    className="px-3 py-2 bg-purple-500 text-white rounded-lg text-sm font-medium"
-                    value="more-than"
-                    onChange={() => { }}
-                >
-                    <option value="more-than">More than</option>
-                    <option value="less-than">Less than</option>
-                    <option value="equal-to">Equal to</option>
-                    <option value="between">Between</option>
-                </select>
+                <span className="text-sm text-greyAccent font-semibold">Answer is</span>
+                <Select defaultValue={numericCondition} onValueChange={onConditionChange}>
+                    <SelectTrigger chevronColor="text-white" className="!h-[43px] py-3 px-6 flex items-center justify-between w-fit text-sm font-medium bg-purplePrimary text-white rounded-xl">
+                        <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                        <SelectItem value="more-than">More than</SelectItem>
+                        <SelectItem value="less-than">Less than</SelectItem>
+                        <SelectItem value="equal-to">More than/ equal to</SelectItem>
+                        <SelectItem value="between">Less than/ equal to</SelectItem>
+                    </SelectContent>
+                </Select>
                 <Input
                     type="number"
                     value={correctAnswer}
                     onChange={(e) => onAnswerChange(e.target.value)}
-                    className="px-3 py-2 border border-gray-300 rounded-lg w-24 text-center"
+                    className="flex-1 h-[43px]p-3 border border-gray-300 rounded-xl  text-sm font-medium text-greyAccent"
                     placeholder="000.00"
                     step="0.01"
                 />
@@ -307,6 +310,15 @@ const SingleSelectAnswers = ({
     );
 };
 
+// Multiple Select Answer Component
+const MultipleSelectAnswers = ({
+    answers,
+    selectedAnswers,
+    onAnswersChange,
+    showShuffleToggle
+}) => {
+    return <div>Multiple Select Answers</div>;
+};
 // Main Reusable Question Modal Component
 const QuestionModal = ({
     trigger,
@@ -324,6 +336,7 @@ const QuestionModal = ({
     const [selectedAnswer, setSelectedAnswer] = useState(initialData.selectedAnswer || '');
     const [selectedRating, setSelectedRating] = useState(initialData.selectedRating || null);
     const [correctAnswer, setCorrectAnswer] = useState(initialData.correctAnswer || '000.00');
+    const [numericCondition, setNumericCondition] = useState("more-than");
     const [post, setPost] = useState(initialData.question || initialQuestion);
     // Dynamic answers state - Initialize with default answers or from initialData
     const [singleSelectAnswers, setSingleSelectAnswers] = useState(
@@ -364,7 +377,10 @@ const QuestionModal = ({
                 answers: singleSelectAnswers
             }),
             ...(questionType === 'rating' && { selectedRating }),
-            ...(questionType === 'numeric-input' && { correctAnswer }),
+            ...(questionType === 'numeric-input' && {
+                correctAnswer,
+                numericCondition,
+            }),
         };
 
         console.log('Saving question:', questionData);
@@ -383,7 +399,6 @@ const QuestionModal = ({
     const renderAnswerSection = () => {
         switch (questionType) {
             case 'single-select':
-            case 'multi-select':
                 return (
                     <SingleSelectAnswers
                         answers={singleSelectAnswers}
@@ -393,6 +408,15 @@ const QuestionModal = ({
                         showShuffleToggle={true}
                     />
                 );
+            case 'multiple-select':
+                return (
+                    <MultipleSelectAnswers
+                    // answers={multipleSelectAnswers}
+                    // selectedAnswers={selectedAnswers}
+                    // onAnswersChange={setMultipleSelectAnswers}
+                    // showShuffleToggle={true}
+                    />
+                )
             case 'rating':
                 return (
                     <RatingScaleAnswers
@@ -406,6 +430,8 @@ const QuestionModal = ({
                     <NumericInputAnswers
                         correctAnswer={correctAnswer}
                         onAnswerChange={setCorrectAnswer}
+                        numericCondition={numericCondition}
+                        onConditionChange={setNumericCondition}
                     />
                 );
             default:
@@ -421,24 +447,29 @@ const QuestionModal = ({
                 {trigger}
             </DialogTrigger>
 
-            <DialogContent className="p-6 min-w-[1208px] max-h-[720px] overflow-y-auto">
+            <DialogContent className="flex flex-col p-6 min-w-[1208px] max-h-[90vh] overflow-y-auto">
                 {/* Header */}
                 <div className="flex items-center justify-between mb-4">
-                    <DialogTitle className="flex items-center gap-2">
-                        <span className="text-xl text-greyPrimary">New Question:</span>
-                        <Select defaultValue={questionType}>
-                            <SelectTrigger className="w-[176px] text-sm bg-blueSecondary text-greyAccent">
-                                <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="single-select">Single Select</SelectItem>
-                                <SelectItem value="multiple-select">Multiple Select</SelectItem>
-                                <SelectItem value="rating">Rating</SelectItem>
-                                <SelectItem value="numeric-input">Numeric Input</SelectItem>
-                                <SelectItem value="essay">Essay</SelectItem>
-                            </SelectContent>
-                        </Select>
-                    </DialogTitle>
+                    <DialogHeader className="max-h-9">
+                        <DialogTitle className="flex items-center gap-2">
+                            <span className="text-xl text-greyPrimary">New Question:</span>
+                            <Select defaultValue={questionType}>
+                                <SelectTrigger className="w-[176px] text-sm bg-blueSecondary text-greyAccent">
+                                    <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="single-select">Single Select</SelectItem>
+                                    <SelectItem value="multiple-select">Multi Select</SelectItem>
+                                    <SelectItem value="rating">Rating</SelectItem>
+                                    <SelectItem value="numeric-input">Numeric Input</SelectItem>
+                                    <SelectItem value="essay">Essay</SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </DialogTitle>
+                    </DialogHeader>
+                    <DialogDescription className="sr-only">
+                        Add a new question to your assessment.
+                    </DialogDescription>
                     <div className="flex items-center gap-3">
                         <button className="px-4 py-2 text-sm text-blue-600 border border-blue-200 rounded-lg hover:bg-blue-50">
                             📋 Preview
@@ -449,154 +480,105 @@ const QuestionModal = ({
                     </div>
                 </div>
 
-                <div className="flex gap-6">
-                    {/* Left Panel - Question Content */}
-                    <div className="flex-1">
-                        {/* AI Tip */}
-                        {/* <div className="flex items-start gap-3 p-4 mb-6 bg-purple-50 border border-purple-200 rounded-lg">
-                            <div className="w-6 h-6 bg-purple-100 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
-                                <span className="text-purple-600 text-sm">💡</span>
-                            </div>
-                            <div className="text-sm text-[#7C7C7C]">
-                                <strong className='font-semibold'>Pro Tip:&nbsp;</strong>Scoutabl's AI suggests tests by matching skills in asedfa awd awd. asedfaas edfaased faasedf aasedfa.
-                            </div>
-                        </div> */}
-                        <div className='bg-purpleQuaternary rounded-2xl px-4 py-3 flex gap-2 mb-4'>
-                            <AiIcon className='w-4 h-' />
-                            <span className='text-[#7C7C7C] font-normal text-sm block'><span className='bg-gradient-to-r from-[#806BFF] to-[#A669FD] inline-block text-transparent bg-clip-text text-sm font-semibold'>Pro Tip:&nbsp;</span>Scoutabl's AI suggests tests by matching skills in your job description with related tests.</span>
-                        </div>
-
-                        {/* Question Input */}
-                        <div className="mb-6">
-                            {/* Rich Text Editor Toolbar */}
-                            {/* <div className="flex items-center gap-2 p-2 border border-gray-300 rounded-t-lg bg-gray-50">
-                                <span className="text-sm text-gray-600">16</span>
-                                <div className="flex items-center gap-1">
-                                    <button className="p-1.5 text-gray-600 hover:bg-gray-200 rounded">B</button>
-                                    <button className="p-1.5 text-gray-600 hover:bg-gray-200 rounded">I</button>
-                                    <button className="p-1.5 text-gray-600 hover:bg-gray-200 rounded">U</button>
-                                </div>
-                                <div className="w-px h-4 bg-gray-300"></div>
-                                <div className="flex items-center gap-1">
-                                    <button className="p-1.5 text-gray-600 hover:bg-gray-200 rounded">⋮</button>
-                                    <button className="p-1.5 text-gray-600 hover:bg-gray-200 rounded">≡</button>
-                                </div>
+                {questionType === 'code' ? (
+                    <CodingQuestionContent initialData={initialData} initialQuestion={initialQuestion} />
+                ) : (
+                    <div className="flex gap-6">
+                        {/* Left Panel - Question Content */}
+                        <div className="flex-1">
+                            {/* AI Tip */}
+                            <div className='bg-purpleQuaternary rounded-2xl px-4 py-3 flex gap-2 mb-4'>
+                                <AiIcon className='w-4 h-' />
+                                <span className='text-[#7C7C7C] font-normal text-sm block'><span className='bg-gradient-to-r from-[#806BFF] to-[#A669FD] inline-block text-transparent bg-clip-text text-sm font-semibold'>Pro Tip:&nbsp;</span>Scoutabl's AI suggests tests by matching skills in your job description with related tests.</span>
                             </div>
 
-                            <textarea
-                                className="w-full p-4 border border-gray-300 border-t-0 rounded-b-lg resize-none focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                rows={4}
-                                value={question}
-                                onChange={(e) => setQuestion(e.target.value)}
-                                placeholder="Enter your question here..."
-                            /> */}
-                            <RichTextEditor content={post} onChange={handleTextEditorOnChange} wordCountToggle={false} />
+                            {/* Question Input */}
+                            <div className="mb-6">
+                                {/* Rich Text Editor Toolbar */}
+                                <RichTextEditor content={post} onChange={handleTextEditorOnChange} wordCountToggle={false} />
+                            </div>
                         </div>
-                    </div>
-                    {/* Right Panel - Settings */}
-                    <div className="flex-1">
-                        <div className='mb-6 p-3 flex flex-col gap-3 rounded-2xl bg-blueSecondary'>
-                            <div className='flex items-center justify-between'>
-                                <div className='flex'>
-                                    <label
-                                        htmlFor="timeToAnswer"
-                                        className='min-h-10 min-w-[150px] px-3 py-2 text-sm font-semibold text-greyAccent bg-white border-r border-[#E0E0E0] rounded-tl-md rounded-bl-md'
-                                    >
-                                        Time to Answer
-                                        <span className='text-[#E45270]'>*</span>
-                                    </label>
-                                    <Input
-                                        type="number"
-                                        name="timeToAnswer"
-                                        id="timeToAnswer"
-                                        placeholder='120 Min'
-                                        className='px-3 py-2 max-h-10 max-w-[114px] text-base font-medium text-greyAccent bg-white rounded-tr-md rounded-br-md'
-                                        onChange={(e) => setTimeToAnswer(e.target.value)}
-                                    />
-                                </div>
-                                <div className="flex items-center gap-8">
-                                    <span className="text-base font-medium text-greyPrimary">Compulsory Question</span>
-                                    <label className="relative inline-flex items-center cursor-pointer">
+                        {/* Right Panel - Settings */}
+                        <div className="flex-1">
+                            <div className='mb-6 p-3 flex flex-col gap-3 rounded-2xl bg-blueSecondary'>
+                                <div className='flex items-center justify-between'>
+                                    <div className='flex'>
+                                        <label
+                                            htmlFor="timeToAnswer"
+                                            className='min-h-10 min-w-[150px] px-3 py-2 text-sm font-semibold text-greyAccent bg-white border-r border-[#E0E0E0] rounded-tl-md rounded-bl-md'
+                                        >
+                                            Time to Answer
+                                            <span className='text-[#E45270]'>*</span>
+                                        </label>
                                         <Input
-                                            type="checkbox"
-                                            checked={isCompulsory}
-                                            onChange={(e) => setIsCompulsory(e.target.checked)}
-                                            className="sr-only"
+                                            type="number"
+                                            name="timeToAnswer"
+                                            id="timeToAnswer"
+                                            placeholder='120 Min'
+                                            className='px-3 py-2 max-h-10 max-w-[114px] text-base font-medium text-greyAccent bg-white rounded-tr-md rounded-br-md rounded-tl-none rounded-bl-none border-0' onChange={(e) => setTimeToAnswer(e.target.value)}
                                         />
-                                        <div className={`w-11 h-6 rounded-full transition-colors ${isCompulsory ? 'bg-blue-600' : 'bg-gray-300'}`}>
-                                            <div className={`w-5 h-5 bg-white rounded-full shadow-md transform transition-transform ${isCompulsory ? 'translate-x-5' : 'translate-x-0'} mt-0.5 ml-0.5`}></div>
-                                        </div>
-                                    </label>
+                                    </div>
+                                    <div className="flex items-center gap-8">
+                                        <span className="text-base font-medium text-greyPrimary">Compulsory Question</span>
+                                        <label className="relative inline-flex items-center cursor-pointer">
+                                            <Input
+                                                type="checkbox"
+                                                checked={isCompulsory}
+                                                onChange={(e) => setIsCompulsory(e.target.checked)}
+                                                className="sr-only"
+                                            />
+                                            <div className={`w-11 h-6 rounded-full transition-colors ${isCompulsory ? 'bg-blue-600' : 'bg-gray-300'}`}>
+                                                <div className={`w-5 h-5 bg-white rounded-full shadow-md transform transition-transform ${isCompulsory ? 'translate-x-5' : 'translate-x-0'} mt-0.5 ml-0.5`}></div>
+                                            </div>
+                                        </label>
+                                    </div>
                                 </div>
-                            </div>
-                            <div className='flex items-center justify-between'>
-                                <div className='flex'>
-                                    <label
-                                        htmlFor="customScore"
-                                        className='min-h-10 min-w-[150px] px-3 py-2 text-sm font-semibold text-greyAccent bg-white border-r border-[#E0E0E0] rounded-tl-md rounded-bl-md'
-                                    >
-                                        Set Custom Score
-                                        <span className='text-[#E45270]'>*</span>
-                                    </label>
-                                    <Input
-                                        type="number"
-                                        name="customScore"
-                                        id="customScore"
-                                        placeholder='120'
-                                        className='px-3 py-2 max-h-10 max-w-[114px] text-base font-medium text-greyAccent bg-white rounded-tr-md rounded-br-md'
-                                        onChange={(e) => setCustomScore(e.target.value)}
-                                    />
-                                </div>
-                                <div className="flex items-center justify-between gap-4">
-                                    <span className="text-base font-medium text-greyPrimary">Save question to library</span>
-                                    <label className="relative inline-flex items-center cursor-pointer">
+                                <div className='flex items-center justify-between'>
+                                    <div className='flex'>
+                                        <label
+                                            htmlFor="customScore"
+                                            className='min-h-10 min-w-[150px] px-3 py-2 text-sm font-semibold text-greyAccent bg-white border-r border-[#E0E0E0] rounded-tl-md rounded-bl-md'
+                                        >
+                                            Set Custom Score
+                                            <span className='text-[#E45270]'>*</span>
+                                        </label>
                                         <Input
-                                            type="checkbox"
-                                            checked={saveToLibrary}
-                                            onChange={(e) => setSaveToLibrary(e.target.checked)}
-                                            className="sr-only"
+                                            type="number"
+                                            name="customScore"
+                                            id="customScore"
+                                            placeholder='120'
+                                            className='px-3 py-2 max-h-10 max-w-[114px] text-base font-medium text-greyAccent bg-white rounded-tr-md rounded-br-md rounded-tl-none rounded-bl-none border-0'
+                                            onChange={(e) => setCustomScore(e.target.value)}
                                         />
-                                        <div className={`w-11 h-6 rounded-full transition-colors ${saveToLibrary ? 'bg-blue-600' : 'bg-gray-300'}`}>
-                                            <div className={`w-5 h-5 bg-white rounded-full shadow-md transform transition-transform ${saveToLibrary ? 'translate-x-5' : 'translate-x-0'} mt-0.5 ml-0.5`}></div>
-                                        </div>
-                                    </label>
+                                    </div>
+                                    <div className="flex items-center justify-between gap-4">
+                                        <span className="text-base font-medium text-greyPrimary">Save question to library</span>
+                                        <label className="relative inline-flex items-center cursor-pointer">
+                                            <Input
+                                                type="checkbox"
+                                                checked={saveToLibrary}
+                                                onChange={(e) => setSaveToLibrary(e.target.checked)}
+                                                className="sr-only"
+                                            />
+                                            <div className={`w-11 h-6 rounded-full transition-colors ${saveToLibrary ? 'bg-blue-600' : 'bg-gray-300'}`}>
+                                                <div className={`w-5 h-5 bg-white rounded-full shadow-md transform transition-transform ${saveToLibrary ? 'translate-x-5' : 'translate-x-0'} mt-0.5 ml-0.5`}></div>
+                                            </div>
+                                        </label>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-
-                        {/* Answer Section */}
-                        <div className='p-4 bg-white rounded-2xl border border-[#E0E0E0]'>
                             {renderAnswerSection()}
-                        </div>
-                        <motion.button
-                            whileHover={{ scale: 1.05 }}
-                            whileTap={{ scale: 0.95 }}
-                            onClick={handleSave}
-                            className="mt-4 ml-auto w-[124px] h-[37px] grid place-content-center bg-[#1EA378] text-white rounded-full text-sm font-medium"
-                        >
-                            Add Question
-                        </motion.button>
-
-                        {/* Action Buttons */}
-                        {/* <div className="space-y-3">
-                            <button
+                            <motion.button
+                                whileHover={{ scale: 1.05 }}
+                                whileTap={{ scale: 0.95 }}
                                 onClick={handleSave}
-                                className="w-full px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 font-medium"
+                                className="mt-4 ml-auto w-[124px] h-[37px] grid place-content-center bg-[#1EA378] text-white rounded-full text-sm font-medium"
                             >
                                 Add Question
-                            </button>
-
-                            <div className="flex gap-2">
-                                <button className="flex-1 px-3 py-2 text-sm text-purple-600 border border-purple-200 rounded-lg hover:bg-purple-50">
-                                    🔄 Rephrase with AI
-                                </button>
-                                <button className="flex-1 px-3 py-2 text-sm text-purple-600 border border-purple-200 rounded-lg hover:bg-purple-50">
-                                    ✍️ Write with AI
-                                </button>
-                            </div>
-                        </div> */}
+                            </motion.button>
+                        </div>
                     </div>
-                </div>
+                )}
             </DialogContent>
         </Dialog>
     );

@@ -145,7 +145,7 @@ const QuestionCards = () => {
                 <span className='text-sm font-semibold text-greyPrimary group-hover:text-white transition-all duration-300 ease-in'>{question.name}</span>
 
                 {/* Only show modal for supported question types */}
-                {['single-select', 'rating', 'numeric-input'].includes(question.type) ? (
+                {['single-select', 'rating', 'numeric-input', 'multiple-select', 'code'].includes(question.type) ? (
                     <QuestionModal
                         trigger={PlusButton}
                         questionType={question.type}
