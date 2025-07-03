@@ -11,21 +11,33 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
+import { MultiSelect } from "@/components/ui/multi-select";
 import { Input } from "@/components/ui/input";
 
 const CodingQuestionContent = ({ initialData, initialQuestion }) => {
     const [currentStep, setCurrentStep] = useState(1);
     const [post, setPost] = useState(initialData.question || initialQuestion);
+    const [seletectedTags, setSelectedTags] = useState(['arrays', 'recursion']);
     const steps = [
         { id: "1", title: "Question Details" },
         { id: "2", title: "Select Languages" },
         { id: "3", title: "Code Stubs" },
         { id: "4", title: "Test Cases" },
     ];
+
+    const questionTagsList = [
+        { value: "arrays", label: "Arrays" },
+        { value: "recursion", label: "Recursion" },
+        { value: "iteration", label: "Iteration" },
+        { value: "functions", label: "Functions" },
+        { value: "conditionals", label: "Conditionals" },
+        { value: "inheritance", label: "Inheritance" },
+        { value: "promises", label: "Promises" },
+        { value: "memoization", label: "Memoization" },
+    ];
     const handleTextEditorOnChange = (content) => {
         setPost(content)
     }
-
 
     function Step1Content() {
         return (
@@ -88,7 +100,12 @@ const CodingQuestionContent = ({ initialData, initialQuestion }) => {
                         </label>
                         <QuestionIcon />
                     </div>
-                    <Input type='text' placeholder="questiontags" className='w-full' />
+                    <MultiSelect
+                        options={questionTagsList}
+                        onValueChange={setSelectedTags}
+                        defaultValue={seletectedTags}
+                        placeholder="Select Question Tags"
+                    />
                 </div>
             </div>
         );
