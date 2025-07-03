@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion';
 import { useCodingAssesment } from './CodingAssesmentContext';
 import QuestionPopup from '@/components/features/candidateAssesments/QuestionPopup';
-import { fetchSubmissions, fetchLanguages } from '@/api/monacoCodeApi';
+import { fetchSubmissions, useLanguages } from '@/api/monacoCodeApi';
 import { cn } from '@/lib/utils';
 import { ChevronLeft, ChevronRight, FileText } from 'lucide-react';
 import SidebarOpenIcon from '@/assets/openSidebar.svg?react';
@@ -44,24 +44,11 @@ const CodeSidebar = ({
     const { enums } = useEnums(); // Access enums
     const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
     const [submissions, setSubmissions] = useState([]);
-    const [languagesMap, setLanguagesMap] = useState({}); // New state for language mapping
-
-    // Fetch languages once on component mount
-    useEffect(() => {
-        const getLanguages = async () => {
-            try {
-                const data = await fetchLanguages();
-                const map = {};
-                data.results.forEach(lang => {
-                    map[lang.id] = lang.name;
-                });
-                setLanguagesMap(map);
-            } catch (error) {
-                console.error('Error fetching languages:', error);
-            }
-        };
-        getLanguages();
-    }, []); // Empty dependency array means this runs once on mount
+    const { data: allLanguages, isLoading: isLanguagesLoading, error: languagesError } = useLanguages();
+    const languagesMap = (allLanguages?.results || []).reduce((acc, lang) => {
+        acc[lang.id] = lang.name;
+        return acc;
+    }, {});
 
     // Handle question selection from popup
     const handleQuestionSelect = (index) => {

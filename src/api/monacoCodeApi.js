@@ -1,27 +1,24 @@
 import axios from "axios";
+import { useQuery } from '@tanstack/react-query';
 
 // const CANDIDATETOKEN = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6NywiY3JlYXRlZF9hdCI6IjIwMjUtMDYtMDkgMTM6MjM6MDEuNTMwODgyKzAwOjAwIn0.9q2-XjZO-kGuhiEieEObuKmlz_bDs_2ZdebHeEgTD7I'
 const CANDIDATETOKEN = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6OSwiY3JlYXRlZF9hdCI6IjIwMjUtMDYtMTggMTI6MzM6MjUuNzM5MzUwKzAwOjAwIn0.zwZmeUQwcBUscQ0PqaxoXxreCPBUJD8kXsD-TqldhaI'
 
 const APIURL = 'https://dev.scoutabl.com/api'
 
-export const executeCode = async (language, sourceCode, version) => {
-    const response = await API.post("/execute", {
-        "language": language,
-        "version": version,
-        "files": [
-            {
-                "content": sourceCode
-            }
-        ],
-    })
-    return response.data;
-}
-
-export const fetchLanguages = async () => {
-    const response = await axios.get(`${APIURL}/languages`)
-    return response.data;
-}
+// //
+// export const executeCode = async (language, sourceCode, version) => {
+//     const response = await API.post("/execute", {
+//         "language": language,
+//         "version": version,
+//         "files": [
+//             {
+//                 "content": sourceCode
+//             }
+//         ],
+//     })
+//     return response.data;
+// }
 
 // POST: Submit code to backend
 export const submitCodeToBackend = async ({ questionId, payload }) => {
@@ -49,17 +46,6 @@ export const pollSubmissionStatus = async ({ questionId, submissionId }) => {
     return data;
 };
 
-// GET: Fetch enums (status/result codes)
-export const fetchEnums = async () => {
-    const res = await fetch(`${APIURL}/enums/all/`, {
-        headers: {
-            'X-Candidate-Authorization': `Bearer ${CANDIDATETOKEN}`
-        }
-    });
-    if (!res.ok) throw new Error("Failed to fetch enums");
-    return res.json();
-};
-
 // Get Submission list
 export const fetchSubmissions = async (questionId) => {
     const res = await fetch(`${APIURL}/candidate/questions/${questionId}/cq-submissions/?is_test=false&ordering=-created_at&page_size=100`, {
@@ -71,3 +57,29 @@ export const fetchSubmissions = async (questionId) => {
     const data = await res.json();
     return data;
 }
+
+//Get Languages
+export const fetchLanguages = async () => {
+    const response = await axios.get(`${APIURL}/languages`)
+    return response.data;
+}
+
+// React Query hook for languages
+export function useLanguages() {
+    return useQuery({
+        queryKey: ['languages'],
+        queryFn: fetchLanguages,
+        staleTime: 1000 * 60 * 60, // 1 hour
+    });
+}
+
+// GET: Fetch enums (status/result codes)
+export const fetchEnums = async () => {
+    const res = await fetch(`${APIURL}/enums/all/`, {
+        headers: {
+            'X-Candidate-Authorization': `Bearer ${CANDIDATETOKEN}`
+        }
+    });
+    if (!res.ok) throw new Error("Failed to fetch enums");
+    return res.json();
+};

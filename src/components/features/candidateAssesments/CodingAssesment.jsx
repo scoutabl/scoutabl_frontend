@@ -6,7 +6,8 @@ import CodeSidebar from './CodeSidebar';
 import CodeEditor from './CodeEditor';
 import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
-import { fetchLanguages } from '@/api/monacoCodeApi';
+import { useLanguages } from '@/api/monacoCodeApi';
+
 function CodingAssesmentInner() {
     const {
         currentQuestion, setCurrentQuestion,
@@ -20,16 +21,21 @@ function CodingAssesmentInner() {
         isDragging, setIsDragging
     } = useCodingAssesment();
 
+    const [isMinLoading, setIsMinLoading] = useState(true);
+    const prevSidebarWidthRef = useRef(sidebarWidth);
+    const prevRightPanelWidthRef = useRef(rightPanelWidth);
+    const rightPanelRef = useRef(null);
+    const { data: languages, isLoading: isLanguagesLoading, error: languagesError } = useLanguages();
     const RIGHT_COLLAPSED_WIDTH = 52; //px
     const minRightPanelWidth = RIGHT_COLLAPSED_WIDTH;
     const COLLAPSED_WIDTH = 48; // px
     const minSidebarWidth = COLLAPSED_WIDTH;
     const minEditorWidth = 52;
     const maxSidebarWidth = window.innerWidth * 0.90;
-    const prevSidebarWidthRef = useRef(sidebarWidth);
-    const prevRightPanelWidthRef = useRef(rightPanelWidth);
-    const rightPanelRef = useRef(null);
-    const [languageTemplates, setLanguageTemplates] = useState({});
+    const languageTemplates = (languages?.results || []).reduce((acc, lang) => {
+        acc[lang.code] = lang.default_template?.content || '';
+        return acc;
+    }, {});
 
     // Dummy data for submissions
     const submissionsData = [
@@ -44,6 +50,57 @@ function CodingAssesmentInner() {
         { id: 2, status: 'Accepted', runtime: '4187 ms', memory: '119.90 MB', language: 'Java Script' },
         { id: 1, status: 'Compile Error', runtime: '4187 ms', memory: '119.90 MB', language: 'Java Script' }
     ];
+
+    // const CANDIDATETOKEN = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6NywiY3JlYXRlZF9hdCI6IjIwMjUtMDYtMDkgMTM6MjM6MDEuNTMwODgyKzAwOjAwIn0.9q2-XjZO-kGuhiEieEObuKmlz_bDs_2ZdebHeEgTD7I'
+    const CANDIDATETOKEN = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6OSwiY3JlYXRlZF9hdCI6IjIwMjUtMDYtMTggMTI6MzM6MjUuNzM5MzUwKzAwOjAwIn0.zwZmeUQwcBUscQ0PqaxoXxreCPBUJD8kXsD-TqldhaI'
+    // Fetch function using axios
+    const fetchQuestionsWithTestCases = async () => {
+        try {
+            const response = await axios.get('https://dev.scoutabl.com/api/candidate-sessions/current-test/questions/', {
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Candidate-Authorization': `Bearer ${CANDIDATETOKEN}`
+                }
+            });
+            const data = response.data;
+            const question = data.results[0];
+            // Fetch test case files for public_testcases
+            const testCases = await Promise.all(
+                (question.public_testcases || []).map(async (tc) => {
+                    const input = tc.input_file ? await axios.get(tc.input_file).then(res => res.data) : '';
+                    const output = tc.output_file ? await axios.get(tc.output_file).then(res => res.data) : '';
+                    return { ...tc, input, output };
+                })
+            );
+
+            return {
+                ...question,
+                testCases,
+                inputVars: ['nums'], // adjust as needed
+            };
+        } catch (error) {
+            throw error;
+        }
+    };
+
+    // Use TanStack Query
+    const { data: currentTestData, isLoading, error } = useQuery({
+        queryKey: ['currentTestQuestion'],
+        queryFn: async () => {
+            const startTime = Date.now();
+            const result = await fetchQuestionsWithTestCases();
+            const endTime = Date.now();
+            const elapsedTime = endTime - startTime;
+
+            // Ensure minimum loading time of 1 second
+            if (elapsedTime < 1000) {
+                await new Promise(resolve => setTimeout(resolve, 1000 - elapsedTime));
+            }
+
+            return result;
+        },
+        staleTime: 0, // Disable caching to ensure fresh data on refresh
+    });
 
     // Helper function to get status color
     const getStatusColor = (status) => {
@@ -120,98 +177,6 @@ function CodingAssesmentInner() {
         window.addEventListener('mouseup', handleMouseUp);
     };
 
-    useEffect(() => {
-        if (isDragging) {
-            document.body.style.userSelect = 'none';
-        } else {
-            document.body.style.userSelect = '';
-        }
-        return () => {
-            document.body.style.userSelect = '';
-        };
-    }, [isDragging]);
-
-    //fetch default template
-    useEffect(() => {
-        async function loadLanguages() {
-            const langs = await fetchLanguages();
-            // Create a map: { python3: "def main(): ...", swift: "import Foundation..." }
-            const templates = {};
-            langs.results.forEach(lang => {
-                templates[lang.code] = lang.default_template?.content || '';
-            });
-            setLanguageTemplates(templates);
-        }
-        loadLanguages();
-    }, []);
-
-
-
-    // const CANDIDATETOKEN = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6NywiY3JlYXRlZF9hdCI6IjIwMjUtMDYtMDkgMTM6MjM6MDEuNTMwODgyKzAwOjAwIn0.9q2-XjZO-kGuhiEieEObuKmlz_bDs_2ZdebHeEgTD7I'
-    const CANDIDATETOKEN = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6OSwiY3JlYXRlZF9hdCI6IjIwMjUtMDYtMTggMTI6MzM6MjUuNzM5MzUwKzAwOjAwIn0.zwZmeUQwcBUscQ0PqaxoXxreCPBUJD8kXsD-TqldhaI'
-    // Fetch function using axios
-    const fetchQuestionsWithTestCases = async () => {
-        try {
-            const response = await axios.get('https://dev.scoutabl.com/api/candidate-sessions/current-test/questions/', {
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-Candidate-Authorization': `Bearer ${CANDIDATETOKEN}`
-                }
-            });
-            const data = response.data;
-            const question = data.results[0];
-            // Fetch test case files for public_testcases
-            const testCases = await Promise.all(
-                (question.public_testcases || []).map(async (tc) => {
-                    const input = tc.input_file ? await axios.get(tc.input_file).then(res => res.data) : '';
-                    const output = tc.output_file ? await axios.get(tc.output_file).then(res => res.data) : '';
-                    return { ...tc, input, output };
-                })
-            );
-
-            return {
-                ...question,
-                testCases,
-                inputVars: ['nums'], // adjust as needed
-            };
-        } catch (error) {
-            throw error;
-        }
-    };
-
-    const [isMinLoading, setIsMinLoading] = useState(true);
-
-    // Use TanStack Query
-    const { data: currentTestData, isLoading, error } = useQuery({
-        queryKey: ['currentTestQuestion'],
-        queryFn: async () => {
-            const startTime = Date.now();
-            const result = await fetchQuestionsWithTestCases();
-            const endTime = Date.now();
-            const elapsedTime = endTime - startTime;
-
-            // Ensure minimum loading time of 1 second
-            if (elapsedTime < 1000) {
-                await new Promise(resolve => setTimeout(resolve, 1000 - elapsedTime));
-            }
-
-            return result;
-        },
-        staleTime: 0, // Disable caching to ensure fresh data on refresh
-    });
-
-    useEffect(() => {
-        if (!isLoading) {
-            // Add a small delay before hiding the loading state
-            const timer = setTimeout(() => {
-                setIsMinLoading(false);
-            }, 500);
-            return () => clearTimeout(timer);
-        } else {
-            setIsMinLoading(true);
-        }
-    }, [isLoading]);
-
     //loading component
     const LoadingComponent = () => {
         return (
@@ -238,6 +203,33 @@ function CodingAssesmentInner() {
             </div>
         )
     }
+
+    useEffect(() => {
+        if (isDragging) {
+            document.body.style.userSelect = 'none';
+        } else {
+            document.body.style.userSelect = '';
+        }
+        return () => {
+            document.body.style.userSelect = '';
+        };
+    }, [isDragging]);
+
+
+    useEffect(() => {
+        if (!isLoading) {
+            // Add a small delay before hiding the loading state
+            const timer = setTimeout(() => {
+                setIsMinLoading(false);
+            }, 500);
+            return () => clearTimeout(timer);
+        } else {
+            setIsMinLoading(true);
+        }
+    }, [isLoading]);
+
+    if (isLanguagesLoading) return <LoadingComponent />;
+    if (languagesError) return <div className='h-[calc(100vh-116px)] flex flex-col items-center justify-center text-2xl text-bold text-red-700'>Error loading languages</div>;
 
     if (isLoading || isMinLoading) return <LoadingComponent />;
     if (error) return <div className='h-[calc(100vh-116px)] flex flex-col items-center justify-center text-2xl text-bold text-red-700'>Error loading question</div>;

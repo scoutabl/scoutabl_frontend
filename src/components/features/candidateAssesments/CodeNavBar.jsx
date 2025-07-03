@@ -1,9 +1,8 @@
 import { useState, useEffect } from 'react'
 import { useMutation, useQuery } from '@tanstack/react-query';
-import { submitCodeToBackend, pollSubmissionStatus } from '@/api/monacoCodeApi';
+import { submitCodeToBackend, pollSubmissionStatus, useLanguages } from '@/api/monacoCodeApi';
 import { useEnums } from '@/context/EnumsContext';
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { fetchLanguages } from '@/api/monacoCodeApi'
 import { cn } from '@/lib/utils';
 import { motion } from 'framer-motion';
 import JsonIcon from "@/assets/jsonIcon.svg?react"
@@ -30,8 +29,8 @@ const CodeNavBar = ({
     setOutputErrorMessage,
 }) => {
     const [isOpen, setIsOpen] = useState(false)
+    const { data: allLanguages, isLoading: isLanguagesLoading, error: languagesError } = useLanguages();
     const [languages, setLanguages] = useState([])
-    // const [language, setLanguage] = useState('python3')
     const [error, setError] = useState(null)
 
     const [shouldPoll, setShouldPoll] = useState(false)
@@ -45,29 +44,25 @@ const CodeNavBar = ({
 
     useEffect(() => {
         if (collapsed) return;
-        setLoading(true)
-        setError(null)
-        const getRuntimeLang = async () => {
+        setLoading(true);
+        setError(null);
+        if (allLanguages && currentTestData?.languages) {
             try {
-                const data = await fetchLanguages();
-                // Filter languages to only include those in currentTestData.languages
-                const allowedLanguageIds = currentTestData?.languages?.map(lang => lang.id) || [];
-                const languageNamesArr = data.results
+                const allowedLanguageIds = currentTestData.languages.map(lang => lang.id) || [];
+                const languageNamesArr = allLanguages.results
                     .filter(lang => allowedLanguageIds.includes(lang.id))
                     .map(lang => ({
                         id: lang.id,
                         name: lang.code
                     }));
-                setLanguages(languageNamesArr)
-            }
-            catch (err) {
-                setError('Failed to load languages')
+                setLanguages(languageNamesArr);
+            } catch (err) {
+                setError('Failed to load languages');
             } finally {
-                setLoading(false)
+                setLoading(false);
             }
         }
-        getRuntimeLang();
-    }, [collapsed, currentTestData?.languages])
+    }, [collapsed, currentTestData?.languages, allLanguages]);
 
     const handleSelect = (lang) => {
         onSelect && onSelect(lang);

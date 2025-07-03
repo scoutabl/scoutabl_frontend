@@ -1,12 +1,12 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useForm, FormProvider, Controller } from "react-hook-form";
-import { cn } from "@/lib/utils";
-import AiIcon from '@/assets/AiIcon.svg?react'
-import QuestionIcon from '@/assets/questionIcon.svg?react'
 import { CircleAlert } from 'lucide-react';
-import ChevronLeftIcon from '@/assets/chevronLeft.svg?react'
-import ChevronRightIcon from '@/assets/chevronRight.svg?react'
+import { motion } from "framer-motion";
 import RichTextEditor from "@/components/RichTextEditor";
+import SearchInput from "@/components/shared/debounceSearch/SearchInput";
+import { useLanguages } from "@/api/monacoCodeApi";
+import { Input } from "@/components/ui/input";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
 import {
     Select,
@@ -16,8 +16,13 @@ import {
     SelectValue,
 } from '@/components/ui/select';
 import MultipleSelector from "@/components/ui/MultipleSelector";
-import { Input } from "@/components/ui/input";
-
+import { cn } from "@/lib/utils";
+import AiIcon from '@/assets/AiIcon.svg?react'
+import QuestionIcon from '@/assets/questionIcon.svg?react'
+import ChevronLeftIcon from '@/assets/chevronLeft.svg?react'
+import ChevronRightIcon from '@/assets/chevronRight.svg?react'
+import EditIcon from '@/assets/pencilIcon.svg?react'
+import CodeIcon from '@/assets/codeIcon.svg?react'
 const questionTagsList = [
     { value: "arrays", label: "Arrays" },
     { value: "recursion", label: "Recursion" },
@@ -190,8 +195,96 @@ const CodingQuestionContent = ({ initialData = {}, initialQuestion = '' }) => {
     }
 
     function Step2Content() {
+        const [searchValue, setSearchValue] = useState('')
+        const { data: allLanguages, isLoading: isLanguagesLoading, error: languagesError } = useLanguages();
+        const languagesMap = (allLanguages?.results || []).reduce((acc, lang) => {
+            acc[lang.id] = lang.name;
+            return acc;
+        }, {});
+        const langResultMap = (allLanguages?.results.map(lang => {
+            return {
+                id: lang.id,
+                name: lang.name,
+                timeLimit: lang.default_time_limit_seconds,
+                memoryLimit: lang.default_memory_limit_mb,
+                defaultTemplate: lang.default_template.content
+                // isPopular: lang.is_popular
+            };
+        }))
+        useEffect(() => {
+            console.log(langResultMap)
+        }, [allLanguages]);
         return (
-            <div> {/* Language selection table, time/memory limits, etc. */} </div>
+            <div className="flex flex-col gap-6">
+                <div className='flex flex-col gap-4'>
+                    <div className='flex items-center justify-between'>
+                        <SearchInput
+                            searchValue={searchValue}
+                            setSearchValue={setSearchValue}
+                            placeholder={"Search Languages"}
+                        />
+                        <div className="flex items-center gap-2">
+                            <motion.button
+                                className='w-[104px] h-[37px] grid place-content-center border border-purplePrimary text-sm text-purplePrimary font-medium bg-white rounded-full'
+                                whileHover={{ y: -3 }}
+                                whileTap={{ y: 1 }}
+                                onClick={(e) => e.preventDefault()}
+                            >
+                                Clear All
+                            </motion.button>
+                            <motion.button
+                                className='w-[104px] h-[37px] grid place-content-center border border-purplePrimary text-sm text-purplePrimary font-medium bg-[#EEE7FE] rounded-full'
+                                whileHover={{ y: -3 }}
+                                whileTap={{ y: 1 }}
+                                onClick={(e) => e.preventDefault()}
+                            >
+                                Select All
+                            </motion.button>
+                            <motion.button
+                                className='px-6 w-[203px] h-[37px] flex items-center gap-2 bg-purplePrimary text-sm  text-white font-medium rounded-full'
+                                whileHover={{ y: -3 }}
+                                whileTap={{ y: 1 }}
+                                onClick={(e) => e.preventDefault()}
+                            >
+                                <CodeIcon className="h-4 w-4 text-white" />
+                                Popular Languages
+                            </motion.button>
+                        </div>
+                    </div>
+                    <div className="p-3 grid grid-cols-[minmax(200px,250px)_minmax(150px,180px)_minmax(150px,10px)_minmax(100px,120px)] gap-16 items-center rounded-xl">
+                        {/* Header */}
+                        <div className="font-medium">Language</div>
+                        <div className="font-medium">Time Limit (seconds)</div>
+                        <div className="font-medium">Memory Limit (mb)</div>
+                        <div className="font-medium">Edit / Save</div>
+                    </div>
+                    {langResultMap
+                        ?.filter(lang => lang.name.toLowerCase().includes(searchValue.toLowerCase()))
+                        .map(lang => {
+                            return (
+                                <div key={lang.id} className="p-3 grid grid-cols-[minmax(200px,250px)_minmax(150px,180px)_minmax(150px,10px)_minmax(100px,120px)] gap-16 items-center rounded-xl border border-[#E0E0E0] bg-white hover:bg-purpleQuaternary transition-all duration-300 ease-in cursor-pointer">
+                                    {/* Header */}
+                                    <div className="flex items-center justify-between">
+                                        <div className="flex items-center gap-2">
+                                            <Checkbox />
+                                            <span className="text-sm text-greyPrimary">{lang.name}</span>
+                                        </div>
+                                        <span className="px-3 py-1 rounded-full border border-[#AECDB9] bg-[#E2F9E9] text-xs font-medium text-[#13482A]">
+                                            Popular
+                                        </span>
+                                    </div>
+                                    <span className="text-greyPrimary text-sm text-center">{lang.timeLimit}</span>
+                                    <span className="text-greyPrimary text-sm text-center">{lang.memoryLimit}</span>
+                                    {/* <div className="font-medium min-w-[150px] rounded-full bg-[#D8FEE3] px-[6px] py-[5.5px] text-[#13482A]">Single Select</div> */}
+                                    <button className="flex items-center justify-center" onClick={(e) => e.preventDefault()}>
+                                        <EditIcon className="w-4 h-4" />
+                                    </button>
+                                </div>
+                            )
+                        })}
+
+                </div>
+            </div>
         );
     }
     function Step3Content() {

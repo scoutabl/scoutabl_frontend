@@ -13,11 +13,11 @@ import { Eye } from 'lucide-react'
 import QuestionCards from '../QuestionCards'
 const Step3 = () => {
     const [questionSequence, setQuestionSequence] = useState([])
-
     return (
         <div className='flex flex-col gap-6 px-[116px] py-6'>
             <div className='flex items-center justify-between'>
                 <div className='w-[600px] p-4 bg-white rounded-5xl flex items-center gap-4 border-[1px] border-[rgba(224,224,224,0.65)] [box-shadow:0px_16px_24px_rgba(0,_0,_0,_0.06),_0px_2px_6px_rgba(0,_0,_0,_0.04)]'>
+                    {/* circular Step No */}
                     <div>
 
                     </div>
