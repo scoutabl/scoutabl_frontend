@@ -48,6 +48,7 @@ const defaultValues = (initialData, initialQuestion) => ({
     constraints: initialData?.constraints || '',
     outputFormats: initialData?.outputFormats || '',
     tags: initialData?.tags || [],
+    selectedLanguages: [],
 });
 
 const CodingQuestionContent = ({ initialData = {}, initialQuestion = '' }) => {
@@ -69,6 +70,8 @@ const CodingQuestionContent = ({ initialData = {}, initialQuestion = '' }) => {
                 'outputFormats',
                 'tags',
             ];
+        } else if (currentStep === 2) {
+            fieldsToValidate = ['selectedLanguages'];
         }
         // Add fields for other steps as needed
         const valid = await trigger(fieldsToValidate);
@@ -197,23 +200,32 @@ const CodingQuestionContent = ({ initialData = {}, initialQuestion = '' }) => {
     function Step2Content() {
         const [searchValue, setSearchValue] = useState('')
         const { data: allLanguages, isLoading: isLanguagesLoading, error: languagesError } = useLanguages();
-        const languagesMap = (allLanguages?.results || []).reduce((acc, lang) => {
-            acc[lang.id] = lang.name;
-            return acc;
-        }, {});
-        const langResultMap = (allLanguages?.results.map(lang => {
+        const [showPopularOnly, setShowPopularOnly] = useState(false);
+        const [editingLangId, setEditingLangId] = useState(null);
+        const [editValues, setEditValues] = useState({});
+        const [langOverrides, setLangOverrides] = useState({}); // { [langId]: { timeLimit, memoryLimit } }
+        const popularLanguages = ["Python 3", "Java", "C++", "NodeJS", "PHP", "C#"];
+        const langResultMap = allLanguages?.results.map(lang => {
+            const override = langOverrides[lang.id] || {};
             return {
                 id: lang.id,
                 name: lang.name,
-                timeLimit: lang.default_time_limit_seconds,
-                memoryLimit: lang.default_memory_limit_mb,
-                defaultTemplate: lang.default_template.content
-                // isPopular: lang.is_popular
+                timeLimit: override.timeLimit ?? lang.default_time_limit_seconds,
+                memoryLimit: override.memoryLimit ?? lang.default_memory_limit_mb,
+                defaultTemplate: lang.default_template.content,
+                isPopular: popularLanguages.includes(lang.name)
             };
-        }))
+        });
         useEffect(() => {
             console.log(langResultMap)
         }, [allLanguages]);
+
+        let filteredLangs = langResultMap
+            ?.filter(lang => lang.name.toLowerCase().includes(searchValue.toLowerCase()));
+        if (showPopularOnly) {
+            filteredLangs = filteredLangs?.filter(lang => lang.isPopular);
+        }
+
         return (
             <div className="flex flex-col gap-6">
                 <div className='flex flex-col gap-4'>
@@ -223,33 +235,51 @@ const CodingQuestionContent = ({ initialData = {}, initialQuestion = '' }) => {
                             setSearchValue={setSearchValue}
                             placeholder={"Search Languages"}
                         />
-                        <div className="flex items-center gap-2">
-                            <motion.button
-                                className='w-[104px] h-[37px] grid place-content-center border border-purplePrimary text-sm text-purplePrimary font-medium bg-white rounded-full'
-                                whileHover={{ y: -3 }}
-                                whileTap={{ y: 1 }}
-                                onClick={(e) => e.preventDefault()}
-                            >
-                                Clear All
-                            </motion.button>
-                            <motion.button
-                                className='w-[104px] h-[37px] grid place-content-center border border-purplePrimary text-sm text-purplePrimary font-medium bg-[#EEE7FE] rounded-full'
-                                whileHover={{ y: -3 }}
-                                whileTap={{ y: 1 }}
-                                onClick={(e) => e.preventDefault()}
-                            >
-                                Select All
-                            </motion.button>
-                            <motion.button
-                                className='px-6 w-[203px] h-[37px] flex items-center gap-2 bg-purplePrimary text-sm  text-white font-medium rounded-full'
-                                whileHover={{ y: -3 }}
-                                whileTap={{ y: 1 }}
-                                onClick={(e) => e.preventDefault()}
-                            >
-                                <CodeIcon className="h-4 w-4 text-white" />
-                                Popular Languages
-                            </motion.button>
-                        </div>
+                        <Controller
+                            name="selectedLanguages"
+                            control={control}
+                            rules={{
+                                validate: value => (value && value.length > 0) || "Please select at least one language"
+                            }}
+                            render={({ field }) => (
+                                <div className="flex items-center gap-2">
+                                    <motion.button
+                                        className='w-[104px] h-[37px] grid place-content-center border border-purplePrimary text-sm text-purplePrimary font-medium bg-white rounded-full'
+                                        whileHover={{ y: -3 }}
+                                        whileTap={{ y: 1 }}
+                                        onClick={e => {
+                                            e.preventDefault();
+                                            field.onChange([]);
+                                        }}
+                                    >
+                                        Clear All
+                                    </motion.button>
+                                    <motion.button
+                                        className='w-[104px] h-[37px] grid place-content-center border border-purplePrimary text-sm text-purplePrimary font-medium bg-[#EEE7FE] rounded-full'
+                                        whileHover={{ y: -3 }}
+                                        whileTap={{ y: 1 }}
+                                        onClick={e => {
+                                            e.preventDefault();
+                                            field.onChange(filteredLangs?.map(lang => lang.id) || []);
+                                        }}
+                                    >
+                                        Select All
+                                    </motion.button>
+                                    <motion.button
+                                        className='px-6 w-fit h-[37px] flex items-center gap-2 bg-purplePrimary text-sm  text-white font-medium rounded-full text-center'
+                                        whileHover={{ y: -3 }}
+                                        whileTap={{ y: 1 }}
+                                        onClick={e => {
+                                            e.preventDefault();
+                                            setShowPopularOnly(prev => !prev);
+                                        }}
+                                    >
+                                        <CodeIcon className="h-4 w-4 text-white" />
+                                        {showPopularOnly ? "Show All" : "Popular Languages"}
+                                    </motion.button>
+                                </div>
+                            )}
+                        />
                     </div>
                     <div className="p-3 grid grid-cols-[minmax(200px,250px)_minmax(150px,180px)_minmax(150px,10px)_minmax(100px,120px)] gap-16 items-center rounded-xl">
                         {/* Header */}
@@ -258,35 +288,105 @@ const CodingQuestionContent = ({ initialData = {}, initialQuestion = '' }) => {
                         <div className="font-medium">Memory Limit (mb)</div>
                         <div className="font-medium">Edit / Save</div>
                     </div>
-                    {langResultMap
-                        ?.filter(lang => lang.name.toLowerCase().includes(searchValue.toLowerCase()))
-                        .map(lang => {
-                            return (
-                                <div key={lang.id} className="p-3 grid grid-cols-[minmax(200px,250px)_minmax(150px,180px)_minmax(150px,10px)_minmax(100px,120px)] gap-16 items-center rounded-xl border border-[#E0E0E0] bg-white hover:bg-purpleQuaternary transition-all duration-300 ease-in cursor-pointer">
-                                    {/* Header */}
-                                    <div className="flex items-center justify-between">
-                                        <div className="flex items-center gap-2">
-                                            <Checkbox />
-                                            <span className="text-sm text-greyPrimary">{lang.name}</span>
-                                        </div>
-                                        <span className="px-3 py-1 rounded-full border border-[#AECDB9] bg-[#E2F9E9] text-xs font-medium text-[#13482A]">
-                                            Popular
-                                        </span>
-                                    </div>
-                                    <span className="text-greyPrimary text-sm text-center">{lang.timeLimit}</span>
-                                    <span className="text-greyPrimary text-sm text-center">{lang.memoryLimit}</span>
-                                    {/* <div className="font-medium min-w-[150px] rounded-full bg-[#D8FEE3] px-[6px] py-[5.5px] text-[#13482A]">Single Select</div> */}
-                                    <button className="flex items-center justify-center" onClick={(e) => e.preventDefault()}>
-                                        <EditIcon className="w-4 h-4" />
-                                    </button>
-                                </div>
-                            )
-                        })}
+                    <Controller
+                        name="selectedLanguages"
+                        control={control}
+                        rules={{
+                            validate: value => (value && value.length > 0) || "Please select at least one language"
+                        }}
+                        render={({ field }) => (
+                            <>
+                                {filteredLangs?.map(lang => (
+                                    <div key={lang.id} className="p-3 grid grid-cols-[minmax(200px,250px)_minmax(150px,180px)_minmax(150px,10px)_minmax(100px,120px)] gap-16 items-center rounded-xl border border-[#E0E0E0] bg-white hover:bg-purpleQuaternary transition-all duration-300 ease-in">
+                                        {/* Header */}
+                                        <div className="flex items-center justify-between">
+                                            <div className="flex items-center gap-2">
+                                                <Checkbox
+                                                    checked={field.value?.includes(lang.id)}
+                                                    onCheckedChange={checked => {
+                                                        if (checked) {
+                                                            field.onChange([...(field.value || []), lang.id]);
+                                                        } else {
+                                                            field.onChange((field.value || []).filter(id => id !== lang.id));
+                                                        }
+                                                    }}
+                                                />
+                                                <span className="text-sm text-greyPrimary">{lang.name}</span>
+                                            </div>
+                                            {lang.isPopular && <span className="px-3 py-1 rounded-full border border-[#AECDB9] bg-[#E2F9E9] text-xs font-medium text-[#13482A]">
+                                                Popular
+                                            </span>}
 
+                                        </div>
+                                        {editingLangId === lang.id ? (
+                                            <>
+                                                <div className="w-full flex items-center justify-center">
+                                                    <input
+                                                        type="number"
+                                                        min={1}
+                                                        className="w-[67px] py-1 px-3 border rounded-md text-sm text-center border-[#CCCCCC]"
+                                                        value={editValues.timeLimit}
+                                                        onChange={e => setEditValues(ev => ({ ...ev, timeLimit: e.target.value }))}
+                                                    />
+                                                </div>
+                                                <div className="w-full flex items-center justify-center">
+                                                    <input
+                                                        type="number"
+                                                        min={1}
+                                                        className="w-[67px] py-1 px-3 border rounded-md text-sm text-center border-[#CCCCCC]"
+                                                        value={editValues.memoryLimit}
+                                                        onChange={e => setEditValues(ev => ({ ...ev, memoryLimit: e.target.value }))}
+                                                    />
+                                                </div>
+                                                <button
+                                                    className="ml-2 px-3 py-1 rounded-full border border-purplePrimary text-purplePrimary text-xs font-medium cursor-pointer hover:bg-purplePrimary hover:text-white transition-colors duration-300 ease-in"
+                                                    onClick={e => {
+                                                        e.preventDefault();
+                                                        setLangOverrides(prev => ({
+                                                            ...prev,
+                                                            [lang.id]: {
+                                                                timeLimit: editValues.timeLimit,
+                                                                memoryLimit: editValues.memoryLimit
+                                                            }
+                                                        }));
+                                                        setEditingLangId(null);
+                                                    }}
+                                                >
+                                                    Save
+                                                </button>
+                                            </>
+                                        ) : (
+                                            <>
+                                                <span className="inline-block w-full text-greyPrimary text-sm text-center">{lang.timeLimit} s</span>
+                                                <span className="inline-block w-full text-greyPrimary text-sm text-center ml-2">{lang.memoryLimit} mb</span>
+                                                <button
+                                                    className="flex items-center justify-center ml-2"
+                                                    onClick={e => {
+                                                        e.preventDefault();
+                                                        setEditingLangId(lang.id);
+                                                        setEditValues({
+                                                            timeLimit: lang.timeLimit,
+                                                            memoryLimit: lang.memoryLimit
+                                                        });
+                                                    }}
+                                                >
+                                                    <EditIcon className="w-4 h-4 cursor-pointer" />
+                                                </button>
+                                            </>
+                                        )}
+                                    </div>
+                                ))}
+                            </>
+                        )}
+                    />
+                    {errors.selectedLanguages && (
+                        <p className="text-red-500 text-xs mt-1">{errors.selectedLanguages.message}</p>
+                    )}
                 </div>
             </div>
         );
     }
+
     function Step3Content() {
         return (
             <div> {/* Code stub editor, language tabs, etc. */} </div>
