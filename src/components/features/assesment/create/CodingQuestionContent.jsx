@@ -23,6 +23,7 @@ import ChevronLeftIcon from '@/assets/chevronLeft.svg?react'
 import ChevronRightIcon from '@/assets/chevronRight.svg?react'
 import EditIcon from '@/assets/pencilIcon.svg?react'
 import CodeIcon from '@/assets/codeIcon.svg?react'
+import SimpleCodeEditor from "@/components/shared/SimpleCodeEditor";
 const questionTagsList = [
     { value: "arrays", label: "Arrays" },
     { value: "recursion", label: "Recursion" },
@@ -58,6 +59,11 @@ const CodingQuestionContent = ({ initialData = {}, initialQuestion = '' }) => {
         defaultValues: defaultValues(initialData, initialQuestion),
     });
     const { control, register, handleSubmit, trigger, formState: { errors } } = methods;
+
+    // Fetch languages at the top level
+    const { data: allLanguages, isLoading: isLanguagesLoading, error: languagesError } = useLanguages();
+    // Move langOverrides to parent
+    const [langOverrides, setLangOverrides] = useState({}); // { [langId]: { timeLimit, memoryLimit } }
 
     const handleNext = async () => {
         let fieldsToValidate = [];
@@ -197,13 +203,18 @@ const CodingQuestionContent = ({ initialData = {}, initialQuestion = '' }) => {
         );
     }
 
-    function Step2Content() {
+    // Step2Content is now a pure component
+    function Step2Content({
+        allLanguages,
+        isLanguagesLoading,
+        languagesError,
+        langOverrides,
+        setLangOverrides
+    }) {
         const [searchValue, setSearchValue] = useState('')
-        const { data: allLanguages, isLoading: isLanguagesLoading, error: languagesError } = useLanguages();
         const [showPopularOnly, setShowPopularOnly] = useState(false);
         const [editingLangId, setEditingLangId] = useState(null);
         const [editValues, setEditValues] = useState({});
-        const [langOverrides, setLangOverrides] = useState({}); // { [langId]: { timeLimit, memoryLimit } }
         const popularLanguages = ["Python 3", "Java", "C++", "NodeJS", "PHP", "C#"];
         const langResultMap = allLanguages?.results.map(lang => {
             const override = langOverrides[lang.id] || {};
@@ -216,16 +227,11 @@ const CodingQuestionContent = ({ initialData = {}, initialQuestion = '' }) => {
                 isPopular: popularLanguages.includes(lang.name)
             };
         });
-        useEffect(() => {
-            console.log(langResultMap)
-        }, [allLanguages]);
-
         let filteredLangs = langResultMap
             ?.filter(lang => lang.name.toLowerCase().includes(searchValue.toLowerCase()));
         if (showPopularOnly) {
             filteredLangs = filteredLangs?.filter(lang => lang.isPopular);
         }
-
         return (
             <div className="flex flex-col gap-6">
                 <div className='flex flex-col gap-4'>
@@ -387,11 +393,31 @@ const CodingQuestionContent = ({ initialData = {}, initialQuestion = '' }) => {
         );
     }
 
-    function Step3Content() {
+    // Step3Content is now a pure component
+    function Step3Content({
+        allLanguages,
+        isLanguagesLoading,
+        languagesError,
+        selectedLanguages,
+        langOverrides
+    }) {
+        // Map selectedLanguages (IDs) to full language objects
+        const selectedLanguageObjects = (allLanguages?.results || []).filter(lang =>
+            (selectedLanguages || []).includes(lang.id)
+        );
         return (
-            <div> {/* Code stub editor, language tabs, etc. */} </div>
+            <div>
+                <SimpleCodeEditor
+                    languages={selectedLanguageObjects}
+                    loading={isLanguagesLoading}
+                    error={languagesError}
+                    value={methods.getValues('codeStubs') || {}}
+                    onChange={(value) => methods.setValue('codeStubs', value)}
+                />
+            </div>
         );
     }
+
     function Step4Content() {
         return (
             <div> {/* Test cases table, add/edit, custom score, toggles, etc. */} </div>
@@ -400,8 +426,20 @@ const CodingQuestionContent = ({ initialData = {}, initialQuestion = '' }) => {
     function renderStepContent() {
         switch (currentStep) {
             case 1: return <Step1Content />;
-            case 2: return <Step2Content />;
-            case 3: return <Step3Content />;
+            case 2: return <Step2Content
+                allLanguages={allLanguages}
+                isLanguagesLoading={isLanguagesLoading}
+                languagesError={languagesError}
+                langOverrides={langOverrides}
+                setLangOverrides={setLangOverrides}
+            />;
+            case 3: return <Step3Content
+                allLanguages={allLanguages}
+                isLanguagesLoading={isLanguagesLoading}
+                languagesError={languagesError}
+                selectedLanguages={methods.getValues('selectedLanguages')}
+                langOverrides={langOverrides}
+            />;
             case 4: return <Step4Content />;
             default: return null;
         }
