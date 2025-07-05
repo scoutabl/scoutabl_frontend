@@ -406,15 +406,13 @@ const CodingQuestionContent = ({ initialData = {}, initialQuestion = '' }) => {
             (selectedLanguages || []).includes(lang.id)
         );
         return (
-            <div>
-                <SimpleCodeEditor
-                    languages={selectedLanguageObjects}
-                    loading={isLanguagesLoading}
-                    error={languagesError}
-                    value={methods.getValues('codeStubs') || {}}
-                    onChange={(value) => methods.setValue('codeStubs', value)}
-                />
-            </div>
+            <SimpleCodeEditor
+                languages={selectedLanguageObjects}
+                loading={isLanguagesLoading}
+                error={languagesError}
+                value={methods.getValues('codeStubs') || {}}
+                onChange={(value) => methods.setValue('codeStubs', value)}
+            />
         );
     }
 
