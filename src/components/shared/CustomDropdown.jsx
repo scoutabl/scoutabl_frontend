@@ -32,7 +32,7 @@ const CustomDropdown = ({ languages, selectedLang, setSelectedLang, loading }) =
                 <ChevronDown />
             </button>
             {open && (
-                <div className="absolute left-0 mt-2 w-44 bg-white border shadow-lg z-[99999] rounded-2xl flex flex-col p-0 max-w-[180px]">
+                <div className="absolute -left-5 mt-4 w-44 bg-white border shadow-lg z-[99999] rounded-2xl flex flex-col p-0 max-w-[180px]">
                     {/* {languages.map((langObj, idx) => (
                         <div
                             key={langObj.id || idx}
@@ -63,7 +63,7 @@ const CustomDropdown = ({ languages, selectedLang, setSelectedLang, loading }) =
                                 key={idx}
                                 onClick={() => {
                                     setSelectedLang(langObj);
-                                    setIsOpen(false);
+                                    setOpen(false);
                                 }}
                                 className={`group py-3 flex items-center relative cursor-pointer first:rounded-t-2xl last:rounded-b-2xl overflow-hidden pl-0
                     ${isSelected ? "bg-[#E8DEFD] dark:bg-[#28203F] text-[#8B5CF6]" : "dark:bg-blackPrimary"}

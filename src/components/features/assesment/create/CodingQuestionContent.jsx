@@ -493,9 +493,9 @@ const CodingQuestionContent = ({ initialData = {}, initialQuestion = '' }) => {
                         </div>
                     </aside>
                     {/* step content */}
-                    <section className="flex-1 bg-white min-h-[600px]">
+                    <section className="flex-1 flex flex-col bg-white min-h-[600px]">
                         {renderStepContent()}
-                        <div className='flex items-center justify-between mt-6'>
+                        <div className='flex items-center justify-between mt-auto pt-6'>
                             <Button
                                 variant="back"
                                 effect="shineHover"

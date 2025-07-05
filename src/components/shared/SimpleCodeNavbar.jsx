@@ -35,7 +35,10 @@ const SimpleCodeNavbar = ({ languages, selectedLang, setSelectedLang, loading, i
                 setSelectedLang={setSelectedLang}
                 loading={loading}
             />
-            <button onClick={(e) => e.preventDefault()} className='px-2 py-1 flex items-center gap-1 text-white text-sm bg-purplePrimary rounded-md'>Reset to Default</button>
+            <button onClick={(e) => e.preventDefault()} className='px-3 py-[4px] flex items-center gap-1 text-white text-xs bg-purplePrimary rounded-md'>
+                <ResetIcon className="text-white size-3" />
+                Reset to Default
+            </button>
         </div>
     )
 }
