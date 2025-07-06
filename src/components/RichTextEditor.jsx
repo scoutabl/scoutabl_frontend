@@ -675,7 +675,7 @@ const RichTextEditor = ({ content = '', onChange = () => { }, wordCountToggle })
     });
 
     return (
-        <div className="flex flex-col h-full max-w-4xl border-[1px] border-[rgba(224,224,224,0.65)] [box-shadow:0px_16px_24px_rgba(0,_0,_0,_0.06),_0px_2px_6px_rgba(0,_0,_0,_0.04)] rounded-5xl">
+        <div className="flex flex-col h-full border-[1px] border-[rgba(224,224,224,0.65)] [box-shadow:0px_16px_24px_rgba(0,_0,_0,_0.06),_0px_2px_6px_rgba(0,_0,_0,_0.04)] rounded-5xl">
             <MenuBar editor={editor} />
             {/* <div className="flex-1 min-h-0 bg-backgroundPrimary">
                 <EditorContent editor={editor} className="h-full" />

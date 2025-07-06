@@ -164,7 +164,7 @@
   }
 
   ::-webkit-scrollbar-thumb {
-    @apply rounded-full bg-gray-500 border-[1px] border-transparent border-solid bg-clip-padding;
+    @apply rounded-full bg-purplePrimary border-[1px] border-transparent border-solid bg-clip-padding;
   }
 
   ::-webkit-scrollbar-corner {
@@ -332,6 +332,8 @@
   --color-blackPrimary: #0F1112;
   --color-blackSecondary: #091418;
   --color-greenPrimary: #1EA378;
+  --color-seperatorPrimary: #E0E0E0;
+  --color-dangerPrimary: #E45270;
   --animate-shine: shine 3s ease-out infinite;
   --animate-gradient-flow: gradientFlow 10s ease infinite;
 

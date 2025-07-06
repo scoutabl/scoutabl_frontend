@@ -1,9 +1,10 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { Editor } from '@monaco-editor/react';
 import SimpleCodeNavbar from './SimpleCodeNavbar';
+
 export default function SimpleCodeEditor({ value, onChange, height = 350, languages, loading }) {
     const [selectedLang, setSelectedLang] = useState(languages && languages.length > 0 ? languages[0] : null);
-    const [isPopoverOpen, setIsPopoverOpen] = useState(false);
+
     const monacoLanguageMap = {
         python3: 'python',
         python: 'python',
@@ -19,20 +20,16 @@ export default function SimpleCodeEditor({ value, onChange, height = 350, langua
         swift: 'swift',
         kotlin: 'kotlin',
     };
-    useEffect(() => {
-        if (languages && languages.length > 0) {
-            setSelectedLang(languages[0]);
-            console.log("selectedLang", selectedLang?.default_template?.content);
-        }
-    }, [languages]);
+
     return (
         <div className='flex flex-col gap-4'>
-            <SimpleCodeNavbar languages={languages}
+            <SimpleCodeNavbar
+                languages={languages}
                 selectedLang={selectedLang}
                 setSelectedLang={setSelectedLang}
                 loading={loading}
             />
-            <div className='px-6 py-8 rounded-5xl border border-[#E0E0E0] h-[394px] w-[896px]'>
+            <div className='px-6 py-8 rounded-5xl border border-seperatorPrimary h-[394px] w-full'>
                 <Editor
                     key={selectedLang ? selectedLang.name : 'editor'}
                     height='100%'
@@ -42,10 +39,10 @@ export default function SimpleCodeEditor({ value, onChange, height = 350, langua
                             ? monacoLanguageMap[selectedLang.name.toLowerCase().replace(/ /g, '')] || 'plaintext'
                             : 'plaintext'
                     }
-                    defaultValue={selectedLang?.default_template?.content || ''}
-                    theme="light"
                     value={
-                        selectedLang && selectedLang.name && value ? value[selectedLang.name] || '' : ''
+                        selectedLang && selectedLang.name && value
+                            ? value[selectedLang.name] || ''
+                            : ''
                     }
                     onChange={code => {
                         if (selectedLang && selectedLang.name) {
@@ -63,8 +60,9 @@ export default function SimpleCodeEditor({ value, onChange, height = 350, langua
                 />
             </div>
             <div className='flex flex-col gap-1'>
-                <span className='text-xs font-normal text-greyPrimary'>File extension: .py</span>
-                <span className='text-xs font-normal text-greyPrimary'>{`Run: node {file}`}</span>
+                {/* should be dynamic */}
+                <span className='text-xs font-normal text-greyPrimary'>File extension: {selectedLang.fileExtension}</span>
+                <span className='text-xs font-normal text-greyPrimary'>{`Run: node {file}`}</span>
             </div>
         </div>
     );

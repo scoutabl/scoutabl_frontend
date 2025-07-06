@@ -23,7 +23,7 @@ const SimpleCodeNavbar = ({ languages, selectedLang, setSelectedLang, loading, i
     useEffect(() => {
         if (languages && languages.length > 0) {
             setSelectedLang(languages[0]);
-            console.log("selectedLang", selectedLang?.default_template?.content);
+            console.log("selectedLang", selectedLang);
         }
     }, [languages]);
 

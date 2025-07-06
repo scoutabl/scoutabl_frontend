@@ -447,7 +447,7 @@ const QuestionModal = ({
                 {trigger}
             </DialogTrigger>
 
-            <DialogContent className="flex flex-col p-6 min-w-[1208px] max-h-[90vh] overflow-y-auto">
+            <DialogContent className="flex flex-col p-6 min-w-[1208px] max-h-[90vh] overflow-y-auto rounded-[24px]">
                 {/* Header */}
                 <div className="flex items-center justify-between mb-4">
                     <DialogHeader className="max-h-9">
