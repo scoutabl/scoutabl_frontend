@@ -1,7 +1,8 @@
 import { useState, useEffect } from "react";
-import { useForm, FormProvider, Controller } from "react-hook-form";
+import { useForm, FormProvider, Controller, useWatch } from "react-hook-form";
 import { CircleAlert, Eye, EyeOff, X } from 'lucide-react';
 import { motion } from "framer-motion";
+import { toast } from "sonner"
 import RichTextEditor from "@/components/RichTextEditor";
 import SearchInput from "@/components/shared/debounceSearch/SearchInput";
 import { useLanguages } from "@/api/monacoCodeApi";
@@ -77,26 +78,33 @@ const defaultValues = (initialData, initialQuestion, allLanguages, selectedLangu
 };
 
 const languageFileExtensions = {
-  "python3": "py",
-  "swift": "swift",
-  "kotlin": "kt",
-  "java": "java",
-  "cpp": "cpp",
-  "nodejs": "js",
-  "csharp": "cs",
-  "ruby": "rb",
-  "go": "go",
-  "php": "php",
-  // Add more as needed
+    "python3": "py",
+    "swift": "swift",
+    "kotlin": "kt",
+    "java": "java",
+    "cpp": "cpp",
+    "nodejs": "js",
+    "csharp": "cs",
+    "ruby": "rb",
+    "go": "go",
+    "php": "php",
+    // Add more as needed
 };
 
 const CodingQuestionContent = ({ initialData = {}, initialQuestion = '' }) => {
     const [currentStep, setCurrentStep] = useState(1);
     const methods = useForm({
         mode: 'onTouched',
-        defaultValues: defaultValues(initialData, initialQuestion),
+        defaultValues: {
+            ...defaultValues(initialData, initialQuestion),
+            customScore: 10,
+            saveToLibrary: false,
+            enablePrecisionCheck: false,
+            disableCompile: false,
+            testCases: [],
+        },
     });
-    const { control, register, handleSubmit, trigger, formState: { errors } } = methods;
+    const { control, register, handleSubmit, clearErrors, trigger, setValue, formState: { errors } } = methods;
 
     // Fetch languages at the top level
     const { data: allLanguages, isLoading: isLanguagesLoading, error: languagesError } = useLanguages();
@@ -225,6 +233,14 @@ const CodingQuestionContent = ({ initialData = {}, initialQuestion = '' }) => {
             }
             setCurrentStep((s) => s + 1);
         }
+        else {
+            // Show toast for each error in the current step
+            fieldsToValidate.forEach(field => {
+                if (errors[field]) {
+                    toast.error(errors[field].message || "This field is required");
+                }
+            });
+        }
     };
     const handleBack = () => setCurrentStep((s) => s - 1);
 
@@ -249,7 +265,7 @@ const CodingQuestionContent = ({ initialData = {}, initialQuestion = '' }) => {
                     render={({ field }) => (
                         <div>
                             <RichTextEditor {...field} content={field.value} onChange={field.onChange} wordCountToggle={false} />
-                            {errors.question && <p className="text-red-500 text-xs mt-1">{errors.question.message}</p>}
+                            {errors.question && <p className="text-dangerPrimary text-xs mt-1">{errors.question.message}</p>}
                         </div>
                     )}
                 />
@@ -287,8 +303,16 @@ const CodingQuestionContent = ({ initialData = {}, initialQuestion = '' }) => {
                         <QuestionIcon />
                     </div>
                     <div className="w-full">
-                        <Input type='text' id="input-formats" placeholder="nums=[1, 2, 3]" className='w-full' {...register('inputFormats', { required: 'Input format is required' })} />
-                        {errors.inputFormats && <p className="text-red-500 text-xs mt-1">{errors.inputFormats.message}</p>}
+                        <Input
+                            type='text'
+                            id="input-formats"
+                            placeholder="nums=[1, 2, 3]"
+                            className={cn('w-full', {
+                                'border-dangerPrimary': errors.inputFormats
+                            })}
+                            {...register('inputFormats', { required: 'Input format is required' })}
+                        />
+                        {errors.inputFormats && <p className="text-dangerPrimary text-xs mt-1">{errors.inputFormats.message}</p>}
                     </div>
                 </div>
                 <div className="flex items-center gap-4">
@@ -300,8 +324,16 @@ const CodingQuestionContent = ({ initialData = {}, initialQuestion = '' }) => {
                         <QuestionIcon />
                     </div>
                     <div className="w-full">
-                        <Input type='text' id="constraints" placeholder="Constraints" className='w-full' {...register('constraints', { required: 'Constraints are required' })} />
-                        {errors.constraints && <p className="text-red-500 text-xs mt-1">{errors.constraints.message}</p>}
+                        <Input
+                            type='text'
+                            id="constraints"
+                            placeholder="Constraints"
+                            className={cn('w-full', {
+                                'border-dangerPrimary': errors.constraints
+                            })}
+                            {...register('constraints', { required: 'Constraints are required' })}
+                        />
+                        {errors.constraints && <p className="text-dangerPrimary text-xs mt-1">{errors.constraints.message}</p>}
                     </div>
                 </div>
                 <div className="flex items-center gap-4">
@@ -313,8 +345,16 @@ const CodingQuestionContent = ({ initialData = {}, initialQuestion = '' }) => {
                         <QuestionIcon />
                     </div>
                     <div className="w-full">
-                        <Input type='text' id="output-formats" placeholder="output" className='w-full' {...register('outputFormats', { required: 'Output format is required' })} />
-                        {errors.outputFormats && <p className="text-red-500 text-xs mt-1">{errors.outputFormats.message}</p>}
+                        <Input
+                            type='text'
+                            id="output-formats"
+                            placeholder="output"
+                            className={cn('w-full', {
+                                'border-dangerPrimary': errors.outputFormats
+                            })}
+                            {...register('outputFormats', { required: 'Output format is required' })}
+                        />
+                        {errors.outputFormats && <p className="text-dangerPrimary text-xs mt-1">{errors.outputFormats.message}</p>}
                     </div>
                 </div>
                 <div className="flex items-center gap-4">
@@ -326,7 +366,7 @@ const CodingQuestionContent = ({ initialData = {}, initialQuestion = '' }) => {
                         <QuestionIcon />
                     </div>
                     <div className="w-full">
-                        <Controller
+                        {/* <Controller
                             name="tags"
                             control={control}
                             rules={{ required: 'At least one tag is required', validate: v => v && v.length > 0 || 'At least one tag is required' }}
@@ -337,10 +377,34 @@ const CodingQuestionContent = ({ initialData = {}, initialQuestion = '' }) => {
                                     onChange={field.onChange}
                                     placeholder="Select Quesiton Tags"
                                     emptyIndicator={<p className="text-center text-lg leading-10 text-gray-600 dark:text-gray-400">no results found.</p>}
+                                    error={errors.tags}                                
+                                />
+                            )}
+                        /> */}
+                        <Controller
+                            name="tags"
+                            control={control}
+                            rules={{
+                                required: 'At least one tag is required',
+                                validate: v => v && v.length > 0 || 'At least one tag is required'
+                            }}
+                            render={({ field }) => (
+                                <MultipleSelector
+                                    defaultOptions={questionTagsList}
+                                    value={field.value}
+                                    onChange={val => {
+                                        field.onChange(val);
+                                        if (val && val.length > 0) {
+                                            clearErrors('tags');
+                                        }
+                                    }}
+                                    placeholder="Select Quesiton Tags"
+                                    emptyIndicator={<p className="text-center text-lg leading-10 text-gray-600 dark:text-gray-400">no results found.</p>}
+                                    error={errors.tags}
                                 />
                             )}
                         />
-                        {errors.tags && <p className="text-red-500 text-xs mt-1">{errors.tags.message}</p>}
+                        {errors.tags && <p className="text-dangerPrimary text-xs mt-1">{errors.tags.message}</p>}
                     </div>
                 </div>
             </div>
@@ -433,12 +497,12 @@ const CodingQuestionContent = ({ initialData = {}, initialQuestion = '' }) => {
                             )}
                         />
                     </div>
-                    <div className="p-3 grid grid-cols-[minmax(200px,250px)_minmax(150px,180px)_minmax(150px,10px)_minmax(100px,120px)] gap-16 items-center rounded-xl">
+                    <div className="p-3 grid grid-cols-4 gap-16 items-center rounded-xl">
                         {/* Header */}
                         <div className="font-medium">Language</div>
-                        <div className="font-medium">Time Limit (seconds)</div>
-                        <div className="font-medium">Memory Limit (mb)</div>
-                        <div className="font-medium">Edit / Save</div>
+                        <div className="font-medium text-center">Time Limit (seconds)</div>
+                        <div className="font-medium text-center">Memory Limit (mb)</div>
+                        <div className="font-medium text-center">Edit / Save</div>
                     </div>
                     <Controller
                         name="selectedLanguages"
@@ -449,7 +513,7 @@ const CodingQuestionContent = ({ initialData = {}, initialQuestion = '' }) => {
                         render={({ field }) => (
                             <>
                                 {filteredLangs?.map(lang => (
-                                    <div key={lang.id} className="p-3 grid grid-cols-[minmax(200px,250px)_minmax(150px,180px)_minmax(150px,10px)_minmax(100px,120px)] gap-16 items-center rounded-xl border border-[#E0E0E0] bg-white hover:bg-purpleQuaternary transition-all duration-300 ease-in">
+                                    <div key={lang.id} className="p-3 grid grid-cols-4  gap-16 items-center rounded-xl border border-[#E0E0E0] bg-white hover:bg-purpleQuaternary transition-all duration-300 ease-in">
                                         {/* Header */}
                                         <div className="flex items-center justify-between">
                                             <div className="flex items-center gap-2">
@@ -554,7 +618,7 @@ const CodingQuestionContent = ({ initialData = {}, initialQuestion = '' }) => {
                         )}
                     />
                     {errors.selectedLanguages && (
-                        <p className="text-red-500 text-xs mt-1">{errors.selectedLanguages.message}</p>
+                        <p className="text-dangerPrimary text-xs mt-1">{errors.selectedLanguages.message}</p>
                     )}
                 </div>
             </div>
@@ -609,7 +673,7 @@ const CodingQuestionContent = ({ initialData = {}, initialQuestion = '' }) => {
                             onChange={field.onChange}
                         />
                         {fieldState.error && (
-                            <p className="text-red-500 text-xs mt-1">{fieldState.error.message}</p>
+                            <p className="text-dangerPrimary text-xs mt-1">{fieldState.error.message}</p>
                         )}
                     </>
                 )}
@@ -617,19 +681,91 @@ const CodingQuestionContent = ({ initialData = {}, initialQuestion = '' }) => {
         );
     }
 
-    function Step4Content() {
-        const [testCases, setTestCases] = useState([]);
+    // Move testCases state to parent
+    const [testCases, setTestCasesState] = useState([]);
+
+    // Keep testCases in sync with React Hook Form
+    useEffect(() => {
+        setValue('testCases', testCases);
+    }, [testCases, setValue]);
+
+    // Helper to update testCases and sync with form
+    const setTestCases = (cases) => {
+        setTestCasesState(cases);
+        setValue('testCases', cases);
+    };
+
+    function Step4Content({ testCases, setTestCases }) {
         const [modalOpen, setModalOpen] = useState(false);
         const [editingCase, setEditingCase] = useState(null);
         const [saveToLibrary, setSaveToLibrary] = useState(false);
         const [enablePrecisionCheck, setEnablePrecisionCheck] = useState(false);
         const [disableCompile, setDisableCompile] = useState(false);
         const [testCaseVisible, setTestCaseVisible] = useState(false);
+
+        useEffect(() => {
+            console.log("Test Cases:", testCases);
+        }, [testCases]);
+
+        const {
+            control: addCaseControl,
+            handleSubmit: handleAddCaseSubmit,
+            reset: resetAddCaseForm,
+            formState: { errors: addCaseErrors }
+        } = useForm({
+            defaultValues: {
+                name: "",
+                input: "",
+                output: "",
+                points: "",
+                weightage: "",
+                visible: false,
+            }
+        });
+
+        // Watch form values for dynamic header
+        const watchedName = useWatch({ control: addCaseControl, name: "name" });
+        const watchedPoints = useWatch({ control: addCaseControl, name: "points" });
+        const watchedVisible = useWatch({ control: addCaseControl, name: "visible" });
+
+        // Add case handler
+        const onAddCase = (data) => {
+            if (editingCase !== null) {
+                // Edit mode: update the test case at the index
+                setTestCases(prev =>
+                    prev.map((tc, idx) => idx === editingCase ? data : tc)
+                );
+            } else {
+                // Add mode: add new test case
+                setTestCases(prev => [...prev, data]);
+            }
+            resetAddCaseForm();
+            setModalOpen(false);
+            setEditingCase(null);
+        };
+
+        //remove test case
+        const handleRemoveTestCase = (id) => {
+            return () => {
+                setTestCases(testCases.filter((_, index) => index !== id));
+            };
+        }
+        //edit test case
+        const handleEditTestCase = (id) => {
+            return () => {
+                const testCase = testCases[id];
+                setEditingCase(id);
+                resetAddCaseForm(testCase);
+                setModalOpen(true);
+            };
+        }
+
         return (
             <div className="flex flex-col gap-6">
                 <div>
-                    <div className="py-3 px-4 grid grid-cols-[minmax(130px,150px)_minmax(150px,180px)_minmax(150px,180px)_minmax(150px,180px)_minmax(190px,206px)] gap-4 items-center rounded-tl-xl rounded-tr-xl border border-seperatorPrimary">
-                        <div className="text-sm font-semibold "> Testcase</div>
+                    {/* <div className="py-3 px-4 grid grid-cols-[minmax(170px,190px)_minmax(200px,210px)_minmax(200px,210px)_minmax(200px,210px)_minmax(230px,250px)] gap-4 items-center rounded-tl-xl rounded-tr-xl border border-seperatorPrimary"> */}
+                    <div className="py-3 px-4 min-w-[600px] grid grid-cols-5 gap-4 items-center rounded-tl-xl rounded-tr-xl border border-seperatorPrimary">
+                        <div className="text-sm font-semibold ">Testcase</div>
                         <div className="flex items-center justify-center gap-2 text-sm font-semibold text-center">
                             Visibility
                             <QuestionIcon size={24} className="text-greyAccent" />
@@ -642,7 +778,9 @@ const CodingQuestionContent = ({ initialData = {}, initialQuestion = '' }) => {
                         </div>
                         <div className="text-sm font-semibold text-center">Action</div>
                     </div>
-                    <div className="py-3 px-4 grid grid-cols-[minmax(130px,150px)_minmax(150px,180px)_minmax(150px,180px)_minmax(150px,180px)_minmax(190px,206px)] gap-4 items-center rounded-bl-xl rounded-br-xl border border-seperatorPrimary">
+                    {/* <div className="py-3 px-4 grid grid-cols-[minmax(170px,190px)_minmax(200px,210px)_minmax(200px,210px)_minmax(200px,210px)_minmax(230px,250px)] gap-4 items-center rounded-bl-xl rounded-br-xl border border-seperatorPrimary"> */}
+                    {/* added test cases */}
+                    {/* <div className="py-3 px-4 min-w-[600px] grid grid-cols-5 gap-4 items-center rounded-bl-xl rounded-br-xl border border-seperatorPrimary">
                         <span className="text-greyPrimary text-sm font-normal">Testcase 1</span>
                         <div className="flex items-center justify-center">
                             <div className="max-w-[74px] px-2 py-1 flex items-center text-center gap-1 bg-[#E2F9E9] rounded-full">
@@ -664,7 +802,47 @@ const CodingQuestionContent = ({ initialData = {}, initialQuestion = '' }) => {
                                 <DeleteIcon className="size-4" />
                             </motion.button>
                         </div>
-                    </div>
+                    </div> */}
+                    {testCases.map((tc, idx) => (
+                        <div key={idx} className="py-3 px-4 min-w-[600px] grid grid-cols-5 gap-4 items-center last:rounded-bl-xl last:rounded-br-xl border border-seperatorPrimary">
+                            <span className="text-greyPrimary text-sm font-normal truncate">{tc.name}</span>
+                            <div className="flex items-center justify-center">
+                                {tc.visible ? (
+                                    <div className="max-w-[74px] px-2 py-1 flex items-center text-center gap-1 bg-[#E2F9E9] rounded-full">
+                                        <Eye size={16} color="#13482A" />
+                                        <span className="text-[#13482A] text-xs font-medium">Public</span>
+                                    </div>
+                                ) : (
+                                    <div className="max-w-[74px] px-2 py-1 flex items-center text-center gap-1 bg-seperatorPrimary rounded-full">
+                                        <EyeOff size={16} color="#5C5C5C" />
+                                        <span className="text-greyAccent text-xs font-medium">Hidden</span>
+                                    </div>
+                                )}
+                            </div>
+                            <span className="text-greyPrimary text-sm font-normal text-center">{tc.points}</span>
+                            <span className="text-greyPrimary text-sm font-normal text-center">{tc.weightage}</span>
+                            <div className="flex items-center justify-center gap-3">
+                                <motion.button
+                                    type="button"
+                                    onClick={handleEditTestCase(idx)}
+                                    className="text-greyPrimary hover:text-purplePrimary"
+                                    whileHover={{ y: -3 }}
+                                    whileTap={{ y: 1 }}
+                                >
+                                    <EditTestIcon className="size-4" />
+                                </motion.button>
+                                <motion.button
+                                    type="button"
+                                    onClick={handleRemoveTestCase(idx)}
+                                    whileHover={{ y: -3 }}
+                                    whileTap={{ y: 1 }}
+                                    className="text-greyPrimary hover:text-dangerPrimary"
+                                >
+                                    <DeleteIcon className="size-4" />
+                                </motion.button>
+                            </div>
+                        </div>
+                    ))}
                 </div>
                 <div className="flex items-center gap-3">
                     <motion.button
@@ -675,12 +853,18 @@ const CodingQuestionContent = ({ initialData = {}, initialQuestion = '' }) => {
                         <UploadZipICon />
                         Upload zip
                     </motion.button>
-                    <Dialog>
+                    <Dialog open={modalOpen} onOpenChange={setModalOpen}>
                         <DialogTrigger asChild>
                             <motion.button
+                                type="button"
                                 whileHover={{ scale: 1.05 }}
                                 whileTap={{ scale: 0.95 }}
                                 className="px-4 py-[6px] w-[130px] h-[33px] flex items-center gap-[6px] text-greyPrimary text-sm font-medium rounded-full bg-purpleSecondary"
+                                onClick={() => {
+                                    setEditingCase(null);
+                                    resetAddCaseForm();
+                                    setModalOpen(true);
+                                }}
                             >
                                 <PlusIcon />
                                 Add Case
@@ -688,24 +872,28 @@ const CodingQuestionContent = ({ initialData = {}, initialQuestion = '' }) => {
                         </DialogTrigger>
                         <DialogContent className="p-0 rounded-[24px] flex flex-col min-w-[1208px] overflow-y-auto">
                             <DialogHeader className='sr-only'>
-                                <DialogTitle>Add Test Case</DialogTitle>
+                                <DialogTitle>{editingCase !== null ? 'Edit Test Case' : 'Add Test Case'}</DialogTitle>
                                 <DialogDescription>
-                                    Create a new test case for your coding question.
+                                    {editingCase !== null ? 'Edit the test case for your coding question.' : 'Create a new test case for your coding question.'}
                                 </DialogDescription>
                             </DialogHeader>
                             <div className="px-6 py-4 flex items-center justify-between border-b border-seperatorPrimary ">
                                 <div className="flex items-center gap-3">
-                                    <span className="text-greyPrimary font-semibold text-lg">Test Case 1</span>
-                                    <div className="max-w-[74px] px-2 py-1 flex items-center text-center gap-1 bg-[#E2F9E9] rounded-full">
-                                        <Eye size={16} color="#13482A" />
-                                        <span className="text-[#13482A] text-xs font-medium">Public</span>
-                                    </div>
-                                    <div className="max-w-[74px] px-2 py-1 flex items-center text-center gap-1 bg-seperatorPrimary rounded-full">
-                                        <EyeOff size={16} color="#5C5C5C" />
-                                        <span className="text-greyAccent text-xs font-medium">Hidden</span>
-                                    </div>
-                                    <span className="text-greyAccent font-normal">10 Points</span>
-
+                                    <span className="text-greyPrimary font-semibold text-lg">
+                                        {watchedName || (editingCase !== null ? `Edit Test Case ${editingCase + 1}` : `Test Case ${testCases.length + 1}`)}
+                                    </span>
+                                    {watchedVisible ? (
+                                        <div className="max-w-[74px] px-2 py-1 flex items-center text-center gap-1 bg-[#E2F9E9] rounded-full">
+                                            <Eye size={16} color="#13482A" />
+                                            <span className="text-[#13482A] text-xs font-medium">Public</span>
+                                        </div>
+                                    ) : (
+                                        <div className="max-w-[74px] px-2 py-1 flex items-center text-center gap-1 bg-seperatorPrimary rounded-full">
+                                            <EyeOff size={16} color="#5C5C5C" />
+                                            <span className="text-greyAccent text-xs font-medium">Hidden</span>
+                                        </div>
+                                    )}
+                                    <span className="text-greyAccent font-normal">{watchedPoints || 10} Points</span>
                                 </div>
                                 <DialogClose >
                                     <motion.div
@@ -720,11 +908,24 @@ const CodingQuestionContent = ({ initialData = {}, initialQuestion = '' }) => {
                             <div className="px-6 pb-6 flex flex-col items-center gap-6">
                                 <div className="w-full flex items-center gap-4">
                                     <label htmlFor="testCaseName" className="min-w-[220px] text-base font-medium text-greyPrimary">Test Case Name</label>
-                                    <Input
-                                        id="testCaseName"
-                                        className="w-full h-[37px] py-2 px-3 border rounded-xl text-base bg-white border-seperatorPrimary"
-                                        placeholder="Enter test case name"
-                                    />
+                                    <div className="flex flex-col gap-1 w-full">
+                                        <Controller
+                                            name="name"
+                                            control={addCaseControl}
+                                            rules={{ required: "Test case name is required" }}
+                                            render={({ field }) => (
+                                                <Input
+                                                    {...field}
+                                                    id="testCaseName"
+                                                    className={cn("w-full h-[37px] py-2 px-3 border rounded-xl text-base bg-white border-seperatorPrimary", {
+                                                        'border-dangerPrimary': addCaseErrors.name
+                                                    })}
+                                                    placeholder="Enter test case name"
+                                                />
+                                            )}
+                                        />
+                                        {addCaseErrors.name && <p className="text-dangerPrimary text-xs">{addCaseErrors.name.message}</p>}
+                                    </div>
                                 </div>
                                 <div className="w-full flex items-center gap-4">
                                     <div className="flex items-center gap-2 min-w-[220px]">
@@ -734,19 +935,34 @@ const CodingQuestionContent = ({ initialData = {}, initialQuestion = '' }) => {
                                         </label>
                                         <QuestionIcon />
                                     </div>
-                                    <Input
-                                        id="testCaseInput"
-                                        className="flex-1 h-[37px] py-2 px-3 border rounded-xl text-base bg-white border-seperatorPrimary"
-                                        placeholder="Enter test case Input"
-                                    />
-                                    <motion.button
-                                        whileHover={{ scale: 1.05 }}
-                                        whileTap={{ scale: 0.95 }}
-                                        className="px-4 py-[6px] w-[129px] h-[33px] flex items-center gap-[6px] text-greyPrimary text-sm font-normal rounded-full border border-seperatorPrimary"
-                                    >
-                                        <UploadZipICon />
-                                        Upload zip
-                                    </motion.button>
+                                    <div className="flex flex-col gap-1 w-full">
+                                        <div className="flex gap-4">
+                                            <Controller
+                                                name="input"
+                                                control={addCaseControl}
+                                                rules={{ required: "Input is required" }}
+                                                render={({ field }) => (
+                                                    <Input
+                                                        {...field}
+                                                        id="testCaseInput"
+                                                        className={cn("flex-1 h-[37px] py-2 px-3 border rounded-xl text-base bg-white border-seperatorPrimary", {
+                                                            'border-dangerPrimary': addCaseErrors.input
+                                                        })}
+                                                        placeholder="Enter test case Input"
+                                                    />
+                                                )}
+                                            />
+                                            <motion.button
+                                                whileHover={{ scale: 1.05 }}
+                                                whileTap={{ scale: 0.95 }}
+                                                className="px-4 py-[6px] w-[130px] h-[33px] flex items-center gap-[6px] text-greyPrimary text-sm font-medium rounded-full border border-seperatorPrimary"
+                                            >
+                                                <UploadZipICon />
+                                                Upload zip
+                                            </motion.button>
+                                        </div>
+                                        {addCaseErrors.input && <p className="text-dangerPrimary text-xs">{addCaseErrors.input.message}</p>}
+                                    </div>
                                 </div>
                                 <div className="w-full flex items-center gap-4">
                                     <div className="flex items-center gap-2 min-w-[220px]">
@@ -756,29 +972,61 @@ const CodingQuestionContent = ({ initialData = {}, initialQuestion = '' }) => {
                                         </label>
                                         <QuestionIcon />
                                     </div>
-                                    <Input
-                                        id="testCaseOutput"
-                                        className="flex-1 h-[37px] py-2 px-3 border rounded-xl text-base bg-white border-seperatorPrimary"
-                                        placeholder="Enter test case Output"
-                                    />
-                                    <motion.button
-                                        whileHover={{ scale: 1.05 }}
-                                        whileTap={{ scale: 0.95 }}
-                                        className="px-4 py-[6px] min-w-[129px] h-[33px] flex items-center gap-[6px] text-greyPrimary text-sm font-normal rounded-full border border-seperatorPrimary"
-                                    >
-                                        <UploadZipICon />
-                                        Upload zip
-                                    </motion.button>
+                                    <div className="flex flex-col gap-1 w-full">
+                                        <div className="flex gap-4">
+                                            <Controller
+                                                name="output"
+                                                control={addCaseControl}
+                                                rules={{ required: "Output is required" }}
+                                                render={({ field }) => (
+                                                    <Input
+                                                        {...field}
+                                                        id="testCaseOutput"
+                                                        className={cn("flex-1 h-[37px] py-2 px-3 border rounded-xl text-base bg-white border-seperatorPrimary", {
+                                                            'border-dangerPrimary': addCaseErrors.output
+                                                        })}
+                                                        placeholder="Enter test case Output"
+                                                    />
+                                                )}
+                                            />
+                                            <motion.button
+                                                whileHover={{ scale: 1.05 }}
+                                                whileTap={{ scale: 0.95 }}
+                                                className="px-4 py-[6px] w-[130px] h-[33px] flex items-center gap-[6px] text-greyPrimary text-sm font-medium rounded-full border border-seperatorPrimary"
+                                            >
+                                                <UploadZipICon />
+                                                Upload zip
+                                            </motion.button>
+                                        </div>
+                                        {addCaseErrors.output && <p className="text-dangerPrimary text-xs">{addCaseErrors.output.message}</p>}
+                                    </div>
                                 </div>
                                 <div className="w-full flex items-center gap-4">
                                     <label htmlFor="testCasePoints" className="min-w-[220px] text-greyPrimary text-base font-medium">Case Points</label>
-                                    <input
-                                        placeholder="10"
-                                        id="testCasePoints"
-                                        type="number"
-                                        min={1}
-                                        className="w-[97px] h-10 py-2 px-3 border rounded-xl text-base font-medium bg-white border-[#CCCCCC]"
-                                    />
+                                    <div className="flex flex-col gap-1 w-full">
+                                        <Controller
+                                            name="points"
+                                            control={addCaseControl}
+                                            rules={{
+                                                required: "Points are required",
+                                                validate: v => !isNaN(Number(v)) || "Points must be a number"
+                                            }}
+                                            render={({ field }) => (
+                                                <input
+                                                    {...field}
+                                                    placeholder="10"
+                                                    id="testCasePoints"
+                                                    type="number"
+                                                    min={1}
+                                                    className={cn("w-[97px] h-10 py-2 px-3 border rounded-xl text-base font-medium bg-white border-[#CCCCCC]", {
+                                                        'border-dangerPrimary': addCaseErrors.points
+                                                    })}
+                                                />
+                                            )}
+
+                                        />
+                                        {addCaseErrors.points && <p className="text-dangerPrimary text-xs">{addCaseErrors.points.message}</p>}
+                                    </div>
                                 </div>
                                 <div className="w-full flex items-center gap-4">
                                     <div className="min-w-[220px] flex items-center gap-2">
@@ -787,30 +1035,52 @@ const CodingQuestionContent = ({ initialData = {}, initialQuestion = '' }) => {
                                         </label>
                                         <QuestionIcon />
                                     </div>
-                                    <input
-                                        placeholder="10"
-                                        id="testCaseWeightage"
-                                        type="number"
-                                        min={1}
-                                        className="w-[97px] h-10 py-2 px-3 border rounded-xl text-base font-medium bg-white border-[#CCCCCC]"
-                                    />
+                                    <div className="flex flex-col gap-1 w-full">
+                                        <Controller
+                                            name="weightage"
+                                            control={addCaseControl}
+                                            rules={{
+                                                required: "Weightage is required",
+                                                validate: v => !isNaN(Number(v)) || "Weightage must be a number"
+                                            }}
+                                            render={({ field }) => (
+                                                <input
+                                                    {...field}
+                                                    placeholder="10"
+                                                    id="testCaseWeightage"
+                                                    type="number"
+                                                    min={1}
+                                                    className={cn("w-[97px] h-10 py-2 px-3 border rounded-xl text-base font-medium bg-white border-[#CCCCCC]", {
+                                                        'border-dangerPrimary': addCaseErrors.weightage
+                                                    })}
+                                                />
+                                            )}
+                                        />
+                                        {addCaseErrors.weightage && <p className="text-dangerPrimary text-xs">{addCaseErrors.weightage.message}</p>}
+                                    </div>
                                 </div>
                                 <div className="w-full flex items-center gap-4">
                                     <div className="min-w-[220px] flex items-center gap-2">
                                         <span className="text-base font-medium text-greyPrimary">Visible to participants</span>
                                         <QuestionIcon />
                                     </div>
-                                    <label className="relative inline-flex items-center cursor-pointer">
-                                        <Input
-                                            type="checkbox"
-                                            checked={testCaseVisible}
-                                            onChange={(e) => setTestCaseVisible(e.target.checked)}
-                                            className="sr-only"
-                                        />
-                                        <div className={`w-11 h-6 rounded-full transition-colors ${testCaseVisible ? 'bg-purplePrimary' : 'bg-greyAccent'}`}>
-                                            <div className={`w-5 h-5 bg-white rounded-full shadow-md transform transition-transform ${testCaseVisible ? 'translate-x-5' : 'translate-x-0'} mt-0.5 ml-0.5`}></div>
-                                        </div>
-                                    </label>
+                                    <Controller
+                                        name="visible"
+                                        control={addCaseControl}
+                                        render={({ field }) => (
+                                            <label className="relative inline-flex items-center cursor-pointer">
+                                                <Input
+                                                    type="checkbox"
+                                                    checked={field.value}
+                                                    onChange={e => field.onChange(e.target.checked)}
+                                                    className="sr-only"
+                                                />
+                                                <div className={`w-11 h-6 rounded-full transition-colors ${field.value ? 'bg-purplePrimary' : 'bg-greyAccent'}`}>
+                                                    <div className={`w-5 h-5 bg-white rounded-full shadow-md transform transition-transform ${field.value ? 'translate-x-5' : 'translate-x-0'} mt-0.5 ml-0.5`}></div>
+                                                </div>
+                                            </label>
+                                        )}
+                                    />
                                 </div>
                                 <div className="w-full flex items-center justify-between mt-[65px]">
                                     <DialogClose >
@@ -823,6 +1093,8 @@ const CodingQuestionContent = ({ initialData = {}, initialQuestion = '' }) => {
                                         </motion.div>
                                     </DialogClose>
                                     <motion.button
+                                        type="button"
+                                        onClick={handleAddCaseSubmit(onAddCase)}
                                         whileHover={{ scale: 1.05 }}
                                         whileTap={{ scale: 0.95 }}
                                         // onClick={handleSave}
@@ -834,63 +1106,87 @@ const CodingQuestionContent = ({ initialData = {}, initialQuestion = '' }) => {
                             </div>
                         </DialogContent>
                     </Dialog>
-
                 </div>
                 <div className="flex items-center gap-6">
                     <div className="p-4 flex flex-col  gap-4 rounded-2xl bg-purpleSecondary flex-1">
                         <div className="flex items-center gap-4">
                             <label htmlFor="testCaseCustomScore" className="min-w-[221px] text-greyPrimary text-sm font-bold">Set Custom Score</label>
-                            <input
-                                placeholder="10"
-                                id="testCaseCustomScore"
-                                type="number"
-                                min={1}
-                                className="w-[68px] h-10 py-1 px-3 border rounded-xl text-base bg-white border-[#CCCCCC]"
+                            <Controller
+                                name="customScore"
+                                control={control}
+                                render={({ field }) => (
+                                    <input
+                                        {...field}
+                                        placeholder="10"
+                                        id="testCaseCustomScore"
+                                        type="number"
+                                        min={1}
+                                        className="w-[68px] h-10 py-1 px-3 border rounded-xl text-base bg-white border-[#CCCCCC]"
+                                    />
+                                )}
                             />
                         </div>
                         <div className="flex items-center gap-4">
                             <span className="min-w-[221px] text-base font-medium text-greyPrimary">Save question to library</span>
-                            <label className="relative inline-flex items-center cursor-pointer">
-                                <Input
-                                    type="checkbox"
-                                    checked={saveToLibrary}
-                                    onChange={(e) => setSaveToLibrary(e.target.checked)}
-                                    className="sr-only"
-                                />
-                                <div className={`w-11 h-6 rounded-full transition-colors ${saveToLibrary ? 'bg-purplePrimary' : 'bg-greyAccent'}`}>
-                                    <div className={`w-5 h-5 bg-white rounded-full shadow-md transform transition-transform ${saveToLibrary ? 'translate-x-5' : 'translate-x-0'} mt-0.5 ml-0.5`}></div>
-                                </div>
-                            </label>
+                            <Controller
+                                name="saveToLibrary"
+                                control={control}
+                                render={({ field }) => (
+                                    <label className="relative inline-flex items-center cursor-pointer">
+                                        <Input
+                                            type="checkbox"
+                                            checked={field.value}
+                                            onChange={e => field.onChange(e.target.checked)}
+                                            className="sr-only"
+                                        />
+                                        <div className={`w-11 h-6 rounded-full transition-colors ${field.value ? 'bg-purplePrimary' : 'bg-greyAccent'}`}>
+                                            <div className={`w-5 h-5 bg-white rounded-full shadow-md transform transition-transform ${field.value ? 'translate-x-5' : 'translate-x-0'} mt-0.5 ml-0.5`}></div>
+                                        </div>
+                                    </label>
+                                )}
+                            />
                         </div>
                     </div>
                     <div className="px-4 py-6 flex flex-col items-center gap-4 rounded-2xl bg-purpleSecondary max-w-[310px]">
                         <div className="flex items-center gap-4">
                             <span className="min-w-[220px] text-base font-medium text-greyPrimary">Enable Precision Check</span>
-                            <label className="relative inline-flex items-center cursor-pointer">
-                                <Input
-                                    type="checkbox"
-                                    checked={enablePrecisionCheck}
-                                    onChange={(e) => setEnablePrecisionCheck(e.target.checked)}
-                                    className="sr-only"
-                                />
-                                <div className={`w-11 h-6 rounded-full transition-colors ${enablePrecisionCheck ? 'bg-purplePrimary' : 'bg-greyAccent'}`}>
-                                    <div className={`w-5 h-5 bg-white rounded-full shadow-md transform transition-transform ${enablePrecisionCheck ? 'translate-x-5' : 'translate-x-0'} mt-0.5 ml-0.5`}></div>
-                                </div>
-                            </label>
+                            <Controller
+                                name="enablePrecisionCheck"
+                                control={control}
+                                render={({ field }) => (
+                                    <label className="relative inline-flex items-center cursor-pointer">
+                                        <Input
+                                            type="checkbox"
+                                            checked={field.value}
+                                            onChange={e => field.onChange(e.target.checked)}
+                                            className="sr-only"
+                                        />
+                                        <div className={`w-11 h-6 rounded-full transition-colors ${field.value ? 'bg-purplePrimary' : 'bg-greyAccent'}`}>
+                                            <div className={`w-5 h-5 bg-white rounded-full shadow-md transform transition-transform ${field.value ? 'translate-x-5' : 'translate-x-0'} mt-0.5 ml-0.5`}></div>
+                                        </div>
+                                    </label>
+                                )}
+                            />
                         </div>
                         <div className="flex items-center gap-4">
-                            <span className="min-w-[220px] text-base font-medium text-greyPrimary">Enable Precision Check</span>
-                            <label className="relative inline-flex items-center cursor-pointer">
-                                <Input
-                                    type="checkbox"
-                                    checked={disableCompile}
-                                    onChange={(e) => setDisableCompile(e.target.checked)}
-                                    className="sr-only"
-                                />
-                                <div className={`w-11 h-6 rounded-full transition-colors ${disableCompile ? 'bg-purplePrimary' : 'bg-greyAccent'}`}>
-                                    <div className={`w-5 h-5 bg-white rounded-full shadow-md transform transition-transform ${disableCompile ? 'translate-x-5' : 'translate-x-0'} mt-0.5 ml-0.5`}></div>
-                                </div>
-                            </label>
+                            <span className="min-w-[220px] text-base font-medium text-greyPrimary">Disable Compile & Test</span>
+                            <Controller
+                                name="disableCompile"
+                                control={control}
+                                render={({ field }) => (
+                                    <label className="relative inline-flex items-center cursor-pointer">
+                                        <Input
+                                            type="checkbox"
+                                            checked={field.value}
+                                            onChange={e => field.onChange(e.target.checked)}
+                                            className="sr-only"
+                                        />
+                                        <div className={`w-11 h-6 rounded-full transition-colors ${field.value ? 'bg-purplePrimary' : 'bg-greyAccent'}`}>
+                                            <div className={`w-5 h-5 bg-white rounded-full shadow-md transform transition-transform ${field.value ? 'translate-x-5' : 'translate-x-0'} mt-0.5 ml-0.5`}></div>
+                                        </div>
+                                    </label>
+                                )}
+                            />
                         </div>
                     </div>
                 </div>
@@ -914,19 +1210,22 @@ const CodingQuestionContent = ({ initialData = {}, initialQuestion = '' }) => {
                 selectedLanguages={methods.getValues('selectedLanguages')}
                 langOverrides={langOverrides}
             />;
-            case 4: return <Step4Content />;
+            case 4: return <Step4Content testCases={testCases} setTestCases={setTestCases} />;
             default: return null;
         }
     }
     const onSubmit = (data) => {
-        // handle final submit here
+        // testCases is now included in data automatically
+        // Send data to your API or backend
         console.log('Form submitted:', data);
     };
     return (
         <FormProvider {...methods}>
             <form onSubmit={handleSubmit(onSubmit)}>
                 <div className='flex gap-6 flex-1'>
-                    <aside className='p-6 w-[20.7%] max-w-[240px] flex flex-col justify-between rounded-5xl bg-white border border-[#E0E0E0]'>
+                    <aside
+                        // className='p-6 w-[20.7%] max-w-[240px] flex flex-col justify-between rounded-5xl bg-white border border-[#E0E0E0]'>
+                        className='p-3 xl:p-6 w-full sm:w-[180px] md:w-[200px] lg:w-[220px] xl:w-[240px] min-w-0 flex flex-col justify-between rounded-5xl bg-white border border-[#E0E0E0] overflow-x-hidden overflow-y-auto max-h-screen'>
                         <div className="flex flex-col gap-4">
                             {steps.map((step) => (
                                 <div

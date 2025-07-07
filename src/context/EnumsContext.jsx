@@ -1,19 +1,31 @@
 // src/context/EnumsContext.jsx
-import { createContext, useContext } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { createContext, useContext, useEffect, useState } from "react";
 import { fetchEnums } from "@/api/monacoCodeApi";
 
 const EnumsContext = createContext();
 
 export const EnumsProvider = ({ children }) => {
-  const { data: enums, isLoading } = useQuery({
-    queryKey: ["enums"],
-    queryFn: fetchEnums,
-    staleTime: Infinity,
+  const [enums, setEnums] = useState(() => {
+    const stored = localStorage.getItem('enums');
+    return stored ? JSON.parse(stored) : null;
   });
+  const [enumsLoading, setEnumsLoading] = useState(!enums);
+
+  useEffect(() => {
+    if (!enums) {
+      setEnumsLoading(true);
+      fetchEnums()
+        .then(data => {
+          setEnums(data);
+          localStorage.setItem('enums', JSON.stringify(data));
+        })
+        .catch(() => setEnums(null))
+        .finally(() => setEnumsLoading(false));
+    }
+  }, [enums]);
 
   return (
-    <EnumsContext.Provider value={{ enums, enumsLoading: isLoading }}>
+    <EnumsContext.Provider value={{ enums, enumsLoading }}>
       {children}
     </EnumsContext.Provider>
   );
