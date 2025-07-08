@@ -25,6 +25,7 @@ import { ChevronLeft } from 'lucide-react';
 import { toast } from "sonner"
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
+import { BASE_API_URL, BACKEND_URL } from '@/lib/constants';
 
 const SignupPage = () => {
     const [apiError, setApiError] = useState("")
@@ -109,7 +110,7 @@ const SignupPage = () => {
 
         }
         try {
-            const response = await fetch("https://dev.scoutabl.com/api/users/register/", {
+            const response = await fetch(`${BASE_API_URL}/users/register/`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -149,7 +150,7 @@ const SignupPage = () => {
             return;
         }
         try {
-            const response = await fetch("https://dev.scoutabl.com/api/verify-email/", {
+            const response = await fetch(`${BASE_API_URL}/verify-email/`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -182,7 +183,7 @@ const SignupPage = () => {
         }
 
         try {
-            const response = await fetch("https://dev.scoutabl.com/api/resend-verification-email/", {
+            const response = await fetch(`${BASE_API_URL}/resend-verification-email/`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -352,10 +353,10 @@ const SignupPage = () => {
                             <div className='h-px bg-[#CFDFE2] flex-1'></div>
                         </div>
                         <div className='flex items-center justify-center gap-5'>
-                            <a href="https://dev.scoutabl.com/auth/login/azuread-tenant-oauth2/">
+                            <a href={`${BACKEND_URL}/auth/login/azuread-tenant-oauth2/`}>
                                 <img src={micorosoftIcon} alt="Microsoft" className='w-[29.24px] h-[29.24px]' />
                             </a>
-                            <a href="https://dev.scoutabl.com/auth/login/google-oauth2/">
+                            <a href={`${BACKEND_URL}/auth/login/google-oauth2/`}>
                                 <img src={googleIcon} alt="Google" className='w-[29.24px] h-[29.24px]' />
                             </a>
                         </div>

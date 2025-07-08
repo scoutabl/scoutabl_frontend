@@ -19,6 +19,7 @@ import googleIcon from '/googleIcon.svg'
 import micorosoftIcon from '/microsoftIcon.svg'
 import { Eye, EyeOff } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
+import { BASE_API_URL, BACKEND_URL } from '@/lib/constants';
 
 const LoginPage = () => {
     const { login } = useAuth();
@@ -169,10 +170,10 @@ const LoginPage = () => {
                             <div className='h-px bg-[#CFDFE2] flex-1'></div>
                         </div>
                         <div className='flex items-center justify-center gap-5'>
-                            <a href="https://dev.scoutabl.com/auth/login/azuread-tenant-oauth2/">
+                            <a href={`${BACKEND_URL}/auth/login/azuread-tenant-oauth2/`}>
                                 <img src={micorosoftIcon} alt="Microsoft" className='w-[clamp(1.5rem,3vw,1.828rem)] h-[clamp(1.5rem,3vw,1.828rem)]' />
                             </a>
-                            <a href="https://dev.scoutabl.com/auth/login/google-oauth2/">
+                            <a href={`${BACKEND_URL}/auth/login/google-oauth2/`}>
                                 <img src={googleIcon} alt="Google" className='w-[clamp(1.5rem,3vw,1.828rem)] h-[clamp(1.5rem,3vw,1.828rem)]' />
                             </a>
                         </div>

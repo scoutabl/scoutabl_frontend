@@ -7,6 +7,7 @@ import CodeEditor from './CodeEditor';
 import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
 import { useLanguages } from '@/api/monacoCodeApi';
+import { BASE_API_URL } from '@/lib/constants';
 
 function CodingAssesmentInner() {
     const {
@@ -56,7 +57,7 @@ function CodingAssesmentInner() {
     // Fetch function using axios
     const fetchQuestionsWithTestCases = async () => {
         try {
-            const response = await axios.get('https://dev.scoutabl.com/api/candidate-sessions/current-test/questions/', {
+            const response = await axios.get(`${BASE_API_URL}/candidate-sessions/current-test/questions/`, {
                 headers: {
                     'Content-Type': 'application/json',
                     'X-Candidate-Authorization': `Bearer ${CANDIDATETOKEN}`

@@ -1,31 +1,46 @@
 // src/context/EnumsContext.jsx
-import { createContext, useContext, useEffect, useState } from "react";
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+  useCallback,
+} from "react";
 import { fetchEnums } from "@/api/monacoCodeApi";
 
 const EnumsContext = createContext();
 
 export const EnumsProvider = ({ children }) => {
-  const [enums, setEnums] = useState(() => {
-    const stored = localStorage.getItem('enums');
-    return stored ? JSON.parse(stored) : null;
-  });
-  const [enumsLoading, setEnumsLoading] = useState(!enums);
+  const [enums, setEnums] = useState(null);
+  const [enumsLoading, setEnumsLoading] = useState(false);
+
+  const resolveEnum = useCallback(
+    (enumName) => {
+      if (enumsLoading) return null;
+      const [type, value] = enumName.split(".");
+      console.debug("type", type, "value", value);
+      if (!type || !value) throw new Error(`Invalid enum name: ${enumName}`);
+
+      return enums.enums[type][value];
+    },
+    [enumsLoading]
+  );
 
   useEffect(() => {
-    if (!enums) {
+    if (!enums && !enumsLoading) {
       setEnumsLoading(true);
       fetchEnums()
-        .then(data => {
+        .then((data) => {
+          console.debug("data", data);
           setEnums(data);
-          localStorage.setItem('enums', JSON.stringify(data));
         })
-        .catch(() => setEnums(null))
+        .catch(console.error)
         .finally(() => setEnumsLoading(false));
     }
   }, [enums]);
 
   return (
-    <EnumsContext.Provider value={{ enums, enumsLoading }}>
+    <EnumsContext.Provider value={{ enums, enumsLoading, resolveEnum }}>
       {children}
     </EnumsContext.Provider>
   );

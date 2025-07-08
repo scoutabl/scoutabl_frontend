@@ -17,3 +17,6 @@ export const CODE_SNIPPETS = {
         'using System;\n\nnamespace HelloWorld\n{\n\tclass Hello { \n\t\tstatic void Main(string[] args) {\n\t\t\tConsole.WriteLine("Hello World in C#");\n\t\t}\n\t}\n}\n',
     php: "<?php\n\n$name = 'Alex';\necho $name;\n",
 };
+
+export const BASE_API_URL = import.meta.env.VITE_API_BASE_URL;
+export const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;

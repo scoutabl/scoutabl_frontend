@@ -20,6 +20,7 @@ import { ChevronLeft, Eye, EyeOff } from 'lucide-react';
 import logo from '/logo.svg'
 import helpIcon from '/helpIcon.svg'
 import { Button } from '@/components/ui/button';
+import { BASE_API_URL } from '@/lib/constants';
 
 const emailSchema = z.object({
     email: z
@@ -82,7 +83,7 @@ const PasswordRecoveryModal = () => {
     const onSubmitEmail = async (values) => {
         try {
             setErrorMessage('');
-            const response = await fetch('https://dev.scoutabl.com/api/users/forgot_password/', {
+            const response = await fetch(`${BASE_API_URL}/users/forgot_password/`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -126,7 +127,7 @@ const PasswordRecoveryModal = () => {
 
         try {
             setErrorMessage('');
-            const response = await fetch('https://dev.scoutabl.com/api/reset-password/', {
+            const response = await fetch(`${BASE_API_URL}/reset-password/`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -160,7 +161,7 @@ const PasswordRecoveryModal = () => {
     const onSubmitNewPassword = async (values) => {
         try {
             setErrorMessage('');
-            const response = await fetch('https://dev.scoutabl.com/api/reset-password/', {
+            const response = await fetch(`${BASE_API_URL}/reset-password/`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

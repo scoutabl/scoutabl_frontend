@@ -390,3 +390,7 @@
 .monaco-editor .overflow-guard {
   z-index: 1 !important;
 }
+
+button:hover {
+  cursor: pointer;
+}
