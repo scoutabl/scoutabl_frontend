@@ -54,10 +54,12 @@ export const useAssessmentQuestions = (assessmentId) => {
     queryFn: async () => {
       const assessment = await getAssessment(assessmentId);
       const questionIds = assessment.custom_questions || [];
-      // Fetch all questions in parallel
       const questions = await Promise.all(questionIds.map(getQuestion));
       return questions;
-    }
+    },
+    staleTime: 1000 * 60 * 5, // 5 minutes: data is fresh for 5 minutes
+    refetchOnWindowFocus: false, // don't refetch when window regains focus
+    refetchOnMount: false, // don't refetch on mount if data is fresh
   });
 };
 
@@ -86,7 +88,7 @@ export const useAddQuestion = (assessmentId, onSuccess) => {
   const patchMutation = useMutation({
     mutationFn: patchAssessment,
     onSuccess: (data) => {
-      queryClient.invalidateQueries(['questions']);
+      queryClient.invalidateQueries(['assessment-questions', assessmentId]);
       onSuccess?.(data);
     },
   });

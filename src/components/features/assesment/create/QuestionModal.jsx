@@ -65,8 +65,10 @@ const DEFAULT_SINGLE_SELECT_ANSWERS = [
 ];
 
 const DEFAULT_MULTIPLE_SELECT_ANSWERS = [
-    { id: '1', text: 'Option 1' },
-    { id: '2', text: 'Option 2' },
+    { id: '1', text: 'C++' },
+    { id: '2', text: 'Javascript' },
+    { id: '3', text: 'Ruby' },
+    { id: '4', text: 'Python' }
 ];
 
 const NumericInputAnswers = ({ correctAnswer, onAnswerChange, numericCondition, onConditionChange }) => {
@@ -467,6 +469,7 @@ const MultipleSelectAnswers = ({
     );
 };
 
+//custom hook for question form
 const useQuestionForm = (initialData, initialQuestion) => {
     const [question, setQuestion] = useState(initialData.question || initialQuestion);
     const [timeToAnswer, setTimeToAnswer] = useState(initialData.timeToAnswer || 120);
@@ -647,6 +650,16 @@ const QuestionModal = memo(({
                         selectedAnswer={formState.selectedAnswer}
                         onAnswerChange={formState.setSelectedAnswer}
                         onAnswersChange={formState.setSingleSelectAnswers}
+                        showShuffleToggle={true}
+                    />
+                );
+            case 'multiple-select':
+                return (
+                    <MultipleSelectAnswers
+                        answers={formState.multipleSelectAnswers}
+                        selectedAnswers={formState.selectedAnswers}
+                        onAnswersChange={formState.setMultipleSelectAnswers}
+                        onSelectedChange={formState.setSelectedAnswers}
                         showShuffleToggle={true}
                     />
                 );
