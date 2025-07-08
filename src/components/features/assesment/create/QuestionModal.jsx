@@ -20,6 +20,7 @@ import {
 } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
+import RearrangeAnswers from './steps/customQuestions/RearrangeAnswers';
 import AiIcon from '@/assets/AiIcon.svg?react'
 import PlusIcon from '@/assets/plusIcon.svg?react'
 import PurpleStarIcon from '@/assets/purpleStar.svg?react'
@@ -477,6 +478,10 @@ const useQuestionForm = (initialData, initialQuestion) => {
     const [correctAnswer, setCorrectAnswer] = useState(initialData.correctAnswer || '000.00');
     const [numericCondition, setNumericCondition] = useState("more-than");
     const [post, setPost] = useState(initialData.question || initialQuestion);
+    const [rearrangeOptions, setRearrangeOptions] = useState([
+        { id: 1, text: '' },
+        { id: 2, text: '' },
+    ]);
 
     const [singleSelectAnswers, setSingleSelectAnswers] = useState(
         initialData.answers || DEFAULT_SINGLE_SELECT_ANSWERS
@@ -500,6 +505,7 @@ const useQuestionForm = (initialData, initialQuestion) => {
         singleSelectAnswers, setSingleSelectAnswers,
         multipleSelectAnswers, setMultipleSelectAnswers,
         selectedAnswers, setSelectedAnswers,
+        rearrangeOptions, setRearrangeOptions,
     };
 };
 
@@ -589,6 +595,28 @@ const QuestionModal = memo(({
             return;
         }
 
+        if (questionType === 'rearrange') {
+            const options = formState.rearrangeOptions.map((opt, idx) => ({
+                text: opt.text,
+                question_order: idx,
+                correct_order: idx
+            }));
+
+            const payload = {
+                resourcetype: "RearrangeQuestion",
+                completion_time,
+                save_template: formState.saveToLibrary,
+                title: formState.post,
+                content: formState.post,
+                shuffle_options: true,
+                correct_order: options.map((_, idx) => idx),
+                options
+            };
+
+            addQuestionMutation.mutate(payload);
+            return;
+        }
+
         const questionData = {
             questionType,
             question: formState.post,
@@ -639,6 +667,13 @@ const QuestionModal = memo(({
                         onConditionChange={formState.setNumericCondition}
                     />
                 );
+            case 'rearrange':
+                return (
+                    <RearrangeAnswers
+                        value={formState.rearrangeOptions}
+                        onChange={formState.setRearrangeOptions}
+                    />
+                )
             default:
                 return <div>Unsupported question type</div>;
         }

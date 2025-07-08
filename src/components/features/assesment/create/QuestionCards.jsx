@@ -15,6 +15,129 @@ import MsExcelIcon from '@/assets/msExcelIcon.svg?react'
 import GoogleSheetsIcon from '@/assets/googleSheetsIcon.svg?react'
 import VideoIcon from '@/assets/videoIcon.svg?react'
 import AudioIcon from '@/assets/audioIcon.svg?react'
+
+export const questionTypes = [
+    {
+        category: 'Choice Based',
+        questions: [
+            {
+                id: 'single-select',
+                name: 'Single Select',
+                type: 'single-select',
+                question: 'Have you previously worked in a remote/hybrid environment?',
+                icon: <TickIcon />,
+                bg: '#D8FEE3',
+                text: '#13482A'
+            },
+            {
+                id: 'multiple-select',
+                name: 'Multiple Select',
+                type: 'multiple-select',
+                question: 'Which programming languages are you proficient in?',
+                icon: <MultiSelect />,
+                bg: '#FEEDD9',
+                text: '#BD7500'
+            },
+            {
+                id: 'rating',
+                name: 'Rating',
+                type: 'rating',
+                question: 'How would you rate your experience with our service?',
+                icon: <RatingIcon />,
+                bg: '#E8E5FF',
+                text: '#3B2A91'
+            },
+            {
+                id: 'rearrange',
+                name: 'Rearrange',
+                type: 'rearrange',
+                question: 'Rearrange the steps in the correct order to effectively set up for a remote/hybrid work environment',
+                icon: <RearrangeIcon />,
+                bg: '#95D1D2',
+                text: '#2F5D5E'
+            }
+        ]
+    },
+    {
+        category: 'Text Based',
+        questions: [
+            {
+                id: 'numeric-input',
+                name: 'Numeric Input',
+                type: 'numeric-input',
+                question: 'How many years of experience do you have?',
+                icon: <NumericInputIcon />,
+                bg: '#C18DAC',
+                text: '#643B53'
+            },
+            {
+                id: 'essay',
+                name: 'Essay',
+                type: 'essay',
+                question: 'Describe your ideal work environment.',
+                icon: <EssayIcon />,
+                bg: '#A98878',
+                text: '#64483B'
+            }
+        ]
+    },
+    {
+        category: 'Hands-on',
+        questions: [
+            {
+                id: 'code',
+                name: 'Code',
+                type: 'code',
+                question: 'Write a function to reverse a string.',
+                icon: <CodeIcon />,
+                bg: '#8893D1',
+                text: '#192569'
+            },
+            {
+                id: 'ms-excel',
+                name: 'MS Excel',
+                type: 'excel',
+                question: 'Create a pivot table from the given data.',
+                icon: <MsExcelIcon />,
+                bg: '#E9755B',
+                text: '#692819'
+            },
+            {
+                id: 'google-sheets',
+                name: 'Google Sheets',
+                type: 'sheets',
+                question: 'Use VLOOKUP to find matching records.',
+                icon: <GoogleSheetsIcon />,
+                bg: '#5DDD87',
+                text: '#1C4B2B'
+            }
+        ]
+    },
+    {
+        category: 'Media',
+        questions: [
+            {
+                id: 'video',
+                name: 'Video',
+                type: 'video',
+                question: 'Record a 2-minute introduction about yourself.',
+                icon: <VideoIcon />,
+                bg: '#D8FFFE',
+                text: '#0A615F'
+            },
+            {
+                id: 'audio',
+                name: 'Audio',
+                type: 'audio',
+                question: 'Record your answer to this question.',
+                icon: <AudioIcon />,
+                bg: '#FFFFDE',
+                text: '#5C7D0E'
+            }
+        ]
+    }
+];
+
 const QuestionCards = () => {
     const handleQuestionSave = (questionData) => {
         console.log('Question saved:', questionData);
@@ -33,98 +156,7 @@ const QuestionCards = () => {
         // }
     };
 
-    const questionTypes = [
-        {
-            category: 'Choice Based',
-            questions: [
-                {
-                    id: 'single-select',
-                    name: 'Single Select',
-                    type: 'single-select',
-                    question: 'Have you previously worked in a remote/hybrid environment?',
-                    icon: <TickIcon />
-                },
-                {
-                    id: 'multiple-select',
-                    name: 'Multiple Select',
-                    type: 'multiple-select',
-                    question: 'Which programming languages are you proficient in?',
-                    icon: <MultiSelect />
-                },
-                {
-                    id: 'rating',
-                    name: 'Rating',
-                    type: 'rating',
-                    question: 'How would you rate your experience with our service?',
-                    icon: <RatingIcon />
-                }
-            ]
-        },
-        {
-            category: 'Text Based',
-            questions: [
-                {
-                    id: 'numeric-input',
-                    name: 'Numeric Input',
-                    type: 'numeric-input',
-                    question: 'How many years of experience do you have?',
-                    icon: <NumericInputIcon />
-                },
-                {
-                    id: 'essay',
-                    name: 'Essay',
-                    type: 'essay',
-                    question: 'Describe your ideal work environment.',
-                    icon: <EssayIcon />
-                }
-            ]
-        },
-        {
-            category: 'Hands-on',
-            questions: [
-                {
-                    id: 'code',
-                    name: 'Code',
-                    type: 'code',
-                    question: 'Write a function to reverse a string.',
-                    icon: <CodeIcon />
-                },
-                {
-                    id: 'ms-excel',
-                    name: 'MS Excel',
-                    type: 'excel',
-                    question: 'Create a pivot table from the given data.',
-                    icon: <MsExcelIcon />
-                },
-                {
-                    id: 'google-sheets',
-                    name: 'Google Sheets',
-                    type: 'sheets',
-                    question: 'Use VLOOKUP to find matching records.',
-                    icon: <GoogleSheetsIcon />
-                }
-            ]
-        },
-        {
-            category: 'Media',
-            questions: [
-                {
-                    id: 'video',
-                    name: 'Video',
-                    type: 'video',
-                    question: 'Record a 2-minute introduction about yourself.',
-                    icon: <VideoIcon />
-                },
-                {
-                    id: 'audio',
-                    name: 'Audio',
-                    type: 'audio',
-                    question: 'Record your answer to this question.',
-                    icon: <AudioIcon />
-                }
-            ]
-        }
-    ];
+
 
     const QuestionCard = ({ question, category }) => {
         const PlusButton = (
@@ -145,7 +177,7 @@ const QuestionCards = () => {
                 <span className='text-sm font-semibold text-greyPrimary group-hover:text-white transition-all duration-300 ease-in'>{question.name}</span>
 
                 {/* Only show modal for supported question types */}
-                {['single-select', 'rating', 'numeric-input', 'multiple-select', 'code'].includes(question.type) ? (
+                {['single-select', 'rating', 'numeric-input', 'multiple-select', 'code', 'rearrange'].includes(question.type) ? (
                     <QuestionModal
                         trigger={PlusButton}
                         questionType={question.type}
