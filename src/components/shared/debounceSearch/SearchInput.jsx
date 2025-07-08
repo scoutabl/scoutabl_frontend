@@ -3,7 +3,7 @@ import { Input } from '@/components/ui/input';
 import SearchIcon from '@/assets/searchIcon.svg?react'
 const SearchInput = ({ searchValue, setSearchValue, placeholder }) => {
     return (
-        <div className="h-[37px] w-[300px] flex items-center rounded-full border border-[#E0E0E0] focus-within:ring-2 focus-within:ring-purplePrimary transition group">
+        <div className="h-[37px] w-[300px] flex items-center rounded-full border border-seperatorPrimary focus-within:ring-2 focus-within:ring-purplePrimary transition group">
             <SearchIcon className="ml-3 text-gray-400 group-hover:scale-[1.1] group-hover:text-purplePrimary transition-all duration-300 ease-in" />
             <input
                 type="text"

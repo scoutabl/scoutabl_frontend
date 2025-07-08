@@ -3,8 +3,8 @@ import { motion } from 'framer-motion'
 import DOMPurify from 'dompurify';
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
-import QuestionCards from '../QuestionCards'
-import { questionTypes } from '../QuestionCards'
+import QuestionCards from './step3-customQuestions/QuestionCards'
+import { questionTypes } from './step3-customQuestions/QuestionCards'
 import { useAssessmentQuestions } from '@/api/createQuestion'
 import AiIcon from '@/assets/AiIcon.svg?react'
 import PlusIcon from '@/assets/plusIcon.svg?react'
@@ -15,6 +15,7 @@ import NoTestIcon from '@/assets/noTestIcon.svg?react'
 import ChevronLeftIcon from '@/assets/chevronLeft.svg?react'
 import ChevronRightIcon from '@/assets/chevronRight.svg?react'
 import { Eye, GripVertical } from 'lucide-react'
+import Step3Loading from './step3-customQuestions/Step3Loading';
 const Step3 = ({ assessmentId = 14 }) => {
     // const [questionSequence, setQuestionSequence] = useState([])
     const { data: questions, isLoading, error, refetch } = useAssessmentQuestions(assessmentId);
@@ -79,7 +80,7 @@ const Step3 = ({ assessmentId = 14 }) => {
         console.log(questionTypes)
     }, [questions]);
 
-    if (isLoading) return <div>Loading...</div>;
+    if (isLoading) return <div className='flex flex-col items-center'><Step3Loading /></div>;
     if (error) return <div>Error loading questions</div>;
 
     return (
@@ -134,7 +135,7 @@ const Step3 = ({ assessmentId = 14 }) => {
                                     <span>900</span>
                                 </div>
                                 <motion.button
-                                    className='h-8 w-8 rounded-full grid place-content-center border border-[#E0E0E0]'
+                                    className='h-8 w-8 rounded-full grid place-content-center border border-seperatorPrimary'
                                     whileHover={{ scale: 1.1 }}
                                     whileTap={{ scale: 0.9 }}
                                 >

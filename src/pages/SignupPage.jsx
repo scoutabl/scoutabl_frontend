@@ -406,7 +406,14 @@ const SignupPage = () => {
                                 </span>
                                 <div className="flex flex-col items-center justify-center gap-3">
                                     <a href="/organization-setup" className='bg-gradient-custom h-[54px] w-[296px] rounded-[20px] [box-shadow:0px_0px_4px_rgba(0,_0,_0,_0.25)] hover:opacity-90 flex items-center justify-center'>Setup your Account</a>
-                                    <span className='text-greyPrimary font-normal text-sm cursor-pointer' onClick={async () => { await login(email, userPassword, true); navigate('/'); }}>Be lazy &amp; <span className='text-bluePrimary hover:underline underline-offset-2'>Skip for Now!</span></span>
+                                    <span
+                                        className='text-greyPrimary font-normal text-sm cursor-pointer'
+                                        onClick={async () => {
+                                            await login(email, userPassword, true);
+                                            navigate('/');
+                                        }}
+                                    >
+                                        Be lazy &amp; <span className='text-bluePrimary hover:underline underline-offset-2'>Skip for Now!</span></span>
                                 </div>
                             </div>
                             :

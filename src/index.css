@@ -30,7 +30,7 @@
   --color-destructive: var(--destructive);
   --color-border: var(--border);
   --color-input: var(--input);
-  --color-ring: var(--ring);
+  --color-ring: var(--color-sidebar-ring);
   --color-chart-1: var(--chart-1);
   --color-chart-2: var(--chart-2);
   --color-chart-3: var(--chart-3);
@@ -320,6 +320,7 @@
 @theme {
 
   /* colors */
+  --color-blueBtn: #0077C2;
   --color-bluePrimary: #0084FF;
   --color-blueSecondary: #E2EAFF;
   --color-purplePrimary: #8B5CF6;

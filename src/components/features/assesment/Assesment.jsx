@@ -216,7 +216,7 @@ const Assesment = () => {
                             return (
                                 <motion.div
                                     key={assesment.id}
-                                    className='py-[18px] px-4 flex flex-col gap-4 rounded-2xl border border-[#E0E0E0] bg-white'
+                                    className='py-[18px] px-4 flex flex-col gap-4 rounded-2xl border border-seperatorPrimary bg-white'
                                     initial={{ opacity: 0, y: 100 }}
                                     animate={{ opacity: 1, y: 0 }}
                                     exit={{ opacity: 0, y: -100 }}

@@ -513,7 +513,7 @@ const CodingQuestionContent = ({ initialData = {}, initialQuestion = '' }) => {
                         render={({ field }) => (
                             <>
                                 {filteredLangs?.map(lang => (
-                                    <div key={lang.id} className="p-3 grid grid-cols-4  gap-16 items-center rounded-xl border border-[#E0E0E0] bg-white hover:bg-purpleQuaternary transition-all duration-300 ease-in">
+                                    <div key={lang.id} className="p-3 grid grid-cols-4  gap-16 items-center rounded-xl border border-seperatorPrimary bg-white hover:bg-purpleQuaternary transition-all duration-300 ease-in">
                                         {/* Header */}
                                         <div className="flex items-center justify-between">
                                             <div className="flex items-center gap-2">
@@ -1224,8 +1224,8 @@ const CodingQuestionContent = ({ initialData = {}, initialQuestion = '' }) => {
             <form onSubmit={handleSubmit(onSubmit)}>
                 <div className='flex gap-6 flex-1'>
                     <aside
-                        // className='p-6 w-[20.7%] max-w-[240px] flex flex-col justify-between rounded-5xl bg-white border border-[#E0E0E0]'>
-                        className='p-3 xl:p-6 w-full sm:w-[180px] md:w-[200px] lg:w-[220px] xl:w-[240px] min-w-0 flex flex-col justify-between rounded-5xl bg-white border border-[#E0E0E0] overflow-x-hidden overflow-y-auto max-h-screen'>
+                        // className='p-6 w-[20.7%] max-w-[240px] flex flex-col justify-between rounded-5xl bg-white border border-seperatorPrimary'>
+                        className='p-3 xl:p-6 w-full sm:w-[180px] md:w-[200px] lg:w-[220px] xl:w-[240px] min-w-0 flex flex-col justify-between rounded-5xl bg-white border border-seperatorPrimary overflow-x-hidden overflow-y-auto max-h-screen'>
                         <div className="flex flex-col gap-4">
                             {steps.map((step) => (
                                 <div
