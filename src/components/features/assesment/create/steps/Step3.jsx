@@ -1,11 +1,23 @@
-import React, { useEffect, useState } from 'react'
+import React, { useState } from 'react'
 import { motion } from 'framer-motion'
 import DOMPurify from 'dompurify';
+import QuestionCards from './step3-customQuestions/QuestionCards'
+import { useAssessmentQuestions, useRemoveQuestion, useDuplicateQuestion } from '@/api/createQuestion'
+import { questionTypes } from './step3-customQuestions/QuestionCards'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
-import QuestionCards from './step3-customQuestions/QuestionCards'
-import { questionTypes } from './step3-customQuestions/QuestionCards'
-import { useAssessmentQuestions } from '@/api/createQuestion'
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+    AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
+import Step3Loading from './step3-customQuestions/Step3Loading';
 import AiIcon from '@/assets/AiIcon.svg?react'
 import PlusIcon from '@/assets/plusIcon.svg?react'
 import TrashIcon from '@/assets/trashIcon.svg?react'
@@ -15,9 +27,12 @@ import NoTestIcon from '@/assets/noTestIcon.svg?react'
 import ChevronLeftIcon from '@/assets/chevronLeft.svg?react'
 import ChevronRightIcon from '@/assets/chevronRight.svg?react'
 import { Eye, GripVertical } from 'lucide-react'
-import Step3Loading from './step3-customQuestions/Step3Loading';
+import QuestionModal from './step3-customQuestions/QuestionModal';
 const Step3 = ({ assessmentId = 14 }) => {
-    // const [questionSequence, setQuestionSequence] = useState([])
+    const [modalOpen, setModalOpen] = useState(false);
+    const [modalMode, setModalMode] = useState('add'); // 'add' or 'edit'
+    const [modalInitialData, setModalInitialData] = useState({});
+    const [modalQuestionType, setModalQuestionType] = useState(null);
     const { data: questions, isLoading, error, refetch } = useAssessmentQuestions(assessmentId);
 
     // Helper to flatten all question type objects
@@ -76,9 +91,37 @@ const Step3 = ({ assessmentId = 14 }) => {
     }
 
 
-    useEffect(() => {
-        console.log(questionTypes)
-    }, [questions]);
+    //function to delete question
+    const { mutate: removeQuestion } = useRemoveQuestion(assessmentId);
+
+    const handleDelete = (questionId) => {
+        removeQuestion({ questionId });
+    };
+
+
+    //function to duplicate question
+    const { mutate: duplicateQuestion } = useDuplicateQuestion(assessmentId);
+
+    const handleDuplicate = (questionId) => {
+        duplicateQuestion({ questionId });
+    };
+    // For add
+    const handleAdd = (type) => {
+        setModalMode('add');
+        setModalInitialData({});
+        setModalQuestionType(type);
+        setModalOpen(true);
+    };
+    // For edit
+    const handleEdit = (question) => {
+        const typeDef = getTypeDef(question);
+        const type = typeDef?.type;
+        console.log(type); // This should now log the correct type
+        setModalMode('edit');
+        setModalInitialData(question);
+        setModalQuestionType(type);
+        setModalOpen(true);
+    };
 
     if (isLoading) return <div className='flex flex-col items-center'><Step3Loading /></div>;
     if (error) return <div>Error loading questions</div>;
@@ -117,7 +160,7 @@ const Step3 = ({ assessmentId = 14 }) => {
                     <Button className="px-4 py-2 rounded-xl bg-purplePrimary hover:bg-[#EEF2FC] text-sm font-medium hover:text-purplePrimary text-white transition-all duration-300 ease-in border border-purplePrimary">Add from Library</Button>
                 </div>
             </div>
-            <QuestionCards />
+            <QuestionCards onAdd={handleAdd} />
             <div className='p-4 flex flex-col gap-4 rounded-5xl bg-white border-[1px] border-[rgba(224,224,224,0.65)] [box-shadow:0px_16px_24px_rgba(0,_0,_0,_0.06),_0px_2px_6px_rgba(0,_0,_0,_0.04)]'>
                 {questions.length > 0
                     ?
@@ -156,7 +199,7 @@ const Step3 = ({ assessmentId = 14 }) => {
                             <div className="font-medium text-center">Action</div>
                         </div>
                         {questions && questions.length > 0 && questions.map((q, idx) => {
-                            console.log(q)
+                            console.log(q.id)
                             const typeDef = getTypeDef(q) || {};
                             const safeTitle = DOMPurify.sanitize(q.title);
                             return (
@@ -205,18 +248,66 @@ const Step3 = ({ assessmentId = 14 }) => {
                                         <span className='text-sm font-medium'>{typeDef.name || q.resourcetype || 'Unknown'}</span>
                                     </div>
                                     <div className="flex items-center gap-2 mx-auto">
-                                        <motion.button className='w-8 h-8 grid place-content-center bg-white rounded-full' whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
+                                        <motion.button
+                                            className='w-8 h-8 grid place-content-center bg-white rounded-full'
+                                            whileHover={{ scale: 1.1 }}
+                                            whileTap={{ scale: 0.9 }}
+                                        >
                                             <Eye className='text-greyPrimary font-normal' size={16} />
                                         </motion.button>
-                                        <motion.button className='w-8 h-8 grid place-content-center bg-white rounded-full' whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
+                                        <motion.button
+                                            onClick={() => handleDuplicate(q.id)}
+                                            className='w-8 h-8 grid place-content-center bg-white rounded-full'
+                                            whileHover={{ scale: 1.1 }}
+                                            whileTap={{ scale: 0.9 }}
+                                        >
                                             <DuplicateIcon className="w-4 h-4" />
                                         </motion.button>
-                                        <motion.button className='w-8 h-8 grid place-content-center bg-white rounded-full' whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
+                                        <motion.button
+                                            onClick={() => handleEdit(q)}
+                                            className='w-8 h-8 grid place-content-center bg-white rounded-full'
+                                            whileHover={{ scale: 1.1 }}
+                                            whileTap={{ scale: 0.9 }}
+                                        >
                                             <EditIcon className="w-4 h-4" />
                                         </motion.button>
-                                        <motion.button className='w-8 h-8 grid place-content-center bg-white rounded-full' whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
+                                        <AlertDialog>
+                                            <AlertDialogTrigger asChild>
+                                                <motion.button
+                                                    className='w-8 h-8 grid place-content-center bg-white rounded-full'
+                                                    whileHover={{ scale: 1.1 }}
+                                                    whileTap={{ scale: 0.9 }}
+                                                >
+                                                    <TrashIcon className="w-4 h-4" />
+                                                </motion.button>
+                                            </AlertDialogTrigger>
+                                            <AlertDialogContent>
+                                                <AlertDialogHeader>
+                                                    <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                                                    <AlertDialogDescription>
+                                                        This action cannot be undone. This will permanently delete your account
+                                                        and remove your data from our servers.
+                                                    </AlertDialogDescription>
+                                                </AlertDialogHeader>
+                                                <AlertDialogFooter>
+                                                    <AlertDialogCancel className='rounded-md bg-dangerPrimary hover:bg-red-900 text-white hover:text-white'>Cancel</AlertDialogCancel>
+                                                    <AlertDialogAction
+                                                        className='rounded-md bg-greenPrimary hover:bg-green-950 text-greyPrimary hover:text-white'
+                                                        onClick={() => handleDelete(q.id)}
+                                                    >
+                                                        Continue
+                                                    </AlertDialogAction>
+                                                </AlertDialogFooter>
+                                            </AlertDialogContent>
+                                        </AlertDialog>
+                                        {/* <motion.button
+                                            onClick={() => handleDelete(q.id)}
+                                            className='w-8 h-8 grid place-content-center bg-white rounded-full'
+                                            whileHover={{ scale: 1.1 }}
+                                            whileTap={{ scale: 0.9 }}
+                                        >
                                             <TrashIcon className="w-4 h-4" />
-                                        </motion.button>
+                                        </motion.button> */}
                                     </div>
                                 </div>
                             );
@@ -244,6 +335,15 @@ const Step3 = ({ assessmentId = 14 }) => {
                     </div>
                 }
             </div>
+            <QuestionModal
+                isOpen={modalOpen}
+                setIsOpen={setModalOpen}
+                mode={modalMode}
+                initialData={modalInitialData}
+                questionType={modalQuestionType}
+                assessmentId={assessmentId}
+            // You can add onSave or other props as needed
+            />
             <div className='flex items-center justify-between'>
                 <Button variant="back" effect="shineHover">
                     <ChevronLeftIcon />

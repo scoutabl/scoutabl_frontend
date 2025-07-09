@@ -138,32 +138,19 @@ export const questionTypes = [
     }
 ];
 
-const QuestionCards = () => {
+const QuestionCards = ({ onAdd }) => {
     const handleQuestionSave = (questionData) => {
         console.log('Question saved:', questionData);
-        // Handle saving the question data to your state/backend
-        // questionData will contain:
-        // {
-        //   questionType: 'single-select' | 'rating' | 'numeric-input',
-        //   question: 'The actual question text from textarea',
-        //   timeToAnswer: 120,
-        //   customScore: 120,
-        //   isCompulsory: true/false,
-        //   saveToLibrary: true/false,
-        //   selectedAnswer: 'answer-id' (for single-select),
-        //   selectedRating: 3 (for rating),
-        //   correctAnswer: '5.00' (for numeric-input)
-        // }
     };
-
 
     const QuestionCard = ({ question, category }) => {
         const PlusButton = (
             <motion.button
                 className='h-6 w-6 grid place-content-center bg-white rounded-full ml-auto group'
                 whileHover={{ scale: 1.1 }}
-                whileTap={{ scale: 0.9 }
-                }>
+                whileTap={{ scale: 0.9 }}
+                onClick={() => onAdd(question.type)}
+            >
                 <PlusIcon className="h-[10px] w-[10px] group-hover:rotate-[-12deg]" />
             </motion.button>
         );
@@ -174,18 +161,7 @@ const QuestionCards = () => {
                     {question.icon}
                 </div>
                 <span className='text-sm font-semibold text-greyPrimary group-hover:text-white transition-all duration-300 ease-in'>{question.name}</span>
-
-                {/* Only show modal for supported question types */}
-                {['single-select', 'rating', 'numeric-input', 'multiple-select', 'code', 'rearrange', 'essay', 'video', 'audio'].includes(question.type) ? (
-                    <QuestionModal
-                        trigger={PlusButton}
-                        questionType={question.type}
-                        initialQuestion={question.question}
-                        onSave={handleQuestionSave}
-                    />
-                ) : (
-                    PlusButton
-                )}
+                {PlusButton}
             </div>
         );
     };

@@ -195,7 +195,7 @@ function App() {
                 <RoutesWithTransitions />
               </NavigationWrapper>
             </ThemeProvider>
-            <Toaster />
+            <Toaster richColors   />
           </AuthProvider>
         </Router>
       </EnumsProvider>

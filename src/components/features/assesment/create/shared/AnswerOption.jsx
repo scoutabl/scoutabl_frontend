@@ -1,6 +1,7 @@
 import React, { useCallback, memo } from 'react';
 import RemoveOptionButton from './RemoveOptionButton';
 import { Input } from '@/components/ui/input';
+import { cn } from '@/lib/utils';
 const AnswerOption = memo(({
     answer,
     index,
@@ -41,7 +42,9 @@ const AnswerOption = memo(({
                 type="text"
                 value={answer.text}
                 onChange={handleTextChange}
-                className="p-3 flex-1 rounded-xl text-greyAccent font-medium text-sm border border-seperatorPrimary"
+                className={cn("p-3 flex-1 rounded-xl text-greyAccent font-medium text-sm border border-seperatorPrimary", {
+                    "border-dangerPrimary": !answer.text.trim().length
+                })}
                 placeholder={`Option ${index + 1}`}
             />
             {/* <motion.button

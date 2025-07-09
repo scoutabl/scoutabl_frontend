@@ -29,7 +29,8 @@ import ReusableAnswer from './ReusableAnswer';
 import AiIcon from '@/assets/AiIcon.svg?react'
 import RichTextEditor from '@/components/RichTextEditor';
 import { toast } from 'sonner';
-import { useAddQuestion } from '@/api/createQuestion';
+import { useAddQuestion, useUpdateQuestion } from '@/api/createQuestion';
+import Assesment from '../../../Assesment';
 
 
 const DEFAULT_SINGLE_SELECT_ANSWERS = [
@@ -38,10 +39,8 @@ const DEFAULT_SINGLE_SELECT_ANSWERS = [
 ];
 
 const DEFAULT_MULTIPLE_SELECT_ANSWERS = [
-    { id: '1', text: 'C++' },
-    { id: '2', text: 'Javascript' },
-    { id: '3', text: 'Ruby' },
-    { id: '4', text: 'Python' }
+    { id: '1', text: 'Javascript' },
+    { id: '2', text: 'C++' }
 ];
 
 //custom hook for question form
@@ -62,7 +61,12 @@ const useQuestionForm = (initialData, initialQuestion) => {
     ]);
 
     const [singleSelectAnswers, setSingleSelectAnswers] = useState(
-        initialData.answers || DEFAULT_SINGLE_SELECT_ANSWERS
+        initialData.choices
+            ? initialData.choices.map(choice => ({
+                id: choice.id, // use backend id!
+                text: choice.text
+            }))
+            : DEFAULT_SINGLE_SELECT_ANSWERS
     );
     const [multipleSelectAnswers, setMultipleSelectAnswers] = useState(
         initialData.answers || DEFAULT_MULTIPLE_SELECT_ANSWERS
@@ -92,10 +96,16 @@ const QuestionModal = memo(({
     questionType,
     initialQuestion = "Have you previously worked in a remote/hybrid environment?",
     onSave,
-    initialData = {}
+    initialData = {},
+    isOpen,
+    setIsOpen,
+    mode = 'add',
+    assessmentId
 }) => {
-    const [isOpen, setIsOpen] = useState(false);
+    // Remove internal isOpen state
+    // const [isOpen, setIsOpen] = useState(false);
     const formState = useQuestionForm(initialData, initialQuestion);
+    const [hasSubmitted, setHasSubmitted] = useState(false);
 
     // Memoize validation logic
     const isValid = useMemo(() => {
@@ -113,10 +123,9 @@ const QuestionModal = memo(({
         return true;
     }, [questionType, formState.post, formState.selectedAnswer, formState.singleSelectAnswers, formState.multipleSelectAnswers]);
 
-    const assessmentId = 14;
-    const addQuestionMutation = useAddQuestion(assessmentId, () => {
-        setIsOpen(false);
-    });
+    const addQuestionMutation = useAddQuestion(assessmentId, () => { setIsOpen(false); });
+    const isEdit = mode === 'edit';
+    const updateQuestionMutation = useUpdateQuestion(assessmentId, () => { setIsOpen(false) })
 
     const handleSave = useCallback(() => {
         if (!isValid) {
@@ -145,16 +154,25 @@ const QuestionModal = memo(({
         let multiple_true = false;
 
         if (questionType === 'multiple-select') {
-            choices = formState.multipleSelectAnswers.map(opt => ({
-                text: opt.text,
-                is_correct: formState.selectedAnswers.includes(opt.id)
-            }));
+            choices = formState.multipleSelectAnswers.map(opt => {
+                // Find original choice by id
+                const original = initialData.choices?.find(c => c.id === opt.id);
+                return {
+                    ...(isEdit && original?.id ? { id: original.id } : {}),
+                    text: opt.text,
+                    is_correct: formState.selectedAnswers.includes(opt.id)
+                };
+            });
             multiple_true = true;
         } else if (questionType === 'single-select') {
-            choices = formState.singleSelectAnswers.map(opt => ({
-                text: opt.text,
-                is_correct: opt.id === formState.selectedAnswer
-            }));
+            choices = formState.singleSelectAnswers.map(opt => {
+                const original = initialData.choices?.find(c => c.id === opt.id);
+                return {
+                    ...(isEdit && original?.id ? { id: original.id } : {}),
+                    text: opt.text,
+                    is_correct: opt.id === formState.selectedAnswer
+                };
+            });
             multiple_true = false;
         }
 
@@ -169,7 +187,11 @@ const QuestionModal = memo(({
                 is_compulsory: formState.isCompulsory,
                 choices
             };
-            addQuestionMutation.mutate(payload);
+            if (isEdit) {
+                updateQuestionMutation.mutate({ questionId: initialData.id, payload });
+            } else {
+                addQuestionMutation.mutate(payload);
+            }
             return;
         }
 
@@ -190,8 +212,11 @@ const QuestionModal = memo(({
                 correct_order: options.map((_, idx) => idx),
                 options
             };
-
-            addQuestionMutation.mutate(payload);
+            if (isEdit) {
+                updateQuestionMutation.mutate({ questionId: initialData.id, payload });
+            } else {
+                addQuestionMutation.mutate(payload);
+            }
             return;
         }
 
@@ -205,7 +230,11 @@ const QuestionModal = memo(({
                 "value": formState.correctAnswer,
                 "condition": formState.numericCondition
             }
-            addQuestionMutation.mutate(payload);
+            if (isEdit) {
+                updateQuestionMutation.mutate({ questionId: initialData.id, payload });
+            } else {
+                addQuestionMutation.mutate(payload);
+            }
             return;
         }
 
@@ -224,7 +253,7 @@ const QuestionModal = memo(({
         };
         onSave?.(questionData);
         setIsOpen(false);
-    }, [isValid, formState, questionType, addQuestionMutation, onSave]);
+    }, [isValid, formState, questionType, addQuestionMutation, updateQuestionMutation, isEdit, initialData, onSave, setIsOpen]);
 
     const handleTextEditorChange = useCallback((content) => {
         formState.setPost(content);
@@ -240,6 +269,14 @@ const QuestionModal = memo(({
                         onAnswerChange={formState.setSelectedAnswer}
                         onAnswersChange={formState.setSingleSelectAnswers}
                         showShuffleToggle={true}
+                        errors={
+                            hasSubmitted
+                                ? [
+                                    !formState.selectedAnswer && "Please select the correct answer",
+                                    formState.singleSelectAnswers.some(answer => !answer.text.trim()) && "All answer options must have text"
+                                ].filter(Boolean)
+                                : []
+                        }
                     />
                 );
             case 'multiple-select':
@@ -250,6 +287,7 @@ const QuestionModal = memo(({
                         onAnswersChange={formState.setMultipleSelectAnswers}
                         onSelectedChange={formState.setSelectedAnswers}
                         showShuffleToggle={true}
+                        length={DEFAULT_MULTIPLE_SELECT_ANSWERS.length}
                     />
                 );
             case 'rating':
@@ -289,10 +327,7 @@ const QuestionModal = memo(({
 
     return (
         <Dialog open={isOpen} onOpenChange={setIsOpen}>
-            <DialogTrigger asChild>
-                {trigger}
-            </DialogTrigger>
-
+            {/* Remove DialogTrigger, modal is controlled from parent */}
             <DialogContent className="flex flex-col p-6 min-w-[90vw] sm:min-w-[600px] md:min-w-[800px] lg:min-w-[1000px] xl:min-w-[1208px] max-w-[98vw] max-h-[90vh] overflow-y-auto rounded-[24px]">
                 <div className="flex items-center justify-between mb-4">
                     <DialogHeader className="max-h-9">
