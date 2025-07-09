@@ -1,5 +1,8 @@
 // QuestionModal.jsx
 import React, { useState, useEffect, useCallback, useMemo, memo } from 'react';
+
+import { useForm, Controller } from 'react-hook-form';
+import { FormProvider } from "react-hook-form";
 import { motion } from 'framer-motion';
 import CodingQuestionContent from './CodingQuestionContent';
 import { Eye, X } from 'lucide-react';
@@ -31,65 +34,103 @@ import RichTextEditor from '@/components/RichTextEditor';
 import { toast } from 'sonner';
 import { useAddQuestion, useUpdateQuestion } from '@/api/createQuestion';
 import Assesment from '../../../Assesment';
-
-
+import { getValidationSchema } from './schema/CreateQuestionValidationSchema';
+import { zodResolver } from '@hookform/resolvers/zod';
 const DEFAULT_SINGLE_SELECT_ANSWERS = [
-    { id: '1', text: 'Yes' },
-    { id: '2', text: 'No' },
+    { answerid: 1, text: 'Yes' },
+    { answerid: 2, text: 'No' },
 ];
 
 const DEFAULT_MULTIPLE_SELECT_ANSWERS = [
-    { id: '1', text: 'Javascript' },
-    { id: '2', text: 'C++' }
+    { id: 1, text: 'Javascript' },
+    { id: 2, text: 'C++' }
 ];
 
+function convertHHMMSSToMinutes(hhmmss) {
+    if (!hhmmss) return 120; // fallback
+    const [hours, minutes, seconds] = hhmmss.split(":").map(Number);
+    return hours * 60 + minutes + Math.floor(seconds / 60);
+}
+
 //custom hook for question form
-const useQuestionForm = (initialData, initialQuestion) => {
-    const [question, setQuestion] = useState(initialData.question || initialQuestion);
-    const [timeToAnswer, setTimeToAnswer] = useState(initialData.timeToAnswer || 120);
-    const [customScore, setCustomScore] = useState(initialData.customScore || 120);
-    const [isCompulsory, setIsCompulsory] = useState(initialData.isCompulsory || false);
-    const [saveToLibrary, setSaveToLibrary] = useState(initialData.saveToLibrary || false);
-    const [selectedAnswer, setSelectedAnswer] = useState(initialData.selectedAnswer || '');
-    const [selectedRating, setSelectedRating] = useState(initialData.selectedRating || null);
-    const [correctAnswer, setCorrectAnswer] = useState(initialData.correctAnswer || '000.00');
-    const [numericCondition, setNumericCondition] = useState("0");
-    const [post, setPost] = useState(initialData.question || initialQuestion);
-    const [rearrangeOptions, setRearrangeOptions] = useState([
-        { id: 1, text: '' },
-        { id: 2, text: '' },
-    ]);
+const useQuestionForm = (initialData, initialQuestion, mode, isOpen, questionType) => {
+    const schema = getValidationSchema(questionType);
 
-    const [singleSelectAnswers, setSingleSelectAnswers] = useState(
-        initialData.choices
-            ? initialData.choices.map(choice => ({
-                id: choice.id, // use backend id!
-                text: choice.text
-            }))
-            : DEFAULT_SINGLE_SELECT_ANSWERS
-    );
-    const [multipleSelectAnswers, setMultipleSelectAnswers] = useState(
-        initialData.answers || DEFAULT_MULTIPLE_SELECT_ANSWERS
-    );
-    const [selectedAnswers, setSelectedAnswers] = useState(initialData.selectedAnswers || []);
+    const getDefaultValues = () => {
+        const defaults = {
+            post: initialData.question || initialQuestion,
+            timeToAnswer: Number(initialData.timeToAnswer) || 120,
+            customScore: Number(initialData.customScore) || 120,
+            isCompulsory: initialData.isCompulsory || false,
+            saveToLibrary: initialData.saveToLibrary || false,
+            selectedAnswer: '',
+            selectedAnswers: [],
+            selectedRating: initialData.selectedRating || null,
+            correctAnswer: initialData.correctAnswer || '000.00',
+            numericCondition: '0',
+            singleSelectAnswers: DEFAULT_SINGLE_SELECT_ANSWERS,
+            multipleSelectAnswers: DEFAULT_MULTIPLE_SELECT_ANSWERS,
+            rearrangeOptions: [
+                { id: 1, text: '' },
+                { id: 2, text: '' },
+            ],
+            shuffleEnabled: false,
+        };
 
-    return {
-        question, setQuestion,
-        timeToAnswer, setTimeToAnswer,
-        customScore, setCustomScore,
-        isCompulsory, setIsCompulsory,
-        saveToLibrary, setSaveToLibrary,
-        selectedAnswer, setSelectedAnswer,
-        selectedRating, setSelectedRating,
-        correctAnswer, setCorrectAnswer,
-        numericCondition, setNumericCondition,
-        post, setPost,
-        singleSelectAnswers, setSingleSelectAnswers,
-        multipleSelectAnswers, setMultipleSelectAnswers,
-        selectedAnswers, setSelectedAnswers,
-        rearrangeOptions, setRearrangeOptions,
+        // Handle edit mode initialization
+        if (mode === 'edit' && initialData.choices) {
+            if (questionType === 'single-select') {
+                defaults.singleSelectAnswers = initialData.choices.map(choice => ({
+                    id: Number(choice.id),
+                    text: choice.text
+                }));
+                const correct = initialData.choices.find(c => c.is_correct);
+                defaults.selectedAnswer = correct ? Number(correct.id) : '';
+            }
+
+            if (questionType === 'multiple-select') {
+                defaults.multipleSelectAnswers = initialData.choices.map(choice => ({
+                    id: Number(choice.id),
+                    text: choice.text
+                }));
+                defaults.selectedAnswers = initialData.choices
+                    .filter(c => c.is_correct)
+                    .map(c => Number(c.id));
+            }
+
+            defaults.timeToAnswer = convertHHMMSSToMinutes(initialData.completion_time);
+            defaults.customScore = initialData.custom_score || 120;
+            defaults.isCompulsory = initialData.is_compulsory || false;
+            defaults.saveToLibrary = initialData.save_template || false;
+            defaults.shuffleEnabled = initialData.shuffle_options || false;
+        }
+
+        console.log('Default values:', defaults);
+        console.log('Types:', {
+            timeToAnswer: typeof defaults.timeToAnswer,
+            customScore: typeof defaults.customScore,
+            selectedAnswer: typeof defaults.selectedAnswer
+        });
+
+        return defaults;
     };
+
+    const form = useForm({
+        resolver: zodResolver(schema),
+        defaultValues: getDefaultValues(),
+        mode: 'onChange', // Validate on change for better UX
+    });
+
+    // Reset form when modal opens/closes or mode changes
+    useEffect(() => {
+        if (isOpen) {
+            form.reset(getDefaultValues());
+        }
+    }, [mode, isOpen, initialData, questionType]);
+
+    return form;
 };
+
 
 const QuestionModal = memo(({
     trigger,
@@ -104,89 +145,144 @@ const QuestionModal = memo(({
 }) => {
     // Remove internal isOpen state
     // const [isOpen, setIsOpen] = useState(false);
-    const formState = useQuestionForm(initialData, initialQuestion);
-    const [hasSubmitted, setHasSubmitted] = useState(false);
-
-    // Memoize validation logic
-    const isValid = useMemo(() => {
-        if (!formState.post.trim()) return false;
-
-        if (questionType === 'single-select') {
-            return formState.selectedAnswer &&
-                formState.singleSelectAnswers.every(answer => answer.text.trim());
-        }
-
-        if (questionType === 'multiple-select') {
-            return formState.multipleSelectAnswers.every(answer => answer.text.trim());
-        }
-
-        return true;
-    }, [questionType, formState.post, formState.selectedAnswer, formState.singleSelectAnswers, formState.multipleSelectAnswers]);
-
+    const form = useQuestionForm(initialData, initialQuestion, mode, isOpen, questionType)
+    const { handleSubmit, control, watch, setValue, formState: { errors, isValid } } = form;
     const addQuestionMutation = useAddQuestion(assessmentId, () => { setIsOpen(false); });
+    const updateQuestionMutation = useUpdateQuestion(assessmentId, () => { setIsOpen(false); });
     const isEdit = mode === 'edit';
-    const updateQuestionMutation = useUpdateQuestion(assessmentId, () => { setIsOpen(false) })
 
-    const handleSave = useCallback(() => {
-        if (!isValid) {
-            if (!formState.post.trim()) {
-                toast.error('Please enter a question');
-                return;
-            }
+    // Use watch to get current form values
+    const watchedValues = watch();
 
-            if (questionType === 'single-select' && !formState.selectedAnswer) {
-                toast.error('Please select the correct answer');
-                return;
-            }
+    // RichTextEditor integration with react-hook-form
+    const handleTextEditorChange = (content) => {
+        setValue('post', content);
+    };
 
-            if (questionType === 'single-select' && formState.singleSelectAnswers.some(answer => !answer.text.trim())) {
-                toast.error('All answer options must have text');
-                return;
-            }
+    // const onSubmit = (data) => {
+    //     console.log('=== DEBUGGING CHOICE SELECTION ===');
+    //     console.log('selectedAnswer:', data.selectedAnswer, 'type:', typeof data.selectedAnswer);
+    //     console.log('singleSelectAnswers:', data.singleSelectAnswers);
 
-            return;
-        }
+    //     // Debug each option
+    //     data.singleSelectAnswers.forEach((opt, index) => {
+    //         console.log(`Option ${index}:`, {
+    //             id: opt.id,
+    //             idType: typeof opt.id,
+    //             text: opt.text,
+    //             isSelected: opt.id === data.selectedAnswer,
+    //             stringComparison: String(opt.id) === String(data.selectedAnswer)
+    //         });
+    //     });
 
-        const mins = parseInt(formState.timeToAnswer, 10) || 0;
+    //     const completion_time = `00:${String(mins).padStart(2, '0')}:00`;
+
+    //     let choices = [];
+    //     let multiple_true = false;
+
+    //     if (questionType === 'multiple-select') {
+    //         choices = data.multipleSelectAnswers.map(opt => {
+    //             const original = initialData.choices?.find(c => Number(c.id) === Number(opt.id));
+    //             return {
+    //                 ...(isEdit && original?.id ? { id: original.id } : {}),
+    //                 text: opt.text,
+    //                 is_correct: data.selectedAnswers.includes(opt.id)
+    //             };
+    //         });
+    //         multiple_true = true;
+    //     } else if (questionType === 'single-select') {
+    //         choices = data.singleSelectAnswers.map(opt => {
+    //             const original = initialData.choices?.find(c => Number(c.id) === Number(opt.id));
+    //             return {
+    //                 ...(isEdit && original?.id ? { id: original.id } : {}),
+    //                 text: opt.text,
+    //                 is_correct: opt.id === data.selectedAnswer
+    //             };
+    //         });
+    //         multiple_true = false;
+    //     }
+
+    //     // Handle different question types
+    //     if (questionType === 'single-select' || questionType === 'multiple-select') {
+    //         const payload = {
+    //             resourcetype: "MCQuestion",
+    //             completion_time,
+    //             save_template: data.saveToLibrary,
+    //             title: data.post,
+    //             multiple_true,
+    //             custom_score: Number(data.customScore),
+    //             is_compulsory: data.isCompulsory,
+    //             choices
+    //         };
+
+    //         if (isEdit) {
+    //             updateQuestionMutation.mutate({ questionId: initialData.id, payload });
+    //         } else {
+    //             addQuestionMutation.mutate(payload);
+    //         }
+    //         return;
+    //     }
+    const onSubmit = (data) => {
+        console.log('=== DEBUGGING CHOICE SELECTION ===');
+        console.log('selectedAnswer:', data.selectedAnswer, 'type:', typeof data.selectedAnswer);
+        console.log('singleSelectAnswers:', data.singleSelectAnswers);
+
+        // Debug each option with proper type conversion
+        data.singleSelectAnswers.forEach((opt, index) => {
+            const isSelected = String(opt.answerId) === String(data.selectedAnswer);
+            console.log(`Option ${index}:`, {
+                answerId: opt.answerId,
+                answerIdType: typeof opt.answerId,
+                text: opt.text,
+                selectedAnswer: data.selectedAnswer,
+                selectedAnswerType: typeof data.selectedAnswer,
+                isSelected: isSelected,
+                stringComparison: String(opt.answerId) === String(data.selectedAnswer)
+            });
+        });
+
+        const mins = parseInt(data.timeToAnswer, 10) || 0;
         const completion_time = `00:${String(mins).padStart(2, '0')}:00`;
 
         let choices = [];
         let multiple_true = false;
 
         if (questionType === 'multiple-select') {
-            choices = formState.multipleSelectAnswers.map(opt => {
-                // Find original choice by id
-                const original = initialData.choices?.find(c => c.id === opt.id);
+            choices = data.multipleSelectAnswers.map(opt => {
+                // Find backend id if editing
+                const original = initialData.choices?.find(c => String(c.id) === String(opt.answerId));
                 return {
                     ...(isEdit && original?.id ? { id: original.id } : {}),
                     text: opt.text,
-                    is_correct: formState.selectedAnswers.includes(opt.id)
+                    is_correct: data.selectedAnswers.includes(opt.answerId)
                 };
             });
             multiple_true = true;
         } else if (questionType === 'single-select') {
-            choices = formState.singleSelectAnswers.map(opt => {
-                const original = initialData.choices?.find(c => c.id === opt.id);
+            choices = data.singleSelectAnswers.map(opt => {
+                const original = initialData.choices?.find(c => String(c.id) === String(opt.answerId));
                 return {
                     ...(isEdit && original?.id ? { id: original.id } : {}),
                     text: opt.text,
-                    is_correct: opt.id === formState.selectedAnswer
+                    is_correct: String(opt.answerId) === String(data.selectedAnswer)
                 };
             });
             multiple_true = false;
         }
 
+        // Rest of your submission logic...
         if (questionType === 'single-select' || questionType === 'multiple-select') {
             const payload = {
                 resourcetype: "MCQuestion",
                 completion_time,
-                save_template: formState.saveToLibrary,
-                title: formState.post,
+                save_template: data.saveToLibrary,
+                title: data.post,
                 multiple_true,
-                custom_score: Number(formState.customScore),
-                is_compulsory: formState.isCompulsory,
+                custom_score: Number(data.customScore),
+                is_compulsory: data.isCompulsory,
                 choices
             };
+
             if (isEdit) {
                 updateQuestionMutation.mutate({ questionId: initialData.id, payload });
             } else {
@@ -195,8 +291,27 @@ const QuestionModal = memo(({
             return;
         }
 
+        //numeric-input payload
+        if (questionType === 'numeric-input') {
+            const payload = {
+                "resourcetype": "NumberQuestion",
+                completion_time,
+                "save_template": data.saveToLibrary,
+                "title": data.post,
+                "content": data.post,
+                "value": data.correctAnswer,
+                "condition": data.numericCondition
+            }
+            if (isEdit) {
+                updateQuestionMutation.mutate({ questionId: initialData.id, payload });
+            } else {
+                addQuestionMutation.mutate(payload);
+            }
+            return;
+        }
+        // hanlde rearrange quetion
         if (questionType === 'rearrange') {
-            const options = formState.rearrangeOptions.map((opt, idx) => ({
+            const options = data.rearrangeOptions.map((opt, idx) => ({
                 text: opt.text,
                 question_order: idx,
                 correct_order: idx
@@ -205,9 +320,9 @@ const QuestionModal = memo(({
             const payload = {
                 resourcetype: "RearrangeQuestion",
                 completion_time,
-                save_template: formState.saveToLibrary,
-                title: formState.post,
-                content: formState.post,
+                save_template: data.saveToLibrary,
+                title: data.post,
+                content: data.post,
                 shuffle_options: true,
                 correct_order: options.map((_, idx) => idx),
                 options
@@ -220,100 +335,69 @@ const QuestionModal = memo(({
             return;
         }
 
-        if (questionType === 'numeric-input') {
-            const payload = {
-                "resourcetype": "NumberQuestion",
-                completion_time,
-                "save_template": formState.saveToLibrary,
-                "title": formState.post,
-                "content": formState.post,
-                "value": formState.correctAnswer,
-                "condition": formState.numericCondition
-            }
-            if (isEdit) {
-                updateQuestionMutation.mutate({ questionId: initialData.id, payload });
-            } else {
-                addQuestionMutation.mutate(payload);
-            }
-            return;
-        }
-
-        const questionData = {
-            questionType,
-            question: formState.post,
-            timeToAnswer: formState.timeToAnswer,
-            customScore: formState.customScore,
-            isCompulsory: formState.isCompulsory,
-            saveToLibrary: formState.saveToLibrary,
-            ...(questionType === 'rating' && { selectedRating: formState.selectedRating }),
-            ...(questionType === 'numeric-input' && {
-                correctAnswer: formState.correctAnswer,
-                numericCondition: formState.numericCondition,
-            }),
-        };
-        onSave?.(questionData);
-        setIsOpen(false);
-    }, [isValid, formState, questionType, addQuestionMutation, updateQuestionMutation, isEdit, initialData, onSave, setIsOpen]);
-
-    const handleTextEditorChange = useCallback((content) => {
-        formState.setPost(content);
-    }, [formState.setPost]);
-
+        // Handle other question types...
+        // (similar to your existing code)
+    };
     const renderAnswerSection = useMemo(() => {
         switch (questionType) {
             case 'single-select':
                 return (
                     <SingleSelectAnswers
-                        answers={formState.singleSelectAnswers}
-                        selectedAnswer={formState.selectedAnswer}
-                        onAnswerChange={formState.setSelectedAnswer}
-                        onAnswersChange={formState.setSingleSelectAnswers}
-                        showShuffleToggle={true}
-                        errors={
-                            hasSubmitted
-                                ? [
-                                    !formState.selectedAnswer && "Please select the correct answer",
-                                    formState.singleSelectAnswers.some(answer => !answer.text.trim()) && "All answer options must have text"
-                                ].filter(Boolean)
-                                : []
-                        }
+                    // answers={data.singleSelectAnswers}
+                    // selectedAnswer={data.selectedAnswer}
+                    // onAnswerChange={data.setSelectedAnswer}
+                    // onAnswersChange={data.setSingleSelectAnswers}
+                    // showShuffleToggle={true}
+                    // shuffleEnabled={data.shuffleEnabled}
+                    // setShuffleEnabled={data.setShuffleEnabled}
+                    // errors={
+                    //     hasSubmitted
+                    //         ? [
+                    //             !data.selectedAnswer && "Please select the correct answer",
+                    //             data.singleSelectAnswers.some(answer => !answer.text.trim()) && "All answer options must have text"
+                    //         ].filter(Boolean)
+                    //         : []
+                    // }
                     />
                 );
-            case 'multiple-select':
-                return (
-                    <MultipleSelectAnswers
-                        answers={formState.multipleSelectAnswers}
-                        selectedAnswers={formState.selectedAnswers}
-                        onAnswersChange={formState.setMultipleSelectAnswers}
-                        onSelectedChange={formState.setSelectedAnswers}
-                        showShuffleToggle={true}
-                        length={DEFAULT_MULTIPLE_SELECT_ANSWERS.length}
-                    />
-                );
-            case 'rating':
-                return (
-                    <RatingScaleAnswers
-                        scale="star-rating"
-                        selectedRating={formState.selectedRating}
-                        onRatingChange={formState.setSelectedRating}
-                    />
-                );
-            case 'numeric-input':
-                return (
-                    <NumericInputAnswers
-                        correctAnswer={formState.correctAnswer}
-                        onAnswerChange={formState.setCorrectAnswer}
-                        numericCondition={formState.numericCondition}
-                        onConditionChange={formState.setNumericCondition}
-                    />
-                );
-            case 'rearrange':
-                return (
-                    <RearrangeAnswers
-                        value={formState.rearrangeOptions}
-                        onChange={formState.setRearrangeOptions}
-                    />
-                )
+            // case 'multiple-select':
+            //     return (
+            //         <MultipleSelectAnswers
+            //             answers={data.multipleSelectAnswers}
+            //             selectedAnswers={data.selectedAnswers}
+            //             onAnswersChange={data.setMultipleSelectAnswers}
+            //             onSelectedChange={data.setSelectedAnswers}
+            //             showShuffleToggle={true}
+            //             shuffleEnabled={data.shuffleEnabled}
+            //             setShuffleEnabled={data.setShuffleEnabled}
+            //             length={DEFAULT_MULTIPLE_SELECT_ANSWERS.length}
+            //             error={data.multipleSelectAnswers.some(answer => !answer.text.trim())}
+            //         />
+            //     );
+            // case 'rating':
+            //     return (
+            //         <RatingScaleAnswers
+            //             scale="star-rating"
+            //             selectedRating={data.selectedRating}
+            //             onRatingChange={data.setSelectedRating}
+            //         />
+            //     );
+            // case 'numeric-input':
+            //     return (
+            //         <NumericInputAnswers
+            //             correctAnswer={data.correctAnswer}
+            //             onAnswerChange={data.setCorrectAnswer}
+            //             numericCondition={data.numericCondition}
+            //             onConditionChange={data.setNumericCondition}
+            //         />
+            //     );
+            // case 'rearrange':
+            //     return (
+            //         <RearrangeAnswers
+            //             value={data.rearrangeOptions}
+            //             onChange={data.setRearrangeOptions}
+            //         />
+            //     )
             case 'essay':
             case 'video':
             case 'audio':
@@ -323,12 +407,13 @@ const QuestionModal = memo(({
             default:
                 return <div>Unsupported question type</div>;
         }
-    }, [questionType, formState]);
+    }, [questionType]);
 
     return (
         <Dialog open={isOpen} onOpenChange={setIsOpen}>
             {/* Remove DialogTrigger, modal is controlled from parent */}
             <DialogContent className="flex flex-col p-6 min-w-[90vw] sm:min-w-[600px] md:min-w-[800px] lg:min-w-[1000px] xl:min-w-[1208px] max-w-[98vw] max-h-[90vh] overflow-y-auto rounded-[24px]">
+
                 <div className="flex items-center justify-between mb-4">
                     <DialogHeader className="max-h-9">
                         <DialogTitle className="flex items-center gap-2">
@@ -372,98 +457,144 @@ const QuestionModal = memo(({
                             </div>
 
                             <div className="flex-1">
-                                <RichTextEditor content={formState.post} onChange={handleTextEditorChange} wordCountToggle={false} />
+                                <RichTextEditor content={watchedValues.post} onChange={handleTextEditorChange} wordCountToggle={false} />
                             </div>
                         </div>
-                        <div className="flex-1 flex flex-col">
-                            <div className='mb-6 p-3 flex flex-col gap-3 rounded-2xl bg-blueSecondary'>
-                                <div className='flex items-center justify-between'>
-                                    <div className='flex'>
-                                        <label
-                                            htmlFor="timeToAnswer"
-                                            className='min-h-10 min-w-[150px] px-3 py-2 text-sm font-semibold text-greyAccent bg-white border-r border-seperatorPrimary rounded-tl-md rounded-bl-md'
-                                        >
-                                            Time to Answer
-                                            <span className='text-[#E45270]'>*</span>
-                                        </label>
-                                        <Input
-                                            type="number"
-                                            name="timeToAnswer"
-                                            id="timeToAnswer"
-                                            placeholder='120 Min'
-                                            className='px-3 py-2 max-h-10 max-w-[114px] text-base font-medium text-greyAccent bg-white rounded-tr-md rounded-br-md rounded-tl-none rounded-bl-none border-0' onChange={(e) => formState.setTimeToAnswer(e.target.value)}
-                                        />
+                        <FormProvider {...form}>
+                            {/* <form onSubmit={handleSubmit(onSubmit)}
+                                className='flex-1 flex flex-col'> */}
+                            {/* <form className='flex-1 flex flex-col' onSubmit={(e) => {
+                                console.log('Form submit event triggered');
+                                handleSubmit(onSubmit)(e);
+                            }}> */}
+                            <form onSubmit={(e) => {
+                                console.log('Form submit event triggered');
+                                console.log('Current form values:', watchedValues);
+
+                                handleSubmit(
+                                    (data) => {
+                                        console.log('✅ Validation passed, onSubmit called with:', data);
+                                        onSubmit(data);
+                                    },
+                                    (errors) => {
+                                        console.log('❌ Validation failed with errors:', errors);
+                                        console.log('Field values at validation:', watchedValues);
+                                    }
+                                )(e);
+                            }}>
+                                <div className='mb-6 p-3 flex flex-col gap-3 rounded-2xl bg-blueSecondary'>
+                                    <div className='flex items-center justify-between'>
+                                        <div className='flex'>
+                                            <label
+                                                htmlFor="timeToAnswer"
+                                                className='min-h-10 min-w-[150px] px-3 py-2 text-sm font-semibold text-greyAccent bg-white border-r border-seperatorPrimary rounded-tl-md rounded-bl-md'
+                                            >
+                                                Time to Answer
+                                                <span className='text-[#E45270]'>*</span>
+                                            </label>
+                                            {/* <Controller
+                                                name="timeToAnswer"
+                                                control={control}
+                                                render={({ field }) => (
+                                                    <Input
+                                                        {...field}
+                                                        type="number"
+                                                        placeholder='120 Min'
+                                                        className='px-3 py-2 max-h-10 max-w-[114px] text-base font-medium text-greyAccent bg-white rounded-tr-md rounded-br-md rounded-tl-none rounded-bl-none border-0'
+                                                    />
+                                                )}
+                                            /> */}
+                                            <Controller
+                                                name="timeToAnswer"
+                                                control={control}
+                                                render={({ field }) => (
+                                                    <Input
+                                                        {...field}
+                                                        type="number"
+                                                        placeholder='120 Min'
+                                                        onChange={(e) => field.onChange(Number(e.target.value))} // Convert to number
+                                                        className='px-3 py-2 max-h-10 max-w-[114px] text-base font-medium text-greyAccent bg-white rounded-tr-md rounded-br-md rounded-tl-none rounded-bl-none border-0'
+                                                    />
+                                                )}
+                                            />
+                                        </div>
+                                        <div className="flex items-center gap-8">
+                                            <span className="text-base font-medium text-greyPrimary">Compulsory Question</span>
+                                            <Controller
+                                                name="isCompulsory"
+                                                control={control}
+                                                render={({ field }) => (
+                                                    <label className="relative inline-flex items-center cursor-pointer">
+                                                        <input
+                                                            type="checkbox"
+                                                            checked={field.value}
+                                                            onChange={field.onChange}
+                                                            className="sr-only"
+                                                        />
+                                                        <div className={`w-11 h-6 rounded-full transition-colors ${field.value ? 'bg-purplePrimary' : 'bg-greyAccent'}`}>
+                                                            <div className={`w-5 h-5 bg-white rounded-full shadow-md transform transition-transform ${field.value ? 'translate-x-5' : 'translate-x-0'} mt-0.5 ml-0.5`}></div>
+                                                        </div>
+                                                    </label>
+                                                )}
+                                            />
+                                        </div>
                                     </div>
-                                    <div className="flex items-center gap-8">
-                                        <span className="text-base font-medium text-greyPrimary">Compulsory Question</span>
-                                        {/* <label className="relative inline-flex items-center cursor-pointer">
-                                            <Input
-                                                type="checkbox"
-                                                checked={formState.isCompulsory}
-                                                onChange={(e) => formState.setIsCompulsory(e.target.checked)}
-                                                className="sr-only"
+                                    <div className='flex items-center justify-between'>
+                                        <div className='flex'>
+                                            <label
+                                                htmlFor="customScore"
+                                                className='min-h-10 min-w-[150px] px-3 py-2 text-sm font-semibold text-greyAccent bg-white border-r border-seperatorPrimary rounded-tl-md rounded-bl-md'
+                                            >
+                                                Set Custom Score
+                                                <span className='text-[#E45270]'>*</span>
+                                            </label>
+                                            <Controller
+                                                name="customScore"
+                                                control={control}
+                                                render={({ field }) => (
+                                                    <Input
+                                                        {...field}
+                                                        type="number"
+                                                        placeholder='120'
+                                                        className='px-3 py-2 max-h-10 max-w-[114px] text-base font-medium text-greyAccent bg-white rounded-tr-md rounded-br-md rounded-tl-none rounded-bl-none border-0'
+                                                        onChange={(e) => field.onChange(Number(e.target.value))}
+                                                    />
+                                                )}
                                             />
-                                            <div className={`w-11 h-6 rounded-full transition-colors ${formState.isCompulsory ? 'bg-purplePrimary' : 'bg-greyac'}`}>
-                                                <div className={`w-5 h-5 bg-white rounded-full shadow-md transform transition-transform ${formState.isCompulsory ? 'translate-x-5' : 'translate-x-0'} mt-0.5 ml-0.5`}></div>
-                                            </div>
-                                        </label> */}
-                                        <label className="relative inline-flex items-center cursor-pointer">
-                                            <Input
-                                                type="checkbox"
-                                                checked={formState.isCompulsory}
-                                                onChange={(e) => formState.setIsCompulsory(e.target.checked)}
-                                                className="sr-only"
+                                        </div>
+                                        <div className="flex items-center justify-between gap-4">
+                                            <span className="text-base font-medium text-greyPrimary">Save question to library</span>
+                                            <Controller
+                                                name="saveToLibrary"
+                                                control={control}
+                                                render={({ field }) => (
+                                                    <label className="relative inline-flex items-center cursor-pointer">
+                                                        <input
+                                                            type="checkbox"
+                                                            checked={field.value}
+                                                            onChange={field.onChange}
+                                                            className="sr-only"
+                                                        />
+                                                        <div className={`w-11 h-6 rounded-full transition-colors ${field.value ? 'bg-purplePrimary' : 'bg-greyAccent'}`}>
+                                                            <div className={`w-5 h-5 bg-white rounded-full shadow-md transform transition-transform ${field.value ? 'translate-x-5' : 'translate-x-0'} mt-0.5 ml-0.5`}></div>
+                                                        </div>
+                                                    </label>
+                                                )}
                                             />
-                                            <div className={`w-11 h-6 rounded-full transition-colors ${formState.isCompulsory ? 'bg-purplePrimary' : 'bg-greyAccent'}`}>
-                                                <div className={`w-5 h-5 bg-white rounded-full shadow-md transform transition-transform ${formState.isCompulsory ? 'translate-x-5' : 'translate-x-0'} mt-0.5 ml-0.5`}></div>
-                                            </div>
-                                        </label>
+                                        </div>
                                     </div>
                                 </div>
-                                <div className='flex items-center justify-between'>
-                                    <div className='flex'>
-                                        <label
-                                            htmlFor="customScore"
-                                            className='min-h-10 min-w-[150px] px-3 py-2 text-sm font-semibold text-greyAccent bg-white border-r border-seperatorPrimary rounded-tl-md rounded-bl-md'
-                                        >
-                                            Set Custom Score
-                                            <span className='text-[#E45270]'>*</span>
-                                        </label>
-                                        <Input
-                                            type="number"
-                                            name="customScore"
-                                            id="customScore"
-                                            placeholder='120'
-                                            className='px-3 py-2 max-h-10 max-w-[114px] text-base font-medium text-greyAccent bg-white rounded-tr-md rounded-br-md rounded-tl-none rounded-bl-none border-0'
-                                            onChange={(e) => formState.setCustomScore(e.target.value)}
-                                        />
-                                    </div>
-                                    <div className="flex items-center justify-between gap-4">
-                                        <span className="text-base font-medium text-greyPrimary">Save question to library</span>
-                                        <label className="relative inline-flex items-center cursor-pointer">
-                                            <Input
-                                                type="checkbox"
-                                                checked={formState.saveToLibrary}
-                                                onChange={(e) => formState.setSaveToLibrary(e.target.checked)}
-                                                className="sr-only"
-                                            />
-                                            <div className={`w-11 h-6 rounded-full transition-colors ${formState.saveToLibrary ? 'bg-purplePrimary' : 'bg-greyAccent'}`}>
-                                                <div className={`w-5 h-5 bg-white rounded-full shadow-md transform transition-transform ${formState.saveToLibrary ? 'translate-x-5' : 'translate-x-0'} mt-0.5 ml-0.5`}></div>
-                                            </div>
-                                        </label>
-                                    </div>
-                                </div>
-                            </div>
-                            {renderAnswerSection}
-                            <motion.button
-                                whileHover={{ scale: 1.05 }}
-                                whileTap={{ scale: 0.95 }}
-                                onClick={handleSave}
-                                className="mt-4 ml-auto w-[124px] h-[37px] grid place-content-center bg-[#1EA378] text-white rounded-full text-sm font-medium"
-                            >
-                                Add Question
-                            </motion.button>
-                        </div>
+                                {renderAnswerSection}
+                                <motion.button
+                                    type="submit"
+                                    whileHover={{ scale: 1.05 }}
+                                    whileTap={{ scale: 0.95 }}
+                                    className="mt-4 ml-auto w-[124px] h-[37px] grid place-content-center bg-[#1EA378] text-white rounded-full text-sm font-medium"
+                                >
+                                    {isEdit ? 'Update Question' : 'Add Question'}
+                                </motion.button>
+                            </form>
+                        </FormProvider>
                     </div>
                 )}
             </DialogContent>

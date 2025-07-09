@@ -114,6 +114,7 @@ const Step3 = ({ assessmentId = 14 }) => {
     };
     // For edit
     const handleEdit = (question) => {
+        console.log('Editing question:', question);
         const typeDef = getTypeDef(question);
         const type = typeDef?.type;
         console.log(type); // This should now log the correct type

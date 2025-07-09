@@ -119,6 +119,7 @@ import { useState, useEffect } from "react";
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import AddOptionButton from '../../shared/AddOptionButton';
+import { cn } from '@/lib/utils';
 
 const MultipleSelectAnswers = ({
     answers,
@@ -126,9 +127,12 @@ const MultipleSelectAnswers = ({
     onAnswersChange,
     onSelectedChange,
     showShuffleToggle,
-    length
+    shuffleEnabled,
+    setShuffleEnabled,
+    length,
+    error
 }) => {
-    const [shuffleEnabled, setShuffleEnabled] = useState(false);
+    // const [shuffleEnabled, setShuffleEnabled] = useState(false);
     const [shuffledOptions, setShuffledOptions] = useState([]);
 
     useEffect(() => {
@@ -148,9 +152,10 @@ const MultipleSelectAnswers = ({
     };
 
     const handleAddOption = () => {
-        const maxId = Math.max(...answers.map(answer => parseInt(answer.id) || 0));
+        // Find the minimum id (for negative id generation)
+        const minId = Math.min(0, ...answers.map(answer => Number(answer.id) || 0));
         const newAnswer = {
-            id: (maxId + 1).toString(),
+            id: minId - 1, // e.g., -1, -2, -3, etc.
             text: ''
         };
         onAnswersChange([...answers, newAnswer]);
@@ -215,7 +220,12 @@ const MultipleSelectAnswers = ({
                             type="text"
                             value={answer.text}
                             onChange={(e) => handleAnswerTextChange(answer.id, e.target.value)}
-                            className="p-3 flex-1 rounded-xl text-greyAccent font-medium text-sm border border-seperatorPrimary focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                            className={cn(
+                                "p-3 flex-1 rounded-xl text-greyAccent font-medium text-sm border border-seperatorPrimary focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500",
+                                {
+                                    "border-dangerPrimary": !answer.text.trim()
+                                }
+                            )}
                             placeholder={`Option ${index + 1}`}
                         />
                         <RemoveOptionButton handleRemove={() => handleRemoveOption(answer.id)} canRemove={answers.length > length} />
