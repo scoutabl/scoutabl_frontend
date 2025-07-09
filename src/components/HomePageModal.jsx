@@ -1,19 +1,19 @@
 import React, { useState, useRef, useEffect, useMemo } from "react";
-import codingIcon from "/codingIcon.svg";
-import bulbIcon from "/bulbIcon.svg";
-import breifcaseIcon from "/breifcaseIcon.svg";
+import { motion } from "framer-motion";
 import bottomBg from "/bottomBackground.svg";
-import rocketIcon from "/rocketIcon.svg";
-import arrowIcon from "/arrowIcon.svg";
-import userIcon from "/userIcon.svg";
-import terminalIcon from "/terminalIcon.svg";
 import { Button } from "./ui/button";
 import { ChevronRight, ChevronLeft } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
-import { cn } from "@/lib/utils";
+import { AnimatePresence } from "framer-motion";
 import { useEnums } from "@/context/EnumsContext";
 import { surveyAPI } from "@/api/onboarding/survey";
-import { useQuery } from "@tanstack/react-query";
+import Card from "./ui/card";
+import HorizontalCard from "./ui/horizontal-card";
+import CodingIcon from '../../public/codingIcon.svg?react';
+import BulbIcon from '../../public/bulbIcon.svg?react';
+import BreifcaseIcon from '../../public/breifcaseIcon.svg?react';
+import RocketIcon from '../../public/rocketIcon.svg?react';
+import ArrowIcon from '../../public/arrowIcon.svg?react';
+import TerminalIcon from '../../public/terminalIcon.svg?react';
 
 const modalVariants = {
   hidden: {
@@ -64,52 +64,50 @@ const LAUNCH = "launch";
 
 const HomePageModal = ({ onClose }) => {
   const { resolveEnum, enumsLoading } = useEnums();
-  const [ config, setConfig ] = useState(null);
-  const [ page, setPage ] = useState(null);
-  const [selectedOption, setSelectedOption] = useState(null);
-  const [currentStep, setCurrentStep] = useState("test");
-  const [direction, setDirection] = useState(0);
+  const [page, setPage] = useState(null);
+  const [selectedOptions, setSelectedOptions] = useState([]);
   const modalRef = useRef(null);
 
   useEffect(() => {
     surveyAPI.getOrCreateOnboardingConfig().then((config) => {
-      setConfig(config);
       setPage(config.extra.assessmentOnboarding.page);
     });
   }, []);
 
   const SURVEY_PAGES = useMemo(() => {
     const pages = {
-      test: {
-        title: "Which kind of test fits your #hiring flow?",
-        subtitle: "These answers help Scoutabl shape an experience that fits you like a tailored suit",
-        hint: "minus the stitching",
-        options: [
-          {
-            id: "coding",
-            title: "Coding Challenges",
-            description: "Test technical chops and problem-solving",
-            icon: codingIcon,
-            value: resolveEnum("UserSurveyTestType.CODING_CHALLENGE"),
-          },
-          {
-            id: "soft",
-            title: "Soft Skills & Personality",
-            description: "Gauge communication, empathy, and traits",
-            icon: bulbIcon,
-            value: resolveEnum(
-              "UserSurveyTestType.SOFT_SKILLS_AND_PERSONALITY"
-            ),
-          },
-          {
-            id: "business",
-            title: "Business & Case Scenarios",
-            description: "Assess strategic thinking and decision-making",
-            icon: breifcaseIcon,
-            value: resolveEnum("UserSurveyTestType.BUSINESS_CASE_SCENARIOS"),
-          },
-        ],
-      },
+      // test: {
+      //   title: "Which kind of test fits your #hiring flow?",
+      //   subtitle:
+      //     "These answers help Scoutabl shape an experience that fits you like a tailored suit",
+      //   hint: "minus the stitching",
+      //   options: [
+      //     {
+      //       id: "coding",
+      //       title: "Coding Challenges",
+      //       description: "Test technical chops and problem-solving",
+      //       Icon: CodingIcon,
+      //       value: resolveEnum("UserSurveyTestType.CODING_CHALLENGE"),
+      //     },
+      //     {
+      //       id: "soft",
+      //       title: "Soft Skills & Personality",
+      //       description: "Gauge communication, empathy, and traits",
+      //       Icon: BulbIcon,
+      //       value: resolveEnum(
+      //         "UserSurveyTestType.SOFT_SKILLS_AND_PERSONALITY"
+      //       ),
+      //     },
+      //     {
+      //       id: "business",
+      //       title: "Business & Case Scenarios",
+      //       description: "Assess strategic thinking and decision-making",
+      //       Icon: BreifcaseIcon,
+      //       value: resolveEnum("UserSurveyTestType.BUSINESS_CASE_SCENARIOS"),
+      //     },
+      //   ],
+        
+      // },
       role: {
         title: "Which best describes your #role?",
         subtitle:
@@ -120,34 +118,33 @@ const HomePageModal = ({ onClose }) => {
             id: "hiring-manager",
             title: "Hiring Manager / Team Lead",
             description: "Making the final calls on top talent",
-            icon: rocketIcon,
+            Icon: RocketIcon,
             value: resolveEnum("UserSurveyRole.HIRING_MANAGER"),
           },
           {
             id: "tech-recruiter",
             title: "Tech Recruiter / Engineering",
             description: "Building the dream team from scratch",
-            icon: terminalIcon,
+            Icon: TerminalIcon,
             value: resolveEnum("UserSurveyRole.TECH_RECRUITER"),
           },
           {
             id: "talent-acquisition",
             title: "HR / Talent Acquisition",
             description: "Streamlining recruitment and people ops",
-            icon: arrowIcon,
+            Icon: ArrowIcon,
             value: resolveEnum("UserSurveyRole.TALENT_ACQUISITION_SPECIALIST"),
           },
           {
             id: "other",
             title: "Other",
             description: "Founders looking to take charge",
-            icon: rocketIcon,
+            Icon: RocketIcon,
             value: resolveEnum("UserSurveyRole.OTHER"),
           },
         ],
       },
     };
-    console.debug("pages", pages, "enumsLoading", enumsLoading);
     return pages;
   }, [enumsLoading]);
 
@@ -163,19 +160,10 @@ const HomePageModal = ({ onClose }) => {
   }, [onClose]);
 
   const handleNext = () => {
-    if (selectedOption) {
-      setDirection(1);
-      setCurrentStep("role");
-    }
-  };
-
-  const handleBack = () => {
-    setDirection(-1);
-    setCurrentStep("test");
-  };
-
-  const handleRoleSelect = (roleId) => {
-    onClose();
+    // if (selectedOption) {
+    //   setDirection(1);
+    //   setCurrentStep("role");
+    // }
   };
 
   const containerVariants = {
@@ -190,16 +178,13 @@ const HomePageModal = ({ onClose }) => {
     },
   };
 
-  const itemVariants = {
-    hidden: { opacity: 0, y: 20 },
-    show: { opacity: 1, transition: { duration: 0.5 }, y: 0 },
-  };
-
   const renderPage = page != null ? SURVEY_PAGES[page] : null;
   let title1, title2;
   if (renderPage) {
     [title1, title2] = renderPage.title.split("#");
   }
+  const nextDisabled = selectedOptions.length === 0;
+  const showHorizontalCard = renderPage && renderPage.options.length > 3;
 
   return (
     <motion.div
@@ -211,11 +196,10 @@ const HomePageModal = ({ onClose }) => {
       ref={modalRef}
       style={{ willChange: "transform" }}
     >
-      <AnimatePresence mode="wait" custom={direction}>
+      <AnimatePresence mode="wait">
         {renderPage ? (
           <motion.div
             key="test-content"
-            custom={direction}
             variants={stepVariants}
             initial="enter"
             animate="center"
@@ -250,58 +234,87 @@ const HomePageModal = ({ onClose }) => {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.4, delay: 0.4 }}
               >
-                {renderPage.subtitle}<br />
-                <motion.p className="italic">
-                — {renderPage.hint}
-                </motion.p>
+                {renderPage.subtitle}
+                <br />
+                <motion.span className="italic">
+                  — {renderPage.hint}
+                </motion.span>
               </motion.p>
             </motion.div>
             <motion.div
-              className="flex items-center justify-between gap-10"
+              className={showHorizontalCard ? "flex flex-wrap gap-6 justify-center items-center z-10" : "flex flex-row items-center justify-between gap-10 z-10"}
               variants={containerVariants}
               initial="hidden"
               animate="show"
             >
-              {renderPage.options.map((option) => (
-                <motion.div
-                  key={option.id}
-                  variants={itemVariants}
-                  onClick={() => setSelectedOption(option.id)}
-                  className={cn(
-                    "h-full w-65 px-[22px] py-[65px] flex flex-col items-center justify-center gap-3 [box-shadow:0px_16px_24px_rgba(0,_0,_0,_0.06),_0px_2px_6px_rgba(0,_0,_0,_0.04)] border rounded-[16px] bg-white hover:bg-[#FAEEFF] transition-all duration-300 ease-in-out group text-center cursor-pointer z-10",
-                    selectedOption === option.id
-                      ? "bg-[#FAEEFF] border-[#9B71F7]"
-                      : "bg-white border-black/10 hover:border-[#9B71F7]"
-                  )}
-                >
-                  <img
-                    src={option.icon}
-                    alt={`${option.title} Icon`}
-                    className={`w-12 h-12 mb-3 transition-colors duration-300 ${
-                      selectedOption === option.id
-                        ? "[filter:invert(41%)_sepia(56%)_saturate(1009%)_hue-rotate(226deg)_brightness(94%)_contrast(94%)]"
-                        : "group-hover:[filter:invert(41%)_sepia(56%)_saturate(1009%)_hue-rotate(226deg)_brightness(94%)_contrast(94%)]"
-                    }`}
-                  />
-                  <h4 className="font-semibold text-[#333333]">
-                    {option.title}
-                  </h4>
-                  <span className="font-normal text-[13px] text-[#5C5C5C] text-center">
-                    {option.description}
-                  </span>
-                </motion.div>
-              ))}
+              {!showHorizontalCard
+                ? renderPage.options.map((option) => (
+                    <Card
+                      key={option.id}
+                      title={option.title}
+                      description={option.description}
+                      Icon={(props) => (
+                        <option.Icon
+                          {...props}
+                          fill={selectedOptions.includes(option.value) ? "#8B5CF6" : undefined}
+                          stroke={selectedOptions.includes(option.value) ? "#8B5CF6" : undefined}
+                        />
+                      )}
+                      selected={selectedOptions.includes(option.value)}
+                      onClick={() => {
+                        if (selectedOptions.includes(option.value)) {
+                          setSelectedOptions(
+                            selectedOptions.filter((value) => value !== option.value)
+                          );
+                        } else {
+                          setSelectedOptions([...selectedOptions, option.value]);
+                        }
+                      }}
+                    />
+                  ))
+                : renderPage.options.reduce((rows, option, idx) => {
+                    if (idx % 2 === 0) rows.push([option]);
+                    else rows[rows.length - 1].push(option);
+                    return rows;
+                  }, []).map((row, rowIdx) => (
+                    <div key={rowIdx} className="flex flex-row justify-center gap-6 w-full mb-4 mx-10">
+                      {row.map((option) => (
+                        <HorizontalCard
+                          key={option.id}
+                          title={option.title}
+                          description={option.description}
+                          Icon={(props) => (
+                            <option.Icon
+                              {...props}
+                              fill={selectedOptions.includes(option.value) ? "#8B5CF6" : undefined}
+                              stroke={selectedOptions.includes(option.value) ? "#8B5CF6" : undefined}
+                            />
+                          )}
+                          selected={selectedOptions.includes(option.value)}
+                          onClick={() => {
+                            if (selectedOptions.includes(option.value)) {
+                              setSelectedOptions(
+                                selectedOptions.filter((value) => value !== option.value)
+                              );
+                            } else {
+                              setSelectedOptions([...selectedOptions, option.value]);
+                            }
+                          }}
+                        />
+                      ))}
+                    </div>
+                  ))}
             </motion.div>
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.4, delay: 2.5 }}
+              transition={{ duration: 0.4, delay: 0.7 }}
             >
               <Button
                 onClick={handleNext}
-                disabled={!selectedOption}
+                disabled={nextDisabled}
                 className={`bg-[#8B5CF6] hover:bg-[#8B5CF6]/90 text-white rounded-full px-3 py-[6px] h-[33px] w-[83px] ${
-                  !selectedOption && "opacity-50 cursor-not-allowed"
+                  nextDisabled && "opacity-50 cursor-not-allowed"
                 }`}
               >
                 Next
@@ -309,7 +322,9 @@ const HomePageModal = ({ onClose }) => {
               </Button>
             </motion.div>
           </motion.div>
-        ) : (<p>TODO: Display Loading Icon</p>)}
+        ) : (
+          <p>TODO: Display Loading Icon</p>
+        )}
       </AnimatePresence>
 
       <motion.img

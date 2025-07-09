@@ -14,7 +14,7 @@ class SurveyAPI extends BaseAPI {
             const res = await this.post(ONBOARDING_CONFIG_URL, {
                 extra: {
                     assessmentOnboarding: {
-                        page: "test"
+                        page: "role"
                     }
                 }
             });
