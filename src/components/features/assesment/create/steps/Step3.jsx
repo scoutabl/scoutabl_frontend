@@ -37,7 +37,7 @@ const Step3 = ({ assessmentId = 14 }) => {
         if (q.resourcetype === 'RatingQuestion') {
             return allTypeDefs.find(typeDef => typeDef.type === 'rating');
         }
-        if (q.resourcetype === 'NumericInputQuestion') {
+        if (q.resourcetype === 'NumberQuestion') {
             return allTypeDefs.find(typeDef => typeDef.type === 'numeric-input');
         }
         if (q.resourcetype === 'EssayQuestion') {

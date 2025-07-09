@@ -52,10 +52,12 @@ const NumericInputAnswers = ({ correctAnswer, onAnswerChange, numericCondition, 
                         <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                        <SelectItem value="more-than">More than</SelectItem>
-                        <SelectItem value="less-than">Less than</SelectItem>
-                        <SelectItem value="equal-to">More than/ equal to</SelectItem>
-                        <SelectItem value="between">Less than/ equal to</SelectItem>
+                        <SelectItem value="0">Less than</SelectItem>
+                        <SelectItem value="1">Less than or Equal</SelectItem>
+                        <SelectItem value="2">Greater than</SelectItem>
+                        <SelectItem value="3">Greater than or Equal</SelectItem>
+                        <SelectItem value="4">Equal</SelectItem>
+                        <SelectItem value="5">Not Equal</SelectItem>
                     </SelectContent>
                 </Select>
                 <Input

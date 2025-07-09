@@ -54,7 +54,7 @@ const useQuestionForm = (initialData, initialQuestion) => {
     const [selectedAnswer, setSelectedAnswer] = useState(initialData.selectedAnswer || '');
     const [selectedRating, setSelectedRating] = useState(initialData.selectedRating || null);
     const [correctAnswer, setCorrectAnswer] = useState(initialData.correctAnswer || '000.00');
-    const [numericCondition, setNumericCondition] = useState("more-than");
+    const [numericCondition, setNumericCondition] = useState("0");
     const [post, setPost] = useState(initialData.question || initialQuestion);
     const [rearrangeOptions, setRearrangeOptions] = useState([
         { id: 1, text: '' },
@@ -191,6 +191,20 @@ const QuestionModal = memo(({
                 options
             };
 
+            addQuestionMutation.mutate(payload);
+            return;
+        }
+
+        if (questionType === 'numeric-input') {
+            const payload = {
+                "resourcetype": "NumberQuestion",
+                completion_time,
+                "save_template": formState.saveToLibrary,
+                "title": formState.post,
+                "content": formState.post,
+                "value": formState.correctAnswer,
+                "condition": formState.numericCondition
+            }
             addQuestionMutation.mutate(payload);
             return;
         }

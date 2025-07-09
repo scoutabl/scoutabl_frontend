@@ -1,7 +1,7 @@
 import React, { createContext, useState, useContext, useEffect, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-
+import { BASE_API_URL } from '@/lib/constants';
 const AuthContext = createContext(null);
 
 export const useAuth = () => useContext(AuthContext);
@@ -11,7 +11,6 @@ const MAX_LOGIN_ATTEMPTS = 5;
 const LOCKOUT_DURATION = 15 * 60 * 1000; // 15 minutes
 const TOKEN_REFRESH_BUFFER = 5 * 60 * 1000; // 5 minutes before expiry
 const IDLE_TIMEOUT = 30 * 60 * 1000; // 30 minutes
-const BASE_API_URL = import.meta.env.VITE_API_BASE_URL
 
 export const AuthProvider = ({ children }) => {
     const [user, setUser] = useState(null);
