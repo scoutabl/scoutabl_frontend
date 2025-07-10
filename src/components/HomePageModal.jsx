@@ -493,16 +493,6 @@ const HomePageModal = ({ onClose }) => {
                         Icon={(props) => (
                           <option.Icon
                             {...props}
-                            fill={
-                              selectedOptionValues.includes(option.value)
-                                ? "#8B5CF6"
-                                : undefined
-                            }
-                            stroke={
-                              selectedOptionValues.includes(option.value)
-                                ? "#8B5CF6"
-                                : undefined
-                            }
                           />
                         )}
                         selected={selectedOptionValues.includes(option.value)}
@@ -528,16 +518,7 @@ const HomePageModal = ({ onClose }) => {
                               Icon={(props) => (
                                 <option.Icon
                                   {...props}
-                                  fill={
-                                    selectedOptionValues.includes(option.value)
-                                      ? "#8B5CF6"
-                                      : undefined
-                                  }
-                                  stroke={
-                                    selectedOptionValues.includes(option.value)
-                                      ? "#8B5CF6"
-                                      : undefined
-                                  }
+                                  className={`${selectedOptionValues.includes(option.value) ? "text-purplePrimary" : ""}`}
                                 />
                               )}
                               selected={selectedOptionValues.includes(
