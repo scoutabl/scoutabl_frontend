@@ -313,7 +313,8 @@ const HomePageModal = ({ onClose }) => {
   };
 
   const handleBack = () => {
-    const prevPage = renderPage.prevPage || config?.extra?.assessmentOnboarding?.prevPage;
+    const prevPage =
+      renderPage.prevPage || config?.extra?.assessmentOnboarding?.prevPage;
     if (!prevPage) {
       console.warn("No previous page found");
       return;
@@ -321,7 +322,7 @@ const HomePageModal = ({ onClose }) => {
 
     setPage(prevPage);
     setSelectedOptionValues([]);
-  }
+  };
 
   const getSelectHandler = (option) => {
     return () => {
@@ -520,19 +521,22 @@ const HomePageModal = ({ onClose }) => {
                 </div>
               </motion.div>
             ) : null}
-            <motion.div className="flex flex-row items-center gap-2 text-sm">
-              <InfoIcon />
-              <motion.p className="text-purplePrimary">
-                You can select multiple options
-              </motion.p>
-            </motion.div>
+            {renderPage.multiselect && (
+              <motion.div className="flex flex-row items-center gap-2 text-sm">
+                <InfoIcon />
+                <motion.p className="text-purplePrimary">
+                  You can select multiple options
+                </motion.p>
+              </motion.div>
+            )}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.4, delay: 0.7 }}
               className="flex flex-row gap-5 items-center"
             >
-              {(renderPage.prevPage || config?.extra?.assessmentOnboarding?.prevPage) && (
+              {(renderPage.prevPage ||
+                config?.extra?.assessmentOnboarding?.prevPage) && (
                 <Button
                   onClick={handleBack}
                   className={`bg-white border border-purplePrimary hover:bg-white text-purplePrimary rounded-full px-3 py-[6px] h-[33px] w-[83px]}`}
