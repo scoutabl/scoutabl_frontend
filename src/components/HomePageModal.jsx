@@ -2,18 +2,28 @@ import React, { useState, useRef, useEffect, useMemo } from "react";
 import { motion } from "framer-motion";
 import bottomBg from "/bottomBackground.svg";
 import { Button } from "./ui/button";
-import { ChevronRight, ChevronLeft } from "lucide-react";
+import { ChevronRight, ChevronLeft, Info } from "lucide-react";
 import { AnimatePresence } from "framer-motion";
 import { useEnums } from "@/context/EnumsContext";
 import { surveyAPI } from "@/api/onboarding/survey";
 import Card from "./ui/card";
+import { SCOUTABL_PURPLE } from "@/lib/constants";
 import HorizontalCard from "./ui/horizontal-card";
-import CodingIcon from '../../public/codingIcon.svg?react';
-import BulbIcon from '../../public/bulbIcon.svg?react';
-import BreifcaseIcon from '../../public/breifcaseIcon.svg?react';
-import RocketIcon from '../../public/rocketIcon.svg?react';
-import ArrowIcon from '../../public/arrowIcon.svg?react';
-import TerminalIcon from '../../public/terminalIcon.svg?react';
+import CodingIcon from "../../public/codingIcon.svg?react";
+import BulbIcon from "../../public/bulbIcon.svg?react";
+import BreifcaseIcon from "../../public/breifcaseIcon.svg?react";
+import RocketIcon from "../../public/rocketIcon.svg?react";
+import ArrowIcon from "../../public/arrowIcon.svg?react";
+import TerminalIcon from "../../public/terminalIcon.svg?react";
+import InfoIcon from "../../public/infoIcon.svg?react";
+import ChatIcon from "../../public/chatIcon.svg?react";
+import FlagIcon from "../../public/flagIcon.svg?react";
+import LayersIcon from "../../public/layersIcon.svg?react";
+import CodeIcon from "../../public/codeIcon.svg?react";
+import DoubleCheckIcon from "../../public/doubleCheckIcon.svg?react";
+import CirclesIcon from "../../public/circlesIcon.svg?react";
+import CommunityIcon from "../../public/communityIcon.svg?react";
+import UserIcon from "../../public/userIcon.svg?react";
 
 const modalVariants = {
   hidden: {
@@ -62,10 +72,16 @@ const PRIORITOES = "priorities";
 const GOALS = "goals";
 const LAUNCH = "launch";
 
+// Page types
+const CHOICE_PAGE = "choice";
+const TEXT_FEEDBACK = "text-feedback";
+const CTA = "cta";
+
 const HomePageModal = ({ onClose }) => {
   const { resolveEnum, enumsLoading } = useEnums();
   const [page, setPage] = useState(null);
-  const [selectedOptions, setSelectedOptions] = useState([]);
+  const [selectedOptionValues, setSelectedOptionValues] = useState([]);
+  const [selectedDetails, setSelectedDetails] = useState({});
   const modalRef = useRef(null);
 
   useEffect(() => {
@@ -76,50 +92,21 @@ const HomePageModal = ({ onClose }) => {
 
   const SURVEY_PAGES = useMemo(() => {
     const pages = {
-      // test: {
-      //   title: "Which kind of test fits your #hiring flow?",
-      //   subtitle:
-      //     "These answers help Scoutabl shape an experience that fits you like a tailored suit",
-      //   hint: "minus the stitching",
-      //   options: [
-      //     {
-      //       id: "coding",
-      //       title: "Coding Challenges",
-      //       description: "Test technical chops and problem-solving",
-      //       Icon: CodingIcon,
-      //       value: resolveEnum("UserSurveyTestType.CODING_CHALLENGE"),
-      //     },
-      //     {
-      //       id: "soft",
-      //       title: "Soft Skills & Personality",
-      //       description: "Gauge communication, empathy, and traits",
-      //       Icon: BulbIcon,
-      //       value: resolveEnum(
-      //         "UserSurveyTestType.SOFT_SKILLS_AND_PERSONALITY"
-      //       ),
-      //     },
-      //     {
-      //       id: "business",
-      //       title: "Business & Case Scenarios",
-      //       description: "Assess strategic thinking and decision-making",
-      //       Icon: BreifcaseIcon,
-      //       value: resolveEnum("UserSurveyTestType.BUSINESS_CASE_SCENARIOS"),
-      //     },
-      //   ],
-        
-      // },
-      role: {
+      [ROLE]: {
         title: "Which best describes your #role?",
         subtitle:
           "Your role helps Scoutabl customize the experience to suit your needs —no fine-tuning necessary.",
         hint: "no fine-tuning necessary.",
+        pageType: CHOICE_PAGE,
+        field: "roles",
         options: [
           {
             id: "hiring-manager",
             title: "Hiring Manager / Team Lead",
             description: "Making the final calls on top talent",
-            Icon: RocketIcon,
+            Icon: UserIcon,
             value: resolveEnum("UserSurveyRole.HIRING_MANAGER"),
+            nextPage: CAPABILITY,
           },
           {
             id: "tech-recruiter",
@@ -127,6 +114,7 @@ const HomePageModal = ({ onClose }) => {
             description: "Building the dream team from scratch",
             Icon: TerminalIcon,
             value: resolveEnum("UserSurveyRole.TECH_RECRUITER"),
+            nextPage: SKILLS,
           },
           {
             id: "talent-acquisition",
@@ -134,6 +122,7 @@ const HomePageModal = ({ onClose }) => {
             description: "Streamlining recruitment and people ops",
             Icon: ArrowIcon,
             value: resolveEnum("UserSurveyRole.TALENT_ACQUISITION_SPECIALIST"),
+            nextPage: PRIORITOES,
           },
           {
             id: "other",
@@ -141,8 +130,118 @@ const HomePageModal = ({ onClose }) => {
             description: "Founders looking to take charge",
             Icon: RocketIcon,
             value: resolveEnum("UserSurveyRole.OTHER"),
+            nextPage: GOALS,
           },
         ],
+      },
+      [CAPABILITY]: {
+        title: "What capability do you want to #evaluate?",
+        description:
+          "These answers help Scoutabl shape an experience that fits you like a tailored suit",
+        hint: "minus the stitching",
+        pageType: CHOICE_PAGE,
+        field: "capabilities",
+        multiselect: true,
+        options: [
+          {
+            id: "decision-making",
+            title: "Decision Making",
+            description: "Measure judgment to empower better outcomes",
+            Icon: CirclesIcon,
+            value: resolveEnum("UserSurveyCapability.DECISION_MAKING"),
+          },
+          {
+            id: "conflict-resolution",
+            title: "Conflict Resolution",
+            description:
+              "Measure ability to resolve tension & strengthen team dynamics",
+            Icon: ChatIcon,
+            value: resolveEnum("UserSurveyCapability.CONFLICT_RESOLUTION"),
+          },
+          {
+            id: "leadership",
+            title: "Leadership",
+            description: "Evaluate real leaders with measurable impact",
+            Icon: FlagIcon,
+            value: resolveEnum("UserSurveyCapability.LEADERSHIP"),
+          },
+        ],
+      },
+      [SKILLS]: {
+        title: "What matter most to you in #skills?",
+        description:
+          "These answers help Scoutabl shape an experience that fits you like a tailored suit",
+        hint: "minus the stitching",
+        pageType: CHOICE_PAGE,
+        field: "skills_technical",
+        multiselect: true,
+        options: [
+          {
+            id: "dsa",
+            title: "Data Structures & Algorithms",
+            description:
+              "Assess talent through intelligent algorithmic insights",
+            Icon: LayersIcon,
+            value: resolveEnum("UserSurveyTechnicalSkill.DSA"),
+          },
+          {
+            id: "code-quality",
+            title: "Code Quality",
+            description: "Hire developers who write clean & organized code",
+            Icon: CodeIcon,
+            value: resolveEnum("UserSurveyTechnicalSkill.CODE_QUALITY"),
+          },
+          {
+            id: "code-exec",
+            title: "Code Execution",
+            description:
+              "Test executional capabilities that deliver excellence",
+            Icon: DoubleCheckIcon,
+            value: resolveEnum("UserSurveyTechnicalSkill.CODE_EXECUTION"),
+          },
+        ],
+      },
+      [PRIORITOES]: {
+        title: "Which tests are typically your top #priorities?",
+        description:
+          "These answers help Scoutabl shape an experience that fits you like a tailored suit",
+        hint: "minus the stitching",
+        pageType: CHOICE_PAGE,
+        fields: "priorities",
+        multiselect: true,
+        options: [
+          {
+            id: "culture",
+            title: "Culture & Psychometric Tests",
+            description: "Culture-driven. Science-backed hiring power",
+            Icon: CommunityIcon,
+            value: resolveEnum(
+              "UserSurveyPriorities.CULTURE_AND_PSYCHOMETRICS"
+            ),
+          },
+          {
+            id: "emotional",
+            title: "Emotional Intelligence Tests",
+            description: "Decode emotion. Drive team harmony",
+            Icon: BulbIcon,
+            value: resolveEnum("UserSurveyPriorities.EMOTIONAL_INTELLIGENCE"),
+          },
+          {
+            id: "role-specific",
+            title: "Role Specific Skills Tests",
+            description: "Reduce risky bad hires. Build dream teams",
+            Icon: BreifcaseIcon,
+            value: resolveEnum("UserSurveyPriorities.ROLE_SPECIFIC_SKILLS"),
+          },
+        ],
+      },
+      [GOALS]: {
+        title: "Tell us what you want to #achieve?",
+        description:
+          "These answers help Scoutabl shape an experience that fits you like a tailored suit",
+        hint: "minus the stitching",
+        pageType: TEXT_FEEDBACK,
+        field: "goals",
       },
     };
     return pages;
@@ -183,7 +282,7 @@ const HomePageModal = ({ onClose }) => {
   if (renderPage) {
     [title1, title2] = renderPage.title.split("#");
   }
-  const nextDisabled = selectedOptions.length === 0;
+  const nextDisabled = selectedOptionValues.length === 0;
   const showHorizontalCard = renderPage && renderPage.options.length > 3;
 
   return (
@@ -242,7 +341,11 @@ const HomePageModal = ({ onClose }) => {
               </motion.p>
             </motion.div>
             <motion.div
-              className={showHorizontalCard ? "flex flex-wrap gap-6 justify-center items-center z-10" : "flex flex-row items-center justify-between gap-10 z-10"}
+              className={
+                showHorizontalCard
+                  ? "flex flex-wrap gap-6 justify-center items-center z-10"
+                  : "flex flex-row items-center justify-between gap-10 z-10"
+              }
               variants={containerVariants}
               initial="hidden"
               animate="show"
@@ -256,54 +359,98 @@ const HomePageModal = ({ onClose }) => {
                       Icon={(props) => (
                         <option.Icon
                           {...props}
-                          fill={selectedOptions.includes(option.value) ? "#8B5CF6" : undefined}
-                          stroke={selectedOptions.includes(option.value) ? "#8B5CF6" : undefined}
+                          fill={
+                            selectedOptionValues.includes(option.value)
+                              ? "#8B5CF6"
+                              : undefined
+                          }
+                          stroke={
+                            selectedOptionValues.includes(option.value)
+                              ? "#8B5CF6"
+                              : undefined
+                          }
                         />
                       )}
-                      selected={selectedOptions.includes(option.value)}
+                      selected={selectedOptionValues.includes(option.value)}
                       onClick={() => {
-                        if (selectedOptions.includes(option.value)) {
-                          setSelectedOptions(
-                            selectedOptions.filter((value) => value !== option.value)
+                        const selectedDetails = {
+                          nextPage: option.nextPage,
+                          field: renderPage.field,
+                        }
+                        if (selectedOptionValues.includes(option.value)) {
+                          if (!renderPage.multiselect) {
+                            setSelectedOptionValues([option.value]);
+                            return;
+                          }
+
+                          setSelectedOptionValues(
+                            selectedOptionValues.filter(
+                              (value) => value !== option.value
+                            )
                           );
                         } else {
-                          setSelectedOptions([...selectedOptions, option.value]);
+                          setSelectedOptionValues([
+                            ...selectedOptionValues,
+                            option.value,
+                          ]);
                         }
                       }}
                     />
                   ))
-                : renderPage.options.reduce((rows, option, idx) => {
-                    if (idx % 2 === 0) rows.push([option]);
-                    else rows[rows.length - 1].push(option);
-                    return rows;
-                  }, []).map((row, rowIdx) => (
-                    <div key={rowIdx} className="flex flex-row justify-center gap-6 w-full mb-4 mx-10">
-                      {row.map((option) => (
-                        <HorizontalCard
-                          key={option.id}
-                          title={option.title}
-                          description={option.description}
-                          Icon={(props) => (
-                            <option.Icon
-                              {...props}
-                              fill={selectedOptions.includes(option.value) ? "#8B5CF6" : undefined}
-                              stroke={selectedOptions.includes(option.value) ? "#8B5CF6" : undefined}
-                            />
-                          )}
-                          selected={selectedOptions.includes(option.value)}
-                          onClick={() => {
-                            if (selectedOptions.includes(option.value)) {
-                              setSelectedOptions(
-                                selectedOptions.filter((value) => value !== option.value)
-                              );
-                            } else {
-                              setSelectedOptions([...selectedOptions, option.value]);
-                            }
-                          }}
-                        />
-                      ))}
-                    </div>
-                  ))}
+                : renderPage.options
+                    .reduce((rows, option, idx) => {
+                      if (idx % 2 === 0) rows.push([option]);
+                      else rows[rows.length - 1].push(option);
+                      return rows;
+                    }, [])
+                    .map((row, rowIdx) => (
+                      <div
+                        key={rowIdx}
+                        className="flex flex-row justify-center gap-6 w-full mb-4 mx-10"
+                      >
+                        {row.map((option) => (
+                          <HorizontalCard
+                            key={option.id}
+                            title={option.title}
+                            description={option.description}
+                            Icon={(props) => (
+                              <option.Icon
+                                {...props}
+                                fill={
+                                  selectedOptionValues.includes(option.value)
+                                    ? "#8B5CF6"
+                                    : undefined
+                                }
+                                stroke={
+                                  selectedOptionValues.includes(option.value)
+                                    ? "#8B5CF6"
+                                    : undefined
+                                }
+                              />
+                            )}
+                            selected={selectedOptionValues.includes(option.value)}
+                            onClick={() => {
+                              if (selectedOptionValues.includes(option.value)) {
+                                setSelectedOptionValues(
+                                  selectedOptionValues.filter(
+                                    (value) => value !== option.value
+                                  )
+                                );
+                              } else {
+                                setSelectedOptionValues([
+                                  ...selectedOptionValues,
+                                  option.value,
+                                ]);
+                              }
+                            }}
+                          />
+                        ))}
+                      </div>
+                    ))}
+            </motion.div>
+            <motion.div className="flex flex-row items-center gap-2 text-sm">
+              <InfoIcon />
+              <motion.p>You can select multiple options</motion.p>
             </motion.div>
             <motion.div
               initial={{ opacity: 0, y: 20 }}
@@ -313,7 +460,7 @@ const HomePageModal = ({ onClose }) => {
               <Button
                 onClick={handleNext}
                 disabled={nextDisabled}
-                className={`bg-[#8B5CF6] hover:bg-[#8B5CF6]/90 text-white rounded-full px-3 py-[6px] h-[33px] w-[83px] ${
+                className={`bg-[${SCOUTABL_PURPLE}] hover:bg-[${SCOUTABL_PURPLE}]/90 text-white rounded-full px-3 py-[6px] h-[33px] w-[83px] ${
                   nextDisabled && "opacity-50 cursor-not-allowed"
                 }`}
               >
