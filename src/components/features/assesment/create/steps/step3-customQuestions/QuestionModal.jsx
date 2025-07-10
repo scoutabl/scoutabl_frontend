@@ -37,8 +37,8 @@ import Assesment from '../../../Assesment';
 import { getValidationSchema } from './schema/CreateQuestionValidationSchema';
 import { zodResolver } from '@hookform/resolvers/zod';
 const DEFAULT_SINGLE_SELECT_ANSWERS = [
-    { answerid: 1, text: 'Yes' },
-    { answerid: 2, text: 'No' },
+    { answerId: 1, text: 'Yes' },
+    { answerId: 2, text: 'No' },
 ];
 
 const DEFAULT_MULTIPLE_SELECT_ANSWERS = [
@@ -58,12 +58,12 @@ const useQuestionForm = (initialData, initialQuestion, mode, isOpen, questionTyp
 
     const getDefaultValues = () => {
         const defaults = {
-            post: initialData.question || initialQuestion,
+            post: initialData.title || initialQuestion,
             timeToAnswer: Number(initialData.timeToAnswer) || 120,
             customScore: Number(initialData.customScore) || 120,
-            isCompulsory: initialData.isCompulsory || false,
-            saveToLibrary: initialData.saveToLibrary || false,
-            selectedAnswer: '',
+            isCompulsory: initialData.is_compulsory || false,
+            saveToLibrary: initialData.save_template || false,
+            selectedAnswer: null,
             selectedAnswers: [],
             selectedRating: initialData.selectedRating || null,
             correctAnswer: initialData.correctAnswer || '000.00',
@@ -76,18 +76,15 @@ const useQuestionForm = (initialData, initialQuestion, mode, isOpen, questionTyp
             ],
             shuffleEnabled: false,
         };
-
-        // Handle edit mode initialization
         if (mode === 'edit' && initialData.choices) {
             if (questionType === 'single-select') {
                 defaults.singleSelectAnswers = initialData.choices.map(choice => ({
-                    id: Number(choice.id),
-                    text: choice.text
+                    answerId: Number(choice.id),
+                    text: choice.text,
                 }));
                 const correct = initialData.choices.find(c => c.is_correct);
-                defaults.selectedAnswer = correct ? Number(correct.id) : '';
+                defaults.selectedAnswer = correct ? Number(correct.id) : null;
             }
-
             if (questionType === 'multiple-select') {
                 defaults.multipleSelectAnswers = initialData.choices.map(choice => ({
                     id: Number(choice.id),
@@ -97,20 +94,12 @@ const useQuestionForm = (initialData, initialQuestion, mode, isOpen, questionTyp
                     .filter(c => c.is_correct)
                     .map(c => Number(c.id));
             }
-
             defaults.timeToAnswer = convertHHMMSSToMinutes(initialData.completion_time);
             defaults.customScore = initialData.custom_score || 120;
             defaults.isCompulsory = initialData.is_compulsory || false;
             defaults.saveToLibrary = initialData.save_template || false;
             defaults.shuffleEnabled = initialData.shuffle_options || false;
         }
-
-        console.log('Default values:', defaults);
-        console.log('Types:', {
-            timeToAnswer: typeof defaults.timeToAnswer,
-            customScore: typeof defaults.customScore,
-            selectedAnswer: typeof defaults.selectedAnswer
-        });
 
         return defaults;
     };
@@ -143,14 +132,11 @@ const QuestionModal = memo(({
     mode = 'add',
     assessmentId
 }) => {
-    // Remove internal isOpen state
-    // const [isOpen, setIsOpen] = useState(false);
     const form = useQuestionForm(initialData, initialQuestion, mode, isOpen, questionType)
     const { handleSubmit, control, watch, setValue, formState: { errors, isValid } } = form;
     const addQuestionMutation = useAddQuestion(assessmentId, () => { setIsOpen(false); });
     const updateQuestionMutation = useUpdateQuestion(assessmentId, () => { setIsOpen(false); });
     const isEdit = mode === 'edit';
-
     // Use watch to get current form values
     const watchedValues = watch();
 
@@ -159,86 +145,20 @@ const QuestionModal = memo(({
         setValue('post', content);
     };
 
-    // const onSubmit = (data) => {
-    //     console.log('=== DEBUGGING CHOICE SELECTION ===');
-    //     console.log('selectedAnswer:', data.selectedAnswer, 'type:', typeof data.selectedAnswer);
-    //     console.log('singleSelectAnswers:', data.singleSelectAnswers);
-
-    //     // Debug each option
-    //     data.singleSelectAnswers.forEach((opt, index) => {
-    //         console.log(`Option ${index}:`, {
-    //             id: opt.id,
-    //             idType: typeof opt.id,
-    //             text: opt.text,
-    //             isSelected: opt.id === data.selectedAnswer,
-    //             stringComparison: String(opt.id) === String(data.selectedAnswer)
-    //         });
-    //     });
-
-    //     const completion_time = `00:${String(mins).padStart(2, '0')}:00`;
-
-    //     let choices = [];
-    //     let multiple_true = false;
-
-    //     if (questionType === 'multiple-select') {
-    //         choices = data.multipleSelectAnswers.map(opt => {
-    //             const original = initialData.choices?.find(c => Number(c.id) === Number(opt.id));
-    //             return {
-    //                 ...(isEdit && original?.id ? { id: original.id } : {}),
-    //                 text: opt.text,
-    //                 is_correct: data.selectedAnswers.includes(opt.id)
-    //             };
-    //         });
-    //         multiple_true = true;
-    //     } else if (questionType === 'single-select') {
-    //         choices = data.singleSelectAnswers.map(opt => {
-    //             const original = initialData.choices?.find(c => Number(c.id) === Number(opt.id));
-    //             return {
-    //                 ...(isEdit && original?.id ? { id: original.id } : {}),
-    //                 text: opt.text,
-    //                 is_correct: opt.id === data.selectedAnswer
-    //             };
-    //         });
-    //         multiple_true = false;
-    //     }
-
-    //     // Handle different question types
-    //     if (questionType === 'single-select' || questionType === 'multiple-select') {
-    //         const payload = {
-    //             resourcetype: "MCQuestion",
-    //             completion_time,
-    //             save_template: data.saveToLibrary,
-    //             title: data.post,
-    //             multiple_true,
-    //             custom_score: Number(data.customScore),
-    //             is_compulsory: data.isCompulsory,
-    //             choices
-    //         };
-
-    //         if (isEdit) {
-    //             updateQuestionMutation.mutate({ questionId: initialData.id, payload });
-    //         } else {
-    //             addQuestionMutation.mutate(payload);
-    //         }
-    //         return;
-    //     }
     const onSubmit = (data) => {
-        console.log('=== DEBUGGING CHOICE SELECTION ===');
-        console.log('selectedAnswer:', data.selectedAnswer, 'type:', typeof data.selectedAnswer);
-        console.log('singleSelectAnswers:', data.singleSelectAnswers);
-
         // Debug each option with proper type conversion
         data.singleSelectAnswers.forEach((opt, index) => {
             const isSelected = String(opt.answerId) === String(data.selectedAnswer);
-            console.log(`Option ${index}:`, {
-                answerId: opt.answerId,
-                answerIdType: typeof opt.answerId,
-                text: opt.text,
-                selectedAnswer: data.selectedAnswer,
-                selectedAnswerType: typeof data.selectedAnswer,
-                isSelected: isSelected,
-                stringComparison: String(opt.answerId) === String(data.selectedAnswer)
-            });
+            // console.log(`Option ${index}:`, {
+            //     answerId: opt.answerId,
+            //     backendId: opt.answerId, // Add this for debugging
+            //     answerIdType: typeof opt.answerId,
+            //     text: opt.text,
+            //     selectedAnswer: data.selectedAnswer,
+            //     selectedAnswerType: typeof data.selectedAnswer,
+            //     isSelected: isSelected,
+            //     stringComparison: String(opt.answerId) === String(data.selectedAnswer)
+            // });
         });
 
         const mins = parseInt(data.timeToAnswer, 10) || 0;
@@ -259,13 +179,49 @@ const QuestionModal = memo(({
             });
             multiple_true = true;
         } else if (questionType === 'single-select') {
+            // choices = data.singleSelectAnswers.map(opt => {
+            //     // For edit mode, use backendId if available, otherwise let backend create new ID
+            //     return {
+            //         ...(isEdit && opt.backendId ? { id: opt.backendId } : {}),
+            //         text: opt.text,
+            //         is_correct: String(opt.answerId) === String(data.selectedAnswer)
+            //     };
+            // });
+            // multiple_true = false;
+            // choices = data.singleSelectAnswers.map(opt => {
+            //     const choiceData = {
+            //         text: opt.text,
+            //         is_correct: Number(opt.answerId) === Number(data.selectedAnswer)
+            //     };
+
+            //     // Include ID for existing backend choices
+            //     if (mode === 'edit' && opt.isExisting === true) {
+            //         choiceData.id = opt.answerId;
+            //     }
+
+            //     return choiceData;
+            // });
+            // choices = data.singleSelectAnswers.map(opt => {
+            //     const choiceData = {
+            //         text: opt.text,
+            //         is_correct: String(opt.answerId) === String(data.selectedAnswer)
+            //     };
+            //     if (mode === 'edit' && opt.answerId) {
+            //         choiceData.id = opt.answerId; // Only include id if it exists (i.e., backend option)
+            //     }
+            //     return choiceData;
+            // });
             choices = data.singleSelectAnswers.map(opt => {
-                const original = initialData.choices?.find(c => String(c.id) === String(opt.answerId));
-                return {
-                    ...(isEdit && original?.id ? { id: original.id } : {}),
+                const choiceData = {
                     text: opt.text,
                     is_correct: String(opt.answerId) === String(data.selectedAnswer)
                 };
+                // Only include id if it matches a backend id
+                const isBackendId = initialData.choices?.some(c => String(c.id) === String(opt.answerId));
+                if (mode === 'edit' && isBackendId) {
+                    choiceData.id = opt.answerId;
+                }
+                return choiceData;
             });
             multiple_true = false;
         }
@@ -339,10 +295,11 @@ const QuestionModal = memo(({
         // (similar to your existing code)
     };
     const renderAnswerSection = useMemo(() => {
+        console.log('[renderAnswerSection] mode:', mode);
         switch (questionType) {
             case 'single-select':
                 return (
-                    <SingleSelectAnswers
+                    <SingleSelectAnswers mode={mode} />
                     // answers={data.singleSelectAnswers}
                     // selectedAnswer={data.selectedAnswer}
                     // onAnswerChange={data.setSelectedAnswer}
@@ -358,7 +315,7 @@ const QuestionModal = memo(({
                     //         ].filter(Boolean)
                     //         : []
                     // }
-                    />
+
                 );
             // case 'multiple-select':
             //     return (
@@ -482,6 +439,7 @@ const QuestionModal = memo(({
                                     }
                                 )(e);
                             }}>
+
                                 <div className='mb-6 p-3 flex flex-col gap-3 rounded-2xl bg-blueSecondary'>
                                     <div className='flex items-center justify-between'>
                                         <div className='flex'>

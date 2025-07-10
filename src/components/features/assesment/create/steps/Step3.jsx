@@ -38,43 +38,15 @@ const Step3 = ({ assessmentId = 14 }) => {
     // Helper to flatten all question type objects
     const allTypeDefs = questionTypes.flatMap(cat => cat.questions);
 
-    //helper function to get type definition based on question
+    // Updated helper function to get type definition based on question
     const getTypeDef = (q) => {
-        // Map backend resourcetype to your config type
         if (q.resourcetype === 'MCQuestion') {
             return allTypeDefs.find(typeDef =>
-                typeDef.type === (q.multiple_true ? 'multiple-select' : 'single-select')
+                typeDef.resourcetype === 'MCQuestion' &&
+                typeDef.multiple_true === !!q.multiple_true
             );
         }
-        if (q.resourcetype === 'RearrangeQuestion') {
-            return allTypeDefs.find(typeDef => typeDef.type === 'rearrange');
-        }
-        if (q.resourcetype === 'RatingQuestion') {
-            return allTypeDefs.find(typeDef => typeDef.type === 'rating');
-        }
-        if (q.resourcetype === 'NumberQuestion') {
-            return allTypeDefs.find(typeDef => typeDef.type === 'numeric-input');
-        }
-        if (q.resourcetype === 'EssayQuestion') {
-            return allTypeDefs.find(typeDef => typeDef.type === 'essay');
-        }
-        if (q.resourcetype === 'CodeQuestion') {
-            return allTypeDefs.find(typeDef => typeDef.type === 'code');
-        }
-        if (q.resourcetype === 'ExcelQuestion') {
-            return allTypeDefs.find(typeDef => typeDef.type === 'ms-excel');
-        }
-        if (q.resourcetype === 'SheetsQuestion') {
-            return allTypeDefs.find(typeDef => typeDef.type === 'google-sheets');
-        }
-        if (q.resourcetype === 'VideoQuestion') {
-            return allTypeDefs.find(typeDef => typeDef.type === 'video');
-        }
-        if (q.resourcetype === 'AudioQuestion') {
-            return allTypeDefs.find(typeDef => typeDef.type === 'audio');
-        }
-        // fallback
-        return undefined;
+        return allTypeDefs.find(typeDef => typeDef.resourcetype === q.resourcetype);
     };
 
     // Format completion time from "HH:MM" to "X hr Y min"
@@ -337,6 +309,7 @@ const Step3 = ({ assessmentId = 14 }) => {
                 }
             </div>
             <QuestionModal
+                key={modalMode + (modalInitialData?.id || '')}
                 isOpen={modalOpen}
                 setIsOpen={setModalOpen}
                 mode={modalMode}

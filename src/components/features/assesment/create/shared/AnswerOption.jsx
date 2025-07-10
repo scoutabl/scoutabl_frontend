@@ -71,14 +71,15 @@ import { Input } from '@/components/ui/input';
 const AnswerOption = memo(({
     answer,
     index,
-    isSelected,
+    selectedValue,
     onAnswerChange,
     onTextChange,
     onRemove,
     canRemove,
     type = "radio",
     register,
-    fieldName
+    fieldName,
+    textError
 }) => (
     <div className="flex items-center gap-2 peer">
         {/* <input
@@ -89,11 +90,19 @@ const AnswerOption = memo(({
             onChange={() => onAnswerChange(answer.answerId)}
             className="w-4 h-4 accent-purplePrimary"
         /> */}
-        <input
+        {/* <input
+            type={type}
+            name="selectedAnswer"
+            value={answer.answerId} // Make sure this matches
+            checked={String(isSelected) === String(answer.answerId)}
+            onChange={() => onAnswerChange(answer.answerId)}
+            className="w-4 h-4 accent-purplePrimary"
+        /> */}
+        {/* <input
             type={type}
             name="selectedAnswer"
             value={answer.answerId}
-            checked={String(isSelected) === String(answer.answerId)}
+            checked={String(selectedValue) === String(answer.answerId)}
             onChange={() => onAnswerChange(answer.answerId)}
             className="w-4 h-4 accent-purplePrimary"
         />
@@ -106,8 +115,37 @@ const AnswerOption = memo(({
             onChange={e => onTextChange(e.target.value)}
         />
         <RemoveOptionButton handleRemove={onRemove} canRemove={canRemove} />
+    </div> */}
+        <input
+            type={type}
+            name="selectedAnswer"
+            value={answer.answerId}
+            checked={String(selectedValue) === String(answer.answerId)}
+            onChange={() => onAnswerChange(answer.answerId)}
+            className="w-4 h-4 accent-purplePrimary"
+        />
+        <Input
+            type="text"
+            {...register(fieldName)}
+            defaultValue={answer.text}
+            // className="p-3 flex-1 rounded-xl text-greyAccent font-medium text-sm border border-seperatorPrimary"
+            className={`p-3 flex-1 rounded-xl text-greyAccent font-medium text-sm border ${textError ? 'border-dangerPrimary' : 'border-seperatorPrimary'
+                }`}
+            placeholder={`Option ${index + 1}`}
+            onChange={e => onTextChange(e.target.value)}
+        />
+        <RemoveOptionButton handleRemove={onRemove} canRemove={canRemove} />
     </div>
 ));
+
+{/* <input
+            type={type}
+            name="selectedAnswer"
+            value={answer.answerId}
+            checked={String(isSelected) === String(answer.answerId)}
+            onChange={() => onAnswerChange(answer.answerId)}
+            className="w-4 h-4 accent-purplePrimary"
+        /> */}
 
 export default AnswerOption;
 

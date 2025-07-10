@@ -24,13 +24,13 @@ export const getValidationSchema = (questionType) => {
     case 'single-select':
       return z.object({
         ...baseSchema,
-        selectedAnswer: z.union([z.string(), z.number()]).refine(
+        selectedAnswer: z.any().refine(
           val => val !== '' && val !== null && val !== undefined,
           'Please select the correct answer'
         ),
         singleSelectAnswers: z.array(
           z.object({
-            answerId: z.number(),
+            answerId: z.number().optional(),
             text: z.string().nonempty('Answer text is required'),
           })
         ).min(2, 'At least 2 answers required'),

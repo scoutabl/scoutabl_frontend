@@ -24,37 +24,35 @@ export const questionTypes = [
                 id: 'single-select',
                 name: 'Single Select',
                 type: 'single-select',
+                resourcetype: 'MCQuestion',
+                multiple_true: false,
                 question: 'Have you previously worked in a remote/hybrid environment?',
-                icon: <TickIcon />,
-                bg: '#D8FEE3',
-                text: '#13482A'
+                icon: <TickIcon />, bg: '#D8FEE3', text: '#13482A'
             },
             {
                 id: 'multiple-select',
                 name: 'Multiple Select',
                 type: 'multiple-select',
+                resourcetype: 'MCQuestion',
+                multiple_true: true,
                 question: 'Which programming languages are you proficient in?',
-                icon: <MultiSelect />,
-                bg: '#FEEDD9',
-                text: '#BD7500'
+                icon: <MultiSelect />, bg: '#FEEDD9', text: '#BD7500'
             },
             {
                 id: 'rating',
                 name: 'Rating',
                 type: 'rating',
+                resourcetype: 'RatingQuestion',
                 question: 'How would you rate your experience with our service?',
-                icon: <RatingIcon />,
-                bg: '#E8E5FF',
-                text: '#3B2A91'
+                icon: <RatingIcon />, bg: '#E8E5FF', text: '#3B2A91'
             },
             {
                 id: 'rearrange',
                 name: 'Rearrange',
                 type: 'rearrange',
+                resourcetype: 'RearrangeQuestion',
                 question: 'Rearrange the steps in the correct order to effectively set up for a remote/hybrid work environment',
-                icon: <RearrangeIcon />,
-                bg: '#95D1D2',
-                text: '#2F5D5E'
+                icon: <RearrangeIcon />, bg: '#95D1D2', text: '#2F5D5E'
             }
         ]
     },
@@ -65,19 +63,17 @@ export const questionTypes = [
                 id: 'numeric-input',
                 name: 'Numeric Input',
                 type: 'numeric-input',
+                resourcetype: 'NumberQuestion',
                 question: 'How many years of experience do you have?',
-                icon: <NumericInputIcon />,
-                bg: '#C18DAC',
-                text: '#643B53'
+                icon: <NumericInputIcon />, bg: '#C18DAC', text: '#643B53'
             },
             {
                 id: 'essay',
                 name: 'Essay',
                 type: 'essay',
+                resourcetype: 'EssayQuestion',
                 question: 'Describe your ideal work environment.',
-                icon: <EssayIcon />,
-                bg: '#A98878',
-                text: '#64483B'
+                icon: <EssayIcon />, bg: '#A98878', text: '#64483B'
             }
         ]
     },
@@ -88,28 +84,25 @@ export const questionTypes = [
                 id: 'code',
                 name: 'Code',
                 type: 'code',
+                resourcetype: 'CodeQuestion',
                 question: 'Write a function to reverse a string.',
-                icon: <CodeIcon />,
-                bg: '#8893D1',
-                text: '#192569'
+                icon: <CodeIcon />, bg: '#8893D1', text: '#192569'
             },
             {
                 id: 'ms-excel',
                 name: 'MS Excel',
-                type: 'excel',
+                type: 'ms-excel',
+                resourcetype: 'ExcelQuestion',
                 question: 'Create a pivot table from the given data.',
-                icon: <MsExcelIcon />,
-                bg: '#E9755B',
-                text: '#692819'
+                icon: <MsExcelIcon />, bg: '#E9755B', text: '#692819'
             },
             {
                 id: 'google-sheets',
                 name: 'Google Sheets',
-                type: 'sheets',
+                type: 'google-sheets',
+                resourcetype: 'SheetsQuestion',
                 question: 'Use VLOOKUP to find matching records.',
-                icon: <GoogleSheetsIcon />,
-                bg: '#5DDD87',
-                text: '#1C4B2B'
+                icon: <GoogleSheetsIcon />, bg: '#5DDD87', text: '#1C4B2B'
             }
         ]
     },
@@ -120,19 +113,17 @@ export const questionTypes = [
                 id: 'video',
                 name: 'Video',
                 type: 'video',
+                resourcetype: 'VideoQuestion',
                 question: 'Record a 2-minute introduction about yourself.',
-                icon: <VideoIcon />,
-                bg: '#D8FFFE',
-                text: '#0A615F'
+                icon: <VideoIcon />, bg: '#D8FFFE', text: '#0A615F'
             },
             {
                 id: 'audio',
                 name: 'Audio',
                 type: 'audio',
+                resourcetype: 'AudioQuestion',
                 question: 'Record your answer to this question.',
-                icon: <AudioIcon />,
-                bg: '#FFFFDE',
-                text: '#5C7D0E'
+                icon: <AudioIcon />, bg: '#FFFFDE', text: '#5C7D0E'
             }
         ]
     }
