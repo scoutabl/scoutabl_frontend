@@ -39,6 +39,10 @@ class SurveyAPI extends BaseAPI {
     async updateUserSurvey(id, survey) {
         return (await this.patch(USER_SURVEY_URL + id + "/", survey)).data;
     }
+
+    async getAssessmentRecommendation() {
+        return (await this.get(USER_SURVEY_URL + "assessment-recommendations/")).data;
+    }
 }
 
 export const surveyAPI = new SurveyAPI();

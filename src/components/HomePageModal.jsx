@@ -93,12 +93,34 @@ const HomePageModal = ({ onClose }) => {
       setConfig(config);
       setSelectedOptionValues([]);
     });
-
+    
     surveyAPI.getOrCreateUserSurvey().then((survey) => {
       setUserSurvey(survey);
     });
   }, []);
 
+  useEffect(() => {
+    async function getAssessmentRecommendation() {
+      if (page === LAUNCH) {
+        // TODO: Implement launch page cards and handlers.
+        const updatedConfig = await surveyAPI.getAssessmentRecommendation();
+        setConfig(updatedConfig);
+      }
+    }
+    getAssessmentRecommendation();
+  }, [page])
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (modalRef.current && !modalRef.current.contains(event.target)) {
+        onClose();
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [onClose]);
+  
   const SURVEY_PAGES = useMemo(() => {
     const pages = {
       [ROLE]: {
@@ -109,6 +131,7 @@ const HomePageModal = ({ onClose }) => {
         pageType: CHOICE_PAGE,
         field: "roles",
         multiselect: false,
+        disableBack: true,
         options: [
           {
             id: "hiring-manager",
@@ -270,16 +293,6 @@ const HomePageModal = ({ onClose }) => {
     return pages;
   }, [enumsLoading]);
 
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (modalRef.current && !modalRef.current.contains(event.target)) {
-        onClose();
-      }
-    };
-
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, [onClose]);
 
   const handleNext = async () => {
     setSubmitting(true);
