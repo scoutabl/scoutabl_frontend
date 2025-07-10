@@ -493,6 +493,7 @@ const HomePageModal = ({ onClose }) => {
                         Icon={(props) => (
                           <option.Icon
                             {...props}
+                            className={`${selectedOptionValues.includes(option.value) ? "text-purplePrimary" : ""}`}
                           />
                         )}
                         selected={selectedOptionValues.includes(option.value)}

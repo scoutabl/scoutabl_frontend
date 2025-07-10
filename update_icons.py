@@ -32,6 +32,7 @@ def update_svg_fill_and_stroke(svg_path):
                 if 'stroke' in elem.attrib and elem.attrib['stroke'] not in ["currentColor", "none"]:
                     print(f"Updating {svg_path} {tag} stroke {elem.attrib['stroke']}")
                     elem.set('stroke', 'currentColor')
+        ET.register_namespace('', 'http://www.w3.org/2000/svg')
         tree.write(svg_path, encoding='utf-8', xml_declaration=True)
         # print(f"Updated: {svg_path}")
     except Exception as e:
