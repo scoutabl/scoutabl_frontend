@@ -1,5 +1,5 @@
 // QuestionModal.jsx
-import React, { useState, useEffect, useCallback, useMemo, memo } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, memo, useRef } from 'react';
 
 import { useForm, Controller } from 'react-hook-form';
 import { FormProvider } from "react-hook-form";
@@ -47,6 +47,13 @@ const DEFAULT_MULTIPLE_SELECT_ANSWERS = [
     { id: 2, text: 'C++' }
 ];
 
+const DEFAULT_REARRANGE_OPTIONS = [
+    { id: 1, text: 'runs' },
+    { id: 2, text: 'quickly' },
+    { id: 3, text: 'dog' },
+]
+
+
 function convertHHMMSSToMinutes(hhmmss) {
     if (!hhmmss) return 120; // fallback
     const [hours, minutes, seconds] = hhmmss.split(":").map(Number);
@@ -71,10 +78,10 @@ const useQuestionForm = (initialData, initialQuestion, mode, isOpen, questionTyp
             numericCondition: initialData.condition?.toString() || '2',
             singleSelectAnswers: DEFAULT_SINGLE_SELECT_ANSWERS,
             multipleSelectAnswers: DEFAULT_MULTIPLE_SELECT_ANSWERS,
-            rearrangeOptions: [
-                { id: 1, text: '' },
-                { id: 2, text: '' },
-            ],
+            rearrangeOrder: initialData.correct_order || [],
+            rearrangeOptions: initialData.options
+                ? [...initialData.options].sort((a, b) => a.correct_order - b.correct_order)
+                : DEFAULT_REARRANGE_OPTIONS,
             shuffleEnabled: false,
         };
         if (mode === 'edit' && initialData.choices) {
@@ -125,7 +132,7 @@ const useQuestionForm = (initialData, initialQuestion, mode, isOpen, questionTyp
 const QuestionModal = memo(({
     trigger,
     questionType,
-    initialQuestion = "Have you previously worked in a remote/hybrid environment?",
+    initialQuestion = "Rearrange the following words to form a grammatically correct and meaningful sentence",
     onSave,
     initialData = {},
     isOpen,
@@ -140,6 +147,7 @@ const QuestionModal = memo(({
     const isEdit = mode === 'edit';
     // Use watch to get current form values
     const watchedValues = watch();
+    const inputRefs = useRef([]);
 
     // RichTextEditor integration with react-hook-form
     const handleTextEditorChange = (content) => {
@@ -147,6 +155,14 @@ const QuestionModal = memo(({
     };
 
     const onError = (errors) => {
+        // Find the first error in rearrangeOptions
+        if (errors.rearrangeOptions) {
+            const firstErrorIdx = errors.rearrangeOptions.findIndex(opt => opt && opt.text);
+            if (firstErrorIdx !== -1 && inputRefs.current[firstErrorIdx]) {
+                inputRefs.current[firstErrorIdx].scrollIntoView({ behavior: 'smooth', block: 'center' });
+                inputRefs.current[firstErrorIdx].focus();
+            }
+        }
         console.log("Zod validation errors:", errors);
     };
 
@@ -314,6 +330,7 @@ const QuestionModal = memo(({
         // hanlde rearrange quetion
         if (questionType === 'rearrange') {
             const options = data.rearrangeOptions.map((opt, idx) => ({
+                ...(mode === 'edit' && opt.id ? { id: opt.id } : {}),
                 text: opt.text,
                 question_order: idx,
                 correct_order: idx
@@ -326,7 +343,6 @@ const QuestionModal = memo(({
                 title: data.post,
                 content: data.post,
                 shuffle_options: true,
-                correct_order: options.map((_, idx) => idx),
                 options
             };
             if (isEdit) {
@@ -392,13 +408,12 @@ const QuestionModal = memo(({
                     // onConditionChange={data.setNumericCondition}
                     />
                 );
-            // case 'rearrange':
-            //     return (
-            //         <RearrangeAnswers
-            //             value={data.rearrangeOptions}
-            //             onChange={data.setRearrangeOptions}
-            //         />
-            //     )
+            case 'rearrange':
+                return (
+                    <RearrangeAnswers
+                        inputRefs={inputRefs}
+                    />
+                )
             case 'essay':
             case 'video':
             case 'audio':

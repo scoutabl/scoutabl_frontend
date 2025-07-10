@@ -3,7 +3,7 @@ import AddOptionButton from "@/components/features/assesment/create/shared/AddOp
 import RemoveOptionButton from "@/components/features/assesment/create/shared/RemoveOptionButton";
 import { Input } from '@/components/ui/input';
 import MarkIcon from '@/assets/mark.svg?react';
-
+import { cn } from "@/lib/utils";
 const SingleSelectAnswers = ({
     name = "singleSelectAnswers",
     selectedName = "selectedAnswer",
@@ -50,7 +50,10 @@ const SingleSelectAnswers = ({
                                 type="text"
                                 {...register(`${name}.${index}.text`)}
                                 defaultValue={field.text}
-                                className={`p-3 flex-1 rounded-xl text-greyAccent font-medium text-sm border ${errors[name]?.[index]?.text ? 'border-dangerPrimary' : 'border-seperatorPrimary'}`}
+                                className={cn('p-3 flex-1 rounded-xl text-greyAccent font-medium text-sm border border-seperatorPrimary ', {
+                                    'border-dangerPrimary': errors[name]?.[index]?.text
+                                }
+                                )}
                                 placeholder={`Option ${index + 1}`}
                                 onChange={e => handleTextChange(e.target.value, index)}
                             />

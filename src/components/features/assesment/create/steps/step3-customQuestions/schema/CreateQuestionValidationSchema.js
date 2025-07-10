@@ -59,7 +59,7 @@ export const getValidationSchema = (questionType) => {
         ...baseSchema,
         rearrangeOptions: z.array(
           z.object({
-            id: z.number(),
+            id: z.number().optional(),
             text: z.string().nonempty('Option text is required'),
           })
         ).min(2, 'At least 2 options required'),
