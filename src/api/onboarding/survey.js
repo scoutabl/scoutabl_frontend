@@ -8,23 +8,23 @@ class SurveyAPI extends BaseAPI {
         super();
     }
 
-    async getOrCreateOnboardingConfig() {
+    async getOrCreateOnboardingConfig(defaultPage) {
         const config = (await this.get(ONBOARDING_CONFIG_URL)).data.results?.[0] || null;
         if (!config) {
-            const res = await this.post(ONBOARDING_CONFIG_URL, {
+            const res = (await this.post(ONBOARDING_CONFIG_URL, {
                 extra: {
                     assessmentOnboarding: {
-                        page: "role"
+                        page: defaultPage
                     }
                 }
-            });
+            })).data;
             return res;
         }
         return config;
     }
 
-    async updateOnboardingConfig(config) {
-        return this.patch(ONBOARDING_CONFIG_URL, config);
+    async updateOnboardingConfig(id, config) {
+        return (await this.patch(ONBOARDING_CONFIG_URL + id + "/", config)).data;
     }
 }
 

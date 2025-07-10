@@ -129,7 +129,7 @@ const HomePageAnimation = React.memo(function HomePageAnimation({ userFirstName,
         const interval = setInterval(() => {
             setMiddleOffset((prev) => (prev + 1) % MIDDLE_AVATARS.length);
             setInnerOffset((prev) => (prev + 1) % INNER_AVATARS.length);
-        }, 2000);
+        }, 5000);
         return () => clearInterval(interval);
     }, []);
 

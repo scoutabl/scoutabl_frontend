@@ -79,14 +79,17 @@ const CTA = "cta";
 
 const HomePageModal = ({ onClose }) => {
   const { resolveEnum, enumsLoading } = useEnums();
+  const [config, setConfig] = useState(null);
   const [page, setPage] = useState(null);
   const [selectedOptionValues, setSelectedOptionValues] = useState([]);
-  const [selectedDetails, setSelectedDetails] = useState({});
+  const [submitting, setSubmitting] = useState(false);
   const modalRef = useRef(null);
 
   useEffect(() => {
-    surveyAPI.getOrCreateOnboardingConfig().then((config) => {
-      setPage(config.extra.assessmentOnboarding.page);
+    surveyAPI.getOrCreateOnboardingConfig(ROLE).then((config) => {
+      setPage(config.extra?.assessmentOnboarding?.page || ROLE);
+      setConfig(config);
+      setSelectedOptionValues([]);
     });
   }, []);
 
@@ -99,6 +102,7 @@ const HomePageModal = ({ onClose }) => {
         hint: "no fine-tuning necessary.",
         pageType: CHOICE_PAGE,
         field: "roles",
+        multiselect: false,
         options: [
           {
             id: "hiring-manager",
@@ -136,12 +140,14 @@ const HomePageModal = ({ onClose }) => {
       },
       [CAPABILITY]: {
         title: "What capability do you want to #evaluate?",
-        description:
+        subtitle:
           "These answers help Scoutabl shape an experience that fits you like a tailored suit",
         hint: "minus the stitching",
         pageType: CHOICE_PAGE,
         field: "capabilities",
         multiselect: true,
+        nextPage: LAUNCH,
+        prevPage: ROLE,
         options: [
           {
             id: "decision-making",
@@ -169,12 +175,14 @@ const HomePageModal = ({ onClose }) => {
       },
       [SKILLS]: {
         title: "What matter most to you in #skills?",
-        description:
+        subtitle:
           "These answers help Scoutabl shape an experience that fits you like a tailored suit",
         hint: "minus the stitching",
         pageType: CHOICE_PAGE,
         field: "skills_technical",
         multiselect: true,
+        nextPage: LAUNCH,
+        prevPage: ROLE,
         options: [
           {
             id: "dsa",
@@ -203,12 +211,14 @@ const HomePageModal = ({ onClose }) => {
       },
       [PRIORITOES]: {
         title: "Which tests are typically your top #priorities?",
-        description:
+        subtitle:
           "These answers help Scoutabl shape an experience that fits you like a tailored suit",
         hint: "minus the stitching",
         pageType: CHOICE_PAGE,
-        fields: "priorities",
+        field: "priorities",
         multiselect: true,
+        nextPage: LAUNCH,
+        prevPage: ROLE,
         options: [
           {
             id: "culture",
@@ -237,11 +247,18 @@ const HomePageModal = ({ onClose }) => {
       },
       [GOALS]: {
         title: "Tell us what you want to #achieve?",
-        description:
+        subtitle:
           "These answers help Scoutabl shape an experience that fits you like a tailored suit",
         hint: "minus the stitching",
         pageType: TEXT_FEEDBACK,
         field: "goals",
+        nextPage: LAUNCH,
+        prevPage: ROLE,
+      },
+      [LAUNCH]: {
+        title: "Ready to launch your #assessment?",
+        subtitle: "Pick the assessment that suits your hiring goals",
+        hint: "You can try others anytime!",
       },
     };
     return pages;
@@ -259,10 +276,73 @@ const HomePageModal = ({ onClose }) => {
   }, [onClose]);
 
   const handleNext = () => {
-    // if (selectedOption) {
-    //   setDirection(1);
-    //   setCurrentStep("role");
-    // }
+    setSubmitting(true);
+    const nextPage =
+      renderPage.options.find(
+        (option) => option.value === selectedOptionValues[0]
+      )?.nextPage ||
+      renderPage.nextPage ||
+      null;
+    const field = renderPage.field;
+    const pageType = renderPage.pageType;
+
+    if (pageType === CHOICE_PAGE) {
+      const payload = {
+        [field]: selectedOptionValues,
+        extra: {
+          assessmentOnboarding: {
+            page: nextPage,
+            prevPage: page,
+          },
+        },
+      };
+      surveyAPI
+        .updateOnboardingConfig(config.id, payload)
+        .then((config) => {
+          setConfig(config);
+          if (nextPage) {
+            setSelectedOptionValues([]);
+            setPage(nextPage);
+          }
+        })
+        .catch(console.error)
+        .finally(() => setSubmitting(false));
+    } else if (pageType === TEXT_FEEDBACK) {
+      console.log("test");
+    }
+  };
+
+  const handleBack = () => {
+    const prevPage = renderPage.prevPage || config?.extra?.assessmentOnboarding?.prevPage;
+    if (!prevPage) {
+      console.warn("No previous page found");
+      return;
+    }
+
+    setPage(prevPage);
+    setSelectedOptionValues([]);
+  }
+
+  const getSelectHandler = (option) => {
+    return () => {
+      if (renderPage.pageType === CHOICE_PAGE) {
+        let newOptions;
+
+        if (renderPage.multiselect) {
+          if (selectedOptionValues.includes(option.value)) {
+            newOptions = selectedOptionValues.filter(
+              (value) => value !== option.value
+            );
+          } else {
+            newOptions = [...selectedOptionValues, option.value];
+          }
+        } else {
+          newOptions = [option.value];
+        }
+
+        setSelectedOptionValues(newOptions);
+      }
+    };
   };
 
   const containerVariants = {
@@ -282,8 +362,8 @@ const HomePageModal = ({ onClose }) => {
   if (renderPage) {
     [title1, title2] = renderPage.title.split("#");
   }
-  const nextDisabled = selectedOptionValues.length === 0;
-  const showHorizontalCard = renderPage && renderPage.options.length > 3;
+  const nextDisabled = selectedOptionValues.length === 0 || submitting;
+  const showHorizontalCard = renderPage && renderPage?.options?.length > 3;
 
   return (
     <motion.div
@@ -340,123 +420,127 @@ const HomePageModal = ({ onClose }) => {
                 </motion.span>
               </motion.p>
             </motion.div>
-            <motion.div
-              className={
-                showHorizontalCard
-                  ? "flex flex-wrap gap-6 justify-center items-center z-10"
-                  : "flex flex-row items-center justify-between gap-10 z-10"
-              }
-              variants={containerVariants}
-              initial="hidden"
-              animate="show"
-            >
-              {!showHorizontalCard
-                ? renderPage.options.map((option) => (
-                    <Card
-                      key={option.id}
-                      title={option.title}
-                      description={option.description}
-                      Icon={(props) => (
-                        <option.Icon
-                          {...props}
-                          fill={
-                            selectedOptionValues.includes(option.value)
-                              ? "#8B5CF6"
-                              : undefined
-                          }
-                          stroke={
-                            selectedOptionValues.includes(option.value)
-                              ? "#8B5CF6"
-                              : undefined
-                          }
-                        />
-                      )}
-                      selected={selectedOptionValues.includes(option.value)}
-                      onClick={() => {
-                        const selectedDetails = {
-                          nextPage: option.nextPage,
-                          field: renderPage.field,
-                        }
-                        if (selectedOptionValues.includes(option.value)) {
-                          if (!renderPage.multiselect) {
-                            setSelectedOptionValues([option.value]);
-                            return;
-                          }
-
-                          setSelectedOptionValues(
-                            selectedOptionValues.filter(
-                              (value) => value !== option.value
-                            )
-                          );
-                        } else {
-                          setSelectedOptionValues([
-                            ...selectedOptionValues,
-                            option.value,
-                          ]);
-                        }
-                      }}
-                    />
-                  ))
-                : renderPage.options
-                    .reduce((rows, option, idx) => {
-                      if (idx % 2 === 0) rows.push([option]);
-                      else rows[rows.length - 1].push(option);
-                      return rows;
-                    }, [])
-                    .map((row, rowIdx) => (
-                      <div
-                        key={rowIdx}
-                        className="flex flex-row justify-center gap-6 w-full mb-4 mx-10"
-                      >
-                        {row.map((option) => (
-                          <HorizontalCard
-                            key={option.id}
-                            title={option.title}
-                            description={option.description}
-                            Icon={(props) => (
-                              <option.Icon
-                                {...props}
-                                fill={
-                                  selectedOptionValues.includes(option.value)
-                                    ? "#8B5CF6"
-                                    : undefined
-                                }
-                                stroke={
-                                  selectedOptionValues.includes(option.value)
-                                    ? "#8B5CF6"
-                                    : undefined
-                                }
-                              />
-                            )}
-                            selected={selectedOptionValues.includes(option.value)}
-                            onClick={() => {
-                              if (selectedOptionValues.includes(option.value)) {
-                                setSelectedOptionValues(
-                                  selectedOptionValues.filter(
-                                    (value) => value !== option.value
-                                  )
-                                );
-                              } else {
-                                setSelectedOptionValues([
-                                  ...selectedOptionValues,
-                                  option.value,
-                                ]);
-                              }
-                            }}
+            {/* Render content based on page type */}
+            {renderPage.pageType === CHOICE_PAGE ? (
+              <motion.div
+                className={
+                  showHorizontalCard
+                    ? "flex flex-wrap gap-6 justify-center items-center z-10 w-full px-15"
+                    : "flex flex-row items-center justify-between gap-10 z-10 w-full px-15"
+                }
+                variants={containerVariants}
+                initial="hidden"
+                animate="show"
+              >
+                {!showHorizontalCard
+                  ? renderPage.options.map((option) => (
+                      <Card
+                        key={option.id}
+                        title={option.title}
+                        description={option.description}
+                        Icon={(props) => (
+                          <option.Icon
+                            {...props}
+                            fill={
+                              selectedOptionValues.includes(option.value)
+                                ? "#8B5CF6"
+                                : undefined
+                            }
+                            stroke={
+                              selectedOptionValues.includes(option.value)
+                                ? "#8B5CF6"
+                                : undefined
+                            }
                           />
-                        ))}
-                      </div>
-                    ))}
-            </motion.div>
+                        )}
+                        selected={selectedOptionValues.includes(option.value)}
+                        onClick={getSelectHandler(option)}
+                      />
+                    ))
+                  : renderPage.options
+                      .reduce((rows, option, idx) => {
+                        if (idx % 2 === 0) rows.push([option]);
+                        else rows[rows.length - 1].push(option);
+                        return rows;
+                      }, [])
+                      .map((row, rowIdx) => (
+                        <div
+                          key={rowIdx}
+                          className="flex flex-row justify-center gap-6 w-full mb-4 mx-10"
+                        >
+                          {row.map((option) => (
+                            <HorizontalCard
+                              key={option.id}
+                              title={option.title}
+                              description={option.description}
+                              Icon={(props) => (
+                                <option.Icon
+                                  {...props}
+                                  fill={
+                                    selectedOptionValues.includes(option.value)
+                                      ? "#8B5CF6"
+                                      : undefined
+                                  }
+                                  stroke={
+                                    selectedOptionValues.includes(option.value)
+                                      ? "#8B5CF6"
+                                      : undefined
+                                  }
+                                />
+                              )}
+                              selected={selectedOptionValues.includes(
+                                option.value
+                              )}
+                              onClick={getSelectHandler(option)}
+                            />
+                          ))}
+                        </div>
+                      ))}
+              </motion.div>
+            ) : renderPage.pageType === TEXT_FEEDBACK ? (
+              <motion.div className="w-full flex flex-col items-center justify-center z-10">
+                {/* Dummy content for TEXT_FEEDBACK */}
+                <textarea
+                  className="w-[500px] h-[120px] border border-gray-300 rounded-lg p-4 text-base focus:outline-none focus:ring-2 focus:ring-purple-400"
+                  placeholder="Share your goals or feedback here..."
+                  disabled
+                />
+                <div className="text-gray-400 mt-2">
+                  (Text feedback coming soon...)
+                </div>
+              </motion.div>
+            ) : renderPage.pageType === CTA ? (
+              <motion.div className="w-full flex flex-col items-center justify-center z-10">
+                {/* Dummy content for CTA */}
+                <div className="text-2xl font-semibold text-purple-700 mb-2">
+                  Call to Action
+                </div>
+                <div className="text-gray-500">
+                  (CTA content coming soon...)
+                </div>
+              </motion.div>
+            ) : null}
             <motion.div className="flex flex-row items-center gap-2 text-sm">
               <InfoIcon />
-              <motion.p>You can select multiple options</motion.p>
+              <motion.p className="text-purplePrimary">
+                You can select multiple options
+              </motion.p>
             </motion.div>
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.4, delay: 0.7 }}
+              className="flex flex-row gap-5 items-center"
             >
+              {(renderPage.prevPage || config?.extra?.assessmentOnboarding?.prevPage) && (
+                <Button
+                  onClick={handleBack}
+                  className={`bg-white border border-purplePrimary hover:bg-white text-purplePrimary rounded-full px-3 py-[6px] h-[33px] w-[83px]}`}
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                  Back
+                </Button>
+              )}
               <Button
                 onClick={handleNext}
                 disabled={nextDisabled}
