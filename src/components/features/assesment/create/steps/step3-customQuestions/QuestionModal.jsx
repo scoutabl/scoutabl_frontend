@@ -36,6 +36,7 @@ import { useAddQuestion, useUpdateQuestion } from '@/api/createQuestion';
 import Assesment from '../../../Assesment';
 import { getValidationSchema } from './schema/CreateQuestionValidationSchema';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { cn } from '@/lib/utils';
 const DEFAULT_SINGLE_SELECT_ANSWERS = [
     { answerId: 1, text: 'Yes' },
     { answerId: 2, text: 'No' },
@@ -59,15 +60,15 @@ const useQuestionForm = (initialData, initialQuestion, mode, isOpen, questionTyp
     const getDefaultValues = () => {
         const defaults = {
             post: initialData.title || initialQuestion,
-            timeToAnswer: Number(initialData.timeToAnswer) || 120,
-            customScore: Number(initialData.customScore) || 120,
+            timeToAnswer: Number(initialData.timeToAnswer) || 25,
+            customScore: Number(initialData.customScore) || 25,
             isCompulsory: initialData.is_compulsory || false,
             saveToLibrary: initialData.is_save_template || false,
             selectedAnswer: null,
             selectedAnswers: [],
             selectedRating: initialData.selectedRating || null,
-            correctAnswer: initialData.correctAnswer || '000.00',
-            numericCondition: '0',
+            correctAnswer: initialData.value || 250,
+            numericCondition: initialData.condition?.toString() || '2',
             singleSelectAnswers: DEFAULT_SINGLE_SELECT_ANSWERS,
             multipleSelectAnswers: DEFAULT_MULTIPLE_SELECT_ANSWERS,
             rearrangeOptions: [
@@ -143,6 +144,10 @@ const QuestionModal = memo(({
     // RichTextEditor integration with react-hook-form
     const handleTextEditorChange = (content) => {
         setValue('post', content);
+    };
+
+    const onError = (errors) => {
+        console.log("Zod validation errors:", errors);
     };
 
     const onSubmit = (data) => {
@@ -378,15 +383,15 @@ const QuestionModal = memo(({
             //             onRatingChange={data.setSelectedRating}
             //         />
             //     );
-            // case 'numeric-input':
-            //     return (
-            //         <NumericInputAnswers
-            //             correctAnswer={data.correctAnswer}
-            //             onAnswerChange={data.setCorrectAnswer}
-            //             numericCondition={data.numericCondition}
-            //             onConditionChange={data.setNumericCondition}
-            //         />
-            //     );
+            case 'numeric-input':
+                return (
+                    <NumericInputAnswers
+                    // correctAnswer={data.correctAnswer}
+                    // onAnswerChange={data.setCorrectAnswer}
+                    // numericCondition={data.numericCondition}
+                    // onConditionChange={data.setNumericCondition}
+                    />
+                );
             // case 'rearrange':
             //     return (
             //         <RearrangeAnswers
@@ -408,7 +413,7 @@ const QuestionModal = memo(({
     return (
         <Dialog open={isOpen} onOpenChange={setIsOpen}>
             {/* Remove DialogTrigger, modal is controlled from parent */}
-            <DialogContent className="flex flex-col p-6 min-w-[90vw] sm:min-w-[600px] md:min-w-[800px] lg:min-w-[1000px] xl:min-w-[1208px] max-w-[98vw] max-h-[90vh] overflow-y-auto rounded-[24px]">
+            <DialogContent className="flex flex-col p-6 min-w-[90vw] sm:min-w-[600px] md:min-w-[800px] lg:min-w-[1000px] xl:min-w-[1208px] max-w-[1208px] max-h-[90vh] overflow-y-auto rounded-[24px]">
 
                 <div className="flex items-center justify-between mb-4">
                     <DialogHeader className="max-h-9">
@@ -457,28 +462,7 @@ const QuestionModal = memo(({
                             </div>
                         </div>
                         <FormProvider {...form}>
-                            {/* <form onSubmit={handleSubmit(onSubmit)}
-                                className='flex-1 flex flex-col'> */}
-                            {/* <form className='flex-1 flex flex-col' onSubmit={(e) => {
-                                console.log('Form submit event triggered');
-                                handleSubmit(onSubmit)(e);
-                            }}> */}
-                            <form onSubmit={(e) => {
-                                console.log('Form submit event triggered');
-                                console.log('Current form values:', watchedValues);
-
-                                handleSubmit(
-                                    (data) => {
-                                        console.log('✅ Validation passed, onSubmit called with:', data);
-                                        onSubmit(data);
-                                    },
-                                    (errors) => {
-                                        console.log('❌ Validation failed with errors:', errors);
-                                        console.log('Field values at validation:', watchedValues);
-                                    }
-                                )(e);
-                            }}>
-
+                            <form onSubmit={handleSubmit(onSubmit, onError)} className='flex-1 flex flex-col'>
                                 <div className='mb-6 p-3 flex flex-col gap-3 rounded-2xl bg-blueSecondary'>
                                     <div className='flex items-center justify-between'>
                                         <div className='flex'>
@@ -489,18 +473,6 @@ const QuestionModal = memo(({
                                                 Time to Answer
                                                 <span className='text-[#E45270]'>*</span>
                                             </label>
-                                            {/* <Controller
-                                                name="timeToAnswer"
-                                                control={control}
-                                                render={({ field }) => (
-                                                    <Input
-                                                        {...field}
-                                                        type="number"
-                                                        placeholder='120 Min'
-                                                        className='px-3 py-2 max-h-10 max-w-[114px] text-base font-medium text-greyAccent bg-white rounded-tr-md rounded-br-md rounded-tl-none rounded-bl-none border-0'
-                                                    />
-                                                )}
-                                            /> */}
                                             <Controller
                                                 name="timeToAnswer"
                                                 control={control}
@@ -586,7 +558,10 @@ const QuestionModal = memo(({
                                     type="submit"
                                     whileHover={{ scale: 1.05 }}
                                     whileTap={{ scale: 0.95 }}
-                                    className="mt-4 ml-auto w-[124px] h-[37px] grid place-content-center bg-[#1EA378] text-white rounded-full text-sm font-medium"
+                                    className={cn("mt-4 ml-auto grid place-content-center bg-[#1EA378] text-white rounded-full text-sm font-medium", {
+                                        'w-[124px] h-[37px]': !isEdit,
+                                        'w-[156px] h-[44px]': isEdit,
+                                    })}
                                 >
                                     {isEdit ? 'Update Question' : 'Add Question'}
                                 </motion.button>

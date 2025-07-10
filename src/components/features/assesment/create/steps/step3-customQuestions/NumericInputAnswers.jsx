@@ -1,36 +1,4 @@
-// const NumericInputAnswers = ({ correctAnswer, onAnswerChange, numericCondition, onConditionChange }) => {
-//     return (
-//         <div className="space-y-4">
-//             <div className="mb-4">
-//                 <span className="text-base font-semibold text-greyPrimary">Correct if</span>
-//             </div>
-//             <div className="flex items-center gap-4">
-//                 <span className="text-sm text-greyAccent font-semibold">Answer is</span>
-//                 <Select defaultValue={numericCondition} onValueChange={onConditionChange}>
-//                     <SelectTrigger chevronColor="text-white" className="!h-[43px] py-3 px-6 flex items-center justify-between w-fit text-sm font-medium bg-purplePrimary text-white rounded-xl">
-//                         <SelectValue />
-//                     </SelectTrigger>
-//                     <SelectContent>
-//                         <SelectItem value="more-than">More than</SelectItem>
-//                         <SelectItem value="less-than">Less than</SelectItem>
-//                         <SelectItem value="equal-to">More than/ equal to</SelectItem>
-//                         <SelectItem value="between">Less than/ equal to</SelectItem>
-//                     </SelectContent>
-//                 </Select>
-//                 <Input
-//                     type="number"
-//                     value={correctAnswer}
-//                     onChange={(e) => onAnswerChange(e.target.value)}
-//                     className="flex-1 h-[43px] p-3 border border-greyAccent rounded-xl text-sm font-medium text-greyAccent"
-//                     placeholder="000.00"
-//                     step="0.01"
-//                 />
-//             </div>
-//         </div>
-//     )
-// }
-
-
+import { useFormContext } from 'react-hook-form';
 import { Input } from '@/components/ui/input';
 import {
     Select,
@@ -39,7 +7,13 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
-const NumericInputAnswers = ({ correctAnswer, onAnswerChange, numericCondition, onConditionChange }) => {
+import MarkIcon from '@/assets/mark.svg?react';
+
+const NumericInputAnswers = () => {
+    const { register, setValue, watch, formState: { errors } } = useFormContext();
+    const correctAnswer = watch('correctAnswer');
+    const numericCondition = watch('numericCondition');
+
     return (
         <div className="space-y-4">
             <div className="mb-4">
@@ -47,7 +21,10 @@ const NumericInputAnswers = ({ correctAnswer, onAnswerChange, numericCondition, 
             </div>
             <div className="flex items-center gap-4">
                 <span className="text-sm text-greyAccent font-semibold">Answer is</span>
-                <Select defaultValue={numericCondition} onValueChange={onConditionChange}>
+                <Select
+                    value={numericCondition}
+                    onValueChange={val => setValue('numericCondition', val, { shouldValidate: true })}
+                >
                     <SelectTrigger chevronColor="text-white" className="!h-[43px] py-3 px-6 flex items-center justify-between w-fit text-sm font-medium bg-purplePrimary text-white rounded-xl">
                         <SelectValue />
                     </SelectTrigger>
@@ -60,15 +37,35 @@ const NumericInputAnswers = ({ correctAnswer, onAnswerChange, numericCondition, 
                         <SelectItem value="5">Not Equal</SelectItem>
                     </SelectContent>
                 </Select>
-                <Input
+                {/* <Input
                     type="number"
+                    {...register('correctAnswer')}
                     value={correctAnswer}
-                    onChange={(e) => onAnswerChange(e.target.value)}
-                    className="flex-1 h-[43px] p-3 border border-greyAccent rounded-xl text-sm font-medium text-greyAccent"
+                    onChange={e => setValue('correctAnswer', e.target.value, { shouldValidate: true })}
+                    className={`flex-1 h-[43px] p-3 border rounded-xl text-sm font-medium text-greyAccent ${errors.correctAnswer ? 'border-dangerPrimary' : 'border-greyAccent'}`}
                     placeholder="000.00"
                     step="0.01"
+                /> */}
+                <Input
+                    type="number"
+                    step="0.01"
+                    placeholder="000.00"
+                    className={`flex-1 h-[43px] p-3 border rounded-xl text-sm font-medium text-greyAccent ${errors.correctAnswer ? 'border-dangerPrimary' : 'border-greyAccent'}`}
+                    {...register('correctAnswer', { valueAsNumber: true })}
                 />
             </div>
+            {errors.numericCondition && (
+                <div className="w-full bg-red-950 p-2 rounded-lg mt-2">
+                    <MarkIcon className="w-4 h-4 inline mr-1 text-white" />
+                    <span className="text-white text-xs font-medium">{errors.numericCondition.message}</span>
+                </div>
+            )}
+            {errors.correctAnswer && (
+                <div className="w-full bg-red-950 p-2 rounded-lg mt-2">
+                    <MarkIcon className="w-4 h-4 inline mr-1 text-white" />
+                    <span className="text-white text-xs font-medium">{errors.correctAnswer.message}</span>
+                </div>
+            )}
         </div>
     )
 }
