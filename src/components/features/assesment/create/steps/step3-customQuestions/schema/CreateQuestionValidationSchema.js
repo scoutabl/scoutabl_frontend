@@ -47,7 +47,6 @@ export const getValidationSchema = (questionType) => {
           })
         ).min(2, 'At least 2 answers required'),
       });
-
     case 'numeric-input':
       return z.object({
         ...baseSchema,

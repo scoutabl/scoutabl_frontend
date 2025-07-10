@@ -1,246 +1,112 @@
-// import React from 'react'
-// import RemoveOptionButton from '@/components/features/assesment/create/shared/RemoveOptionButton';
-// import { useState, useEffect } from "react";
-// import { Checkbox } from '@/components/ui/checkbox';
-// import { Input } from '@/components/ui/input';
-// import AddOptionButton from '../../shared/AddOptionButton';
-
-// const MultipleSelectAnswers = ({
-//     answers,
-//     selectedAnswers = [],
-//     onAnswersChange,
-//     onSelectedChange,
-//     showShuffleToggle
-// }) => {
-//     const [shuffleEnabled, setShuffleEnabled] = useState(false);
-//     const [shuffledOptions, setShuffledOptions] = useState([]);
-
-//     useEffect(() => {
-//         if (shuffleEnabled) {
-//             const shuffled = [...answers]
-//                 .map(value => ({ value, sort: Math.random() }))
-//                 .sort((a, b) => a.sort - b.sort)
-//                 .map(({ value }) => value);
-//             setShuffledOptions(shuffled);
-//         } else {
-//             setShuffledOptions([]);
-//         }
-//     }, [shuffleEnabled, answers]);
-
-//     const handleShuffleToggle = (checked) => {
-//         setShuffleEnabled(checked);
-//     };
-
-//     const handleAddOption = () => {
-//         const maxId = Math.max(...answers.map(answer => parseInt(answer.id) || 0));
-//         const newAnswer = {
-//             id: (maxId + 1).toString(),
-//             text: ''
-//         };
-//         onAnswersChange([...answers, newAnswer]);
-//     };
-
-//     const handleRemoveOption = (answerId) => {
-//         if (answers.length <= 2) {
-//             // alert('You must have at least 2 options');
-//             return;
-//         }
-//         const updatedAnswers = answers.filter(answer => answer.id !== answerId);
-//         onAnswersChange(updatedAnswers);
-//         const updatedSelected = selectedAnswers.filter(id => id !== answerId);
-//         onSelectedChange(updatedSelected);
-//     };
-
-//     const handleAnswerTextChange = (answerId, newText) => {
-//         const updatedAnswers = answers.map(answer =>
-//             answer.id === answerId ? { ...answer, text: newText } : answer
-//         );
-//         onAnswersChange(updatedAnswers);
-//     };
-
-//     const handleCheckboxChange = (answerId, checked) => {
-//         let updatedSelected;
-//         if (checked) {
-//             updatedSelected = [...selectedAnswers, answerId];
-//         } else {
-//             updatedSelected = selectedAnswers.filter(id => id !== answerId);
-//         }
-//         onSelectedChange(updatedSelected);
-//     };
-
-//     const optionsToRender = shuffleEnabled ? shuffledOptions : answers;
-
-//     return (
-//         <div className="flex flex-col gap-4">
-//             <div className="flex items-center justify-between">
-//                 <span className="text-base font-semibold text-greyPrimary">Select right answer</span>
-//                 {showShuffleToggle && (
-//                     <div className='flex items-center gap-1 group'>
-//                         <Checkbox
-//                             name="shuffleMultipleSelectOptions"
-//                             id="shuffleMultipleSelectOptions"
-//                             checked={shuffleEnabled}
-//                             onCheckedChange={handleShuffleToggle}
-//                         />
-//                         <label htmlFor='shuffleMultipleSelectOptions' className="text-greyAccent font-medium text-sm group-hover:text-purplePrimary duration-300 transition-colors ease-in cursor-pointer">
-//                             Shuffle options
-//                         </label>
-//                     </div>
-//                 )}
-//             </div>
-//             <div className='flex flex-col gap-4 '>
-//                 {optionsToRender.map((answer, index) => (
-//                     <div key={answer.id} className="flex items-center gap-2 peer">
-//                         <Checkbox
-//                             checked={selectedAnswers.includes(answer.id)}
-//                             onCheckedChange={checked => handleCheckboxChange(answer.id, checked)}
-//                         />
-//                         <Input
-//                             type="text"
-//                             value={answer.text}
-//                             onChange={(e) => handleAnswerTextChange(answer.id, e.target.value)}
-//                             className="p-3 flex-1 rounded-xl text-greyAccent font-medium text-sm border border-seperatorPrimary focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-//                             placeholder={`Option ${index + 1}`}
-//                         />
-//                         <RemoveOptionButton handleRemove={handleRemoveOption(answer.id)} canRemove={answers.length > 2} />
-//                     </div>
-//                 ))}
-//             </div>
-//             <AddOptionButton handleAddOption={handleAddOption} />
-//         </div>
-//     );
-// };
-
-// export default MultipleSelectAnswers
-
-import React from 'react'
-import RemoveOptionButton from '@/components/features/assesment/create/shared/RemoveOptionButton';
-import { useState, useEffect } from "react";
-import { Checkbox } from '@/components/ui/checkbox';
+import { useFormContext, useFieldArray } from "react-hook-form";
+import AddOptionButton from "../../shared/AddOptionButton";
+import RemoveOptionButton from "../../shared/RemoveOptionButton";
 import { Input } from '@/components/ui/input';
-import AddOptionButton from '../../shared/AddOptionButton';
+import { Checkbox } from '@/components/ui/checkbox';
 import { cn } from '@/lib/utils';
+import MarkIcon from '@/assets/mark.svg?react';
+const MultipleSelectAnswers = ({ name = "multipleSelectAnswers", selectedName = "selectedAnswers", mode }) => {
+    const { control, register, setValue, watch, formState: { errors } } = useFormContext();
+    const { fields, append, remove } = useFieldArray({ control, name });
+    const selectedAnswers = watch(selectedName) || [];
+    const multipleSelectAnswers = watch(name) || [];
 
-const MultipleSelectAnswers = ({
-    answers,
-    selectedAnswers = [],
-    onAnswersChange,
-    onSelectedChange,
-    showShuffleToggle,
-    shuffleEnabled,
-    setShuffleEnabled,
-    length,
-    error
-}) => {
-    // const [shuffleEnabled, setShuffleEnabled] = useState(false);
-    const [shuffledOptions, setShuffledOptions] = useState([]);
-
-    useEffect(() => {
-        if (shuffleEnabled) {
-            const shuffled = [...answers]
-                .map(value => ({ value, sort: Math.random() }))
-                .sort((a, b) => a.sort - b.sort)
-                .map(({ value }) => value);
-            setShuffledOptions(shuffled);
-        } else {
-            setShuffledOptions([]);
-        }
-    }, [shuffleEnabled, answers]);
-
-    const handleShuffleToggle = (checked) => {
-        setShuffleEnabled(checked);
-    };
-
+    // Add new option
     const handleAddOption = () => {
-        // Find the minimum id (for negative id generation)
-        const minId = Math.min(0, ...answers.map(answer => Number(answer.id) || 0));
-        const newAnswer = {
-            id: minId - 1, // e.g., -1, -2, -3, etc.
-            text: ''
-        };
-        onAnswersChange([...answers, newAnswer]);
+        const newId = Date.now();
+        append({ id: newId, text: "" });
     };
 
-    const handleRemoveOption = (answerId) => {
-        if (answers.length <= 2) {
-            alert('You must have at least 2 options');
-            return;
-        }
-        const updatedAnswers = answers.filter(answer => answer.id !== answerId);
-        onAnswersChange(updatedAnswers);
-        const updatedSelected = selectedAnswers.filter(id => id !== answerId);
-        onSelectedChange(updatedSelected);
-    };
+    // Handle checkbox change - use the actual multipleSelectAnswers ID, not field ID
+    const handleCheckboxChange = (index) => {
+        const actualId = multipleSelectAnswers[index]?.id;
+        if (actualId === undefined) return;
 
-    const handleAnswerTextChange = (answerId, newText) => {
-        const updatedAnswers = answers.map(answer =>
-            answer.id === answerId ? { ...answer, text: newText } : answer
-        );
-        onAnswersChange(updatedAnswers);
-    };
+        console.log('DEBUG - Checkbox changed for actual ID:', actualId, typeof actualId);
+        console.log('DEBUG - Current selectedAnswers before change:', selectedAnswers);
 
-    const handleCheckboxChange = (answerId, checked) => {
-        let updatedSelected;
-        if (checked) {
-            updatedSelected = [...selectedAnswers, answerId];
+        let updated;
+        // Convert to strings for comparison to handle mixed types
+        const selectedAsStrings = selectedAnswers.map(String);
+        const actualIdAsString = String(actualId);
+
+        if (selectedAsStrings.includes(actualIdAsString)) {
+            // Remove: filter out the matching ID (preserve original types)
+            updated = selectedAnswers.filter(val => String(val) !== actualIdAsString);
+            console.log('DEBUG - Removing ID:', actualId);
         } else {
-            updatedSelected = selectedAnswers.filter(id => id !== answerId);
+            // Add: use the actual ID from multipleSelectAnswers
+            updated = [...selectedAnswers, actualId];
+            console.log('DEBUG - Adding ID:', actualId);
         }
-        onSelectedChange(updatedSelected);
+
+        console.log('DEBUG - Updated selectedAnswers:', updated);
+        setValue(selectedName, updated, { shouldValidate: true });
     };
 
-    const optionsToRender = shuffleEnabled ? shuffledOptions : answers;
+    // Remove option and update selectedAnswers if needed
+    const handleRemoveOption = (index) => {
+        const actualId = multipleSelectAnswers[index]?.id;
+        remove(index);
+
+        if (actualId !== undefined) {
+            const updatedSelected = selectedAnswers.filter(val => String(val) !== String(actualId));
+            setValue(selectedName, updatedSelected, { shouldValidate: true });
+        }
+    };
 
     return (
-        <div className="flex flex-col gap-4">
-            <div className="flex items-center justify-between">
-                <span className="text-base font-semibold text-greyPrimary">Select right answer</span>
-                {showShuffleToggle && (
-                    <div className='flex items-center gap-1 group'>
-                        <Checkbox
-                            name="shuffleMultipleSelectOptions"
-                            id="shuffleMultipleSelectOptions"
-                            checked={shuffleEnabled}
-                            onCheckedChange={handleShuffleToggle}
-                        />
-                        <label htmlFor='shuffleMultipleSelectOptions' className="text-greyAccent font-medium text-sm group-hover:text-purplePrimary duration-300 transition-colors ease-in cursor-pointer">
-                            Shuffle options
-                        </label>
+        <div>
+            {fields.map((field, idx) => {
+                const actualAnswer = multipleSelectAnswers[idx];
+                const isSelected = actualAnswer ?
+                    selectedAnswers.map(String).includes(String(actualAnswer.id)) :
+                    false;
+
+                return (
+                    <div className='flex flex-col '>
+                        <div key={field.id} className="flex items-center gap-2 mb-2">
+                            <Checkbox
+                                checked={isSelected}
+                                onCheckedChange={() => handleCheckboxChange(idx)}
+                                id={`multi-option-${field.id}`}
+                            />
+                            <Input
+                                type="text"
+                                {...register(`${name}.${idx}.text`)}
+                                defaultValue={field.text}
+                                className={cn(
+                                    "p-3 flex-1 rounded-xl text-greyAccent font-medium text-sm border",
+                                    errors[name]?.[idx]?.text ? 'border-dangerPrimary' : 'border-seperatorPrimary'
+                                )}
+                                onChange={e => setValue(`${name}.${idx}.text`, e.target.value, { shouldValidate: true })}
+                            />
+                            <RemoveOptionButton
+                                handleRemove={() => handleRemoveOption(idx)}
+                                canRemove={fields.length > 2}
+                            />
+                        </div>
+                        {errors[name]?.[idx]?.text && (
+                            <div className="w-full bg-[#412624] p-2 rounded-lg my-2">
+                                <MarkIcon className="w-4 h-4 inline mr-1 text-[#FF4E55]" />
+                                <span className="text-[#FF4E55] text-xs font-medium">
+                                    {errors[name][idx].text.message}
+                                </span>
+                            </div>
+                        )}
                     </div>
-                )}
-            </div>
-            <div className='flex flex-col gap-4 '>
-                {optionsToRender.map((answer, index) => (
-                    <div key={answer.id} className="flex items-center gap-2 peer">
-                        <Checkbox
-                            checked={selectedAnswers.includes(answer.id)}
-                            onCheckedChange={checked => handleCheckboxChange(answer.id, checked)}
-                        />
-                        <Input
-                            type="text"
-                            value={answer.text}
-                            onChange={(e) => handleAnswerTextChange(answer.id, e.target.value)}
-                            className={cn(
-                                "p-3 flex-1 rounded-xl text-greyAccent font-medium text-sm border border-seperatorPrimary focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500",
-                                {
-                                    "border-dangerPrimary": !answer.text.trim()
-                                }
-                            )}
-                            placeholder={`Option ${index + 1}`}
-                        />
-                        <RemoveOptionButton handleRemove={() => handleRemoveOption(answer.id)} canRemove={answers.length > length} />
-                    </div>
-                ))}
-            </div>
-            <AddOptionButton handleAddOption={handleAddOption} />
-            {/* <button onClick={handleAddOption} className="py-[17.5px] flex items-center gap-3 group cursor-pointer">
-                <div className='size-6 grid place-content-center bg-white rounded-full border border-transparent group-hover:bg-blueBtn group-hover:border-blueBtn transition-colors duration-300 ease-in'>
-                    <PlusIcon className="text-blueBtn group-hover:text-white transition-colors duration-200 ease-in" />
+                );
+            })}
+
+            {errors[selectedName] && (
+                <div className="w-full bg-[#412624] p-2 rounded-lg mt-2">
+                    <MarkIcon className="w-4 h-4 inline mr-1 text-[#FF4E55]" />
+                    <span className="text-[#FF4E55] text-xs font-medium">{errors[selectedName].message}</span>
                 </div>
-                <span className='text-blueBtn text-sm font-medium group-hover:underline underline-offset-4 transition-all duration-200 ease-in'>Add Options</span>
-            </button> */}
+            )}
+            <AddOptionButton handleAddOption={handleAddOption} />
         </div>
     );
 };
 
-export default MultipleSelectAnswers
+export default MultipleSelectAnswers;
