@@ -93,7 +93,7 @@ const HomePageModal = ({ onClose }) => {
       setConfig(config);
       setSelectedOptionValues([]);
     });
-    
+
     surveyAPI.getOrCreateUserSurvey().then((survey) => {
       setUserSurvey(survey);
     });
@@ -108,7 +108,7 @@ const HomePageModal = ({ onClose }) => {
       }
     }
     getAssessmentRecommendation();
-  }, [page])
+  }, [page]);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -120,7 +120,7 @@ const HomePageModal = ({ onClose }) => {
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [onClose]);
-  
+
   const SURVEY_PAGES = useMemo(() => {
     const pages = {
       [ROLE]: {
@@ -293,7 +293,6 @@ const HomePageModal = ({ onClose }) => {
     return pages;
   }, [enumsLoading]);
 
-
   const handleNext = async () => {
     setSubmitting(true);
     const nextPage =
@@ -317,11 +316,11 @@ const HomePageModal = ({ onClose }) => {
       };
       surveyPayload = {
         [field]: selectedOptionValues,
-      }
+      };
     } else if (pageType === TEXT_FEEDBACK) {
       surveyPayload = {
         [field]: feedbackText,
-      }
+      };
       configPayload = {
         extra: {
           assessmentOnboarding: {
@@ -335,7 +334,10 @@ const HomePageModal = ({ onClose }) => {
     try {
       if (surveyPayload) {
         try {
-          const survey = await surveyAPI.updateUserSurvey(userSurvey.id, surveyPayload);
+          const survey = await surveyAPI.updateUserSurvey(
+            userSurvey.id,
+            surveyPayload
+          );
           setUserSurvey(survey);
         } catch (err) {
           console.error(err);
@@ -344,7 +346,10 @@ const HomePageModal = ({ onClose }) => {
 
       if (configPayload) {
         try {
-          const updatedConfig = await surveyAPI.updateOnboardingConfig(config.id, configPayload);
+          const updatedConfig = await surveyAPI.updateOnboardingConfig(
+            config.id,
+            configPayload
+          );
           setConfig(updatedConfig);
           if (nextPage) {
             setSelectedOptionValues([]);
@@ -493,7 +498,11 @@ const HomePageModal = ({ onClose }) => {
                         Icon={(props) => (
                           <option.Icon
                             {...props}
-                            className={`${selectedOptionValues.includes(option.value) ? "text-purplePrimary" : ""}`}
+                            className={`${
+                              selectedOptionValues.includes(option.value)
+                                ? "text-purplePrimary"
+                                : ""
+                            }`}
                           />
                         )}
                         selected={selectedOptionValues.includes(option.value)}
@@ -519,7 +528,11 @@ const HomePageModal = ({ onClose }) => {
                               Icon={(props) => (
                                 <option.Icon
                                   {...props}
-                                  className={`${selectedOptionValues.includes(option.value) ? "text-purplePrimary" : ""}`}
+                                  className={`${
+                                    selectedOptionValues.includes(option.value)
+                                      ? "text-purplePrimary"
+                                      : ""
+                                  }`}
                                 />
                               )}
                               selected={selectedOptionValues.includes(
@@ -553,9 +566,9 @@ const HomePageModal = ({ onClose }) => {
             ) : null}
             {renderPage.multiselect && (
               <motion.div className="flex flex-row items-center gap-2 text-sm">
-                <InfoIcon />
+                <InfoIcon className="text-purplePrimary" />
                 <motion.p className="text-purplePrimary">
-                  You can select multiple options
+                  FYI you can select multiple options
                 </motion.p>
               </motion.div>
             )}
@@ -565,16 +578,17 @@ const HomePageModal = ({ onClose }) => {
               transition={{ duration: 0.4, delay: 0.7 }}
               className="flex flex-row gap-5 items-center"
             >
-              {(renderPage.prevPage ||
-                config?.extra?.assessmentOnboarding?.prevPage) && (
-                <Button
-                  onClick={handleBack}
-                  className={`bg-white border border-purplePrimary hover:bg-white text-purplePrimary rounded-full px-3 py-[6px] h-[33px] w-[83px]}`}
-                >
-                  <ChevronLeft className="h-4 w-4" />
-                  Back
-                </Button>
-              )}
+              {!renderPage.disableBack &&
+                (renderPage.prevPage ||
+                  config?.extra?.assessmentOnboarding?.prevPage) && (
+                  <Button
+                    onClick={handleBack}
+                    className={`bg-white border border-purplePrimary hover:bg-white text-purplePrimary rounded-full px-3 py-[6px] h-[33px] w-[83px]}`}
+                  >
+                    <ChevronLeft className="h-4 w-4" />
+                    Back
+                  </Button>
+                )}
               <Button
                 onClick={handleNext}
                 disabled={nextDisabled}
