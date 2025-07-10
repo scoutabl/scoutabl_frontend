@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect, useMemo } from "react";
 import { motion } from "framer-motion";
 import bottomBg from "/bottomBackground.svg";
 import { Button } from "./ui/button";
+import { Textarea } from "./ui/textarea";
 import { ChevronRight, ChevronLeft, Info } from "lucide-react";
 import { AnimatePresence } from "framer-motion";
 import { useEnums } from "@/context/EnumsContext";
@@ -9,21 +10,20 @@ import { surveyAPI } from "@/api/onboarding/survey";
 import Card from "./ui/card";
 import { SCOUTABL_PURPLE } from "@/lib/constants";
 import HorizontalCard from "./ui/horizontal-card";
-import CodingIcon from "../../public/codingIcon.svg?react";
-import BulbIcon from "../../public/bulbIcon.svg?react";
-import BreifcaseIcon from "../../public/breifcaseIcon.svg?react";
-import RocketIcon from "../../public/rocketIcon.svg?react";
-import ArrowIcon from "../../public/arrowIcon.svg?react";
-import TerminalIcon from "../../public/terminalIcon.svg?react";
-import InfoIcon from "../../public/infoIcon.svg?react";
-import ChatIcon from "../../public/chatIcon.svg?react";
-import FlagIcon from "../../public/flagIcon.svg?react";
-import LayersIcon from "../../public/layersIcon.svg?react";
-import CodeIcon from "../../public/codeIcon.svg?react";
-import DoubleCheckIcon from "../../public/doubleCheckIcon.svg?react";
-import CirclesIcon from "../../public/circlesIcon.svg?react";
-import CommunityIcon from "../../public/communityIcon.svg?react";
-import UserIcon from "../../public/userIcon.svg?react";
+import BulbIcon from "@/assets/bulbIcon.svg?react";
+import BreifcaseIcon from "@/assets/breifcaseIcon.svg?react";
+import RocketIcon from "@/assets/rocketIcon.svg?react";
+import ArrowIcon from "@/assets/arrowIcon.svg?react";
+import TerminalIcon from "@/assets/terminalIcon.svg?react";
+import InfoIcon from "@/assets/infoIcon.svg?react";
+import ChatIcon from "@/assets/chatIcon.svg?react";
+import FlagIcon from "@/assets/flagIcon.svg?react";
+import LayersIcon from "@/assets/layersIcon.svg?react";
+import CodeIcon from "@/assets/codeIcon.svg?react";
+import DoubleCheckIcon from "@/assets/doubleCheckIcon.svg?react";
+import CirclesIcon from "@/assets/circlesIcon.svg?react";
+import CommunityIcon from "@/assets/communityIcon.svg?react";
+import UserIcon from "@/assets/userIcon.svg?react";
 
 const modalVariants = {
   hidden: {
@@ -82,6 +82,7 @@ const HomePageModal = ({ onClose }) => {
   const [config, setConfig] = useState(null);
   const [page, setPage] = useState(null);
   const [selectedOptionValues, setSelectedOptionValues] = useState([]);
+  const [feedbackText, setFeedbackText] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const modalRef = useRef(null);
 
@@ -363,7 +364,11 @@ const HomePageModal = ({ onClose }) => {
   if (renderPage) {
     [title1, title2] = renderPage.title.split("#");
   }
-  const nextDisabled = selectedOptionValues.length === 0 || submitting;
+  const nextDisabled =
+    (renderPage?.pageType === CHOICE_PAGE &&
+      selectedOptionValues.length === 0) ||
+    (renderPage?.pageType === TEXT_FEEDBACK && !feedbackText) ||
+    submitting;
   const showHorizontalCard = renderPage && renderPage?.options?.length > 3;
 
   return (
@@ -500,15 +505,12 @@ const HomePageModal = ({ onClose }) => {
               </motion.div>
             ) : renderPage.pageType === TEXT_FEEDBACK ? (
               <motion.div className="w-full flex flex-col items-center justify-center z-10">
-                {/* Dummy content for TEXT_FEEDBACK */}
-                <textarea
-                  className="w-[500px] h-[120px] border border-gray-300 rounded-lg p-4 text-base focus:outline-none focus:ring-2 focus:ring-purple-400"
-                  placeholder="Share your goals or feedback here..."
-                  disabled
+                <Textarea
+                  className="w-[580px] h-[160px] border border-gray-300 rounded-lg p-4 text-base focus:outline-none focus:ring-2 focus:ring-purple-400"
+                  placeholder="Share your hiring goals here..."
+                  onChange={(e) => setFeedbackText(e.target.value)}
+                  value={feedbackText}
                 />
-                <div className="text-gray-400 mt-2">
-                  (Text feedback coming soon...)
-                </div>
               </motion.div>
             ) : renderPage.pageType === CTA ? (
               <motion.div className="w-full flex flex-col items-center justify-center z-10">
