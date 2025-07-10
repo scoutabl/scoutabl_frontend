@@ -1,7 +1,7 @@
 import BaseAPI from "@/api/base";
 
 const ONBOARDING_CONFIG_URL = "/onboarding-config/"
-const SURVEY_URL = "/user-survey/"
+const USER_SURVEY_URL = "/user-survey/"
 
 class SurveyAPI extends BaseAPI {
     constructor() {
@@ -23,8 +23,21 @@ class SurveyAPI extends BaseAPI {
         return config;
     }
 
+    async getOrCreateUserSurvey() {
+        const survey = (await this.get(USER_SURVEY_URL)).data.results?.[0] || null;
+        if (!survey) {
+            const res = (await this.post(USER_SURVEY_URL, {})).data;
+            return res;
+        }
+        return survey;
+    }
+
     async updateOnboardingConfig(id, config) {
         return (await this.patch(ONBOARDING_CONFIG_URL + id + "/", config)).data;
+    }
+
+    async updateUserSurvey(id, survey) {
+        return (await this.patch(USER_SURVEY_URL + id + "/", survey)).data;
     }
 }
 

@@ -80,6 +80,7 @@ const CTA = "cta";
 const HomePageModal = ({ onClose }) => {
   const { resolveEnum, enumsLoading } = useEnums();
   const [config, setConfig] = useState(null);
+  const [userSurvey, setUserSurvey] = useState(null);
   const [page, setPage] = useState(null);
   const [selectedOptionValues, setSelectedOptionValues] = useState([]);
   const [feedbackText, setFeedbackText] = useState("");
@@ -91,6 +92,10 @@ const HomePageModal = ({ onClose }) => {
       setPage(config.extra?.assessmentOnboarding?.page || ROLE);
       setConfig(config);
       setSelectedOptionValues([]);
+    });
+
+    surveyAPI.getOrCreateUserSurvey().then((survey) => {
+      setUserSurvey(survey);
     });
   }, []);
 
@@ -276,10 +281,10 @@ const HomePageModal = ({ onClose }) => {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [onClose]);
 
-  const handleNext = () => {
+  const handleNext = async () => {
     setSubmitting(true);
     const nextPage =
-      renderPage.options.find(
+      renderPage.options?.find(
         (option) => option.value === selectedOptionValues[0]
       )?.nextPage ||
       renderPage.nextPage ||
@@ -287,9 +292,9 @@ const HomePageModal = ({ onClose }) => {
     const field = renderPage.field;
     const pageType = renderPage.pageType;
 
+    let configPayload, surveyPayload;
     if (pageType === CHOICE_PAGE) {
-      const payload = {
-        [field]: selectedOptionValues,
+      configPayload = {
         extra: {
           assessmentOnboarding: {
             page: nextPage,
@@ -297,19 +302,47 @@ const HomePageModal = ({ onClose }) => {
           },
         },
       };
-      surveyAPI
-        .updateOnboardingConfig(config.id, payload)
-        .then((config) => {
-          setConfig(config);
+      surveyPayload = {
+        [field]: selectedOptionValues,
+      }
+    } else if (pageType === TEXT_FEEDBACK) {
+      surveyPayload = {
+        [field]: feedbackText,
+      }
+      configPayload = {
+        extra: {
+          assessmentOnboarding: {
+            page: nextPage,
+            prevPage: page,
+          },
+        },
+      };
+    }
+
+    try {
+      if (surveyPayload) {
+        try {
+          const survey = await surveyAPI.updateUserSurvey(userSurvey.id, surveyPayload);
+          setUserSurvey(survey);
+        } catch (err) {
+          console.error(err);
+        }
+      }
+
+      if (configPayload) {
+        try {
+          const updatedConfig = await surveyAPI.updateOnboardingConfig(config.id, configPayload);
+          setConfig(updatedConfig);
           if (nextPage) {
             setSelectedOptionValues([]);
             setPage(nextPage);
           }
-        })
-        .catch(console.error)
-        .finally(() => setSubmitting(false));
-    } else if (pageType === TEXT_FEEDBACK) {
-      console.log("test");
+        } catch (err) {
+          console.error(err);
+        }
+      }
+    } finally {
+      setSubmitting(false);
     }
   };
 
