@@ -11,7 +11,7 @@ export const useAuth = () => useContext(AuthContext);
 const MAX_LOGIN_ATTEMPTS = 5;
 const LOCKOUT_DURATION = 15 * 60 * 1000; // 15 minutes
 const TOKEN_REFRESH_BUFFER = 5 * 60 * 1000; // 5 minutes before expiry
-const IDLE_TIMEOUT = 30 * 60 * 1000; // 30 minutes
+const IDLE_TIMEOUT = 24 * 60 * 60 * 1000; // 24 hours
 
 export const AuthProvider = ({ children }) => {
     const [user, setUser] = useState(null);
