@@ -34,6 +34,7 @@ export const getValidationSchema = (questionType) => {
             text: z.string().nonempty('Answer text is required'),
           })
         ).min(2, 'At least 2 answers required'),
+        shuffleEnabled: z.boolean().default(false),
       });
 
     case 'multiple-select':
@@ -46,6 +47,7 @@ export const getValidationSchema = (questionType) => {
             text: z.string().nonempty('Answer text is required'),
           })
         ).min(2, 'At least 2 answers required'),
+        shuffleEnabled: z.boolean().default(false),
       });
     case 'numeric-input':
       return z.object({
@@ -63,6 +65,16 @@ export const getValidationSchema = (questionType) => {
             text: z.string().nonempty('Option text is required'),
           })
         ).min(2, 'At least 2 options required'),
+      });
+
+    case 'essay':
+    case 'video':
+    case 'audio':
+      return z.object({
+        ...baseSchema,
+        title: z.string().nonempty('Title is required'),
+        relevance_context: z.string().optional(),
+        look_for_context: z.string().optional(),
       });
 
     default:

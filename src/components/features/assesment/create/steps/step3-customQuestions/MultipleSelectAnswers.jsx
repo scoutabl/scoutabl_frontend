@@ -1,9 +1,10 @@
-import { useFormContext, useFieldArray } from "react-hook-form";
+import { useFormContext, useFieldArray, Controller } from "react-hook-form";
 import AddOptionButton from "../../shared/AddOptionButton";
 import RemoveOptionButton from "../../shared/RemoveOptionButton";
 import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
 import { cn } from '@/lib/utils';
+import FormMessage from "../../shared/FormMessage";
 import MarkIcon from '@/assets/mark.svg?react';
 const MultipleSelectAnswers = ({ name = "multipleSelectAnswers", selectedName = "selectedAnswers", mode }) => {
     const { control, register, setValue, watch, formState: { errors } } = useFormContext();
@@ -56,55 +57,83 @@ const MultipleSelectAnswers = ({ name = "multipleSelectAnswers", selectedName = 
     };
 
     return (
-        <div>
-            {fields.map((field, idx) => {
-                const actualAnswer = multipleSelectAnswers[idx];
-                const isSelected = actualAnswer ?
-                    selectedAnswers.map(String).includes(String(actualAnswer.id)) :
-                    false;
-
-                return (
-                    <div className='flex flex-col '>
-                        <div key={field.id} className="flex items-center gap-2 mb-2">
+        <div className="flex flex-col gap-4">
+            <div className="flex items-center justify-between">
+                <span className="text-base font-semibold text-greyPrimary">Select right answer</span>
+                <div className="flex items-center gap-1">
+                    <Controller
+                        name="shuffleEnabled"
+                        control={control}
+                        defaultValue={false}
+                        render={({ field }) => (
                             <Checkbox
-                                checked={isSelected}
-                                onCheckedChange={() => handleCheckboxChange(idx)}
-                                id={`multi-option-${field.id}`}
+                                checked={field.value}
+                                onCheckedChange={(val) => {
+                                    console.log("Shuffle checkbox toggled. New value:", !!val);
+                                    field.onChange(!!val);
+                                }}
                             />
-                            <Input
-                                type="text"
-                                {...register(`${name}.${idx}.text`)}
-                                defaultValue={field.text}
-                                className={cn(
-                                    "p-3 flex-1 rounded-xl text-greyAccent font-medium text-sm border",
-                                    errors[name]?.[idx]?.text ? 'border-dangerPrimary' : 'border-seperatorPrimary'
-                                )}
-                                onChange={e => setValue(`${name}.${idx}.text`, e.target.value, { shouldValidate: true })}
-                            />
-                            <RemoveOptionButton
-                                handleRemove={() => handleRemoveOption(idx)}
-                                canRemove={fields.length > 2}
-                            />
-                        </div>
-                        {errors[name]?.[idx]?.text && (
-                            <div className="w-full bg-[#412624] p-2 rounded-lg my-2">
-                                <MarkIcon className="w-4 h-4 inline mr-1 text-[#FF4E55]" />
-                                <span className="text-[#FF4E55] text-xs font-medium">
-                                    {errors[name][idx].text.message}
-                                </span>
-                            </div>
                         )}
-                    </div>
-                );
-            })}
-
-            {errors[selectedName] && (
-                <div className="w-full bg-[#412624] p-2 rounded-lg mt-2">
-                    <MarkIcon className="w-4 h-4 inline mr-1 text-[#FF4E55]" />
-                    <span className="text-[#FF4E55] text-xs font-medium">{errors[selectedName].message}</span>
+                    />
+                    <span className="text-sm text-greyAccent font-semibold ml-2"> Shuffle Options</span>
                 </div>
-            )}
-            <AddOptionButton handleAddOption={handleAddOption} />
+            </div>
+            <div className="flex flex-col gap-4">
+                {fields.map((field, idx) => {
+                    const actualAnswer = multipleSelectAnswers[idx];
+                    const isSelected = actualAnswer ?
+                        selectedAnswers.map(String).includes(String(actualAnswer.id)) :
+                        false;
+
+                    return (
+                        <>
+                            <div key={field.id} className="flex items-center gap-2">
+                                <Checkbox
+                                    checked={isSelected}
+                                    onCheckedChange={() => handleCheckboxChange(idx)}
+                                    id={`multi-option-${field.id}`}
+                                />
+                                <Input
+                                    type="text"
+                                    {...register(`${name}.${idx}.text`)}
+                                    defaultValue={field.text}
+                                    className={cn(
+                                        "p-3 flex-1 rounded-xl text-greyAccent font-medium text-sm border",
+                                        errors[name]?.[idx]?.text ? 'border-dangerPrimary' : 'border-seperatorPrimary'
+                                    )}
+                                    onChange={e => setValue(`${name}.${idx}.text`, e.target.value, { shouldValidate: true })}
+                                />
+                                <RemoveOptionButton
+                                    handleRemove={() => handleRemoveOption(idx)}
+                                    canRemove={fields.length > 2}
+                                />
+                            </div>
+                            {/* {
+                                errors[name]?.[idx]?.text && (
+                                    <div className="w-full bg-[#412624] p-2 rounded-lg my-2">
+                                        <MarkIcon className="w-4 h-4 inline mr-1 text-[#FF4E55]" />
+                                        <span className="text-[#FF4E55] text-xs font-medium">
+                                            {errors[name][idx].text.message}
+                                        </span>
+                                    </div>
+                                )
+                            } */}
+                            {errors[name]?.[idx]?.text && (
+                                <FormMessage message={errors[name][idx].text.message} />
+                            )}
+                        </>
+                    );
+                })}
+
+                {errors[selectedName] && (
+                    // <div className="w-full bg-[#412624] p-2 rounded-lg mt-2">
+                    //     <MarkIcon className="w-4 h-4 inline mr-1 text-[#FF4E55]" />
+                    //     <span className="text-[#FF4E55] text-xs font-medium">{errors[selectedName].message}</span>
+                    // </div>
+                    <FormMessage message={errors[selectedName].message} />
+                )}
+                <AddOptionButton handleAddOption={handleAddOption} />
+            </div>
         </div>
     );
 };

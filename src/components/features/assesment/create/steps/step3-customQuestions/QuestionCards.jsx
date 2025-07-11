@@ -15,7 +15,7 @@ import MsExcelIcon from '@/assets/msExcelIcon.svg?react'
 import GoogleSheetsIcon from '@/assets/googleSheetsIcon.svg?react'
 import VideoIcon from '@/assets/videoIcon.svg?react'
 import AudioIcon from '@/assets/audioIcon.svg?react'
-
+import PremiumIcon from '@/assets/premiumIconSvg.svg?react'
 export const questionTypes = [
     {
         category: 'Choice Based',
@@ -56,7 +56,7 @@ export const questionTypes = [
                 type: 'rearrange',
                 resourcetype: 'RearrangeQuestion',
                 question: 'Rearrange the following words to form a grammatically correct and meaningful sentence',
-                icon: <RearrangeIcon />,
+                icon: <RearrangeIcon className="h-3 w-3" />,
                 bg: '#95D1D2',
                 text: '#2F5D5E'
             }
@@ -96,7 +96,7 @@ export const questionTypes = [
                 type: 'code',
                 resourcetype: 'CodeQuestion',
                 question: 'Write a function to reverse a string.',
-                icon: <CodeIcon />,
+                icon: <CodeIcon className="h-3 w-3" />,
                 bg: '#8893D1',
                 text: '#192569'
             },
@@ -133,7 +133,8 @@ export const questionTypes = [
                 question: 'Record a 2-minute introduction about yourself.',
                 icon: <VideoIcon />,
                 bg: '#D8FFFE',
-                text: '#0A615F'
+                text: '#0A615F',
+                subscription: 'premium',
             },
             {
                 id: 'audio',
@@ -143,7 +144,8 @@ export const questionTypes = [
                 question: 'Record your answer to this question.',
                 icon: <AudioIcon />,
                 bg: '#FFFFDE',
-                text: '#5C7D0E'
+                text: '#5C7D0E',
+                subscription: 'premium',
             }
         ]
     }
@@ -172,6 +174,11 @@ const QuestionCards = ({ onAdd }) => {
                     {question.icon}
                 </div>
                 <span className='text-sm font-semibold text-greyPrimary group-hover:text-white transition-all duration-300 ease-in'>{question.name}</span>
+                {question.subscription === 'premium' && (
+                    <div className='h-[24.83px] w-8 grid place-content-center rounded-full bg-[linear-gradient(89.56deg,_rgba(128,_107,_255,_0.2)_0.37%,_rgba(166,_105,_253,_0.2)_99.63%)]'>
+                        <PremiumIcon />
+                    </div>
+                )}
                 {PlusButton}
             </div>
         );

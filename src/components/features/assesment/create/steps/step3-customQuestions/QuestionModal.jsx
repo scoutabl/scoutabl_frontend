@@ -82,7 +82,11 @@ const useQuestionForm = (initialData, initialQuestion, mode, isOpen, questionTyp
             rearrangeOptions: initialData.options
                 ? [...initialData.options].sort((a, b) => a.correct_order - b.correct_order)
                 : DEFAULT_REARRANGE_OPTIONS,
+            // shuffleEnabled: initialData.shuffle_options || false,
             shuffleEnabled: false,
+            relevance_context: initialData.relevance_context || '',
+            look_for_context: initialData.look_for_context || '',
+            title: initialData.title || '',
         };
         if (mode === 'edit' && initialData.choices) {
             if (questionType === 'single-select') {
@@ -104,9 +108,13 @@ const useQuestionForm = (initialData, initialQuestion, mode, isOpen, questionTyp
             }
             defaults.timeToAnswer = convertHHMMSSToMinutes(initialData.completion_time);
             defaults.customScore = initialData.custom_score || 120;
-            defaults.isCompulsory = initialData.is_compulsory || false;
-            defaults.saveToLibrary = initialData.is_save_template || false;
             defaults.shuffleEnabled = initialData.shuffle_options || false;
+            // defaults.isCompulsory = initialData.is_compulsory || false;
+            // defaults.saveToLibrary = initialData.is_save_template || false;
+            // defaults.shuffleEnabled = initialData.shuffle_options || false;
+            // defaults.title = initialData.title || '';
+            // defaults.relevance_context = initialData.relevance_context || '';
+            // defaults.look_for_context = initialData.look_for_context || '';
         }
 
         return defaults;
@@ -121,6 +129,7 @@ const useQuestionForm = (initialData, initialQuestion, mode, isOpen, questionTyp
     // Reset form when modal opens/closes or mode changes
     useEffect(() => {
         if (isOpen) {
+            console.log('Resetting form with:', getDefaultValues());
             form.reset(getDefaultValues());
         }
     }, [mode, isOpen, initialData, questionType]);
@@ -132,6 +141,7 @@ const useQuestionForm = (initialData, initialQuestion, mode, isOpen, questionTyp
 const QuestionModal = memo(({
     trigger,
     questionType,
+    setQuestionType,
     initialQuestion = "Rearrange the following words to form a grammatically correct and meaningful sentence",
     onSave,
     initialData = {},
@@ -167,6 +177,8 @@ const QuestionModal = memo(({
     };
 
     const onSubmit = (data) => {
+        console.log("Form data before submit:", data);
+        console.log("shuffleEnabled in form data:", data.shuffleEnabled);
         // Debug each option with proper type conversion
         // data.singleSelectAnswers.forEach((opt, index) => {
         //     const isSelected = String(opt.answerId) === String(data.selectedAnswer);
@@ -294,6 +306,7 @@ const QuestionModal = memo(({
                 resourcetype: "MCQuestion",
                 completion_time,
                 save_template: data.saveToLibrary,
+                shuffle_options: !!data.shuffleEnabled,
                 title: data.post,
                 multiple_true,
                 custom_score: Number(data.customScore),
@@ -353,8 +366,24 @@ const QuestionModal = memo(({
             return;
         }
 
-        // Handle other question types...
-        // (similar to your existing code)
+        if (['essay', 'video', 'audio'].includes(questionType)) {
+            const payload = {
+                resourcetype: questionType === 'essay' ? 'EssayQuestion' : questionType === 'video' ? 'VideoQuestion' : 'AudioQuestion',
+                completion_time,
+                save_template: data.saveToLibrary,
+                content: data.title || '', // If you have a content field, otherwise use title or another field
+                title: data.title,
+                relevance_context: data.relevance_context,
+                look_for_context: data.look_for_context,
+                // ...add other fields as needed
+            };
+            if (isEdit) {
+                updateQuestionMutation.mutate({ questionId: initialData.id, payload });
+            } else {
+                addQuestionMutation.mutate(payload);
+            }
+            return;
+        }
     };
     const renderAnswerSection = useMemo(() => {
         switch (questionType) {
@@ -391,34 +420,27 @@ const QuestionModal = memo(({
                     // length = { DEFAULT_MULTIPLE_SELECT_ANSWERS.length }
                     // error = { data.multipleSelectAnswers.some(answer => !answer.text.trim()) }
                 );
-            // case 'rating':
-            //     return (
-            //         <RatingScaleAnswers
-            //             scale="star-rating"
-            //             selectedRating={data.selectedRating}
-            //             onRatingChange={data.setSelectedRating}
-            //         />
-            //     );
+            case 'rating':
+                return (
+                    <RatingScaleAnswers
+                        scale="star-rating"
+                        selectedRating={data.selectedRating}
+                        onRatingChange={data.setSelectedRating}
+                    />
+                );
             case 'numeric-input':
                 return (
-                    <NumericInputAnswers
-                    // correctAnswer={data.correctAnswer}
-                    // onAnswerChange={data.setCorrectAnswer}
-                    // numericCondition={data.numericCondition}
-                    // onConditionChange={data.setNumericCondition}
-                    />
+                    <NumericInputAnswers />
                 );
             case 'rearrange':
                 return (
-                    <RearrangeAnswers
-                        inputRefs={inputRefs}
-                    />
+                    <RearrangeAnswers inputRefs={inputRefs} />
                 )
             case 'essay':
             case 'video':
             case 'audio':
                 return (
-                    <ReusableAnswer />
+                    <ReusableAnswer register={form.register} errors={form.formState.errors} />
                 );
             default:
                 return <div>Unsupported question type</div>;
@@ -434,7 +456,7 @@ const QuestionModal = memo(({
                     <DialogHeader className="max-h-9">
                         <DialogTitle className="flex items-center gap-2">
                             <span className="text-xl text-greyPrimary">New Question:</span>
-                            <Select defaultValue={questionType}>
+                            <Select value={questionType} onValueChange={setQuestionType}>
                                 <SelectTrigger className="w-[176px] text-sm bg-blueSecondary text-greyAccent">
                                     <SelectValue />
                                 </SelectTrigger>
@@ -444,6 +466,10 @@ const QuestionModal = memo(({
                                     <SelectItem value="rating">Rating</SelectItem>
                                     <SelectItem value="numeric-input">Numeric Input</SelectItem>
                                     <SelectItem value="essay">Essay</SelectItem>
+                                    <SelectItem value="video">Video</SelectItem>
+                                    <SelectItem value="audio">Audio</SelectItem>
+                                    <SelectItem value="rearrange">Rearrange</SelectItem>
+                                    <SelectItem value="code">Code</SelectItem>
                                 </SelectContent>
                             </Select>
                         </DialogTitle>

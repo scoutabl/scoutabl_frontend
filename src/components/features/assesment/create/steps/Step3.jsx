@@ -315,6 +315,7 @@ const Step3 = ({ assessmentId = 14 }) => {
                 mode={modalMode}
                 initialData={modalInitialData}
                 questionType={modalQuestionType}
+                setQuestionType={setModalQuestionType}
                 assessmentId={assessmentId}
             // You can add onSave or other props as needed
             />
