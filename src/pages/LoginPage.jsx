@@ -75,7 +75,7 @@ const LoginPage = () => {
                     </h1>
 
                     <Form {...form}>
-                        <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col gap-4">
+                        <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col gap-4" autoComplete="on">
                             {/* email field */}
                             <FormField
                                 control={form.control}
@@ -89,6 +89,7 @@ const LoginPage = () => {
                                                 placeholder="Enter your business email"
                                                 {...field}
                                                 disabled={isLoading}
+                                                autoComplete="email"
                                             />
                                         </FormControl>
                                         <FormMessage className='py-1 text-[clamp(0.75rem,1.5vw,0.875rem)]' />
