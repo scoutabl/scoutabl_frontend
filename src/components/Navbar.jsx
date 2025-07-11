@@ -6,7 +6,7 @@ import { useAuth } from "@/context/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { ROUTES } from "../lib/routes";
 import RocketIcon from "@/assets/rocketIcon.svg?react";
-import RocketFillIcon from "@/assets/rocketFillIcon.svg?react";
+import RocketSolidIcon from "@/assets/rocketSolidIcon.svg?react";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 
 function Navbar() {
@@ -29,23 +29,23 @@ function Navbar() {
       />
       <div className="flex flex-row gap-10">
         <IconButton
-          iconSolid={RocketFillIcon}
+          iconSolid={RocketSolidIcon}
           iconOutline={RocketIcon}
           label="Assessments"
           active
         />
         <IconButton
-          iconSolid={RocketFillIcon}
+          iconSolid={RocketSolidIcon}
           iconOutline={RocketIcon}
           label="Assessments"
         />
         <IconButton
-          iconSolid={RocketFillIcon}
+          iconSolid={RocketSolidIcon}
           iconOutline={RocketIcon}
           label="Assessments"
         />
         <IconButton
-          iconSolid={RocketFillIcon}
+          iconSolid={RocketSolidIcon}
           iconOutline={RocketIcon}
           label="Assessments"
         />
