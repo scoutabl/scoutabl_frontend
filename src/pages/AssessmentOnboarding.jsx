@@ -9,6 +9,7 @@ import { motion } from "framer-motion";
 import { useOnboardingConfig } from "@/api/onboarding/survey";
 import { useNavigate } from "react-router-dom";
 import { ROUTES } from "../lib/routes";
+import Loading from "@/components/ui/loading";
 
 const avatarVariants = {
   hidden: { opacity: 0, scale: 0.8 },
@@ -43,7 +44,7 @@ const contentVariants = {
 
 const AssessmentOnboarding = () => {
   const navigate = useNavigate();
-  const { data: onboardingConfig } = useOnboardingConfig();
+  const { data: onboardingConfig, isLoading } = useOnboardingConfig();
   const [userFirstName, setUserFirstName] = useState("");
   const [userLastName, setUserLastName] = useState("");
   const [windowSize, setWindowSize] = useState({
@@ -85,7 +86,9 @@ const AssessmentOnboarding = () => {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  return (
+  return isLoading ? (
+    <Loading />
+  ) : (
     <div className="relative min-h-screen">
       <HomePageAnimation
         userFirstName={userFirstName}

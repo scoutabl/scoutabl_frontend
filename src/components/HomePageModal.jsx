@@ -30,6 +30,7 @@ import DoubleCheckIcon from "@/assets/doubleCheckIcon.svg?react";
 import CirclesIcon from "@/assets/circlesIcon.svg?react";
 import CommunityIcon from "@/assets/communityIcon.svg?react";
 import UserIcon from "@/assets/userIcon.svg?react";
+import Loading from "./ui/loading";
 
 const modalVariants = {
   hidden: {
@@ -610,7 +611,7 @@ const HomePageModal = ({ onClose }) => {
             </motion.div>
           </motion.div>
         ) : (
-          <p>TODO: Display Loading Icon</p>
+          <Loading />
         )}
       </AnimatePresence>
 
