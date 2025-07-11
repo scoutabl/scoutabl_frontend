@@ -1,11 +1,14 @@
 import React from 'react'
-import logo from '/logo.svg'
+import LogoIcon from '@/assets/logoFull.svg?react'
 import { Button } from './ui/button'
 import { useAuth } from '@/context/AuthContext'
+import { useNavigate } from 'react-router-dom'
+import { ROUTES } from "../lib/routes";
 
 function Navbar() {
     const { logout } = useAuth()
-
+    const navigate = useNavigate()
+    
     const handleLogout = async () => {
         try {
             await logout()
@@ -15,8 +18,8 @@ function Navbar() {
     }
 
     return (
-        <nav className="fixed w-full z-20 top-0 start-0 h-20 flex items-center justify-between px-10">
-            <img src={logo} alt="scoutabl logo" className='h-9 w-9' />
+        <nav className="fixed z-20 top-0 left-[110px] right-[110px] h-18 mt-4 flex items-center justify-between px-6 rounded-full bg-purplePrimary">
+            <LogoIcon className="hover:cursor-pointer" onClick={() => navigate(ROUTES.ROOT)} />
             <Button
                 onClick={handleLogout}
                 effect="shineHover"

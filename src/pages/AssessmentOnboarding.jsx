@@ -6,6 +6,9 @@ import HomePageModal from "@/components/HomePageModal";
 import { toast } from "sonner";
 import HomePageAnimation from "@/components/HomePageAnimation";
 import { motion } from "framer-motion";
+import { useOnboardingConfig } from "@/api/onboarding/survey";
+import { useNavigate } from "react-router-dom";
+import { ROUTES } from "../lib/routes";
 
 const avatarVariants = {
   hidden: { opacity: 0, scale: 0.8 },
@@ -39,6 +42,8 @@ const contentVariants = {
 };
 
 const AssessmentOnboarding = () => {
+  const navigate = useNavigate();
+  const { data: onboardingConfig } = useOnboardingConfig();
   const [userFirstName, setUserFirstName] = useState("");
   const [userLastName, setUserLastName] = useState("");
   const [windowSize, setWindowSize] = useState({
@@ -46,6 +51,12 @@ const AssessmentOnboarding = () => {
     height: typeof window !== "undefined" ? window.innerHeight : 0,
   });
   const [showModal, setShowModal] = useState(false);
+
+  useEffect(() => {
+    if (onboardingConfig?.assessment_onboarding_completed) {
+      navigate(ROUTES.ASSESSMENT);
+    }
+  }, [onboardingConfig?.assessment_onboarding_completed, navigate]);
 
   useEffect(() => {
     //throw error if no user found in local storage

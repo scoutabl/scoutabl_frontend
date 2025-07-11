@@ -26,6 +26,7 @@ import { toast } from "sonner"
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import { BASE_API_URL, BACKEND_URL } from '@/lib/constants';
+import { ROUTES } from "../lib/routes";
 
 const SignupPage = () => {
     const [apiError, setApiError] = useState("")
@@ -410,7 +411,7 @@ const SignupPage = () => {
                                         className='text-greyPrimary font-normal text-sm cursor-pointer'
                                         onClick={async () => {
                                             await login(email, userPassword, true);
-                                            navigate('/');
+                                            navigate(ROUTES.ROOT);
                                         }}
                                     >
                                         Be lazy &amp; <span className='text-bluePrimary hover:underline underline-offset-2'>Skip for Now!</span></span>

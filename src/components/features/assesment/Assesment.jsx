@@ -18,6 +18,7 @@ import ShareIcon from '@/assets/shareIcon.svg?react'
 import SettingsIcon from '@/assets/settingsIcon.svg?react'
 import TrashIcon from '@/assets/trashIcon.svg?react'
 import { Eye, Trash2 } from 'lucide-react'
+import { ROUTES } from "../../../lib/routes";
 const options = [
     {
         title: 'Active Assessments',
@@ -168,7 +169,7 @@ const Assesment = () => {
                     <Button
                         variant='primary'
                         className='p-3 flex items-center gap-2 rounded-2xl group'
-                        onClick={() => navigate('/assessment/create/1')}
+                        onClick={() => navigate(ROUTES.ASSESSMENT_CREATE.replace(":stepId", "1"))}
                     >
                         <div className='h-6 w-6 rounded-full bg-white grid place-content-center'>
                             <PlusIcon className="text-purplePrimary" />

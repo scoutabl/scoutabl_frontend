@@ -4,6 +4,7 @@ import Step1 from "./steps/Step1";
 import Step2 from "./steps/Step2";
 import Step3 from "./steps/Step3";
 import Step4 from "./steps/Step4";
+import { ROUTES } from "../../../../lib/routes";
 
 const steps = [
     { id: "1", component: Step1 },
@@ -18,7 +19,7 @@ export default function CreateAssessmentFlow() {
     const stepIndex = steps.findIndex((s) => s.id === stepId) || 0;
     const StepComponent = steps[stepIndex]?.component || Step1;
 
-    const goToStep = (id) => navigate(`/assessments/create/${id}`);
+    const goToStep = (id) => navigate(ROUTES.ASSESSMENT_CREATE.replace(":stepId", id));
 
     return (
         <div>

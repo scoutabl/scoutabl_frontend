@@ -1,28 +1,36 @@
 // export default App
-import './App.css'
-import { useEffect } from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom';
+import "./App.css";
+import { useEffect } from "react";
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
+  Navigate,
+  useLocation,
+  useNavigate,
+} from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
-import { AnimatePresence } from 'framer-motion';
-import { Toaster } from './components/ui/sonner'
-import AssesmentLayout from './layouts/AssesmentLayout';
-import { ThemeProvider } from './context/ThemeContext';
-import { PageTransition } from './components/PageTransition';
-import { AuthProvider, useAuth } from './context/AuthContext'
+import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
+import { AnimatePresence } from "framer-motion";
+import { Toaster } from "./components/ui/sonner";
+import AssesmentLayout from "./layouts/AssesmentLayout";
+import { ThemeProvider } from "./context/ThemeContext";
+import { PageTransition } from "./components/PageTransition";
+import { AuthProvider, useAuth } from "./context/AuthContext";
 import { EnumsProvider } from "@/context/EnumsContext";
-import NotFoundPage from './pages/NotFoundPage';
-import AuthNavbar from './components/AuthNavbar'
-import LoginPage from './pages/LoginPage'
-import SignupPage from './pages/SignupPage'
-import AssessmentOnboarding from './pages/AssessmentOnboarding'
-import { AssessmentProvider } from './context/AssesmentContext';
-import Assesment from './components/features/assesment/Assesment';
-import CreateAssessmentFlow from './components/features/assesment/create/CreateAssesmentFlow';
-import SkillAssesment from './pages/SkillAssesment'
-import CodingAssesment from './components/features/candidateAssesments/CodingAssesment'
-import { handleAPIError } from './lib/errorHandling';
-
+import NotFoundPage from "./pages/NotFoundPage";
+import AuthNavbar from "./components/AuthNavbar";
+import LoginPage from "./pages/LoginPage";
+import SignupPage from "./pages/SignupPage";
+import AssessmentOnboarding from "./pages/AssessmentOnboarding";
+import { AssessmentProvider } from "./context/AssesmentContext";
+import Assesment from "./components/features/assesment/Assesment";
+import CreateAssessmentFlow from "./components/features/assesment/create/CreateAssesmentFlow";
+import SkillAssesment from "./pages/SkillAssesment";
+import CodingAssesment from "./components/features/candidateAssesments/CodingAssesment";
+import { handleAPIError } from "./lib/errorHandling";
+import NavbarWrapper from "./components/common/NavbarWrapper";
+import { ROUTES } from "./lib/routes";
 
 // Protected Route component for authenticated users
 const ProtectedRoute = ({ children }) => {
@@ -47,7 +55,7 @@ const AuthRoute = ({ children }) => {
   useEffect(() => {
     // Only redirect if not loading and user is authenticated
     if (!loading && isAuthenticated) {
-      navigate('/assessment-onboarding', { replace: true });
+      navigate(ROUTES.ASSESSMENT_ONBOARDING, { replace: true });
     }
   }, [user, loading, isAuthenticated, navigate]);
 
@@ -68,14 +76,12 @@ const AuthRoute = ({ children }) => {
 // Navigation wrapper component
 const NavigationWrapper = ({ children }) => {
   const location = useLocation();
-  const isAuthPage = ['/login', '/register'].includes(location.pathname);
+  const isAuthPage = ["/login", "/register"].includes(location.pathname);
 
   return (
     <>
       {isAuthPage ? <AuthNavbar /> : ""}
-      <AnimatePresence mode="wait">
-        {children}
-      </AnimatePresence>
+      <AnimatePresence mode="wait">{children}</AnimatePresence>
     </>
   );
 };
@@ -88,7 +94,7 @@ const RoutesWithTransitions = () => {
     <Routes location={location} key={location.pathname}>
       {/* Auth routes - only accessible when not logged in */}
       <Route
-        path="/login"
+        path={ROUTES.LOGIN}
         element={
           <AuthRoute>
             <PageTransition>
@@ -98,7 +104,7 @@ const RoutesWithTransitions = () => {
         }
       />
       <Route
-        path="/register"
+        path={ROUTES.REGISTER}
         element={
           <AuthRoute>
             <PageTransition>
@@ -110,57 +116,67 @@ const RoutesWithTransitions = () => {
 
       {/* Protected routes - only accessible when logged in */}
       <Route
-        path="/assessment-onboarding"
+        path={ROUTES.ASSESSMENT_ONBOARDING}
         element={
           <ProtectedRoute>
-            <PageTransition>
-              <AssessmentOnboarding />
-            </PageTransition>
+            <NavbarWrapper>
+              <PageTransition>
+                <AssessmentOnboarding />
+              </PageTransition>
+            </NavbarWrapper>
           </ProtectedRoute>
         }
       />
       <Route
-        path="/assessment"
+        path={ROUTES.ASSESSMENT}
         element={
           <ProtectedRoute>
-            <PageTransition>
-              <Assesment />
-            </PageTransition>
+            <NavbarWrapper>
+              <PageTransition>
+                <Assesment />
+              </PageTransition>
+            </NavbarWrapper>
           </ProtectedRoute>
         }
       />
       <Route
-        path="/assessment/create/:stepId"
+        path={ROUTES.ASSESSMENT_CREATE}
         element={
           <ProtectedRoute>
-            <PageTransition>
-              <AssessmentProvider>
-                <CreateAssessmentFlow />
-              </AssessmentProvider>
-            </PageTransition>
+            <NavbarWrapper>
+              <PageTransition>
+                <AssessmentProvider>
+                  <CreateAssessmentFlow />
+                </AssessmentProvider>
+              </PageTransition>
+            </NavbarWrapper>
           </ProtectedRoute>
         }
       />
       <Route element={<AssesmentLayout />}>
         <Route
-          path="/skill-assesment"
+          path={ROUTES.SKILL_ASSESSMENT}
           element={
             <ProtectedRoute>
-              <PageTransition>
-                <SkillAssesment />
-              </PageTransition>
+              <NavbarWrapper>
+                <PageTransition>
+                  <SkillAssesment />
+                </PageTransition>
+              </NavbarWrapper>
             </ProtectedRoute>
           }
         />
       </Route>
       <Route element={<AssesmentLayout />}>
         <Route
-          path="/coding-assesment"
+          path={ROUTES.CODING_ASSESSMENT}
           element={
             <ProtectedRoute>
-              <PageTransition>
-                <CodingAssesment />
-              </PageTransition>
+              <NavbarWrapper>
+                <PageTransition>
+                  <CodingAssesment />
+                </PageTransition>
+              </NavbarWrapper>
             </ProtectedRoute>
           }
         />
@@ -168,11 +184,11 @@ const RoutesWithTransitions = () => {
 
       {/* Redirect root based on auth state */}
       <Route
-        path="/"
-        element={<Navigate to="/assessment-onboarding" replace />}
+        path={ROUTES.ROOT}
+        element={<Navigate to={ROUTES.ASSESSMENT_ONBOARDING} replace />}
       />
       <Route
-        path="*"
+        path={ROUTES.NOT_FOUND}
         element={
           <PageTransition>
             <NotFoundPage />
@@ -183,18 +199,16 @@ const RoutesWithTransitions = () => {
   );
 };
 
-const queryClient = new QueryClient(
-  {
-    defaultOptions: {
-      queries: {
-        onError: handleAPIError,
-      },
-      mutations: {
-        onError: handleAPIError,
-      },
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      onError: handleAPIError,
     },
-  }
-);
+    mutations: {
+      onError: handleAPIError,
+    },
+  },
+});
 
 function App() {
   return (
@@ -207,13 +221,13 @@ function App() {
                 <RoutesWithTransitions />
               </NavigationWrapper>
             </ThemeProvider>
-            <Toaster richColors   />
+            <Toaster richColors />
           </AuthProvider>
         </Router>
       </EnumsProvider>
       <ReactQueryDevtools initialIsOpen={false} />
     </QueryClientProvider>
-  )
+  );
 }
 
-export default App
+export default App;
