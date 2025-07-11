@@ -2,6 +2,7 @@ import React, { createContext, useState, useContext, useEffect, useCallback, use
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { BASE_API_URL } from '@/lib/constants';
+import { ROUTES } from "../lib/routes";
 const AuthContext = createContext(null);
 
 export const useAuth = () => useContext(AuthContext);
@@ -381,7 +382,7 @@ export const AuthProvider = ({ children }) => {
         // Security: Reset login attempts on manual logout
         resetLoginAttempts();
 
-        navigate('/login');
+        navigate(ROUTES.LOGIN);
     }, [navigate]);
 
     const refreshAccessToken = async () => {
