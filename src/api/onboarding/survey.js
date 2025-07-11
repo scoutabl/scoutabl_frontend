@@ -1,3 +1,5 @@
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+
 import BaseAPI from "@/api/base";
 
 const ONBOARDING_CONFIG_URL = "/onboarding-config/"
@@ -46,3 +48,54 @@ class SurveyAPI extends BaseAPI {
 }
 
 export const surveyAPI = new SurveyAPI();
+
+export const useOnboardingConfig = (defaultPage) => {
+    return useQuery({
+        queryKey: ['onboarding-config', defaultPage],
+        queryFn: () => surveyAPI.getOrCreateOnboardingConfig(defaultPage),
+    });
+}
+
+export const useUserSurvey = () => {
+    return useQuery({
+        queryKey: ['user-survey'],
+        queryFn: () => surveyAPI.getOrCreateUserSurvey(),
+    });
+}
+
+export const useAssessmentRecommendation = () => {
+    const queryClient = useQueryClient();
+    return useMutation({
+        queryKey: ['assessment-recommendation'],
+        mutationFn: () => surveyAPI.getAssessmentRecommendation(),
+        onSuccess: (data) => {
+            queryClient.setQueryData(['onboarding-config'], () => {
+                return { ...data };
+            });
+        },
+    });
+}
+
+export const useUpdateOnboardingConfig = () => {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: ({ id, config }) => surveyAPI.updateOnboardingConfig(id, config),
+        onSuccess: (data) => {
+            queryClient.setQueryData(['onboarding-config'], () => {
+                return { ...data };
+            });
+        },
+    });
+}
+
+export const useUpdateUserSurvey = () => {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: ({ id, survey }) => surveyAPI.updateUserSurvey(id, survey),
+        onSuccess: (data) => {
+            queryClient.setQueryData(['user-survey'], () => {
+                return { ...data };
+            });
+        },
+    });
+}

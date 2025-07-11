@@ -15,12 +15,13 @@ import NotFoundPage from './pages/NotFoundPage';
 import AuthNavbar from './components/AuthNavbar'
 import LoginPage from './pages/LoginPage'
 import SignupPage from './pages/SignupPage'
-import HomePage from './pages/HomePage'
+import AssessmentOnboarding from './pages/AssessmentOnboarding'
 import { AssessmentProvider } from './context/AssesmentContext';
 import Assesment from './components/features/assesment/Assesment';
 import CreateAssessmentFlow from './components/features/assesment/create/CreateAssesmentFlow';
 import SkillAssesment from './pages/SkillAssesment'
 import CodingAssesment from './components/features/candidateAssesments/CodingAssesment'
+import { handleAPIError } from './lib/errorHandling';
 
 
 // Protected Route component for authenticated users
@@ -46,7 +47,7 @@ const AuthRoute = ({ children }) => {
   useEffect(() => {
     // Only redirect if not loading and user is authenticated
     if (!loading && isAuthenticated) {
-      navigate('/dashboard', { replace: true });
+      navigate('/assessment-onboarding', { replace: true });
     }
   }, [user, loading, isAuthenticated, navigate]);
 
@@ -109,11 +110,11 @@ const RoutesWithTransitions = () => {
 
       {/* Protected routes - only accessible when logged in */}
       <Route
-        path="/dashboard"
+        path="/assessment-onboarding"
         element={
           <ProtectedRoute>
             <PageTransition>
-              <HomePage />
+              <AssessmentOnboarding />
             </PageTransition>
           </ProtectedRoute>
         }
@@ -168,7 +169,7 @@ const RoutesWithTransitions = () => {
       {/* Redirect root based on auth state */}
       <Route
         path="/"
-        element={<Navigate to="/dashboard" replace />}
+        element={<Navigate to="/assessment-onboarding" replace />}
       />
       <Route
         path="*"
@@ -182,7 +183,18 @@ const RoutesWithTransitions = () => {
   );
 };
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient(
+  {
+    defaultOptions: {
+      queries: {
+        onError: handleAPIError,
+      },
+      mutations: {
+        onError: handleAPIError,
+      },
+    },
+  }
+);
 
 function App() {
   return (

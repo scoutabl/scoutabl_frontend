@@ -6,7 +6,13 @@ import { Textarea } from "./ui/textarea";
 import { ChevronRight, ChevronLeft, Info } from "lucide-react";
 import { AnimatePresence } from "framer-motion";
 import { useEnums } from "@/context/EnumsContext";
-import { surveyAPI } from "@/api/onboarding/survey";
+import {
+  useOnboardingConfig,
+  useUserSurvey,
+  useAssessmentRecommendation,
+  useUpdateOnboardingConfig,
+  useUpdateUserSurvey,
+} from "@/api/onboarding/survey";
 import Card from "./ui/card";
 import { SCOUTABL_PURPLE } from "@/lib/constants";
 import HorizontalCard from "./ui/horizontal-card";
@@ -78,37 +84,33 @@ const TEXT_FEEDBACK = "text-feedback";
 const CTA = "cta";
 
 const HomePageModal = ({ onClose }) => {
-  const { resolveEnum, enumsLoading } = useEnums();
-  const [config, setConfig] = useState(null);
-  const [userSurvey, setUserSurvey] = useState(null);
+  const { resolveEnum } = useEnums();
+  const { data: config } = useOnboardingConfig(ROLE);
+  const { data: userSurvey } = useUserSurvey();
+  const { mutate: getAssessmentRecommendation } = useAssessmentRecommendation();
+  const {
+    mutateAsync: updateOnboardingConfigAsync,
+    isPending: isUpdatingOnboardingConfig,
+  } = useUpdateOnboardingConfig();
+  const {
+    mutateAsync: updateUserSurveyAsync,
+    isPending: isUpdatingUserSurvey,
+  } = useUpdateUserSurvey();
   const [page, setPage] = useState(null);
   const [selectedOptionValues, setSelectedOptionValues] = useState([]);
   const [feedbackText, setFeedbackText] = useState("");
-  const [submitting, setSubmitting] = useState(false);
   const modalRef = useRef(null);
 
-  useEffect(() => {
-    surveyAPI.getOrCreateOnboardingConfig(ROLE).then((config) => {
-      setPage(config.extra?.assessmentOnboarding?.page || ROLE);
-      setConfig(config);
-      setSelectedOptionValues([]);
-    });
-
-    surveyAPI.getOrCreateUserSurvey().then((survey) => {
-      setUserSurvey(survey);
-    });
-  }, []);
+  const submitting = isUpdatingOnboardingConfig || isUpdatingUserSurvey;
 
   useEffect(() => {
-    async function getAssessmentRecommendation() {
-      if (page === LAUNCH) {
-        // TODO: Implement launch page cards and handlers.
-        const updatedConfig = await surveyAPI.getAssessmentRecommendation();
-        setConfig(updatedConfig);
-      }
-    }
-    getAssessmentRecommendation();
-  }, [page]);
+    setPage(config?.extra?.assessmentOnboarding?.page || ROLE);
+    setSelectedOptionValues([]);
+  }, [config?.extra?.assessmentOnboarding?.page]);
+
+  useEffect(() => {
+    if (page === LAUNCH) getAssessmentRecommendation();
+  }, [page, getAssessmentRecommendation]);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -288,13 +290,13 @@ const HomePageModal = ({ onClose }) => {
         title: "Ready to launch your #assessment?",
         subtitle: "Pick the assessment that suits your hiring goals",
         hint: "You can try others anytime!",
+        pageType: CTA,
       },
     };
     return pages;
-  }, [enumsLoading]);
+  }, [resolveEnum]);
 
   const handleNext = async () => {
-    setSubmitting(true);
     const nextPage =
       renderPage.options?.find(
         (option) => option.value === selectedOptionValues[0]
@@ -329,38 +331,44 @@ const HomePageModal = ({ onClose }) => {
           },
         },
       };
+    } else if (page === LAUNCH) {
+      // TODO: This is supposed to trigger first assessment creation.
+      // For now, marking onboarding done to move to dashboard.
+      await updateOnboardingConfigAsync({
+        id: config.id,
+        config: {
+          assessment_onboarding_completed: true,
+        },
+      });
+      onClose();
+      return;
     }
 
     try {
+      const mutationPromises = [];
       if (surveyPayload) {
-        try {
-          const survey = await surveyAPI.updateUserSurvey(
-            userSurvey.id,
-            surveyPayload
-          );
-          setUserSurvey(survey);
-        } catch (err) {
-          console.error(err);
-        }
+        mutationPromises.push(
+          updateUserSurveyAsync({
+            id: userSurvey.id,
+            survey: surveyPayload,
+          })
+        );
       }
-
       if (configPayload) {
-        try {
-          const updatedConfig = await surveyAPI.updateOnboardingConfig(
-            config.id,
-            configPayload
-          );
-          setConfig(updatedConfig);
-          if (nextPage) {
-            setSelectedOptionValues([]);
-            setPage(nextPage);
-          }
-        } catch (err) {
-          console.error(err);
-        }
+        mutationPromises.push(
+          updateOnboardingConfigAsync({
+            id: config.id,
+            config: configPayload,
+          })
+        );
       }
-    } finally {
-      setSubmitting(false);
+      await Promise.all(mutationPromises);
+      if (nextPage) {
+        setSelectedOptionValues([]);
+        setPage(nextPage);
+      }
+    } catch (err) {
+      console.error(err);
     }
   };
 
