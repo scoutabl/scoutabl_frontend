@@ -87,7 +87,7 @@ const AssessmentOnboarding = () => {
   }, []);
 
   return isLoading ? (
-    <Loading />
+    <Loading className="h-[70vh]" />
   ) : (
     <div className="relative min-h-screen">
       <HomePageAnimation

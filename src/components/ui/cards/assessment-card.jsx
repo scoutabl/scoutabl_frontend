@@ -5,6 +5,7 @@ import {
   PopoverTrigger,
   PopoverContent,
 } from "@/components/ui/popover";
+import UserAvatarBadge from "@/components/common/UserAvatarBadge";
 
 /**
  * EntityCard for assessment list
@@ -46,6 +47,7 @@ const AssessmentCard = ({
     <div
       className={cn(
         "py-[18px] px-4 flex flex-col gap-4 rounded-2xl border border-seperatorPrimary bg-white",
+        "hover:bg-purpleTertiary hover:border-purplePrimary",
         className
       )}
     >
@@ -101,15 +103,12 @@ const AssessmentCard = ({
         </Popover>
       </div>
       <div className="flex flex-col gap-2">
-        <h2 className="text-base text-semibold text-greyPrimary">{title}</h2>
-        <div className="flex items-center gap-2">
+        <h1 className="text-base text-semibold text-greyPrimary text-xl">{title}</h1>
+        <div className="flex items-center gap-2 text-sm">
           <span className="text-purplePrimary">Owner</span>
-          <div className="flex items-center gap-1">
-            {/* image will come here */}
-            <span className="text-xs text-greyPrimary">{owner}</span>
-          </div>
+          <UserAvatarBadge user={owner} />
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 text-sm">
           <span className="text-purplePrimary">Expires</span>
           <div className="flex items-center gap-1">
             <span className="text-xs text-greyPrimary">{expires}</span>
@@ -122,9 +121,11 @@ const AssessmentCard = ({
             </div>
           ))}
         </div>
-        <div className="flex gap-1 items-center">
-          {CandidatesIcon && <CandidatesIcon className="h-[18px] w-6" />}
-          <span className="text-2xl text-greyPrimary font-bold">{candidates}</span>
+        <div className="flex flex-row gap-1 items-end">
+          <span className="text-purplePrimary">
+            {CandidatesIcon && <CandidatesIcon className="size-8" />}
+            </span>
+          <span className="text-3xl text-greyPrimary font-bold leading-none">{candidates}</span>
           <span className="text-sm text-greyAccent">Candidates</span>
         </div>
       </div>

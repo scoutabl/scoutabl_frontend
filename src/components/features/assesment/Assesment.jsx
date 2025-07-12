@@ -11,7 +11,7 @@ import PlusIcon from "@/assets/plusIcon.svg?react";
 import CreateAiIcon from "@/assets/createAiIcon.svg?react";
 import ActiveAssementIcon from "@/assets/activeAssesment.svg?react";
 import InvitationSentIcon from "@/assets/invitationSent.svg?react";
-import TotalCandidatesIcon from "@/assets/totalCandidates.svg?react";
+import TotalCandidatesIcon from "@/assets/totalCandidatesIcon.svg?react";
 import CompletionRateIcon from "@/assets/completionRate.svg?react";
 import DotsIcon from "@/assets/dots.svg?react";
 import EditIcon from "@/assets/editIcon.svg?react";
@@ -24,9 +24,11 @@ import { Eye, Trash2 } from "lucide-react";
 import { ROUTES } from "../../../lib/routes";
 import StatCard from "@/components/ui/cards/stat-card";
 import Section from "@/components/common/Section";
-import { useAssessmentPage } from "@/api/assessments/assessment";
+import { useInfiniteAssessmentPages } from "@/api/assessments/assessment";
 import { DEFAULT_LIST_API_PARAMS } from "@/lib/constants";
-import AssessmentCard from "@/components/ui/cards/entity-card";
+import AssessmentCard from "@/components/ui/cards/assessment-card";
+import { useEnums } from "@/context/EnumsContext";
+import PaginatedScroll from "@/components/common/PaginatedScroll";
 
 const options = [
   {
@@ -56,8 +58,17 @@ const options = [
 ];
 
 const Assesment = () => {
+  const { resolveEnum } = useEnums();
   const [searchParams] = useState(DEFAULT_LIST_API_PARAMS);
-  const { data: assessmentPage } = useAssessmentPage(searchParams);
+  const pageSize = DEFAULT_LIST_API_PARAMS.page_size;
+  const {
+    data,
+    fetchNextPage,
+    isLoading,
+    hasNextPage,
+    isFetchingNextPage,
+  } = useInfiniteAssessmentPages({ ...searchParams, page_size: pageSize });
+  const assessments = data ? data.pages.flatMap((page) => page.results) : [];
   const [openPopoverIndex, setOpenPopoverIndex] = useState(null);
   //   const [assessments, setAssessments] = useState([
   //     {
@@ -116,11 +127,15 @@ const Assesment = () => {
   //     },
   //   ]);
   const navigate = useNavigate();
-  const assessments = assessmentPage?.results || [];
 
   // Placeholder handlers for linter
   const handleEdit = () => {};
   const removeAssesment = () => {};
+
+  // Infinite scroll handler for PaginatedScroll
+  const handleNextPage = () => {
+    if (hasNextPage && !isFetchingNextPage) fetchNextPage();
+  };
 
   return (
     <section className="my-6 mx-[116px] flex flex-col gap-6">
@@ -178,136 +193,175 @@ const Assesment = () => {
           />
         </div>
         {/* Assessments Card  */}
-        <div className="assesment-grid">
-          <AnimatePresence>
-            {assessments.map((assesment) => {
-              // Status color logic for EntityCard
-              const statusMap = {
-                1: { bg: "bg-[#DDF3E3]", dot: "bg-[#008D0A]", text: "text-[#008D0A]", label: "Published" },
-                2: { bg: "bg-[#FBDDDD]", dot: "bg-[#EB5757]", text: "text-[#EB5757]", label: "Archived" },
-                3: { bg: "bg-[#FFE2CB]", dot: "bg-[#E68335]", text: "text-[#E68335]", label: "Draft" },
-              };
-              const statusObj = statusMap[assesment.status] || { bg: "bg-gray-200", dot: "bg-gray-400", text: "text-gray-600", label: "Unknown" };
-
-              // Title
-              const title = assesment.name || "Untitled Assessment";
-              // Owner (first moderator username or fallback)
-              const owner = assesment.moderator_details?.[0]?.username || "Unknown Owner";
-              // Expires (end_date or fallback)
-              const expires = assesment.end_date ? new Date(assesment.end_date).toLocaleDateString() : "N/A";
-              // Tags (from first test_details.tags or empty)
-              const tags = assesment.test_details?.[0]?.tags || [];
-              // Candidates (dummy value, as not present)
-              const candidates = 0;
-
-              // Popover menu config (unchanged)
-              const popoverMenu = [
-                {
-                  icon: (
-                    <EditIcon className="text-greyAccent group-hover:text-purplePrimary" />
-                  ),
-                  label: "Edit",
-                  color: "text-greyAccent",
-                  hover: "group-hover:text-purplePrimary",
-                  key: "edit",
-                  rounded: "rounded-tl-2xl rounded-tr-2xl",
-                  onClick: () => {
-                    handleEdit?.(assesment.id);
-                    setOpenPopoverIndex(null);
+        <PaginatedScroll
+          currentPage={data?.pages.length || 1}
+          totalCount={data?.pages[0]?.count || 0}
+          pageSize={pageSize}
+          onNextPage={handleNextPage}
+          loading={isFetchingNextPage || isLoading}
+          useWindowScroll
+        >
+          <div className="assesment-grid">
+            <AnimatePresence>
+              {assessments.map((assesment) => {
+                // Status color logic for EntityCard
+                const statusMap = {
+                  [resolveEnum("AssessmentStatus.PUBLISHED")]: {
+                    bg: "bg-[#DDF3E3]",
+                    dot: "bg-[#008D0A]",
+                    text: "text-[#008D0A]",
+                    label: "Published",
                   },
-                },
-                {
-                  icon: (
-                    <Eye className="w-4 h-4 text-greyAccent group-hover:text-purplePrimary" />
-                  ),
-                  label: "Preview",
-                  color: "text-greyAccent",
-                  hover: "group-hover:text-purplePrimary",
-                  key: "preview",
-                  onClick: () => setOpenPopoverIndex(null),
-                },
-                {
-                  icon: (
-                    <ShareIcon className="text-greyAccent group-hover:text-purplePrimary" />
-                  ),
-                  label: "Share Preview Link",
-                  color: "text-greyAccent",
-                  hover: "group-hover:text-purplePrimary",
-                  key: "share",
-                  onClick: () => setOpenPopoverIndex(null),
-                },
-                {
-                  icon: (
-                    <InvitationSentIcon className="text-greyAccent group-hover:text-purplePrimary" />
-                  ),
-                  label: "Invite Candidates",
-                  color: "text-greyAccent",
-                  hover: "group-hover:text-purplePrimary",
-                  key: "invite",
-                  onClick: () => setOpenPopoverIndex(null),
-                },
-                {
-                  icon: (
-                    <DuplicateIcon className="text-greyAccent group-hover:text-purplePrimary" />
-                  ),
-                  label: "Duplicate",
-                  color: "text-greyAccent",
-                  hover: "group-hover:text-purplePrimary",
-                  key: "duplicate",
-                  onClick: () => setOpenPopoverIndex(null),
-                },
-                {
-                  icon: (
-                    <SettingsIcon className="text-greyAccent group-hover:text-purplePrimary" />
-                  ),
-                  label: "Settings",
-                  color: "text-greyAccent",
-                  hover: "group-hover:text-purplePrimary",
-                  key: "settings",
-                  onClick: () => setOpenPopoverIndex(null),
-                },
-                {
-                  icon: (
-                    <Trash2 className="w-5 h-5 text-greyAccent group-hover:text-[#EB5757]" />
-                  ),
-                  label: "Delete Assessment",
-                  color: "text-greyAccent",
-                  hover: "group-hover:text-[#EB5757]",
-                  key: "delete",
-                  rounded: "rounded-bl-2xl rounded-br-2xl",
-                  onClick: () => {
-                    removeAssesment?.(assesment.id);
-                    setOpenPopoverIndex(null);
+                  [resolveEnum("AssessmentStatus.ENDED")]: {
+                    bg: "bg-[#FBDDDD]",
+                    dot: "bg-[#EB5757]",
+                    text: "text-[#EB5757]",
+                    label: "Archived",
                   },
-                },
-              ];
+                  [resolveEnum("AssessmentStatus.DRAFT")]: {
+                    bg: "bg-[#FFE2CB]",
+                    dot: "bg-[#E68335]",
+                    text: "text-[#E68335]",
+                    label: "Draft",
+                  },
+                  [resolveEnum("AssessmentStatus.SCHEDULED")]: {
+                    bg: "bg-[#FFE2CB]",
+                    dot: "bg-[#E68335]",
+                    text: "text-[#E68335]",
+                    label: "Scheduled",
+                  },
+                };
+                const statusObj = statusMap[assesment.status] || {
+                  bg: "bg-gray-200",
+                  dot: "bg-gray-400",
+                  text: "text-gray-600",
+                  label: "Unknown",
+                };
 
-              return (
-                <AssessmentCard
-                  key={assesment.id}
-                  status={statusObj.label}
-                  statusBg={statusObj.bg}
-                  statusDot={statusObj.dot}
-                  statusText={statusObj.text}
-                  title={title}
-                  owner={owner}
-                  expires={expires}
-                  tags={tags}
-                  candidates={candidates}
-                  candidatesIcon={TotalCandidatesIcon}
-                  popoverMenu={popoverMenu}
-                  popoverOpen={openPopoverIndex === assesment.id}
-                  onPopoverOpenChange={(open) => setOpenPopoverIndex(open ? assesment.id : null)}
-                  popoverTrigger={
-                    <button className="h-[28px] w-[28px] grid place-content-center rounded-full bg-backgroundPrimary">
-                      <DotsIcon />
-                    </button>
-                  }
-                />
-              );
-            })}
-          </AnimatePresence>
-        </div>
+                // Title
+                const title = assesment.name || "Untitled Assessment";
+                // Owner (first moderator username or fallback)
+
+                // Expires (end_date or fallback)
+                const expires = assesment.end_date
+                  ? new Date(assesment.end_date).toLocaleDateString()
+                  : "N/A";
+                // Tags (from first test_details.tags or empty)
+                const tags = assesment.test_details?.[0]?.tags || [];
+                // Candidates (dummy value, as not present)
+                const candidates = 0;
+
+                // Popover menu config (unchanged)
+                const popoverMenu = [
+                  {
+                    icon: (
+                      <EditIcon className="text-greyAccent group-hover:text-purplePrimary" />
+                    ),
+                    label: "Edit",
+                    color: "text-greyAccent",
+                    hover: "group-hover:text-purplePrimary",
+                    key: "edit",
+                    rounded: "rounded-tl-2xl rounded-tr-2xl",
+                    onClick: () => {
+                      handleEdit?.(assesment.id);
+                      setOpenPopoverIndex(null);
+                    },
+                  },
+                  {
+                    icon: (
+                      <Eye className="w-4 h-4 text-greyAccent group-hover:text-purplePrimary" />
+                    ),
+                    label: "Preview",
+                    color: "text-greyAccent",
+                    hover: "group-hover:text-purplePrimary",
+                    key: "preview",
+                    onClick: () => setOpenPopoverIndex(null),
+                  },
+                  {
+                    icon: (
+                      <ShareIcon className="text-greyAccent group-hover:text-purplePrimary" />
+                    ),
+                    label: "Share Preview Link",
+                    color: "text-greyAccent",
+                    hover: "group-hover:text-purplePrimary",
+                    key: "share",
+                    onClick: () => setOpenPopoverIndex(null),
+                  },
+                  {
+                    icon: (
+                      <InvitationSentIcon className="text-greyAccent group-hover:text-purplePrimary" />
+                    ),
+                    label: "Invite Candidates",
+                    color: "text-greyAccent",
+                    hover: "group-hover:text-purplePrimary",
+                    key: "invite",
+                    onClick: () => setOpenPopoverIndex(null),
+                  },
+                  {
+                    icon: (
+                      <DuplicateIcon className="text-greyAccent group-hover:text-purplePrimary" />
+                    ),
+                    label: "Duplicate",
+                    color: "text-greyAccent",
+                    hover: "group-hover:text-purplePrimary",
+                    key: "duplicate",
+                    onClick: () => setOpenPopoverIndex(null),
+                  },
+                  {
+                    icon: (
+                      <SettingsIcon className="text-greyAccent group-hover:text-purplePrimary" />
+                    ),
+                    label: "Settings",
+                    color: "text-greyAccent",
+                    hover: "group-hover:text-purplePrimary",
+                    key: "settings",
+                    onClick: () => setOpenPopoverIndex(null),
+                  },
+                  {
+                    icon: (
+                      <Trash2 className="w-5 h-5 text-greyAccent group-hover:text-[#EB5757]" />
+                    ),
+                    label: "Delete Assessment",
+                    color: "text-greyAccent",
+                    hover: "group-hover:text-[#EB5757]",
+                    key: "delete",
+                    rounded: "rounded-bl-2xl rounded-br-2xl",
+                    onClick: () => {
+                      removeAssesment?.(assesment.id);
+                      setOpenPopoverIndex(null);
+                    },
+                  },
+                ];
+
+                return (
+                  <AssessmentCard
+                    key={assesment.id}
+                    status={statusObj.label}
+                    statusBg={statusObj.bg}
+                    statusDot={statusObj.dot}
+                    statusText={statusObj.text}
+                    title={title}
+                    owner={assesment.created_by_details || assesment.moderator_details?.[0]}
+                    expires={expires}
+                    tags={tags}
+                    candidates={candidates}
+                    candidatesIcon={TotalCandidatesIcon}
+                    popoverMenu={popoverMenu}
+                    popoverOpen={openPopoverIndex === assesment.id}
+                    onPopoverOpenChange={(open) =>
+                      setOpenPopoverIndex(open ? assesment.id : null)
+                    }
+                    popoverTrigger={
+                      <button className="h-[28px] w-[28px] grid place-content-center rounded-full bg-backgroundPrimary">
+                        <DotsIcon />
+                      </button>
+                    }
+                  />
+                );
+              })}
+            </AnimatePresence>
+          </div>
+        </PaginatedScroll>
       </Section>
     </section>
   );
