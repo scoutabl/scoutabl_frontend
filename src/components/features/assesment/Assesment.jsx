@@ -26,7 +26,7 @@ import StatCard from "@/components/ui/cards/stat-card";
 import Section from "@/components/common/Section";
 import { useAssessmentPage } from "@/api/assessments/assessment";
 import { DEFAULT_LIST_API_PARAMS } from "@/lib/constants";
-import EntityCard from "@/components/ui/cards/entity-card";
+import AssessmentCard from "@/components/ui/cards/entity-card";
 
 const options = [
   {
@@ -283,7 +283,7 @@ const Assesment = () => {
               ];
 
               return (
-                <EntityCard
+                <AssessmentCard
                   key={assesment.id}
                   status={statusObj.label}
                   statusBg={statusObj.bg}

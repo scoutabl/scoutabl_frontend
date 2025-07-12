@@ -25,7 +25,7 @@ import {
  * @param {React.ReactNode} props.popoverTrigger
  * @param {string} [props.className]
  */
-const EntityCard = ({
+const AssessmentCard = ({
   status,
   statusBg = "",
   statusDot = "",
@@ -132,4 +132,4 @@ const EntityCard = ({
   );
 };
 
-export default React.memo(EntityCard);
+export default React.memo(AssessmentCard);
