@@ -1,13 +1,12 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { motion, AnimatePresence } from "framer-motion";
+import { AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import {
   Popover,
   PopoverTrigger,
   PopoverContent,
 } from "@/components/ui/popover";
-import { cn } from "@/lib/utils";
 import PlusIcon from "@/assets/plusIcon.svg?react";
 import CreateAiIcon from "@/assets/createAiIcon.svg?react";
 import ActiveAssementIcon from "@/assets/activeAssesment.svg?react";
@@ -27,6 +26,7 @@ import StatCard from "@/components/ui/cards/stat-card";
 import Section from "@/components/common/Section";
 import { useAssessmentPage } from "@/api/assessments/assessment";
 import { DEFAULT_LIST_API_PARAMS } from "@/lib/constants";
+import EntityCard from "@/components/ui/cards/entity-card";
 
 const options = [
   {
@@ -56,9 +56,8 @@ const options = [
 ];
 
 const Assesment = () => {
-  const [searchParams, setSearchParams] = useState(DEFAULT_LIST_API_PARAMS);
-  const { data: assessmentPage, isLoading: assessmentPageLoading } =
-    useAssessmentPage(searchParams);
+  const [searchParams] = useState(DEFAULT_LIST_API_PARAMS);
+  const { data: assessmentPage } = useAssessmentPage(searchParams);
   const [openPopoverIndex, setOpenPopoverIndex] = useState(null);
   //   const [assessments, setAssessments] = useState([
   //     {
@@ -119,10 +118,9 @@ const Assesment = () => {
   const navigate = useNavigate();
   const assessments = assessmentPage?.results || [];
 
-  //   const removeAssesment = (id) => {
-  //     setAssessments(assessmentPage.filter((assesment) => assesment.id !== id));
-  //     setOpenPopoverIndex(null);
-  //   };
+  // Placeholder handlers for linter
+  const handleEdit = () => {};
+  const removeAssesment = () => {};
 
   return (
     <section className="my-6 mx-[116px] flex flex-col gap-6">
@@ -183,224 +181,129 @@ const Assesment = () => {
         <div className="assesment-grid">
           <AnimatePresence>
             {assessments.map((assesment) => {
+              // Status color logic for EntityCard
+              const statusMap = {
+                1: { bg: "bg-[#DDF3E3]", dot: "bg-[#008D0A]", text: "text-[#008D0A]", label: "Published" },
+                2: { bg: "bg-[#FBDDDD]", dot: "bg-[#EB5757]", text: "text-[#EB5757]", label: "Archived" },
+                3: { bg: "bg-[#FFE2CB]", dot: "bg-[#E68335]", text: "text-[#E68335]", label: "Draft" },
+              };
+              const statusObj = statusMap[assesment.status] || { bg: "bg-gray-200", dot: "bg-gray-400", text: "text-gray-600", label: "Unknown" };
+
+              // Title
+              const title = assesment.name || "Untitled Assessment";
+              // Owner (first moderator username or fallback)
+              const owner = assesment.moderator_details?.[0]?.username || "Unknown Owner";
+              // Expires (end_date or fallback)
+              const expires = assesment.end_date ? new Date(assesment.end_date).toLocaleDateString() : "N/A";
+              // Tags (from first test_details.tags or empty)
+              const tags = assesment.test_details?.[0]?.tags || [];
+              // Candidates (dummy value, as not present)
+              const candidates = 0;
+
+              // Popover menu config (unchanged)
+              const popoverMenu = [
+                {
+                  icon: (
+                    <EditIcon className="text-greyAccent group-hover:text-purplePrimary" />
+                  ),
+                  label: "Edit",
+                  color: "text-greyAccent",
+                  hover: "group-hover:text-purplePrimary",
+                  key: "edit",
+                  rounded: "rounded-tl-2xl rounded-tr-2xl",
+                  onClick: () => {
+                    handleEdit?.(assesment.id);
+                    setOpenPopoverIndex(null);
+                  },
+                },
+                {
+                  icon: (
+                    <Eye className="w-4 h-4 text-greyAccent group-hover:text-purplePrimary" />
+                  ),
+                  label: "Preview",
+                  color: "text-greyAccent",
+                  hover: "group-hover:text-purplePrimary",
+                  key: "preview",
+                  onClick: () => setOpenPopoverIndex(null),
+                },
+                {
+                  icon: (
+                    <ShareIcon className="text-greyAccent group-hover:text-purplePrimary" />
+                  ),
+                  label: "Share Preview Link",
+                  color: "text-greyAccent",
+                  hover: "group-hover:text-purplePrimary",
+                  key: "share",
+                  onClick: () => setOpenPopoverIndex(null),
+                },
+                {
+                  icon: (
+                    <InvitationSentIcon className="text-greyAccent group-hover:text-purplePrimary" />
+                  ),
+                  label: "Invite Candidates",
+                  color: "text-greyAccent",
+                  hover: "group-hover:text-purplePrimary",
+                  key: "invite",
+                  onClick: () => setOpenPopoverIndex(null),
+                },
+                {
+                  icon: (
+                    <DuplicateIcon className="text-greyAccent group-hover:text-purplePrimary" />
+                  ),
+                  label: "Duplicate",
+                  color: "text-greyAccent",
+                  hover: "group-hover:text-purplePrimary",
+                  key: "duplicate",
+                  onClick: () => setOpenPopoverIndex(null),
+                },
+                {
+                  icon: (
+                    <SettingsIcon className="text-greyAccent group-hover:text-purplePrimary" />
+                  ),
+                  label: "Settings",
+                  color: "text-greyAccent",
+                  hover: "group-hover:text-purplePrimary",
+                  key: "settings",
+                  onClick: () => setOpenPopoverIndex(null),
+                },
+                {
+                  icon: (
+                    <Trash2 className="w-5 h-5 text-greyAccent group-hover:text-[#EB5757]" />
+                  ),
+                  label: "Delete Assessment",
+                  color: "text-greyAccent",
+                  hover: "group-hover:text-[#EB5757]",
+                  key: "delete",
+                  rounded: "rounded-bl-2xl rounded-br-2xl",
+                  onClick: () => {
+                    removeAssesment?.(assesment.id);
+                    setOpenPopoverIndex(null);
+                  },
+                },
+              ];
+
               return (
-                <motion.div
+                <EntityCard
                   key={assesment.id}
-                  className="py-[18px] px-4 flex flex-col gap-4 rounded-2xl border border-seperatorPrimary bg-white"
-                  initial={{ opacity: 0, y: 100 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -100 }}
-                  layout
-                >
-                  <div className="flex items-center justify-between">
-                    <div
-                      className={cn(
-                        "px-3 py-1 flex items-center gap-[6px] rounded-full",
-                        {
-                          "bg-[#DDF3E3]":
-                            assesment.status.toLowerCase() === "published",
-                          "bg-[#FBDDDD]":
-                            assesment.status.toLowerCase() === "archived",
-                          "bg-[#FFE2CB]":
-                            assesment.status.toLowerCase() === "draft",
-                        }
-                      )}
-                    >
-                      <div
-                        className={cn("h-2 w-2 rounded-full", {
-                          "bg-[#008D0A]":
-                            assesment.status.toLowerCase() === "published",
-                          "bg-[#EB5757]":
-                            assesment.status.toLowerCase() === "archived",
-                          "bg-[#E68335]":
-                            assesment.status.toLowerCase() === "draft",
-                        })}
-                      />
-                      <span
-                        className={cn("text-xs font-medium", {
-                          "text-[#008D0A]":
-                            assesment.status.toLowerCase() === "published",
-                          "text-[#EB5757]":
-                            assesment.status.toLowerCase() === "archived",
-                          "text-[#E68335]":
-                            assesment.status.toLowerCase() === "draft",
-                        })}
-                      >
-                        {assesment.status}
-                      </span>
-                    </div>
-                    <Popover
-                      open={openPopoverIndex === assesment.id}
-                      onOpenChange={(open) =>
-                        setOpenPopoverIndex(open ? assesment.id : null)
-                      }
-                    >
-                      <PopoverTrigger asChild>
-                        <button className="h-[28px] w-[28px] grid place-content-center rounded-full bg-backgroundPrimary">
-                          <DotsIcon />
-                        </button>
-                      </PopoverTrigger>
-                      <PopoverContent className="p-0 flex flex-col max-w-[240px] rounded-2xl bg-white">
-                        {[
-                          {
-                            icon: (
-                              <EditIcon className="text-greyAccent group-hover:text-purplePrimary" />
-                            ),
-                            label: "Edit",
-                            color: "text-greyAccent",
-                            hover: "group-hover:text-purplePrimary",
-                            key: "edit",
-                            rounded: "rounded-tl-2xl rounded-tr-2xl",
-                          },
-                          {
-                            icon: (
-                              <Eye className="w-4 h-4 text-greyAccent group-hover:text-purplePrimary" />
-                            ),
-                            label: "Preview",
-                            color: "text-greyAccent",
-                            hover: "group-hover:text-purplePrimary",
-                            key: "preview",
-                          },
-                          {
-                            icon: (
-                              <ShareIcon className="text-greyAccent group-hover:text-purplePrimary" />
-                            ),
-                            label: "Share Preview Link",
-                            color: "text-greyAccent",
-                            hover: "group-hover:text-purplePrimary",
-                            key: "share",
-                          },
-                          {
-                            icon: (
-                              <InvitationSentIcon className="text-greyAccent group-hover:text-purplePrimary" />
-                            ),
-                            label: "Invite Candidates",
-                            color: "text-greyAccent",
-                            hover: "group-hover:text-purplePrimary",
-                            key: "invite",
-                          },
-                          {
-                            icon: (
-                              <DuplicateIcon className="text-greyAccent group-hover:text-purplePrimary" />
-                            ),
-                            label: "Duplicate",
-                            color: "text-greyAccent",
-                            hover: "group-hover:text-purplePrimary",
-                            key: "duplicate",
-                          },
-                          {
-                            icon: (
-                              <SettingsIcon className="text-greyAccent group-hover:text-purplePrimary" />
-                            ),
-                            label: "Settings",
-                            color: "text-greyAccent",
-                            hover: "group-hover:text-purplePrimary",
-                            key: "settings",
-                          },
-                          {
-                            icon: (
-                              <Trash2 className="w-5 h-5 text-greyAccent group-hover:text-[#EB5757]" />
-                            ),
-                            label: "Delete Assessment",
-                            color: "text-greyAccent",
-                            hover: "group-hover:text-[#EB5757]",
-                            key: "delete",
-                            rounded: "rounded-bl-2xl rounded-br-2xl",
-                          },
-                        ].map((item, idx, arr) => {
-                          const isFirst = idx === 0;
-                          const isLast = idx === arr.length - 1;
-                          const rounded =
-                            item.rounded ||
-                            (isFirst
-                              ? "rounded-tl-2xl rounded-tr-2xl"
-                              : isLast
-                              ? "rounded-bl-2xl rounded-br-2xl"
-                              : "");
-                          return (
-                            <button
-                              onClick={() => {
-                                if (item.key === "delete")
-                                  removeAssesment(assesment.id);
-                                else if (item.key === "edit")
-                                  handleEdit(assesment.id);
-                                // ...other actions
-                                setOpenPopoverIndex(null);
-                              }}
-                              key={item.key}
-                              className={cn(
-                                "relative py-3 px-4 flex gap-3 items-center group w-full text-left hover:bg-purpleTertiary",
-                                {
-                                  "hover:bg-[#FBDDDD]": item.key === "delete",
-                                }
-                              )}
-                            >
-                              <div
-                                className={cn(
-                                  "absolute left-0 top-0 h-full w-1 opacity-0 group-hover:opacity-100 bg-purplePrimary",
-                                  {
-                                    "bg-[#EB5757]": item.key === "delete",
-                                  }
-                                )}
-                              />
-                              {item.icon}
-                              <span
-                                className={`font-medium text-sm text-nowrap ${item.color} ${item.hover}`}
-                              >
-                                {item.label}
-                              </span>
-                            </button>
-                          );
-                        })}
-                      </PopoverContent>
-                    </Popover>
-                  </div>
-                  <div className="flex flex-col gap-2">
-                    <h2 className="text-base text-semibold text-greyPrimray">
-                      {assesment.title}
-                    </h2>
-                    <div className="flex items-center gap-2">
-                      <span className="text-purplePrimary">Owner</span>
-                      <div className="flex items-center gap-1">
-                        {/* image will come here */}
-                        <span className="text-xs text-greyPrimary">
-                          {assesment.owner}
-                        </span>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <span className="text-purplePrimary">Expires</span>
-                      <div className="flex items-center gap-1">
-                        <span className="text-xs text-greyPrimary">
-                          {assesment.expires}
-                        </span>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      {assesment.tags.map((tag, index) => {
-                        return (
-                          <div
-                            key={index}
-                            className="px-3 py-1 bg-blueSecondary rounded-full"
-                          >
-                            <span className="text-xs text-greyAccent">
-                              {tag}
-                            </span>
-                          </div>
-                        );
-                      })}
-                    </div>
-                    <div className="flex gap-1 items-center">
-                      <TotalCandidatesIcon className="h-[18px] w-6" />
-                      <span className="text-2xl text-greyPrimray font-bold">
-                        {assesment.candidates}
-                      </span>
-                      <span className="text-sm text-greyAccent">
-                        Candidates
-                      </span>
-                    </div>
-                  </div>
-                </motion.div>
+                  status={statusObj.label}
+                  statusBg={statusObj.bg}
+                  statusDot={statusObj.dot}
+                  statusText={statusObj.text}
+                  title={title}
+                  owner={owner}
+                  expires={expires}
+                  tags={tags}
+                  candidates={candidates}
+                  candidatesIcon={TotalCandidatesIcon}
+                  popoverMenu={popoverMenu}
+                  popoverOpen={openPopoverIndex === assesment.id}
+                  onPopoverOpenChange={(open) => setOpenPopoverIndex(open ? assesment.id : null)}
+                  popoverTrigger={
+                    <button className="h-[28px] w-[28px] grid place-content-center rounded-full bg-backgroundPrimary">
+                      <DotsIcon />
+                    </button>
+                  }
+                />
               );
             })}
           </AnimatePresence>
