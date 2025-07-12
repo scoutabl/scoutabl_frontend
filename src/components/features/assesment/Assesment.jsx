@@ -25,6 +25,8 @@ import { Eye, Trash2 } from "lucide-react";
 import { ROUTES } from "../../../lib/routes";
 import StatCard from "@/components/ui/cards/stat-card";
 import Section from "@/components/common/Section";
+import { useAssessmentPage } from "@/api/assessments/assessment";
+import { DEFAULT_LIST_API_PARAMS } from "@/lib/constants";
 
 const options = [
   {
@@ -54,72 +56,76 @@ const options = [
 ];
 
 const Assesment = () => {
+  const [searchParams, setSearchParams] = useState(DEFAULT_LIST_API_PARAMS);
+  const { data: assessmentPage, isLoading: assessmentPageLoading } =
+    useAssessmentPage(searchParams);
   const [openPopoverIndex, setOpenPopoverIndex] = useState(null);
-  const [assessments, setAssessments] = useState([
-    {
-      id: 1,
-      status: "Published",
-      title: "Senior UX Designer Assessment ",
-      owner: "Molly Williams",
-      expires: "21/ Feb/ 2025",
-      tags: ["Skills & Coding", "random"],
-      candidates: 3128,
-    },
-    {
-      id: 2,
-      status: "Archived",
-      title: "Senior UX Designer Assessment ",
-      owner: "Molly Williams",
-      expires: "21/ Feb/ 2025",
-      tags: ["Skills & Coding", "random"],
-      candidates: 3128,
-    },
-    {
-      id: 3,
-      status: "Draft",
-      title: "Senior UX Designer Assessment ",
-      owner: "Molly Williams",
-      expires: "21/ Feb/ 2025",
-      tags: ["Skills & Coding", "random"],
-      candidates: 3128,
-    },
-    {
-      id: 4,
-      status: "Published",
-      title: "Senior UX Designer Assessment ",
-      owner: "Molly Williams",
-      expires: "21/ Feb/ 2025",
-      tags: ["Skills & Coding", "random"],
-      candidates: 3128,
-    },
-    {
-      id: 5,
-      status: "Archived",
-      title: "Senior UX Designer Assessment ",
-      owner: "Molly Williams",
-      expires: "21/ Feb/ 2025",
-      tags: ["Skills & Coding", "random"],
-      candidates: 3128,
-    },
-    {
-      id: 6,
-      status: "Draft",
-      title: "Senior UX Designer Assessment ",
-      owner: "Molly Williams",
-      expires: "21/ Feb/ 2025",
-      tags: ["Skills & Coding", "random"],
-      candidates: 3128,
-    },
-  ]);
+  //   const [assessments, setAssessments] = useState([
+  //     {
+  //       id: 1,
+  //       status: "Published",
+  //       title: "Senior UX Designer Assessment ",
+  //       owner: "Molly Williams",
+  //       expires: "21/ Feb/ 2025",
+  //       tags: ["Skills & Coding", "random"],
+  //       candidates: 3128,
+  //     },
+  //     {
+  //       id: 2,
+  //       status: "Archived",
+  //       title: "Senior UX Designer Assessment ",
+  //       owner: "Molly Williams",
+  //       expires: "21/ Feb/ 2025",
+  //       tags: ["Skills & Coding", "random"],
+  //       candidates: 3128,
+  //     },
+  //     {
+  //       id: 3,
+  //       status: "Draft",
+  //       title: "Senior UX Designer Assessment ",
+  //       owner: "Molly Williams",
+  //       expires: "21/ Feb/ 2025",
+  //       tags: ["Skills & Coding", "random"],
+  //       candidates: 3128,
+  //     },
+  //     {
+  //       id: 4,
+  //       status: "Published",
+  //       title: "Senior UX Designer Assessment ",
+  //       owner: "Molly Williams",
+  //       expires: "21/ Feb/ 2025",
+  //       tags: ["Skills & Coding", "random"],
+  //       candidates: 3128,
+  //     },
+  //     {
+  //       id: 5,
+  //       status: "Archived",
+  //       title: "Senior UX Designer Assessment ",
+  //       owner: "Molly Williams",
+  //       expires: "21/ Feb/ 2025",
+  //       tags: ["Skills & Coding", "random"],
+  //       candidates: 3128,
+  //     },
+  //     {
+  //       id: 6,
+  //       status: "Draft",
+  //       title: "Senior UX Designer Assessment ",
+  //       owner: "Molly Williams",
+  //       expires: "21/ Feb/ 2025",
+  //       tags: ["Skills & Coding", "random"],
+  //       candidates: 3128,
+  //     },
+  //   ]);
   const navigate = useNavigate();
+  const assessments = assessmentPage?.results || [];
 
-  const removeAssesment = (id) => {
-    setAssessments(assessments.filter((assesment) => assesment.id !== id));
-    setOpenPopoverIndex(null);
-  };
+  //   const removeAssesment = (id) => {
+  //     setAssessments(assessmentPage.filter((assesment) => assesment.id !== id));
+  //     setOpenPopoverIndex(null);
+  //   };
 
   return (
-    <section className="py-6 px-[116px] flex flex-col gap-6 bg-backgroundPrimary">
+    <section className="my-6 mx-[116px] flex flex-col gap-6">
       {/* header */}
       <div className="flex items-center justify-between">
         <h1 className="font-bold text-2xl text-greyPrimary">Assesments</h1>

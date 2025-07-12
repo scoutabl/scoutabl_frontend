@@ -1,12 +1,23 @@
 import axios from "axios";
 
-import { BASE_API_URL } from "@/lib/constants";
+import { BASE_API_URL, DEFAULT_LIST_API_PARAMS } from "@/lib/constants";
 
 export default class BaseAPI {
     constructor() {
         this.api = axios.create({
             baseURL: BASE_API_URL,
         });
+    }
+
+    defaultListParams(params) {
+        return {
+            ...DEFAULT_LIST_API_PARAMS,
+            ...(params || {}),
+        }
+    }
+
+    paramsToString(params) {
+        return new URLSearchParams(params).toString();
     }
 
     headers(extraHeaders = {}) {
