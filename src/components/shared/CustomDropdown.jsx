@@ -1,6 +1,6 @@
 import { useRef, useState, useEffect } from 'react';
 import JsonIcon from "@/assets/jsonIcon.svg?react"
-import ChevronDown from "@/assets/chevron-down.svg?react"
+import ChevronDown from "@/assets/chevronDownIcon.svg?react"
 
 const CustomDropdown = ({ languages, selectedLang, setSelectedLang, loading }) => {
     const [open, setOpen] = useState(false);

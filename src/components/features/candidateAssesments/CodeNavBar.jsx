@@ -9,7 +9,7 @@ import JsonIcon from "@/assets/jsonIcon.svg?react"
 import { Minimize } from 'lucide-react';
 import PlayIcon from '@/assets/playIcon.svg?react'
 import CheckIcon from '@/assets/checkIcon.svg?react'
-import ChevronDown from "@/assets/chevron-down.svg?react"
+import ChevronDown from "@/assets/chevronDownIcon.svg?react"
 import ResetIcon from '@/assets/resetIcon.svg?react'
 import MaximizeIcon from '@/assets/maximizeIcon.svg?react'
 import { useCodingAssesment } from './CodingAssesmentContext';

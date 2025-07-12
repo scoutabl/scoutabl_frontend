@@ -129,7 +129,8 @@
 
   html {
     font-family: var(--font-sans);
-
+    /* overflow-y: scroll;
+    scrollbar-gutter: stable; */
   }
 
   body {

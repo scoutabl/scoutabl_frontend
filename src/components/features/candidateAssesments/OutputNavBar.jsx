@@ -3,7 +3,7 @@ import testResultIcon from '/testResultIcon.svg';
 import { cn } from '@/lib/utils';
 import { ChevronUp, Minimize, Maximize } from 'lucide-react';
 import MaximizeIcon from '@/assets/maximizeIcon.svg?react'
-import ChevronDown from '@/assets/chevron-down.svg?react'
+import ChevronDown from '@/assets/chevronDownIcon.svg?react'
 import { motion } from 'framer-motion';
 import { useCodingAssesment } from './CodingAssesmentContext';
 // Only handle horizontal collapse

@@ -447,7 +447,7 @@ const CodingQuestionContent = ({ initialData = {}, initialQuestion = '' }) => {
                     <div className='flex items-center justify-between'>
                         <SearchInput
                             searchValue={searchValue}
-                            setSearchValue={setSearchValue}
+                            onChange={setSearchValue}
                             placeholder={"Search Languages"}
                         />
                         <Controller

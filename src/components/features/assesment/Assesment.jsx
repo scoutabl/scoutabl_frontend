@@ -29,6 +29,11 @@ import { DEFAULT_LIST_API_PARAMS } from "@/lib/constants";
 import AssessmentCard from "@/components/ui/cards/assessment-card";
 import { useEnums } from "@/context/EnumsContext";
 import PaginatedScroll from "@/components/common/PaginatedScroll";
+import SearchInput from "@/components/shared/debounceSearch/SearchInput";
+import { debounce } from "@/lib/utils";
+import Dropdown from "@/components/ui/dropdown";
+import { useUsers } from "@/api/users/users";
+import UserAvatarBadge from "@/components/common/UserAvatarBadge";
 
 const options = [
   {
@@ -59,15 +64,13 @@ const options = [
 
 const Assesment = () => {
   const { resolveEnum } = useEnums();
-  const [searchParams] = useState(DEFAULT_LIST_API_PARAMS);
+  const { data: users } = useUsers();
+  const [searchParams, setSearchParams] = useState({
+    ...DEFAULT_LIST_API_PARAMS,
+  });
   const pageSize = DEFAULT_LIST_API_PARAMS.page_size;
-  const {
-    data,
-    fetchNextPage,
-    isLoading,
-    hasNextPage,
-    isFetchingNextPage,
-  } = useInfiniteAssessmentPages({ ...searchParams, page_size: pageSize });
+  const { data, fetchNextPage, isLoading, hasNextPage, isFetchingNextPage } =
+    useInfiniteAssessmentPages({ ...searchParams, page_size: pageSize });
   const assessments = data ? data.pages.flatMap((page) => page.results) : [];
   const [openPopoverIndex, setOpenPopoverIndex] = useState(null);
   //   const [assessments, setAssessments] = useState([
@@ -137,6 +140,10 @@ const Assesment = () => {
     if (hasNextPage && !isFetchingNextPage) fetchNextPage();
   };
 
+  const handleSearch = debounce((value) => {
+    setSearchParams({ ...searchParams, search: value });
+  });
+
   return (
     <section className="my-6 mx-[116px] flex flex-col gap-6">
       {/* header */}
@@ -185,13 +192,67 @@ const Assesment = () => {
       {/* search Filter & asssesments section */}
       <Section className="flex flex-col gap-6">
         {/* search */}
-        <div className="flex items-center justify-between">
-          <input
-            type="search"
-            name="assesment-card-filter"
-            id="assesment-card-filter"
+        <Section className="flex flex-row items-center justify-between bg-white">
+          <SearchInput
+            placeholder="Search for Assessments"
+            onChange={handleSearch}
           />
-        </div>
+          <Dropdown
+            name="Status"
+            options={[
+              { display: "All", value: null, isDefault: true },
+              {
+                display: "Published",
+                value: resolveEnum("AssessmentStatus.PUBLISHED"),
+              },
+              {
+                display: "Draft",
+                value: resolveEnum("AssessmentStatus.DRAFT"),
+              },
+              {
+                display: "Archived",
+                value: resolveEnum("AssessmentStatus.ENDED"),
+              },
+            ]}
+            currentValue={searchParams.status}
+            onChange={(val) =>
+              setSearchParams((prev) => {
+                const next = { ...prev };
+                if (val == null) {
+                  delete next.status;
+                } else {
+                  next.status = val;
+                }
+                return next;
+              })
+            }
+          />
+
+          <Dropdown
+            name="Owner"
+            options={[
+              { display: "All", value: null, isDefault: true },
+              ...(users || []).map((user) => ({
+                display: user.username,
+                value: user.id,
+                user,
+              })),
+            ]}
+            currentValue={searchParams.created_by__in}
+            onChange={(val) =>
+              setSearchParams((prev) => {
+                const next = { ...prev };
+                if (val == null) {
+                  delete next.created_by__in;
+                } else {
+                  next.created_by__in = val;
+                }
+                return next;
+              })
+            }
+            renderOption={({user, display, isDefault}) => isDefault ? display : <UserAvatarBadge user={user} />}
+          />
+        </Section>
         {/* Assessments Card  */}
         <PaginatedScroll
           currentPage={data?.pages.length || 1}
@@ -341,7 +402,10 @@ const Assesment = () => {
                     statusDot={statusObj.dot}
                     statusText={statusObj.text}
                     title={title}
-                    owner={assesment.created_by_details || assesment.moderator_details?.[0]}
+                    owner={
+                      assesment.created_by_details ||
+                      assesment.moderator_details?.[0]
+                    }
                     expires={expires}
                     tags={tags}
                     candidates={candidates}

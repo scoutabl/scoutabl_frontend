@@ -20,7 +20,6 @@ export const EnumsProvider = ({ children }) => {
       const [type, value] = enumName.split(".");
       console.debug("type", type, "value", value);
       if (!type || !value) throw new Error(`Invalid enum name: ${enumName}`);
-
       return enums.enums[type][value];
     },
     [enumsLoading]

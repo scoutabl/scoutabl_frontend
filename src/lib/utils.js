@@ -27,3 +27,11 @@ export function getInitials(user) {
   const fullName = getUserFullName(user) || "";
   return fullName.split(" ").map((name) => name[0]).join("").toUpperCase();
 }
+
+export function debounce(func, delay = 300) {
+  let timeout;
+  return function(...args) {
+    clearTimeout(timeout);
+    timeout = setTimeout(() => func.apply(this, args), delay);
+  };
+}
