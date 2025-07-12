@@ -13,9 +13,9 @@ import {
   useUpdateOnboardingConfig,
   useUpdateUserSurvey,
 } from "@/api/onboarding/survey";
-import Card from "./ui/card";
+import Card from "./ui/cards/card";
 import { SCOUTABL_PURPLE } from "@/lib/constants";
-import HorizontalCard from "./ui/horizontal-card";
+import HorizontalCard from "./ui/cards/horizontal-card";
 import BulbIcon from "@/assets/bulbIcon.svg?react";
 import BreifcaseIcon from "@/assets/breifcaseIcon.svg?react";
 import RocketIcon from "@/assets/rocketIcon.svg?react";
