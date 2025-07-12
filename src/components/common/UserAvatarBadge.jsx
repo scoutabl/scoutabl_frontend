@@ -10,7 +10,7 @@ const UserAvatarBadge = ({user}) => {
     <div className="flex flex-row gap-1 items-center">
       <Avatar className="size-6">
         <AvatarImage src={profile_photo} alt={fullName} />
-        <AvatarFallback className="bg-blueSecondary">{getInitials(user) || "?"}</AvatarFallback>
+        <AvatarFallback className="bg-blueSecondary text-xs">{getInitials(user) || "?"}</AvatarFallback>
       </Avatar>
       <span className="text-greyPrimary">{fullName}</span>
     </div>
