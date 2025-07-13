@@ -30,6 +30,7 @@ import SkillAssesment from "./pages/SkillAssesment";
 import CodingAssesment from "./components/features/candidateAssesments/CodingAssesment";
 import { handleAPIError } from "./lib/errorHandling";
 import NavbarWrapper from "./components/common/NavbarWrapper";
+import AssessmentNavbarWrapper from "./components/common/AssessmentNavbarWrapper";
 import { ROUTES } from "./lib/routes";
 
 // Protected Route component for authenticated users
@@ -143,11 +144,13 @@ const RoutesWithTransitions = () => {
         path={ROUTES.ASSESSMENT_CREATE}
         element={
           <ProtectedRoute>
+            <AssessmentNavbarWrapper>
               <PageTransition>
                 <AssessmentProvider>
                   <CreateAssessmentFlow />
                 </AssessmentProvider>
               </PageTransition>
+            </AssessmentNavbarWrapper>
           </ProtectedRoute>
         }
       />

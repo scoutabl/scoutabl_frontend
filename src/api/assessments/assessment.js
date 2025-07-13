@@ -18,6 +18,26 @@ class AssessmentAPI extends BaseAPI {
         const url = `${ASSESSMENT_URL}summary/`;
         return (await this.get(url)).data;
     }
+
+    async getAssessment(assessmentId) {
+        const url = `${ASSESSMENT_URL}${assessmentId}/`;
+        return (await this.get(url)).data;
+    }
+
+    async createAssessment(data) {
+        const url = `${ASSESSMENT_URL}`;
+        return (await this.post(url, data)).data;
+    }
+
+    async updateAssessment(assessmentId, data) {
+        const url = `${ASSESSMENT_URL}${assessmentId}/`;
+        return (await this.patch(url, data)).data;
+    }
+
+    async deleteAssessment(assessmentId) {
+        const url = `${ASSESSMENT_URL}${assessmentId}/`;
+        return (await this.delete(url)).data;
+    }
 }
 
 export const assesmentAPI = new AssessmentAPI();
@@ -53,3 +73,28 @@ export const useAssessmentsSummary = () => {
         queryFn: () => assesmentAPI.getAssessmentsSummary(),
     });
 }
+
+export const useAssessment = (assessmentId) => {
+    return useQuery({
+        queryKey: ["assessment", assessmentId],
+        queryFn: () => assesmentAPI.getAssessment(assessmentId),
+        enabled: !!assessmentId,
+    });
+}
+
+export const useCreateAssessment = () => {
+    return useMutation({
+        mutationFn: (data) => assesmentAPI.createAssessment(data),
+    });
+}
+
+export const useUpdateAssessment = () => {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: (assessmentId, data) => assesmentAPI.updateAssessment(assessmentId, data),
+        onSuccess: (data) => {
+            queryClient.setQueryData(["assessment", data.id], data);
+        },
+    });
+}
+

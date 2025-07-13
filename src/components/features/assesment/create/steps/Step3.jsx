@@ -1,5 +1,4 @@
 import React, { useState } from 'react'
-import { motion } from 'framer-motion'
 import DOMPurify from 'dompurify';
 import QuestionCards from './step3-customQuestions/QuestionCards'
 import { useAssessmentQuestions, useRemoveQuestion, useDuplicateQuestion } from '@/api/createQuestion'
@@ -28,12 +27,15 @@ import ChevronLeftIcon from '@/assets/chevronLeft.svg?react'
 import ChevronRightIcon from '@/assets/chevronRight.svg?react'
 import { Eye, GripVertical } from 'lucide-react'
 import QuestionModal from './step3-customQuestions/QuestionModal';
+import AssessmentStep from '@/components/common/AssessmentStep';
+import { useAssessmentContext } from '@/components/common/AssessmentNavbarWrapper';
 const Step3 = ({ assessmentId = 14 }) => {
+    const { steps, selectedStep, setSelectedStep } = useAssessmentContext();
     const [modalOpen, setModalOpen] = useState(false);
     const [modalMode, setModalMode] = useState('add'); // 'add' or 'edit'
     const [modalInitialData, setModalInitialData] = useState({});
     const [modalQuestionType, setModalQuestionType] = useState(null);
-    const { data: questions, isLoading, error, refetch } = useAssessmentQuestions(assessmentId);
+    const { data: questions, isLoading, error } = useAssessmentQuestions(assessmentId);
 
     // Helper to flatten all question type objects
     const allTypeDefs = questionTypes.flatMap(cat => cat.questions);
@@ -100,24 +102,13 @@ const Step3 = ({ assessmentId = 14 }) => {
     if (error) return <div>Error loading questions</div>;
 
     return (
-        <div className='flex flex-col gap-6 px-[116px] py-6'>
+        <div className='flex flex-col gap-6 py-6'>
             <div className='flex items-center justify-between'>
-                <div className='w-[600px] p-4 bg-white rounded-5xl flex items-center gap-4 border-[1px] border-[rgba(224,224,224,0.65)] [box-shadow:0px_16px_24px_rgba(0,_0,_0,_0.06),_0px_2px_6px_rgba(0,_0,_0,_0.04)]'>
-                    {/* circular Step No */}
-                    <div>
-
-                    </div>
-                    <div className='flex flex-col gap-1'>
-                        <select>
-                            <option value="1">Select a category</option>
-                            <option value="2">Category 1</option>
-                            <option value="3">Category 2</option>
-                            <option value="4">Category 3</option>
-                        </select>
-                        <span className='text-greenPrimary font-semibold text-xl'>Add Custom Questions</span>
-                    </div>
-                    <span className='block px-3 py-1 mt-auto bg-greenPrimary/15 rounded-full'>Next: Finalize</span>
-                </div>
+                <AssessmentStep
+                    steps={steps}
+                    selected={selectedStep}
+                    onSelect={val => setSelectedStep(Number(val))}
+                />
                 <div className='min-w-[450px] bg-purpleQuaternary rounded-5xl px-4 py-[25px] flex items-center gap-2 [box-shadow:0px_16px_24px_rgba(0,_0,_0,_0.06),_0px_2px_6px_rgba(0,_0,_0,_0.04)]'>
                     <AiIcon className='w-4 h-' />
                     <span className='text-[#7C7C7C] font-normal text-sm block max-w-[418px]'><span className='bg-gradient-to-r from-[#806BFF] to-[#A669FD] inline-block text-transparent bg-clip-text text-sm font-semibold'>Pro Tip:&nbsp;</span>Scoutabl's AI suggests tests by matching skills in your job description with related tests.</span>
