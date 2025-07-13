@@ -197,61 +197,76 @@ const Assesment = () => {
             placeholder="Search for Assessments"
             onChange={handleSearch}
           />
-          <Dropdown
-            name="Status"
-            options={[
-              { display: "All", value: null, isDefault: true },
-              {
-                display: "Published",
-                value: resolveEnum("AssessmentStatus.PUBLISHED"),
-              },
-              {
-                display: "Draft",
-                value: resolveEnum("AssessmentStatus.DRAFT"),
-              },
-              {
-                display: "Archived",
-                value: resolveEnum("AssessmentStatus.ENDED"),
-              },
-            ]}
-            currentValue={searchParams.status}
-            onChange={(val) =>
-              setSearchParams((prev) => {
-                const next = { ...prev };
-                if (val == null) {
-                  delete next.status;
-                } else {
-                  next.status = val;
+          <div className="flex flex-row gap-3">
+            <Dropdown
+                name="Status"
+                multiselect
+                showSelectAll
+                options={[
+                {
+                    display: "Published",
+                    value: resolveEnum("AssessmentStatus.PUBLISHED"),
+                },
+                {
+                    display: "Draft",
+                    value: resolveEnum("AssessmentStatus.DRAFT"),
+                },
+                {
+                    display: "Archived",
+                    value: resolveEnum("AssessmentStatus.ENDED"),
+                },
+                ]}
+                currentValue={searchParams.status}
+                onChange={(val) =>
+                setSearchParams((prev) => {
+                    const next = { ...prev };
+                    if (val == null) {
+                    delete next.status;
+                    } else {
+                    next.status = val;
+                    }
+                    return next;
+                })
                 }
-                return next;
-              })
-            }
-          />
+            />
 
-          <Dropdown
-            name="Owner"
-            options={[
-              { display: "All", value: null, isDefault: true },
-              ...(users || []).map((user) => ({
-                display: user.username,
-                value: user.id,
-                user,
-              })),
-            ]}
-            currentValue={searchParams.created_by__in}
-            onChange={(val) =>
-              setSearchParams((prev) => {
-                const next = { ...prev };
-                if (val == null) {
-                  delete next.created_by__in;
-                } else {
-                  next.created_by__in = val;
+            <Dropdown
+                name="Owner"
+                multiselect
+                showSelectAll
+                options={[
+                ...(users || []).map((user) => ({
+                    display: user.username,
+                    value: user.id,
+                    user,
+                })),
+                ]}
+                currentValue={searchParams.created_by__in || []}
+                onChange={(val) =>
+                setSearchParams((prev) => {
+                    const next = { ...prev };
+                    if (val === null || (Array.isArray(val) && val.includes(null))) {
+                    delete next.created_by__in;
+                    } else {
+                    next.created_by__in = val;
+                    }
+                    return next;
+                })
                 }
-                return next;
-              })
-            }
-            renderOption={({user, display, isDefault}) => isDefault ? display : <UserAvatarBadge user={user} />}
-          />
+                renderOption={({ user, display, isDefault }) =>
+                isDefault ? (
+                    display
+                ) : (
+                    <UserAvatarBadge
+                    user={user}
+                    className="gap-3 py-2"
+                    iconClassName="w-10 h-10"
+                    showEmail
+                    />
+                )
+                }
+            />
+          </div>
         </Section>
         {/* Assessments Card  */}
         <PaginatedScroll

@@ -24,12 +24,51 @@ const Dropdown = ({
   currentValue,
   className = "",
   renderOption,
+  multiselect = false,
+  showSelectAll = false,
 }) => {
+  const isSelected = (val) =>
+    multiselect && Array.isArray(currentValue)
+      ? currentValue.includes(val)
+      : currentValue === val;
+
+  const allValues = options.map((opt) => opt.value);
+  const allSelected =
+    multiselect &&
+    Array.isArray(currentValue) &&
+    allValues.length > 0 &&
+    allValues.every((val) => currentValue.includes(val));
+
+  const handleItemClick = (val) => {
+    if (multiselect) {
+      let newValues = Array.isArray(currentValue) ? [...currentValue] : [];
+      if (newValues.includes(val)) {
+        newValues = newValues.filter((v) => v !== val);
+      } else {
+        newValues.push(val);
+      }
+      onChange(newValues);
+    } else {
+      onChange(val);
+    }
+  };
+
+  const handleSelectAll = () => {
+    if (allSelected) {
+      onChange([]);
+    } else {
+      onChange([...allValues]);
+    }
+  };
+
   const currentOption = options.find(
     (opt) =>
-      opt.value === currentValue ||
+      (multiselect && Array.isArray(currentValue)
+        ? currentValue.includes(opt.value)
+        : opt.value === currentValue) ||
       (opt.isDefault && (currentValue === null || currentValue === undefined))
   );
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -37,28 +76,102 @@ const Dropdown = ({
           variant="outline"
           className={`rounded-full focus-visible:ring-0 text-sm ${className}`}
         >
-          {name ? `${name}: ` : ""}{" "}
-          {currentOption
-            ? renderOption
-              ? renderOption(currentOption)
-              : currentOption.display
-            : "Select"}
+          {name ? `${name}` : ""}
+          {multiselect
+            ? Array.isArray(currentValue) && currentValue.length > 0
+              ? `: ${options
+                  .filter((opt) => currentValue.includes(opt.value))
+                  .map((opt) => opt.display)
+                  .join(", ")}`
+              : ""
+            : currentOption
+            ? `: ${currentOption.display}`
+            : ""}
           <ChevronDown className="ml-2" />
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="start" className="py-2 px-0">
         <DropdownMenuGroup className="p-0">
+          {multiselect && showSelectAll && (
+            <DropdownMenuItem
+              key="__select_all__"
+              onClick={handleSelectAll}
+              className={`rounded-none text-base px-3 hover:cursor-pointer flex flex-row items-center justify-between gap-5 ${
+                allSelected
+                  ? "bg-[#F3E8FF] border-l-4 border-purplePrimary font-medium"
+                  : ""
+              }`}
+            >
+              <span>{"All"}</span>
+              <span className="w-5 h-5 flex items-center justify-center mr-2">
+                <span
+                  className={`inline-flex items-center justify-center w-5 h-5 rounded-xs border-2 transition-colors duration-150 ${
+                    allSelected
+                      ? "border-purplePrimary bg-purplePrimary"
+                      : "border-gray-300 bg-white"
+                  }`}
+                >
+                  {allSelected && (
+                    <svg
+                      width="14"
+                      height="14"
+                      viewBox="0 0 16 16"
+                      fill="none"
+                      xmlns="http://www.w3.org/2000/svg"
+                    >
+                      <path
+                        d="M4 8.5L7 11.5L12 6.5"
+                        stroke="#fff"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    </svg>
+                  )}
+                </span>
+              </span>
+            </DropdownMenuItem>
+          )}
           {options.map((opt) => (
             <DropdownMenuItem
               key={opt.value}
-              onClick={() => onChange(opt.value)}
-              className={`rounded-none text-base px-3 hover:cursor-pointer ${
-                opt.value === currentValue
+              onClick={() => handleItemClick(opt.value)}
+              className={`rounded-none text-base px-3 hover:cursor-pointer flex flex-row items-center justify-between gap-5 ${
+                isSelected(opt.value)
                   ? "bg-[#F3E8FF] border-l-4 border-purplePrimary font-medium"
                   : ""
               }`}
             >
               {renderOption ? renderOption(opt) : opt.display}
+              {multiselect && (
+                <span className="w-5 h-5 flex items-center justify-center mr-2">
+                  <span
+                    className={`inline-flex items-center justify-center w-5 h-5 rounded-xs border-2 transition-colors duration-150 ${
+                      isSelected(opt.value)
+                        ? "border-purplePrimary bg-purplePrimary"
+                        : "border-gray-300 bg-white"
+                    }`}
+                  >
+                    {isSelected(opt.value) && (
+                      <svg
+                        width="14"
+                        height="14"
+                        viewBox="0 0 16 16"
+                        fill="none"
+                        xmlns="http://www.w3.org/2000/svg"
+                      >
+                        <path
+                          d="M4 8.5L7 11.5L12 6.5"
+                          stroke="#fff"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        />
+                      </svg>
+                    )}
+                  </span>
+                </span>
+              )}
             </DropdownMenuItem>
           ))}
         </DropdownMenuGroup>
@@ -76,9 +189,17 @@ Dropdown.propTypes = {
     })
   ).isRequired,
   onChange: PropTypes.func.isRequired,
-  currentValue: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+  currentValue: PropTypes.oneOfType([
+    PropTypes.string,
+    PropTypes.number,
+    PropTypes.arrayOf(
+      PropTypes.oneOfType([PropTypes.string, PropTypes.number])
+    ),
+  ]),
   className: PropTypes.string,
   renderOption: PropTypes.func, // Optional custom render function
+  multiselect: PropTypes.bool, // Enable multi-select
+  showSelectAll: PropTypes.bool, // Show select all option in multi-select
 };
 
 export default Dropdown;
