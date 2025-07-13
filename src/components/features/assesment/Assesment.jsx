@@ -216,14 +216,14 @@ const Assesment = () => {
                     value: resolveEnum("AssessmentStatus.ENDED"),
                 },
                 ]}
-                currentValue={searchParams.status}
+                currentValue={searchParams.status__in}
                 onChange={(val) =>
                 setSearchParams((prev) => {
                     const next = { ...prev };
                     if (val == null) {
-                    delete next.status;
+                    delete next.status__in;
                     } else {
-                    next.status = val;
+                    next.status__in = val;
                     }
                     return next;
                 })
