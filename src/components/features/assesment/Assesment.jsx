@@ -94,7 +94,7 @@ const Assesment = () => {
   ];
 
   return (
-    <section className="my-6 mx-[116px] flex flex-col gap-6">
+    <section className="flex flex-col gap-6">
       {/* header */}
       <div className="flex items-center justify-between">
         <h1 className="font-bold text-2xl text-greyPrimary">Assesments</h1>
@@ -281,7 +281,7 @@ const Assesment = () => {
                 // Tags (from first test_details.tags or empty)
                 const tags = assesment.test_details?.[0]?.tags || [];
                 // Candidates (dummy value, as not present)
-                const candidates = 0;
+                const candidates = assesment.total_candidates || 0;
 
                 // Popover menu config (unchanged)
                 const popoverMenu = [

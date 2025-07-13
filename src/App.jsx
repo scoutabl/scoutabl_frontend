@@ -143,13 +143,11 @@ const RoutesWithTransitions = () => {
         path={ROUTES.ASSESSMENT_CREATE}
         element={
           <ProtectedRoute>
-            <NavbarWrapper>
               <PageTransition>
                 <AssessmentProvider>
                   <CreateAssessmentFlow />
                 </AssessmentProvider>
               </PageTransition>
-            </NavbarWrapper>
           </ProtectedRoute>
         }
       />

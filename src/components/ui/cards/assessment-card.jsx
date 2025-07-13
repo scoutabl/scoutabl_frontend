@@ -126,7 +126,7 @@ const AssessmentCard = ({
             {CandidatesIcon && <CandidatesIcon className="size-8" />}
             </span>
           <span className="text-3xl text-greyPrimary font-bold leading-none">{candidates}</span>
-          <span className="text-sm text-greyAccent">Candidates</span>
+          <span className="text-sm text-greyAccent">Candidate{candidates > 1 ? "s" : ""}</span>
         </div>
       </div>
     </div>
