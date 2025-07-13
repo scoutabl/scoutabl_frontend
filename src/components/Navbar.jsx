@@ -1,40 +1,7 @@
 import React from "react";
-import LogoIcon from "@/assets/logoFull.svg?react";
+import PropTypes from "prop-types";
 import IconButton from "@/components/ui/icon-button";
-import { Button } from "@/components/ui/button";
-import { useAuth } from "@/context/AuthContext";
-import { useNavigate, useLocation } from "react-router-dom";
-import { ROUTES } from "../lib/routes";
-import RocketIcon from "@/assets/rocketIcon.svg?react";
-import RocketSolidIcon from "@/assets/rocketSolidIcon.svg?react";
-import CommunityIcon from "@/assets/communityIcon.svg?react";
-import CommunitySolidIcon from "@/assets/communitySolidIcon.svg?react";
-import WorldIcon from "@/assets/worldIcon.svg?react";
-import WorldSolidIcon from "@/assets/worldSolidIcon.svg?react";
-import BookIcon from "@/assets/bookIcon.svg?react";
-import BookSolidIcon from "@/assets/bookSolidIcon.svg?react";
-import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-
-const NAV_ITEMS = [
-  {
-    name: "Assessments",
-    iconSolid: RocketSolidIcon,
-    iconOutline: RocketIcon,
-    route: ROUTES.ASSESSMENT,
-  },
-  {
-    name: "Talent Pool",
-    iconSolid: WorldSolidIcon,
-    iconOutline: WorldIcon,
-    route: ROUTES.TALENT_POOL,
-  },
-  {
-    name: "Test Library",
-    iconSolid: BookSolidIcon,
-    iconOutline: BookIcon,
-    route: ROUTES.TEST_LIBRARY,
-  },
-];
+import { useLocation } from "react-router-dom";
 
 function isActiveRoute(itemRoute, currentPath) {
   if (itemRoute === "/") {
@@ -46,45 +13,49 @@ function isActiveRoute(itemRoute, currentPath) {
   );
 }
 
-function Navbar() {
-  const { logout } = useAuth();
-  const navigate = useNavigate();
+function Navbar({ logo: Logo, navItems, actions, logoOnClick }) {
   const location = useLocation();
-
-  const handleLogout = async () => {
-    try {
-      await logout();
-    } catch (error) {
-      console.error("Logout error:", error);
-    }
-  };
 
   return (
     <nav className="fixed z-20 top-0 left-[110px] right-[110px] h-20 mt-4 flex items-center justify-between px-6 rounded-full bg-purplePrimary">
-      <LogoIcon
-        className="hover:cursor-pointer"
-        onClick={() => navigate(ROUTES.ROOT)}
-      />
+      {Logo && (
+        <Logo
+          className="hover:cursor-pointer"
+          onClick={logoOnClick}
+        />
+      )}
       <div className="flex flex-row gap-10">
-        {NAV_ITEMS.map((item) => (
+        {navItems && navItems.map((item) => (
           <IconButton
             key={item.name}
             iconSolid={item.iconSolid}
             iconOutline={item.iconOutline}
             label={item.name}
             active={isActiveRoute(item.route, location.pathname)}
-            onClick={() => navigate(item.route)}
+            onClick={() => item.onClick && item.onClick()}
           />
         ))}
       </div>
       <div className="flex flex-row flex-wrap items-center gap-12">
-        <Avatar className="border border-white border-2 hover:cursor-pointer size-11">
-          <AvatarImage src="https://github.com/shadcn.png" alt="@shadcn" />
-          <AvatarFallback>CN</AvatarFallback>
-        </Avatar>
+        {actions}
       </div>
     </nav>
   );
 }
+
+Navbar.propTypes = {
+  logo: PropTypes.elementType.isRequired,
+  navItems: PropTypes.arrayOf(
+    PropTypes.shape({
+      name: PropTypes.string.isRequired,
+      iconSolid: PropTypes.elementType.isRequired,
+      iconOutline: PropTypes.elementType.isRequired,
+      route: PropTypes.string.isRequired,
+      onClick: PropTypes.func,
+    })
+  ).isRequired,
+  actions: PropTypes.node.isRequired,
+  logoOnClick: PropTypes.func.isRequired,
+};
 
 export default Navbar;
