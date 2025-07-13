@@ -10,21 +10,28 @@ const AssessmentNavbarWrapper = ({ children }) => {
   const [selectedStep, setSelectedStep] = useState(1);
   const stepsArray = [
     {
-      value: 1,
+        value: 1,
+        name: "Basics",
+        primaryColor: "#0043CE",
+        secondaryColor: "#D0E2FF",
+        enabled: false,
+    },
+    {
+      value: 2,
       name: "Configure Assessment",
       primaryColor: "#806BFF",
       secondaryColor: "#EEF2FC",
       enabled: true,
     },
     {
-      value: 2,
+      value: 3,
       name: "Add Custom Questions",
       primaryColor: "#27AE60",
       secondaryColor: "#E9F9F1",
       enabled: true,
     },
     {
-      value: 3,
+      value: 4,
       name: "Finalize",
       primaryColor: "#F2994A",
       secondaryColor: "#FFF4E5",

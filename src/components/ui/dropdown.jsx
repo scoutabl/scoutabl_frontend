@@ -26,6 +26,8 @@ const Dropdown = ({
   renderOption,
   multiselect = false,
   showSelectAll = false,
+  showCurrentValue = true,
+  style={},
 }) => {
   const isSelected = (val) =>
     multiselect && Array.isArray(currentValue)
@@ -75,16 +77,17 @@ const Dropdown = ({
         <Button
           variant="outline"
           className={`rounded-full focus-visible:ring-0 text-sm ${className}`}
+          style={style}
         >
           {name ? `${name}` : ""}
-          {multiselect
+          {multiselect && showCurrentValue
             ? Array.isArray(currentValue) && currentValue.length > 0
               ? `: ${options
                   .filter((opt) => currentValue.includes(opt.value))
                   .map((opt) => opt.display)
                   .join(", ")}`
               : ""
-            : currentOption
+            : showCurrentValue && currentOption
             ? `: ${currentOption.display}`
             : ""}
           <ChevronDown className="ml-2" />
@@ -135,8 +138,13 @@ const Dropdown = ({
           {options.map((opt) => (
             <DropdownMenuItem
               key={opt.value}
-              onClick={() => handleItemClick(opt.value)}
-              className={`rounded-none text-base px-3 hover:cursor-pointer flex flex-row items-center justify-between gap-5 ${
+              onClick={opt.disabled ? undefined : () => handleItemClick(opt.value)}
+              disabled={!!opt.disabled}
+              className={`rounded-none text-base px-3 flex flex-row items-center justify-between gap-5 ${
+                opt.disabled
+                  ? "opacity-50 cursor-not-allowed bg-transparent"
+                  : "hover:cursor-pointer"
+              } ${
                 isSelected(opt.value)
                   ? "bg-[#F3E8FF] border-l-4 border-purplePrimary font-medium"
                   : ""
