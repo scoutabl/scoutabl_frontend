@@ -31,7 +31,7 @@ const Card = ({
       )}
       {...rest}
     >
-      {Icon && <Icon width={48} height={48} className="mb-3" />}
+      {Icon && <Icon width={48} height={48} className="mb-4" />}
       <h4 className="font-semibold text-[#333333]">{title}</h4>
       <span className="font-normal text-[13px] text-[#5C5C5C] text-center">
         {description}
