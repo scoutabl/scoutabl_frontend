@@ -13,6 +13,11 @@ class AssessmentAPI extends BaseAPI {
         const url = `${ASSESSMENT_URL}?${this.paramsToString(this.defaultListParams(params))}`;
         return (await this.get(url)).data;
     }
+
+    async getAssessmentsSummary() {
+        const url = `${ASSESSMENT_URL}summary/`;
+        return (await this.get(url)).data;
+    }
 }
 
 export const assesmentAPI = new AssessmentAPI();
@@ -41,3 +46,10 @@ export const useInfiniteAssessmentPages = (params) => {
         },
     });
 };
+
+export const useAssessmentsSummary = () => {
+    return useQuery({
+        queryKey: ["assessments_summary"],
+        queryFn: () => assesmentAPI.getAssessmentsSummary(),
+    });
+}

@@ -24,7 +24,10 @@ import { Eye, Trash2 } from "lucide-react";
 import { ROUTES } from "../../../lib/routes";
 import StatCard from "@/components/ui/cards/stat-card";
 import Section from "@/components/common/Section";
-import { useInfiniteAssessmentPages } from "@/api/assessments/assessment";
+import {
+  useInfiniteAssessmentPages,
+  useAssessmentsSummary,
+} from "@/api/assessments/assessment";
 import { DEFAULT_LIST_API_PARAMS } from "@/lib/constants";
 import AssessmentCard from "@/components/ui/cards/assessment-card";
 import { useEnums } from "@/context/EnumsContext";
@@ -35,33 +38,6 @@ import Dropdown from "@/components/ui/dropdown";
 import { useUsers } from "@/api/users/users";
 import UserAvatarBadge from "@/components/common/UserAvatarBadge";
 
-const options = [
-  {
-    title: "Active Assessments",
-    total: 13,
-    icon: ActiveAssementIcon,
-    iconBgColor: "bg-[rgba(0,119,194,0.2)]",
-  },
-  {
-    title: "Invitations Sent",
-    total: 12256,
-    icon: InvitationSentIcon,
-    iconBgColor: "bg-[rgba(139,92,246,0.2)]",
-  },
-  {
-    title: "Total Candidates",
-    total: 1256,
-    icon: TotalCandidatesIcon,
-    iconBgColor: "bg-[rgba(230,131,53,0.2)]",
-  },
-  {
-    title: "Overall Completion Rate",
-    total: "76%",
-    icon: CompletionRateIcon,
-    iconBgColor: "bg-[rgba(139,92,246,0.2)]",
-  },
-];
-
 const Assesment = () => {
   const { resolveEnum } = useEnums();
   const { data: users } = useUsers();
@@ -71,64 +47,10 @@ const Assesment = () => {
   const pageSize = DEFAULT_LIST_API_PARAMS.page_size;
   const { data, fetchNextPage, isLoading, hasNextPage, isFetchingNextPage } =
     useInfiniteAssessmentPages({ ...searchParams, page_size: pageSize });
+  const { data: summary } = useAssessmentsSummary();
+
   const assessments = data ? data.pages.flatMap((page) => page.results) : [];
   const [openPopoverIndex, setOpenPopoverIndex] = useState(null);
-  //   const [assessments, setAssessments] = useState([
-  //     {
-  //       id: 1,
-  //       status: "Published",
-  //       title: "Senior UX Designer Assessment ",
-  //       owner: "Molly Williams",
-  //       expires: "21/ Feb/ 2025",
-  //       tags: ["Skills & Coding", "random"],
-  //       candidates: 3128,
-  //     },
-  //     {
-  //       id: 2,
-  //       status: "Archived",
-  //       title: "Senior UX Designer Assessment ",
-  //       owner: "Molly Williams",
-  //       expires: "21/ Feb/ 2025",
-  //       tags: ["Skills & Coding", "random"],
-  //       candidates: 3128,
-  //     },
-  //     {
-  //       id: 3,
-  //       status: "Draft",
-  //       title: "Senior UX Designer Assessment ",
-  //       owner: "Molly Williams",
-  //       expires: "21/ Feb/ 2025",
-  //       tags: ["Skills & Coding", "random"],
-  //       candidates: 3128,
-  //     },
-  //     {
-  //       id: 4,
-  //       status: "Published",
-  //       title: "Senior UX Designer Assessment ",
-  //       owner: "Molly Williams",
-  //       expires: "21/ Feb/ 2025",
-  //       tags: ["Skills & Coding", "random"],
-  //       candidates: 3128,
-  //     },
-  //     {
-  //       id: 5,
-  //       status: "Archived",
-  //       title: "Senior UX Designer Assessment ",
-  //       owner: "Molly Williams",
-  //       expires: "21/ Feb/ 2025",
-  //       tags: ["Skills & Coding", "random"],
-  //       candidates: 3128,
-  //     },
-  //     {
-  //       id: 6,
-  //       status: "Draft",
-  //       title: "Senior UX Designer Assessment ",
-  //       owner: "Molly Williams",
-  //       expires: "21/ Feb/ 2025",
-  //       tags: ["Skills & Coding", "random"],
-  //       candidates: 3128,
-  //     },
-  //   ]);
   const navigate = useNavigate();
 
   // Placeholder handlers for linter
@@ -143,6 +65,33 @@ const Assesment = () => {
   const handleSearch = debounce((value) => {
     setSearchParams({ ...searchParams, search: value });
   });
+
+  const options = [
+    {
+      title: "Active Assessments",
+      total: summary?.active_assessments || 0,
+      icon: ActiveAssementIcon,
+      iconBgColor: "bg-[rgba(0,119,194,0.2)]",
+    },
+    {
+      title: "Invitations Sent",
+      total: summary?.invites_sent || 0,
+      icon: InvitationSentIcon,
+      iconBgColor: "bg-[rgba(139,92,246,0.2)]",
+    },
+    {
+      title: "Total Candidates",
+      total: summary?.total_candidates || 0,
+      icon: TotalCandidatesIcon,
+      iconBgColor: "bg-[rgba(230,131,53,0.2)]",
+    },
+    {
+      title: "Overall Completion Rate",
+      total: (summary?.completion_rate || 0) * 100 + "%",
+      icon: CompletionRateIcon,
+      iconBgColor: "bg-[rgba(139,92,246,0.2)]",
+    },
+  ];
 
   return (
     <section className="my-6 mx-[116px] flex flex-col gap-6">
@@ -199,72 +148,79 @@ const Assesment = () => {
           />
           <div className="flex flex-row gap-3">
             <Dropdown
-                name="Status"
-                multiselect
-                showSelectAll
-                options={[
+              name="Status"
+              multiselect
+              showSelectAll
+              options={[
                 {
-                    display: "Published",
-                    value: resolveEnum("AssessmentStatus.PUBLISHED"),
+                  display: "Published",
+                  value: resolveEnum("AssessmentStatus.PUBLISHED"),
                 },
                 {
-                    display: "Draft",
-                    value: resolveEnum("AssessmentStatus.DRAFT"),
+                  display: "Draft",
+                  value: resolveEnum("AssessmentStatus.DRAFT"),
                 },
                 {
-                    display: "Archived",
-                    value: resolveEnum("AssessmentStatus.ENDED"),
+                  display: "Scheduled",
+                  value: resolveEnum("AssessmentStatus.SCHEDULED"),
                 },
-                ]}
-                currentValue={searchParams.status__in}
-                onChange={(val) =>
+                {
+                  display: "Archived",
+                  value: resolveEnum("AssessmentStatus.ENDED"),
+                },
+              ]}
+              currentValue={searchParams.status__in}
+              onChange={(val) =>
                 setSearchParams((prev) => {
-                    const next = { ...prev };
-                    if (val == null) {
+                  const next = { ...prev };
+                  if (val == null) {
                     delete next.status__in;
-                    } else {
+                  } else {
                     next.status__in = val;
-                    }
-                    return next;
+                  }
+                  return next;
                 })
-                }
+              }
             />
 
             <Dropdown
-                name="Owner"
-                multiselect
-                showSelectAll
-                options={[
+              name="Owner"
+              multiselect
+              showSelectAll
+              options={[
                 ...(users || []).map((user) => ({
-                    display: user.username,
-                    value: user.id,
-                    user,
+                  display: user.username,
+                  value: user.id,
+                  user,
                 })),
-                ]}
-                currentValue={searchParams.created_by__in || []}
-                onChange={(val) =>
+              ]}
+              currentValue={searchParams.created_by__in || []}
+              onChange={(val) =>
                 setSearchParams((prev) => {
-                    const next = { ...prev };
-                    if (val === null || (Array.isArray(val) && val.includes(null))) {
+                  const next = { ...prev };
+                  if (
+                    val === null ||
+                    (Array.isArray(val) && val.includes(null))
+                  ) {
                     delete next.created_by__in;
-                    } else {
+                  } else {
                     next.created_by__in = val;
-                    }
-                    return next;
+                  }
+                  return next;
                 })
-                }
-                renderOption={({ user, display, isDefault }) =>
+              }
+              renderOption={({ user, display, isDefault }) =>
                 isDefault ? (
-                    display
+                  display
                 ) : (
-                    <UserAvatarBadge
+                  <UserAvatarBadge
                     user={user}
                     className="gap-3 py-2"
                     iconClassName="w-10 h-10"
                     showEmail
-                    />
+                  />
                 )
-                }
+              }
             />
           </div>
         </Section>
@@ -301,9 +257,9 @@ const Assesment = () => {
                     label: "Draft",
                   },
                   [resolveEnum("AssessmentStatus.SCHEDULED")]: {
-                    bg: "bg-[#FFE2CB]",
-                    dot: "bg-[#E68335]",
-                    text: "text-[#E68335]",
+                    bg: "bg-[#97cff7]",
+                    dot: "bg-[#0077C2]",
+                    text: "text-[#0077C2]",
                     label: "Scheduled",
                   },
                 };
