@@ -6,12 +6,47 @@ import {
 } from "@/api/assessments/assessment";
 import EditIcon from "@/assets/editIcon.svg?react";
 import { Button } from "../ui/button";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { ROUTES } from "@/lib/routes";
 
 const AssessmentContext = createContext();
 
 const MAX_INPUT_WIDTH = 400; // px
+
+const stepsArray = [
+  {
+    value: 1,
+    stepId: "create",
+    name: "Basics",
+    primaryColor: "#0043CE",
+    secondaryColor: "#D0E2FF",
+    enabledSteps: [1],
+  },
+  {
+    value: 2,
+    stepId: "configure",
+    name: "Configure Assessment",
+    primaryColor: "#806BFF",
+    secondaryColor: "#EEF2FC",
+    enabledSteps: [2, 3, 4],
+  },
+  {
+    value: 3,
+    stepId: "custom-questions",
+    name: "Add Custom Questions",
+    primaryColor: "#27AE60",
+    secondaryColor: "#E9F9F1",
+    enabledSteps: [2, 3, 4],
+  },
+  {
+    value: 4,
+    stepId: "finalize",
+    name: "Finalize",
+    primaryColor: "#F2994A",
+    secondaryColor: "#FFF4E5",
+    enabledSteps: [2, 3, 4],
+  },
+];
 
 const AssessmentNavbarWrapper = ({ children }) => {
   const [assessmentId, setAssessmentId] = useState(null);
@@ -20,7 +55,10 @@ const AssessmentNavbarWrapper = ({ children }) => {
     assessment ? assessment.name : "Untitled Assessment"
   );
   const { mutateAsync: updateAssessment } = useUpdateAssessment();
-  const [selectedStep, setSelectedStep] = useState(1);
+  const { stepId } = useParams();
+  const [selectedStep, setSelectedStep] = useState(
+    stepsArray.find((step) => step.stepId === stepId)?.value || 1
+  );
   const navigate = useNavigate();
 
   // For auto-resizing input
@@ -85,37 +123,6 @@ const AssessmentNavbarWrapper = ({ children }) => {
       Exit
     </Button>
   );
-
-  const stepsArray = [
-    {
-      value: 1,
-      name: "Basics",
-      primaryColor: "#0043CE",
-      secondaryColor: "#D0E2FF",
-      enabled: false,
-    },
-    {
-      value: 2,
-      name: "Configure Assessment",
-      primaryColor: "#806BFF",
-      secondaryColor: "#EEF2FC",
-      enabled: true,
-    },
-    {
-      value: 3,
-      name: "Add Custom Questions",
-      primaryColor: "#27AE60",
-      secondaryColor: "#E9F9F1",
-      enabled: true,
-    },
-    {
-      value: 4,
-      name: "Finalize",
-      primaryColor: "#F2994A",
-      secondaryColor: "#FFF4E5",
-      enabled: false,
-    },
-  ];
 
   return (
     <div className="flex flex-col">

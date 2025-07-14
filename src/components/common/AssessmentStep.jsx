@@ -18,9 +18,10 @@ const AssessmentStep = ({
   const currentStepIndex = steps.findIndex((s) => s.value === selected);
   const currentStep = steps[currentStepIndex] || {};
   const nextStep = steps[currentStepIndex + 1];
+  const enabledSteps = steps[currentStepIndex].enabledSteps;
 
   return (
-    <div className="w-[600px] p-4 bg-white rounded-5xl flex items-center gap-4 border-[1px] border-[rgba(224,224,224,0.65)] [box-shadow:0px_16px_24px_rgba(0,_0,_0,_0.06),_0px_2px_6px_rgba(0,_0,_0,_0.04)]">
+    <div className="w-[550px] p-4 bg-white rounded-5xl flex items-center gap-4 border-[1px] border-[rgba(224,224,224,0.65)] [box-shadow:0px_16px_24px_rgba(0,_0,_0,_0.06),_0px_2px_6px_rgba(0,_0,_0,_0.04)]">
       {/* Circular Step No */}
       <div
         className="flex items-center justify-center w-12 h-12 rounded-full border border-5"
@@ -41,7 +42,7 @@ const AssessmentStep = ({
           options={steps.map((step) => ({
             display: step.name,
             value: step.value,
-            disabled: !step.enabled,
+            disabled: !enabledSteps.includes(step.value),
           }))}
           currentValue={selected}
           onChange={onSelect}

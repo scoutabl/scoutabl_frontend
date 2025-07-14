@@ -7,14 +7,13 @@ import Step4 from "./steps/Step4";
 import { ROUTES } from "../../../../lib/routes";
 
 const steps = [
-    { id: "1", component: Step1 },
-    { id: "2", component: Step2 },
-    { id: "3", component: Step3 },
-    { id: "4", component: Step4 },
+    { id: "configure", component: Step2 },
+    { id: "custom-questions", component: Step3 },
+    { id: "finalize", component: Step4 },
 ];
 
-export default function CreateAssessmentFlow() {
-    const { stepId } = useParams();
+export default function EditAssessmentFlow() {
+    const { stepId, assessmentId } = useParams();
     const navigate = useNavigate();
     const stepIndex = steps.findIndex((s) => s.id === stepId) || 0;
     const StepComponent = steps[stepIndex]?.component || Step1;

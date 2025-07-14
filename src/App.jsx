@@ -25,7 +25,7 @@ import SignupPage from "./pages/SignupPage";
 import AssessmentOnboarding from "./pages/AssessmentOnboarding";
 import { AssessmentProvider } from "./context/AssesmentContext";
 import Assesment from "./components/features/assesment/Assesment";
-import CreateAssessmentFlow from "./components/features/assesment/create/CreateAssesmentFlow";
+import EditAssessmentFlow from "./components/features/assesment/create/EditAssesmentFlow";
 import SkillAssesment from "./pages/SkillAssesment";
 import CodingAssesment from "./components/features/candidateAssesments/CodingAssesment";
 import { handleAPIError } from "./lib/errorHandling";
@@ -147,7 +147,21 @@ const RoutesWithTransitions = () => {
             <AssessmentNavbarWrapper>
               <PageTransition>
                 <AssessmentProvider>
-                  <CreateAssessmentFlow />
+                  <EditAssessmentFlow />
+                </AssessmentProvider>
+              </PageTransition>
+            </AssessmentNavbarWrapper>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path={ROUTES.ASSESSMENT_EDIT}
+        element={
+          <ProtectedRoute>
+            <AssessmentNavbarWrapper>
+              <PageTransition>
+                <AssessmentProvider>
+                  <EditAssessmentFlow />
                 </AssessmentProvider>
               </PageTransition>
             </AssessmentNavbarWrapper>
