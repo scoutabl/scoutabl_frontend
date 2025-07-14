@@ -45,7 +45,7 @@ const NavbarWrapper = ({ children }) => {
   return (
     <div className="flex flex-col">
       <Navbar
-        logo={LogoIcon}
+        logo={<LogoIcon />}
         navItems={NAV_ITEMS}
         actions={Actions}
         logoOnClick={() => navigate(ROUTES.ROOT)}

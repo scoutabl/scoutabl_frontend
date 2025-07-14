@@ -23,8 +23,8 @@ import TrashIcon from '@/assets/trashIcon.svg?react'
 import EditIcon from '@/assets/editquestion.svg?react'
 import DuplicateIcon from '@/assets/duplicateIcon.svg?react'
 import NoTestIcon from '@/assets/noTestIcon.svg?react'
-import ChevronLeftIcon from '@/assets/chevronLeft.svg?react'
-import ChevronRightIcon from '@/assets/chevronRight.svg?react'
+import ChevronLeftIcon from '@/assets/chevronLeftIcon.svg?react'
+import ChevronRightIcon from '@/assets/chevronRightIcon.svg?react'
 import { Eye, GripVertical } from 'lucide-react'
 import QuestionModal from './step3-customQuestions/QuestionModal';
 import AssessmentStep from '@/components/common/AssessmentStep';

@@ -29,8 +29,8 @@ import MultipleSelector from "@/components/ui/MultipleSelector";
 import SimpleCodeEditor from "@/components/shared/SimpleCodeEditor";
 import { cn } from "@/lib/utils";
 import AiIcon from '@/assets/AiIcon.svg?react'
-import ChevronLeftIcon from '@/assets/chevronLeft.svg?react'
-import ChevronRightIcon from '@/assets/chevronRight.svg?react'
+import ChevronLeftIcon from '@/assets/chevronLeftIcon.svg?react'
+import ChevronRightIcon from '@/assets/chevronRightIcon.svg?react'
 import EditIcon from '@/assets/editIcon.svg?react'
 import CodeIcon from '@/assets/codeIcon.svg?react'
 import QuestionIcon from '@/assets/questionIcon.svg?react'

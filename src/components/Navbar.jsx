@@ -13,17 +13,18 @@ function isActiveRoute(itemRoute, currentPath) {
   );
 }
 
-function Navbar({ logo: Logo, navItems, actions, logoOnClick }) {
+function Navbar({ logo, navItems, actions, logoOnClick }) {
   const location = useLocation();
 
   return (
     <nav className="fixed z-20 top-0 left-[110px] right-[110px] h-20 mt-4 flex items-center justify-between px-6 rounded-full bg-purplePrimary">
-      {Logo && (
+      {/* {Logo && (
         <Logo
           className="hover:cursor-pointer"
           onClick={logoOnClick}
         />
-      )}
+      )} */}
+      {logo && logo}
       <div className="flex flex-row gap-10">
         {navItems && navItems.map((item) => (
           <IconButton

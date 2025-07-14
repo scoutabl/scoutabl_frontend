@@ -83,8 +83,12 @@ export const useAssessment = (assessmentId) => {
 }
 
 export const useCreateAssessment = () => {
+    const queryClient = useQueryClient();
     return useMutation({
         mutationFn: (data) => assesmentAPI.createAssessment(data),
+        onSuccess: (data) => {
+            queryClient.setQueryData(["assessment", data.id], data);
+        },
     });
 }
 
