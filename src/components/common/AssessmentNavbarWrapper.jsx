@@ -49,10 +49,9 @@ const stepsArray = [
 ];
 
 const AssessmentNavbarWrapper = ({ children }) => {
-  //   const [assessmentId, setAssessmentId] = useState(null);
   const { stepId, assessmentId } = useParams();
-  console.log("---", stepId, assessmentId, window.location.pathname);
-  const { data: assessment } = useAssessment(assessmentId);
+  const { data: assessment, isLoading: isAssessmentLoading } =
+    useAssessment(assessmentId);
   const [assessmentName, setAssessmentName] = useState(
     assessment ? assessment.name : "Untitled Assessment"
   );
@@ -72,6 +71,12 @@ const AssessmentNavbarWrapper = ({ children }) => {
       setInputWidth(width);
     }
   }, [assessmentName]);
+
+  useEffect(() => {
+    if (!isAssessmentLoading && assessment) {
+      setAssessmentName(assessment.name);
+    }
+  }, [isAssessmentLoading, assessment]);
 
   const handleStepChange = (stepValue) => {
     // setSelectedStep(stepValue);
@@ -103,8 +108,8 @@ const AssessmentNavbarWrapper = ({ children }) => {
           }
           if (assessmentId) {
             await updateAssessment({
-              id: assessmentId,
-              name: assessmentName.trim() || newName,
+              assessmentId,
+              data: { name: assessmentName.trim() || newName },
             });
           }
           if (newName) setAssessmentName(newName);

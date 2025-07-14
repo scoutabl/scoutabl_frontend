@@ -30,6 +30,7 @@ class AssessmentAPI extends BaseAPI {
     }
 
     async updateAssessment(assessmentId, data) {
+        console.log(assessmentId, data);
         const url = `${ASSESSMENT_URL}${assessmentId}/`;
         return (await this.patch(url, data)).data;
     }
@@ -95,7 +96,7 @@ export const useCreateAssessment = () => {
 export const useUpdateAssessment = () => {
     const queryClient = useQueryClient();
     return useMutation({
-        mutationFn: (assessmentId, data) => assesmentAPI.updateAssessment(assessmentId, data),
+        mutationFn: ({assessmentId, data}) => assesmentAPI.updateAssessment(assessmentId, data),
         onSuccess: (data) => {
             queryClient.setQueryData(["assessment", data.id], data);
         },
