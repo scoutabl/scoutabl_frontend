@@ -391,6 +391,14 @@ const Assesment = () => {
                         <DotsIcon />
                       </button>
                     }
+                    onTitleClick={() =>
+                      navigate(
+                        ROUTES.ASSESSMENT_EDIT.replace(
+                          ":assessmentId",
+                          assesment.id
+                        ).replace(":stepId", "configure")
+                      )
+                    }
                   />
                 );
               })}

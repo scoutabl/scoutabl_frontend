@@ -42,6 +42,7 @@ const AssessmentCard = ({
   onPopoverOpenChange,
   popoverTrigger,
   className = "",
+  onTitleClick = () => {},
 }) => {
   return (
     <div
@@ -59,7 +60,9 @@ const AssessmentCard = ({
           )}
         >
           <div className={cn("h-2 w-2 rounded-full", statusDot)} />
-          <span className={cn("text-xs font-medium", statusText)}>{status}</span>
+          <span className={cn("text-xs font-medium", statusText)}>
+            {status}
+          </span>
         </div>
         <Popover open={popoverOpen} onOpenChange={onPopoverOpenChange}>
           <PopoverTrigger asChild>{popoverTrigger}</PopoverTrigger>
@@ -103,7 +106,9 @@ const AssessmentCard = ({
         </Popover>
       </div>
       <div className="flex flex-col gap-2">
-        <h1 className="text-base text-semibold text-greyPrimary text-xl">{title}</h1>
+        <h1 className="text-base text-semibold text-greyPrimary text-xl hover:cursor-pointer" onClick={onTitleClick}>
+          {title}
+        </h1>
         <div className="flex items-center gap-2 text-sm">
           <span className="text-purplePrimary">Owner</span>
           <UserAvatarBadge user={owner} />
@@ -116,7 +121,10 @@ const AssessmentCard = ({
         </div>
         <div className="flex items-center gap-2">
           {tags.map((tag, index) => (
-            <div key={index} className="px-3 py-1 bg-blueSecondary rounded-full">
+            <div
+              key={index}
+              className="px-3 py-1 bg-blueSecondary rounded-full"
+            >
               <span className="text-xs text-greyAccent">{tag}</span>
             </div>
           ))}
@@ -124,9 +132,13 @@ const AssessmentCard = ({
         <div className="flex flex-row gap-1 items-end">
           <span className="text-purplePrimary">
             {CandidatesIcon && <CandidatesIcon className="size-8" />}
-            </span>
-          <span className="text-3xl text-greyPrimary font-bold leading-none">{candidates}</span>
-          <span className="text-sm text-greyAccent">Candidate{candidates > 1 ? "s" : ""}</span>
+          </span>
+          <span className="text-3xl text-greyPrimary font-bold leading-none">
+            {candidates}
+          </span>
+          <span className="text-sm text-greyAccent">
+            Candidate{candidates > 1 ? "s" : ""}
+          </span>
         </div>
       </div>
     </div>
