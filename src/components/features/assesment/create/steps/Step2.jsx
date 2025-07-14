@@ -1,8 +1,17 @@
 import React from 'react'
+import { useAssessmentContext } from '@/components/common/AssessmentNavbarWrapper';
+import AssessmentStep from '@/components/common/AssessmentStep';
 
 const Step2 = () => {
+  const { steps, selectedStep, handleStepChange } = useAssessmentContext();
   return (
-    <div>Step2</div>
+    <div>
+      <AssessmentStep
+        steps={steps}
+        selected={selectedStep}
+        onSelect={handleStepChange}
+      />
+    </div>
   )
 }
 

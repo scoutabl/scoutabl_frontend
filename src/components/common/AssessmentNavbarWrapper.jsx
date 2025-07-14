@@ -49,16 +49,16 @@ const stepsArray = [
 ];
 
 const AssessmentNavbarWrapper = ({ children }) => {
-  const [assessmentId, setAssessmentId] = useState(null);
+  //   const [assessmentId, setAssessmentId] = useState(null);
+  const { stepId, assessmentId } = useParams();
+  console.log("---", stepId, assessmentId, window.location.pathname);
   const { data: assessment } = useAssessment(assessmentId);
   const [assessmentName, setAssessmentName] = useState(
     assessment ? assessment.name : "Untitled Assessment"
   );
   const { mutateAsync: updateAssessment } = useUpdateAssessment();
-  const { stepId } = useParams();
-  const [selectedStep, setSelectedStep] = useState(
-    stepsArray.find((step) => step.stepId === stepId)?.value || 1
-  );
+  const selectedStep =
+    stepsArray.find((step) => step.stepId === stepId)?.value || 1;
   const navigate = useNavigate();
 
   // For auto-resizing input
@@ -72,6 +72,23 @@ const AssessmentNavbarWrapper = ({ children }) => {
       setInputWidth(width);
     }
   }, [assessmentName]);
+
+  const handleStepChange = (stepValue) => {
+    // setSelectedStep(stepValue);
+    if (stepValue === 1) {
+      navigate(ROUTES.ASSESSMENT_CREATE);
+    } else {
+      const targetStep = stepsArray.find(
+        (step) => step.value === stepValue
+      )?.stepId;
+      navigate(
+        ROUTES.ASSESSMENT_EDIT.replace(":assessmentId", assessmentId).replace(
+          ":stepId",
+          targetStep
+        )
+      );
+    }
+  };
 
   const logo = (
     <div className="flex items-center relative gap-2 text-white">
@@ -132,10 +149,10 @@ const AssessmentNavbarWrapper = ({ children }) => {
           value={{
             assessment,
             assessmentName,
-            setAssessmentId,
+            // setAssessmentId,
             steps: stepsArray,
             selectedStep,
-            setSelectedStep,
+            handleStepChange,
           }}
         >
           {children}

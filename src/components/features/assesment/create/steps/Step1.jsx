@@ -14,19 +14,21 @@ import { SCOUTABL_MUTED_SECONDARY, SCOUTABL_WHITE } from "@/lib/constants";
 import { Button } from "@/components/ui/button";
 import { useCreateAssessment } from "@/api/assessments/assessment";
 import { useEnums } from "@/context/EnumsContext";
+import { ROUTES } from "@/lib/routes";
+import { useNavigate } from "react-router-dom";
 
 const Step1 = () => {
   const { resolveEnum } = useEnums();
   const {
     steps,
     selectedStep,
-    setSelectedStep,
+    handleStepChange,
     assessmentName,
-    setAssessmentId,
   } = useAssessmentContext();
   const { mutateAsync: createAssessment, isPending: isCreatingAssessment } =
     useCreateAssessment();
   const [selectedCategory, setSelectedCategory] = useState(null);
+  const navigate = useNavigate();
 
   const handleNext = async () => {
     const assessment = await createAssessment({
@@ -34,8 +36,7 @@ const Step1 = () => {
       category: selectedCategory,
       save_template: false,
     });
-    setAssessmentId(assessment.id);
-    // TODO: Navigate
+    navigate(ROUTES.ASSESSMENT_EDIT.replace(":assessmentId", assessment.id).replace(":stepId", "configure"));
   };
 
   const CATEGORIES = [
@@ -70,7 +71,7 @@ const Step1 = () => {
         <AssessmentStep
           steps={steps}
           selected={selectedStep}
-          onSelect={setSelectedStep}
+          onSelect={handleStepChange}
         />
       </div>
       <div className="flex flex-col gap-8 mb-8">

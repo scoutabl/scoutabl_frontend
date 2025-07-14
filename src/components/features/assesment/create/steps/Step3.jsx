@@ -30,7 +30,7 @@ import QuestionModal from './step3-customQuestions/QuestionModal';
 import AssessmentStep from '@/components/common/AssessmentStep';
 import { useAssessmentContext } from '@/components/common/AssessmentNavbarWrapper';
 const Step3 = ({ assessmentId = 14 }) => {
-    const { steps, selectedStep, setSelectedStep } = useAssessmentContext();
+    const { steps, selectedStep, handleStepChange } = useAssessmentContext();
     const [modalOpen, setModalOpen] = useState(false);
     const [modalMode, setModalMode] = useState('add'); // 'add' or 'edit'
     const [modalInitialData, setModalInitialData] = useState({});
@@ -107,7 +107,7 @@ const Step3 = ({ assessmentId = 14 }) => {
                 <AssessmentStep
                     steps={steps}
                     selected={selectedStep}
-                    onSelect={val => setSelectedStep(Number(val))}
+                    onSelect={handleStepChange}
                 />
                 <div className='min-w-[450px] bg-purpleQuaternary rounded-5xl px-4 py-[25px] flex items-center gap-2 [box-shadow:0px_16px_24px_rgba(0,_0,_0,_0.06),_0px_2px_6px_rgba(0,_0,_0,_0.04)]'>
                     <AiIcon className='w-4 h-' />
