@@ -30,7 +30,13 @@ function getAvatarForUsername(username, avatars) {
   return avatars[hash % avatars.length];
 }
 
-const UserAvatarBadge = ({ user, showEmail, className, iconClassName }) => {
+const UserAvatarBadge = ({
+  user,
+  showEmail,
+  className,
+  iconClassName,
+  iconOnly = false,
+}) => {
   const { profile_photo, username, gender } = user || {};
 
   const fullName = getUserFullName(user) || getUserFullName(user) || "Unknown";
@@ -54,12 +60,14 @@ const UserAvatarBadge = ({ user, showEmail, className, iconClassName }) => {
           {getInitials(user) || "?"}
         </AvatarFallback>
       </Avatar>
-      <div className="flex flex-col justify-center">
-        <span className="text-greyPrimary">{fullName}</span>
-        {showEmail && (
-          <span className="text-[#7C7C7C] text-xs">{user.email}</span>
-        )}
-      </div>
+      {!iconOnly && (
+        <div className="flex flex-col justify-center">
+          <span className="text-greyPrimary">{fullName}</span>
+          {showEmail && (
+            <span className="text-[#7C7C7C] text-xs">{user.email}</span>
+          )}
+        </div>
+      )}
     </div>
   );
 };
