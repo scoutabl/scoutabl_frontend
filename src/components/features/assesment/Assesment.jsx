@@ -181,6 +181,7 @@ const Assesment = () => {
                   return next;
                 })
               }
+              className="max-w-[200px]"
             />
 
             <Dropdown
@@ -221,6 +222,7 @@ const Assesment = () => {
                   />
                 )
               }
+              className="max-w-[200px]"
             />
           </div>
         </Section>

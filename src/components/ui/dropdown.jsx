@@ -9,6 +9,7 @@ import {
 import ChevronDown from "@/assets/chevronDownIcon.svg?react";
 import { Button } from "@/components/ui/button";
 import PropTypes from "prop-types";
+import { SCOUTABL_TEXT_SECONDARY } from "@/lib/constants";
 
 /**
  * Dropdown component
@@ -27,7 +28,9 @@ const Dropdown = ({
   multiselect = false,
   showSelectAll = false,
   showCurrentValue = true,
-  style={},
+  iconOnly = false,
+  icon = <ChevronDown className="ml-2" />,
+  style = {},
 }) => {
   const isSelected = (val) =>
     multiselect && Array.isArray(currentValue)
@@ -79,22 +82,37 @@ const Dropdown = ({
           className={`rounded-full focus-visible:ring-0 text-sm ${className}`}
           style={style}
         >
-          {name ? `${name}` : ""}
-          {multiselect && showCurrentValue
-            ? Array.isArray(currentValue) && currentValue.length > 0
-              ? `: ${options
-                  .filter((opt) => currentValue.includes(opt.value))
-                  .map((opt) => opt.display)
-                  .join(", ")}`
-              : ""
-            : showCurrentValue && currentOption
-            ? `: ${currentOption.display}`
-            : ""}
-          <ChevronDown className="ml-2" />
+          {!iconOnly && (
+            <span className="overflow-hidden text-ellipsis whitespace-nowrap">
+              <span
+                className={
+                  Array.isArray(currentValue) && currentValue.length > 0
+                    ? "font-semibold"
+                    : ""
+                }
+              >
+                {name ? `${name}` : ""}
+              </span>
+              {multiselect && showCurrentValue
+                ? Array.isArray(currentValue) && currentValue.length > 0
+                  ? `: ${options
+                      .filter((opt) => currentValue.includes(opt.value))
+                      .map((opt) => opt.display)
+                      .join(", ")}`
+                  : ""
+                : showCurrentValue && currentOption
+                ? `: ${currentOption.display}`
+                : ""}
+            </span>
+          )}
+          {icon}
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="start" className="py-2 px-0">
-        <DropdownMenuGroup className="p-0">
+        <DropdownMenuGroup
+          className="p-0 min-w-[200px]"
+          style={{ color: SCOUTABL_TEXT_SECONDARY }}
+        >
           {multiselect && showSelectAll && (
             <DropdownMenuItem
               key="__select_all__"
@@ -138,7 +156,9 @@ const Dropdown = ({
           {options.map((opt) => (
             <DropdownMenuItem
               key={opt.value}
-              onClick={opt.disabled ? undefined : () => handleItemClick(opt.value)}
+              onClick={
+                opt.disabled ? undefined : () => handleItemClick(opt.value)
+              }
               disabled={!!opt.disabled}
               className={`rounded-none text-base px-3 flex flex-row items-center justify-between gap-5 ${
                 opt.disabled
@@ -150,7 +170,16 @@ const Dropdown = ({
                   : ""
               }`}
             >
-              {renderOption ? renderOption(opt) : opt.display}
+              {renderOption ? (
+                renderOption(opt)
+              ) : opt.icon ? (
+                <div className="flex flex-row items-center gap-2">
+                  {opt.icon}
+                  {opt.display}
+                </div>
+              ) : (
+                opt.display
+              )}
               {multiselect && (
                 <span className="w-5 h-5 flex items-center justify-center mr-2">
                   <span
