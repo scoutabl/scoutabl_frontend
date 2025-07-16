@@ -1,6 +1,10 @@
-import React from "react";
+import React, { useEffect } from "react";
 import Dropdown from "@/components/ui/dropdown";
 import { cn } from "@/lib/utils";
+import {
+  RadialBar,
+  RadialBarChart,
+} from "recharts";
 
 /**
  * steps: Array<{ value: number|string, name: string, primaryColor: string, secondaryColor: string, enabled: boolean }>
@@ -20,20 +24,61 @@ const AssessmentStep = ({
   const nextStep = steps[currentStepIndex + 1];
   const enabledSteps = steps[currentStepIndex].enabledSteps;
 
+  useEffect(() => {
+    console.log('Current step index:', currentStepIndex);
+    console.log('Steps length:', steps.length);
+    console.log('Progress:', progress);
+    console.log('enable steps:', enabledSteps);
+  }, [currentStepIndex, steps.length]);
+
+  const description = "A radial chart with text"
+
+  // const progress = ((currentStepIndex + 1) / steps.length) * 100;
+  const progress = ((currentStepIndex + 1) / steps.length) * 100;
+  // const progress = (currentStepIndex / (steps.length - 1)) * 100;
+  const chartData = [{ value: progress }];
+
   return (
     <div className="w-[550px] p-4 bg-white rounded-5xl flex items-center gap-4 border-[1px] border-[rgba(224,224,224,0.65)] [box-shadow:0px_16px_24px_rgba(0,_0,_0,_0.06),_0px_2px_6px_rgba(0,_0,_0,_0.04)]">
       {/* Circular Step No */}
-      <div
-        className="flex items-center justify-center w-12 h-12 rounded-full border border-5"
-        style={{
-        //   background: currentStep.secondaryColor,
-        //   color: currentStep.primaryColor,
-        borderColor: currentStep.primaryColor,
-          fontWeight: 700,
-          fontSize: 20,
-        }}
-      >
-        {currentStep.value}
+      <div className="w-[60px] h-[60px] relative flex items-center justify-center">
+        {/* <RadialBarChart
+          width={60}
+          height={60}
+          cx={30}
+          cy={30}
+          innerRadius={22}
+          outerRadius={30}
+          barSize={8}
+          data={chartData}
+          startAngle={90}
+          endAngle={450}
+        > */}
+        <RadialBarChart
+          width={60}
+          height={60}
+          cx={30}
+          cy={30}
+          innerRadius={22}
+          outerRadius={30}
+          barSize={8}
+          data={chartData}
+          startAngle={90}
+          endAngle={450} // full circle
+        >
+          <RadialBar
+            // minAngle={15}
+            background
+            clockWise
+            dataKey="value"
+            fill={currentStep.primaryColor || "#22a87f"}
+            cornerRadius={30}
+            domain={[0, 100]} // <-- Add this line!
+          />
+        </RadialBarChart>
+        <span className="absolute inset-0 flex items-center justify-center text-2xl font-bold text-black">
+          {currentStep.value}
+        </span>
       </div>
       <div className="flex flex-col gap-2 flex-1">
         {/* Step select dropdown */}
