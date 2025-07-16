@@ -129,14 +129,17 @@
 
   html {
     font-family: var(--font-sans);
-    /* overflow-y: scroll;
-    scrollbar-gutter: stable; */
+    overflow-y: scroll !important;
+  }
+
+
+  body[data-scroll-locked] {
+    margin-right: 0 !important;
   }
 
   body {
     @apply bg-backgroundPrimary dark:bg-black text-greyPrimary;
     font-family: var(--font-sans);
-
   }
 
   h1 {

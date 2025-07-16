@@ -16,6 +16,7 @@ import {
     AlertDialogTitle,
     AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
+import { motion } from 'framer-motion';
 import Step3Loading from './step3-customQuestions/Step3Loading';
 import AiIcon from '@/assets/AiIcon.svg?react'
 import PlusIcon from '@/assets/plusIcon.svg?react'
