@@ -94,7 +94,7 @@ const AssessmentStep = ({
           multiselect={false}
           showCurrentValue={false}
           className={cn("w-30 h-6 text-xs p-1 gap-0")}
-          style={{ background: currentStep.secondaryColor }}
+          style={{ background: currentStep.secondaryColor, color: "inherit" }}
         />
         <span
           className="font-semibold text-lg"
