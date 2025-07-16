@@ -9,7 +9,7 @@ import {
 import ChevronDown from "@/assets/chevronDownIcon.svg?react";
 import { Button } from "@/components/ui/button";
 import PropTypes from "prop-types";
-import { SCOUTABL_TEXT_SECONDARY } from "@/lib/constants";
+import { SCOUTABL_TEXT_SECONDARY, SCOUTABL_TEXT, SCOUTABL_WHITE } from "@/lib/constants";
 
 /**
  * Dropdown component
@@ -73,6 +73,9 @@ const Dropdown = ({
         : opt.value === currentValue) ||
       (opt.isDefault && (currentValue === null || currentValue === undefined))
   );
+  const hasValue = multiselect
+    ? Array.isArray(currentValue) && currentValue.length > 0
+    : currentValue !== null && currentValue !== undefined;
 
   return (
     <DropdownMenu>
@@ -80,21 +83,19 @@ const Dropdown = ({
         <Button
           variant="outline"
           className={`rounded-full focus-visible:ring-0 text-sm ${className}`}
-          style={style}
+          style={{
+            background: hasValue ? SCOUTABL_TEXT : "inherit",
+            color: hasValue ? SCOUTABL_WHITE : "inherit",
+            ...style
+          }}
         >
           {!iconOnly && (
             <span className="overflow-hidden text-ellipsis whitespace-nowrap">
-              <span
-                className={
-                  Array.isArray(currentValue) && currentValue.length > 0
-                    ? "font-semibold"
-                    : ""
-                }
-              >
+              <span className={hasValue ? "font-semibold" : ""}>
                 {name ? `${name}` : ""}
               </span>
               {multiselect && showCurrentValue
-                ? Array.isArray(currentValue) && currentValue.length > 0
+                ? hasValue
                   ? `: ${options
                       .filter((opt) => currentValue.includes(opt.value))
                       .map((opt) => opt.display)
