@@ -28,6 +28,7 @@ export const SCOUTABL_BLACK = "#4F4F4F";
 export const SCOUTABL_TEXT = "#333333"
 export const SCOUTABL_TEXT_SECONDARY = "#5C5C5C"
 export const DEFAULT_LIST_API_PARAMS = {
+    page: 1,
     page_size: 10,
     ordering: "-created_at",
 }

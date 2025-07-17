@@ -32,11 +32,11 @@ const PaginatedScroll = ({
     if (!sentinel) return;
     const options = {
       root: useWindowScroll ? null : scrollRef.current,
-      rootMargin: '0px',
+      rootMargin: "0px",
       threshold: 0.1,
     };
     const observer = new window.IntersectionObserver((entries) => {
-      entries.forEach(entry => {
+      entries.forEach((entry) => {
         if (entry.isIntersecting && !loading && currentPage < totalPages) {
           onNextPage?.();
         }
@@ -46,7 +46,15 @@ const PaginatedScroll = ({
     return () => {
       observer.disconnect();
     };
-  }, [loading, currentPage, totalPages, onNextPage, useWindowScroll, pageSize, totalCount]);
+  }, [
+    loading,
+    currentPage,
+    totalPages,
+    onNextPage,
+    useWindowScroll,
+    pageSize,
+    totalCount,
+  ]);
 
   return (
     <div
@@ -59,11 +67,13 @@ const PaginatedScroll = ({
       <div ref={sentinelRef} style={{ height: 1 }} />
       {loading && (
         <div className="flex justify-center mt-5">
-          <Loading iconProps={{ className: "animate-spin text-purplePrimary" }} />
+          <Loading
+            iconProps={{ className: "animate-spin text-purplePrimary" }}
+          />
         </div>
       )}
     </div>
   );
 };
 
-export default PaginatedScroll; 
+export default PaginatedScroll;

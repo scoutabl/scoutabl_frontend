@@ -32,6 +32,7 @@ import { handleAPIError } from "./lib/errorHandling";
 import NavbarWrapper from "./components/common/NavbarWrapper";
 import AssessmentNavbarWrapper from "./components/common/AssessmentNavbarWrapper";
 import { ROUTES } from "./lib/routes";
+import { BootstrapProvider } from "./context/BootstrapContext";
 
 // Protected Route component for authenticated users
 const ProtectedRoute = ({ children }) => {
@@ -231,12 +232,14 @@ function App() {
       <EnumsProvider>
         <Router>
           <AuthProvider>
-            <ThemeProvider>
-              <NavigationWrapper>
-                <RoutesWithTransitions />
-              </NavigationWrapper>
-            </ThemeProvider>
-            <Toaster richColors />
+            <BootstrapProvider>
+              <ThemeProvider>
+                <NavigationWrapper>
+                  <RoutesWithTransitions />
+                </NavigationWrapper>
+              </ThemeProvider>
+              <Toaster richColors />
+            </BootstrapProvider>
           </AuthProvider>
         </Router>
       </EnumsProvider>
