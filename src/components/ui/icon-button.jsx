@@ -1,5 +1,17 @@
 import React from "react";
-import PropTypes from "prop-types";
+import { cn } from "@/lib/utils";
+import { SCOUTABL_MUTED_PRIMARY, COMMON_VARIANTS } from "@/lib/constants";
+
+const variants = {
+  default: {
+    iconSpan:
+      "px-4 py-1 flex items-center justify-center mb-1 rounded-full transition-colors duration-200",
+  },
+  circleOutline: {
+    iconSpan: "p-[8px] rounded-full",
+    button: cn(`rounded-full`, COMMON_VARIANTS.outline),
+  },
+};
 
 /**
  * IconButton component for navigation or option selection.
@@ -13,12 +25,13 @@ import PropTypes from "prop-types";
  * @param {object} [props.rest] - Other props
  */
 const IconButton = ({
-  iconSolid: IconSolid,
-  iconOutline: IconOutline,
+  iconSolid,
+  iconOutline,
   label,
   active = false,
   onClick,
   className = "",
+  variant = "default",
   ...rest
 }) => {
   return (
@@ -26,16 +39,21 @@ const IconButton = ({
       type="button"
       aria-pressed={active}
       onClick={onClick}
-      className={`flex flex-col items-center justify-center focus:outline-none transition-all duration-200 ${className}`}
+      className={cn(
+        `flex flex-col items-center justify-center focus:outline-none transition-all duration-200`,
+        className,
+        variants[variant]?.button || ""
+      )}
       {...rest}
     >
       <span
-        className={`px-4 py-1 flex items-center justify-center mb-1 rounded-full transition-colors duration-200 ${
+        className={cn(
+          variants[variant]?.iconSpan,
           active ? "bg-white text-purplePrimary" : "bg-transparent text-white"
-        }`}
+        )}
       >
-        {active && IconSolid && <IconSolid className="size-5" aria-hidden="true" />}
-        {!active && IconOutline && <IconOutline className="size-5" aria-hidden="true" />}
+        {active && iconSolid}
+        {!active && iconOutline}
       </span>
       <span
         className={`text-sm transition-colors duration-200 ${
@@ -46,15 +64,6 @@ const IconButton = ({
       </span>
     </button>
   );
-};
-
-IconButton.propTypes = {
-  iconSolid: PropTypes.elementType.isRequired,
-  iconOutline: PropTypes.elementType.isRequired,
-  label: PropTypes.string.isRequired,
-  active: PropTypes.bool,
-  onClick: PropTypes.func,
-  className: PropTypes.string,
 };
 
 export default React.memo(IconButton);

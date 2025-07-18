@@ -22,13 +22,19 @@ export const BASE_API_URL = import.meta.env.VITE_API_BASE_URL;
 export const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
 export const SCOUTABL_PURPLE = "#8B5CF6";
 export const SCOUTABL_PURPLE_SECONDARY = "#CFDDFD";
+export const SCOUTABL_PINK = "#FAEEFF";
 export const SCOUTABL_MUTED_SECONDARY = "#EEF2FC";
 export const SCOUTABL_WHITE = "#FFFFFF";
 export const SCOUTABL_BLACK = "#4F4F4F";
 export const SCOUTABL_TEXT = "#333333"
 export const SCOUTABL_TEXT_SECONDARY = "#5C5C5C"
+export const SCOUTABL_MUTED_PRIMARY = "#E0E0E0";
+export const SCOUTABL_RED = "#EB5757";
 export const DEFAULT_LIST_API_PARAMS = {
     page: 1,
     page_size: 10,
     ordering: "-created_at",
+}
+export const COMMON_VARIANTS = {
+    outline: `broder border-2 border-[${SCOUTABL_MUTED_PRIMARY}]`
 }

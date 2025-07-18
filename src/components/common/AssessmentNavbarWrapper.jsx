@@ -50,8 +50,9 @@ const stepsArray = [
 
 const AssessmentNavbarWrapper = ({ children }) => {
   const { stepId, assessmentId } = useParams();
-  const { data: assessment, isLoading: isAssessmentLoading } =
-    useAssessment(assessmentId);
+  const { data: assessment, isLoading: isAssessmentLoading } = useAssessment(
+    parseInt(assessmentId)
+  );
   const [assessmentName, setAssessmentName] = useState(
     assessment ? assessment.name : "Untitled Assessment"
   );

@@ -14,20 +14,20 @@ import UserAvatarBadge from "./UserAvatarBadge";
 const NAV_ITEMS = [
   {
     name: "Assessments",
-    iconSolid: RocketSolidIcon,
-    iconOutline: RocketIcon,
+    iconSolid: <RocketSolidIcon className="size-5" />,
+    iconOutline: <RocketIcon className="size-5" />,
     route: ROUTES.ASSESSMENT,
   },
   {
     name: "Talent Pool",
-    iconSolid: WorldSolidIcon,
-    iconOutline: WorldIcon,
+    iconSolid: <WorldSolidIcon className="size-5" />,
+    iconOutline: <WorldIcon className="size-5" />,
     route: ROUTES.TALENT_POOL,
   },
   {
     name: "Test Library",
-    iconSolid: BookSolidIcon,
-    iconOutline: BookIcon,
+    iconSolid: <BookSolidIcon className="size-5" />,
+    iconOutline: <BookIcon className="size-5" />,
     route: ROUTES.TEST_LIBRARY,
   },
 ];
