@@ -30,7 +30,6 @@ class AssessmentAPI extends BaseAPI {
     }
 
     async updateAssessment(assessmentId, data) {
-        console.log(assessmentId, data);
         const url = `${ASSESSMENT_URL}${assessmentId}/`;
         return (await this.patch(url, data)).data;
     }

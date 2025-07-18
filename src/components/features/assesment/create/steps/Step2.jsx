@@ -19,6 +19,9 @@ import { SCOUTABL_TEXT_SECONDARY, COMMON_VARIANTS } from "@/lib/constants";
 import { EyeIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useUpdateAssessment } from "@/api/assessments/assessment";
+import SearchInput from "@/components/shared/debounceSearch/SearchInput";
+import Dropdown from "@/components/ui/dropdown";
+import { useBootstrap } from "@/context/BootstrapContext";
 
 // TODO: Fetch from API
 const MAX_TEST_COUNT = 5;
@@ -31,10 +34,10 @@ const ICON_MAP = {
 const Step2 = () => {
   const { assessment, steps, selectedStep, handleStepChange } =
     useAssessmentContext();
-  console.log(assessment);
   const { mutateAsync: updateAssessment, isPending: isUpdatingAssessment } =
     useUpdateAssessment();
-  const [searchParams] = useState(DEFAULT_LIST_API_PARAMS);
+  const { platformLibraryId, organisationLibraryId } = useBootstrap();
+  const [searchParams, setSearchParams] = useState({...DEFAULT_LIST_API_PARAMS, library: platformLibraryId});
   const {
     data: assessmentTestsData,
     isFetchingNextPage,
@@ -49,7 +52,6 @@ const Step2 = () => {
 
   const selectedTests = assessment?.test_details || [];
   const selectedTestIds = (selectedTests || []).map((test) => test.id);
-  // console.log(searchParams);
   const TEST_TAGS = ["Recommended", "Popular"];
 
   const handleAdd = async (testId) => {
@@ -82,7 +84,7 @@ const Step2 = () => {
         />
       </div>
       <Section className="flex flex-col">
-        <Section className="bg-white flex flex-col p-3">
+        <Section className="bg-white flex flex-col p-3 gap-5">
           <div className="flex flex-row gap-3 justify-between">
             {Array.from({ length: MAX_TEST_COUNT }).map((_, index) => (
               <AddedTest
@@ -94,7 +96,31 @@ const Step2 = () => {
               />
             ))}
           </div>
-          <div>Filtering tools here</div>
+          <div className="flex flex-row justify-between">
+            <SearchInput placeholder="Search for tests" />
+            <div className="flex flex-row gap-2">
+              <Dropdown
+                name="Library"
+                currentValue={searchParams.library}
+                options={[
+                  {
+                    display: "Platform",
+                    value: platformLibraryId,
+                  },
+                  {
+                    display: "My Library",
+                    value: organisationLibraryId,
+                  },
+                ]}
+                onChange={(val) => {
+                  setSearchParams((prev) => ({
+                    ...prev,
+                    library: val
+                  }))
+                }}
+              />
+            </div>
+          </div>
         </Section>
         <div className="flex flex-col py-7">
           <h2 className="font-normal">{count} tests available</h2>
