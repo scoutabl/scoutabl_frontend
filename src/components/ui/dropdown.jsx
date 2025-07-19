@@ -13,7 +13,19 @@ import {
   SCOUTABL_TEXT_SECONDARY,
   SCOUTABL_TEXT,
   SCOUTABL_WHITE,
+  COMMON_VARIANTS,
 } from "@/lib/constants";
+import { XIcon } from "lucide-react";
+import { cn } from "@/lib/utils";
+
+const variants = {
+  default: {
+    div: "",
+  },
+  outline: {
+    div: COMMON_VARIANTS.outline,
+  },
+};
 
 /**
  * Dropdown component
@@ -33,7 +45,9 @@ const Dropdown = ({
   showSelectAll = false,
   showCurrentValue = true,
   iconOnly = false,
-  icon = <ChevronDown className="ml-2" />,
+  icon = <ChevronDown className="size-5" />,
+  clearable = false,
+  variant = "default",
   style = {},
 }) => {
   const isSelected = (val) =>
@@ -81,38 +95,76 @@ const Dropdown = ({
     ? Array.isArray(currentValue) && currentValue.length > 0
     : currentValue !== null && currentValue !== undefined;
 
+  const showClearIcon = clearable && hasValue;
+
+  const handleClear = () => {
+    if (multiselect) {
+      onChange([]);
+    } else {
+      onChange(null);
+    }
+  };
+
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button
-          variant="outline"
-          className={`rounded-full focus-visible:ring-0 text-sm ${className}`}
-          style={{
-            background: hasValue ? SCOUTABL_TEXT : "inherit",
-            color: hasValue ? SCOUTABL_WHITE : "inherit",
-            ...style,
-          }}
-        >
-          {!iconOnly && (
-            <span className="overflow-hidden text-ellipsis whitespace-nowrap">
-              <span className={hasValue ? "font-semibold" : ""}>
-                {name ? `${name}` : ""}
+      <div
+        className={cn(
+          "flex flex-row items-center rounded-full hover:cursor-pointer px-4",
+          "h-10",
+          !hasValue ? variants[variant].div : ""
+        )}
+        style={{
+          background: hasValue ? SCOUTABL_TEXT : "inherit",
+          color: hasValue ? SCOUTABL_WHITE : "inherit",
+          ...style,
+        }}
+      >
+        <DropdownMenuTrigger asChild>
+          <Button
+            variant="outline"
+            className={cn(
+              `rounded-full focus:outline-none text-sm`,
+              "focus-visible:ring-0 focus-visible:ring-offset-0 focus:ring-0 border-0",
+              "p-0 gap-1",
+              className
+            )}
+            onClick={() => console.log("button click")}
+            style={{
+              color: "inherit",
+              background: "inherit",
+            }}
+          >
+            {!iconOnly && (
+              <span className="overflow-hidden text-ellipsis whitespace-nowrap">
+                <span className={hasValue ? "font-semibold" : ""}>
+                  {name ? `${name}` : ""}
+                </span>
+                {multiselect && showCurrentValue
+                  ? hasValue
+                    ? `: ${options
+                        .filter((opt) => currentValue.includes(opt.value))
+                        .map((opt) => opt.display)
+                        .join(", ")}`
+                    : ""
+                  : showCurrentValue && currentOption
+                  ? `: ${currentOption.display}`
+                  : ""}
               </span>
-              {multiselect && showCurrentValue
-                ? hasValue
-                  ? `: ${options
-                      .filter((opt) => currentValue.includes(opt.value))
-                      .map((opt) => opt.display)
-                      .join(", ")}`
-                  : ""
-                : showCurrentValue && currentOption
-                ? `: ${currentOption.display}`
-                : ""}
-            </span>
-          )}
-          {icon}
-        </Button>
-      </DropdownMenuTrigger>
+            )}
+            {!showClearIcon && icon}
+          </Button>
+        </DropdownMenuTrigger>
+        {/* TODO: Clearable click events don't work. Fix. */}
+        {showClearIcon && (
+          <span className="ml-2 stroke-2 hover:stroke-4">
+            <XIcon
+              className="size-4"
+              style={{ strokeWidth: "inherit" }}
+              onClick={handleClear}
+            />
+          </span>
+        )}
+      </div>
       <DropdownMenuContent align="start" className="py-2 px-0">
         <DropdownMenuGroup
           className="p-0 min-w-[200px]"

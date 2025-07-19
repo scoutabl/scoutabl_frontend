@@ -149,6 +149,8 @@ const Assesment = () => {
           <div className="flex flex-row gap-3">
             <Dropdown
               name="Status"
+              variant="outline"
+              clearable
               multiselect
               showSelectAll
               options={[
@@ -187,6 +189,8 @@ const Assesment = () => {
             <Dropdown
               name="Owner"
               multiselect
+              clearable
+              variant="outline"
               showSelectAll
               options={[
                 ...(users || []).map((user) => ({

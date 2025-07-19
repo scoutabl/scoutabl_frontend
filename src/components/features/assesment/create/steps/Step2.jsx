@@ -138,9 +138,10 @@ const Step2 = () => {
           </div>
           <div className="flex flex-row justify-between">
             <SearchInput placeholder="Search for tests" />
-            <div className="flex flex-row gap-2">
+            <div className="flex flex-row gap-3">
               <Dropdown
                 name="Library"
+                variant="outline"
                 currentValue={searchParams.library}
                 options={[
                   {
@@ -161,6 +162,8 @@ const Step2 = () => {
               />
               <Dropdown
                 name="Duration"
+                clearable
+                variant="outline"
                 currentValue={durationFilter}
                 options={[
                   {
