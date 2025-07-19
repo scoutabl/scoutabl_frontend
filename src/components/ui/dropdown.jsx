@@ -169,9 +169,13 @@ const Dropdown = ({
           </span>
         )}
       </div>
-      <DropdownMenuContent align="start" className="py-2 px-0" style={{
-        scrollbarWidth: "2px"
-      }}>
+      <DropdownMenuContent
+        align="start"
+        className="py-2 px-0"
+        style={{
+          scrollbarWidth: "2px",
+        }}
+      >
         <DropdownMenuGroup
           className="p-0 min-w-[200px]"
           style={{ color: SCOUTABL_TEXT_SECONDARY }}
@@ -179,7 +183,10 @@ const Dropdown = ({
           {multiselect && showSelectAll && (
             <DropdownMenuItem
               key="__select_all__"
-              onClick={handleSelectAll}
+              onClick={(e) => {
+                e?.preventDefault();
+                handleSelectAll();
+              }}
               className={cn(
                 `rounded-none text-base px-3 hover:cursor-pointer flex flex-row items-center gap-5`,
                 rightCheckbox ? "justify-between" : "gap-0",
@@ -200,9 +207,11 @@ const Dropdown = ({
             return (
               <DropdownMenuItem
                 key={opt.value}
-                onClick={
-                  opt.disabled ? undefined : () => handleItemClick(opt.value)
-                }
+                onSelect={(e) => {
+                  e?.preventDefault();
+                  if (opt.disabled) return;
+                  handleItemClick(opt.value);
+                }}
                 disabled={!!opt.disabled}
                 className={cn(
                   `rounded-none text-base px-3 flex flex-row items-center`,
