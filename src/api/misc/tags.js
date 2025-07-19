@@ -19,7 +19,7 @@ const tagsAPI = new TagsAPI();
 const useAllTags = (params) => {
     return useQuery({
         queryKey: ["tags", params],
-        queryFn: () => tagsAPI.getTags({ ...params, fetch_all: 1 }).then(res => res?.results || []),
+        queryFn: () => tagsAPI.getTags({ ...params, fetch_all: 1, ordering: "name" }).then(res => res?.results || []),
     });
 };
 

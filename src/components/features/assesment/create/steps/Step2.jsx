@@ -21,7 +21,7 @@ import {
   SCOUTABL_MUTED_PRIMARY,
 } from "@/lib/constants";
 import { EyeIcon } from "lucide-react";
-import { cn, durationToMinutes } from "@/lib/utils";
+import { cn, debounce, durationToMinutes } from "@/lib/utils";
 import { useUpdateAssessment } from "@/api/assessments/assessment";
 import SearchInput from "@/components/shared/debounceSearch/SearchInput";
 import Dropdown from "@/components/ui/dropdown";
@@ -127,6 +127,13 @@ const Step2 = () => {
     });
   };
 
+  const handleSearch = debounce((value) => {
+    setSearchParams((prev) => ({
+      ...prev,
+      search: value,
+    }));
+  });
+
   const handleRemove = async (testId) => {
     if (isUpdatingAssessment) return;
     await updateAssessment({
@@ -160,7 +167,7 @@ const Step2 = () => {
             ))}
           </div>
           <div className="flex flex-row justify-between">
-            <SearchInput placeholder="Search for tests" />
+            <SearchInput placeholder="Search for tests" onChange={handleSearch} />
             <div className="flex flex-row gap-3">
               <Dropdown
                 name="Library"
