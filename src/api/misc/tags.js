@@ -1,7 +1,7 @@
 import BaseAPI from "../base";
 import { useQuery } from "@tanstack/react-query";
 
-const TAGS_URL = "/tags";
+const TAGS_URL = "/tags/";
 
 class TagsAPI extends BaseAPI {
     constructor() {

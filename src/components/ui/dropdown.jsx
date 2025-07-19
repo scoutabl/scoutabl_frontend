@@ -1,4 +1,4 @@
-import React, { useRef } from "react";
+import React from "react";
 import {
   DropdownMenu,
   DropdownMenuGroup,
@@ -17,6 +17,7 @@ import {
 } from "@/lib/constants";
 import { XIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
+import Checkbox from "./checkbox2";
 
 const variants = {
   default: {
@@ -25,38 +26,6 @@ const variants = {
   outline: {
     div: COMMON_VARIANTS.outline,
   },
-};
-
-const Checkbox = ({ active }) => {
-  return (
-    <span className="w-5 h-5 flex items-center justify-center mr-2">
-      <span
-        className={`inline-flex items-center justify-center w-5 h-5 rounded-xs border-2 transition-colors duration-150 ${
-          active
-            ? "border-purplePrimary bg-purplePrimary"
-            : "border-gray-300 bg-white"
-        }`}
-      >
-        {active && (
-          <svg
-            width="14"
-            height="14"
-            viewBox="0 0 16 16"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            <path
-              d="M4 8.5L7 11.5L12 6.5"
-              stroke="#fff"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </svg>
-        )}
-      </span>
-    </span>
-  );
 };
 
 /**
@@ -200,7 +169,9 @@ const Dropdown = ({
           </span>
         )}
       </div>
-      <DropdownMenuContent align="start" className="py-2 px-0">
+      <DropdownMenuContent align="start" className="py-2 px-0" style={{
+        scrollbarWidth: "2px"
+      }}>
         <DropdownMenuGroup
           className="p-0 min-w-[200px]"
           style={{ color: SCOUTABL_TEXT_SECONDARY }}
@@ -212,6 +183,7 @@ const Dropdown = ({
               className={cn(
                 `rounded-none text-base px-3 hover:cursor-pointer flex flex-row items-center gap-5`,
                 rightCheckbox ? "justify-between" : "gap-0",
+                "hover:cursor-pointer hover:border-l-2 hover:border-purplePrimary",
                 allSelected
                   ? "bg-[#F3E8FF] border-l-4 border-purplePrimary font-medium"
                   : ""
@@ -237,10 +209,8 @@ const Dropdown = ({
                   rightCheckbox ? "justify-between gap-5" : "gap-0",
                   opt.disabled
                     ? "opacity-50 cursor-not-allowed bg-transparent"
-                    : "hover:cursor-pointer",
-                  isSelected(opt.value)
-                    ? "bg-[#F3E8FF] border-l-4 border-purplePrimary font-medium"
-                    : ""
+                    : "hover:cursor-pointer hover:border-l-2 hover:border-purplePrimary",
+                  isSelected(opt.value) ? "bg-[#F3E8FF] font-medium" : ""
                 )}
               >
                 {multiselect && !rightCheckbox && checkbox}
