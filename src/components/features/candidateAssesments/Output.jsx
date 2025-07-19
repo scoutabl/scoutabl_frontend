@@ -5,7 +5,7 @@ import OutputNavBar from './OutputNavBar';
 import { useCodingAssesment } from './CodingAssesmentContext';
 import { useEnums } from '@/context/EnumsContext';
 import { motion } from 'framer-motion';
-import ClockIcon from '@/assets/clock.svg?react';
+import ClockIcon from '@/assets/clockIcon.svg?react';
 import { Skeleton } from '@/components/ui/skeleton';
 const OUTPUT_NAVBAR_MIN_HEIGHT = 54;
 

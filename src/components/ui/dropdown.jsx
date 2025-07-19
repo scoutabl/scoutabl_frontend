@@ -9,7 +9,11 @@ import {
 import ChevronDown from "@/assets/chevronDownIcon.svg?react";
 import { Button } from "@/components/ui/button";
 import PropTypes from "prop-types";
-import { SCOUTABL_TEXT_SECONDARY, SCOUTABL_TEXT, SCOUTABL_WHITE } from "@/lib/constants";
+import {
+  SCOUTABL_TEXT_SECONDARY,
+  SCOUTABL_TEXT,
+  SCOUTABL_WHITE,
+} from "@/lib/constants";
 
 /**
  * Dropdown component
@@ -86,7 +90,7 @@ const Dropdown = ({
           style={{
             background: hasValue ? SCOUTABL_TEXT : "inherit",
             color: hasValue ? SCOUTABL_WHITE : "inherit",
-            ...style
+            ...style,
           }}
         >
           {!iconOnly && (

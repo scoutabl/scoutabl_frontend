@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useAssessmentContext } from "@/components/common/AssessmentNavbarWrapper";
 import AssessmentStep from "@/components/common/AssessmentStep";
 import Section from "@/components/common/section";
@@ -15,13 +15,21 @@ import FlameIcon from "@/assets/flameIcon.svg?react";
 import WheelIcon from "@/assets/wheelIcon.svg?react";
 import { Button } from "@/components/ui/button";
 import IconButton from "@/components/ui/icon-button";
-import { SCOUTABL_TEXT_SECONDARY, COMMON_VARIANTS } from "@/lib/constants";
+import {
+  SCOUTABL_TEXT_SECONDARY,
+  COMMON_VARIANTS,
+  SCOUTABL_MUTED_PRIMARY,
+} from "@/lib/constants";
 import { EyeIcon } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { cn, durationToMinutes } from "@/lib/utils";
 import { useUpdateAssessment } from "@/api/assessments/assessment";
 import SearchInput from "@/components/shared/debounceSearch/SearchInput";
 import Dropdown from "@/components/ui/dropdown";
 import { useBootstrap } from "@/context/BootstrapContext";
+import { useEnums } from "@/context/EnumsContext";
+import ClockIcon from "@/assets/clockIcon.svg?react";
+import HistIcon from "@/assets/histIcon.svg?react";
+import QuestionIcon from "@/assets/questionIcon.svg?react";
 
 // TODO: Fetch from API
 const MAX_TEST_COUNT = 5;
@@ -31,13 +39,38 @@ const ICON_MAP = {
   Recommended: <WheelIcon className="size-4" />,
 };
 
+const DURATION_FILTERS = [
+  {
+    completion_time__lte: 10 * 60,
+  },
+  {
+    completion_time__gte: 10 * 60,
+    completion_time__lte: 20 * 60,
+  },
+  {
+    completion_time__gte: 20 * 60,
+    completion_time__lte: 30 * 60,
+  },
+  {
+    completion_time__gte: 30 * 60,
+    completion_time__lte: 60 * 60,
+  },
+  {
+    completion_time__gte: 60 * 60,
+  },
+];
+
 const Step2 = () => {
+  const { resolveEnum } = useEnums();
   const { assessment, steps, selectedStep, handleStepChange } =
     useAssessmentContext();
   const { mutateAsync: updateAssessment, isPending: isUpdatingAssessment } =
     useUpdateAssessment();
   const { platformLibraryId, organisationLibraryId } = useBootstrap();
-  const [searchParams, setSearchParams] = useState({...DEFAULT_LIST_API_PARAMS, library: platformLibraryId});
+  const [searchParams, setSearchParams] = useState({
+    ...DEFAULT_LIST_API_PARAMS,
+  });
+  const [durationFilter, setDurationFilter] = useState();
   const {
     data: assessmentTestsData,
     isFetchingNextPage,
@@ -45,6 +78,13 @@ const Step2 = () => {
     hasNextPage,
     fetchNextPage,
   } = useInfiniteAssessmentTestPages({ ...searchParams });
+
+  useEffect(() => {
+    setSearchParams((prev) => ({
+      ...prev,
+      library: platformLibraryId,
+    }));
+  }, [platformLibraryId]);
 
   const tests =
     assessmentTestsData?.pages?.flatMap((page) => page.results) || [];
@@ -104,19 +144,60 @@ const Step2 = () => {
                 currentValue={searchParams.library}
                 options={[
                   {
-                    display: "Platform",
+                    display: "Scoutabl",
                     value: platformLibraryId,
                   },
                   {
-                    display: "My Library",
+                    display: "My Organisation",
                     value: organisationLibraryId,
                   },
                 ]}
                 onChange={(val) => {
                   setSearchParams((prev) => ({
                     ...prev,
-                    library: val
-                  }))
+                    library: val,
+                  }));
+                }}
+              />
+              <Dropdown
+                name="Duration"
+                currentValue={durationFilter}
+                options={[
+                  {
+                    display: "upto 10 min",
+                    value: 0,
+                  },
+                  {
+                    display: "10-20 min",
+                    value: 1,
+                  },
+                  {
+                    display: "20-30 min",
+                    value: 2,
+                  },
+                  {
+                    display: "30-60 min",
+                    value: 3,
+                  },
+                  {
+                    display: "over 60 min",
+                    value: 4,
+                  },
+                ]}
+                onChange={(val) => {
+                  setDurationFilter(val);
+                  setSearchParams((prev) => {
+                    const {
+                      completion_time: _completion_time,
+                      completion_time__lte: _completion_time__lte,
+                      completion_time__gte: _completion_time__gte,
+                      ...rest
+                    } = prev;
+                    return {
+                      ...rest,
+                      ...DURATION_FILTERS[val],
+                    };
+                  });
                 }}
               />
             </div>
@@ -137,52 +218,93 @@ const Step2 = () => {
           >
             <div className="flex flex-row flex-wrap gap-4 justify-center mt-6">
               {tests.map((test) => {
+                const stats = [
+                  {
+                    key: "duration",
+                    value: `${
+                      durationToMinutes(test.completion_time) || 0
+                    } min`,
+                    icon: <ClockIcon className="size-4" />,
+                  },
+                  {
+                    key: "qustions",
+                    value: `${test.question_count} questions`,
+                    icon: <QuestionIcon className="size-4" />,
+                  },
+                  {
+                    key: "type",
+                    value:
+                      test.test_type ===
+                      resolveEnum("AssessmentTestType.NORMAL")
+                        ? "Normal"
+                        : "Adaptive",
+                    icon: <HistIcon className="size-4" />,
+                  },
+                ];
                 const isAdded = selectedTestIds.includes(test.id);
                 const footer = (
-                  <div className="flex flex-row justify-between">
-                    <div className="flex flex-row gap-2">
-                      <IconButton
-                        variant="circleOutline"
-                        iconOutline={
-                          <EyeIcon
-                            className={`size-5 stroke-2 text-[${SCOUTABL_TEXT_SECONDARY}]`}
-                          />
-                        }
-                        className="bg-white rounded-full text-black"
-                      />
-                      <Button
-                        className={cn(
-                          "rounded-full bg-white text hover:bg-white",
-                          `text-[${SCOUTABL_TEXT_SECONDARY}]`,
-                          COMMON_VARIANTS.outline
-                        )}
-                      >
-                        Details
-                      </Button>
+                  <div className="flex flex-col gap-4">
+                    <div className="flex flex-row text-sm">
+                      {stats.map((stat, index) => (
+                        <div
+                          key={stat.key}
+                          className={cn(
+                            `flex flex-row gap-1 items-center px-2`,
+                            `text-[${SCOUTABL_TEXT_SECONDARY}]`,
+                            index < stats.length - 1 &&
+                              `border-r-1 border-[${SCOUTABL_MUTED_PRIMARY}]`
+                          )}
+                        >
+                          {stat.icon}
+                          <span>{stat.value}</span>
+                        </div>
+                      ))}
                     </div>
-                    {isAdded ? (
-                      <Button
-                        className={`text-white rounded-full`}
-                        style={{
-                          background: SCOUTABL_RED,
-                        }}
-                        onClick={() => {
-                          handleRemove(test.id);
-                        }}
-                        // disabled={isUpdatingAssessment}
-                      >
-                        Remove
-                      </Button>
-                    ) : (
-                      <Button
-                        className="rounded-full"
-                        style={{ background: SCOUTABL_TEXT }}
-                        onClick={() => handleAdd(test.id)}
-                        // disabled={isUpdatingAssessment}
-                      >
-                        Add
-                      </Button>
-                    )}
+                    <div className="flex flex-row justify-between">
+                      <div className="flex flex-row gap-2">
+                        <IconButton
+                          variant="circleOutline"
+                          iconOutline={
+                            <EyeIcon
+                              className={`size-5 stroke-2 text-[${SCOUTABL_TEXT_SECONDARY}]`}
+                            />
+                          }
+                          className="bg-white rounded-full text-black"
+                        />
+                        <Button
+                          className={cn(
+                            "rounded-full bg-white text hover:bg-white",
+                            `text-[${SCOUTABL_TEXT_SECONDARY}]`,
+                            COMMON_VARIANTS.outline
+                          )}
+                        >
+                          Details
+                        </Button>
+                      </div>
+                      {isAdded ? (
+                        <Button
+                          className={`text-white rounded-full`}
+                          style={{
+                            background: SCOUTABL_RED,
+                          }}
+                          onClick={() => {
+                            handleRemove(test.id);
+                          }}
+                          // disabled={isUpdatingAssessment}
+                        >
+                          Remove
+                        </Button>
+                      ) : (
+                        <Button
+                          className="rounded-full"
+                          style={{ background: SCOUTABL_TEXT }}
+                          onClick={() => handleAdd(test.id)}
+                          // disabled={isUpdatingAssessment}
+                        >
+                          Add
+                        </Button>
+                      )}
+                    </div>
                   </div>
                 );
 

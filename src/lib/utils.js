@@ -35,3 +35,35 @@ export function debounce(func, delay = 300) {
     timeout = setTimeout(() => func.apply(this, args), delay);
   };
 }
+
+/**
+ * Converts a duration string to total minutes
+ * @param {string} duration - Duration string in format "HH:MM:SS" or "MM:SS"
+ * @returns {number} Total minutes
+ * @example
+ * durationToMinutes("01:29:00") // returns 89
+ * durationToMinutes("05:30") // returns 5
+ * durationToMinutes("00:45") // returns 0
+ */
+export function durationToMinutes(duration) {
+  if (!duration || typeof duration !== 'string') {
+    return 0;
+  }
+
+  const parts = duration.split(':').map(part => parseInt(part, 10) || 0);
+  
+  if (parts.length === 3) {
+    // Format: "HH:MM:SS"
+    const [hours, minutes, seconds] = parts;
+    return hours * 60 + minutes + Math.round(seconds / 60);
+  } else if (parts.length === 2) {
+    // Format: "MM:SS"
+    const [minutes, seconds] = parts;
+    return minutes + Math.round(seconds / 60);
+  } else if (parts.length === 1) {
+    // Format: "MM" (just minutes)
+    return parts[0];
+  }
+  
+  return 0;
+}

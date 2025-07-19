@@ -47,9 +47,9 @@ const AssessmentTestCard = ({
         ))}
       </div>
       {/* Name */}
-      <div className="text-lg font-semibold mb-1">{name}</div>
+      <div className="text-md font-semibold mb-1">{name}</div>
       {/* Description */}
-      <div className="text-sm text-gray-600 mb-4 line-clamp-3 flex-1">
+      <div className="text-sm text-gray-600 flex-1 max-h-[40px] line-clamp-2">
         {description}
       </div>
       {/* Footer */}
