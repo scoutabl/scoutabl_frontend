@@ -30,6 +30,7 @@ import { useEnums } from "@/context/EnumsContext";
 import ClockIcon from "@/assets/clockIcon.svg?react";
 import HistIcon from "@/assets/histIcon.svg?react";
 import QuestionIcon from "@/assets/questionIcon.svg?react";
+import { useAllTags } from "@/api/misc/tags";
 
 // TODO: Fetch from API
 const MAX_TEST_COUNT = 5;
@@ -62,6 +63,7 @@ const DURATION_FILTERS = [
 
 const Step2 = () => {
   const { resolveEnum } = useEnums();
+  const { data: allTags, isLoading: isTagsLoading } = useAllTags();
   const { assessment, steps, selectedStep, handleStepChange } =
     useAssessmentContext();
   const { mutateAsync: updateAssessment, isPending: isUpdatingAssessment } =
@@ -85,6 +87,16 @@ const Step2 = () => {
       library: platformLibraryId,
     }));
   }, [platformLibraryId]);
+
+  const skillTags =
+    allTags?.filter((t) => t.tag_type === resolveEnum("TagType.SKILL")) || [];
+  const testTypeTags =
+    allTags?.filter((t) => t.tag_type === resolveEnum("TagType.TEST_TYPE")) ||
+    [];
+  const selectedSkillTags =
+    searchParams?.tags__in?.filter((t) =>
+      skillTags?.some((st) => st.id === t)
+    ) || [];
 
   const tests =
     assessmentTestsData?.pages?.flatMap((page) => page.results) || [];
@@ -159,6 +171,33 @@ const Step2 = () => {
                     library: val,
                   }));
                 }}
+              />
+              <Dropdown
+                name="Skill"
+                currentValue={selectedSkillTags}
+                multiselect
+                showSelectAll
+                clearable
+                variant="outline"
+                options={
+                  skillTags?.map((t) => ({
+                    display: t.name,
+                    value: t.id,
+                  })) || []
+                }
+                onChange={(val) => {
+                  setSearchParams((prev) => {
+                    const { tags__in, ...rest } = prev;
+                    const newTags = [
+                      ...(tags__in || []).filter(
+                        (t) => !skillTags.some((st) => st.id === t)
+                      ),
+                      ...val,
+                    ];
+                    return { ...rest, tags__in: newTags };
+                  });
+                }}
+                className="max-w-[200px]"
               />
               <Dropdown
                 name="Duration"

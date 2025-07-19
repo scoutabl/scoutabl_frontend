@@ -83,7 +83,6 @@ const Dropdown = ({
   style = {},
   rightCheckbox = false,
 }) => {
-  const triggerRef = useRef(null);
   const isSelected = (val) =>
     multiselect && Array.isArray(currentValue)
       ? currentValue.includes(val)
@@ -159,13 +158,12 @@ const Dropdown = ({
           <Button
             variant="outline"
             className={cn(
-              `rounded-full focus:outline-none text-sm`,
+              `rounded-full focus:outline-none text-sm select-none`,
               "focus-visible:ring-0 focus-visible:ring-offset-0 focus:ring-0 border-0",
               "gap-1 text-ellipsis overflow-hidden",
               showClearIcon ? "p-0" : "px-4",
               className
             )}
-            ref={triggerRef}
             style={{
               color: "inherit",
               background: "inherit",
@@ -193,7 +191,7 @@ const Dropdown = ({
         </DropdownMenuTrigger>
         {/* TODO: Clearable click events don't work. Fix. */}
         {showClearIcon && (
-          <span className="ml-2 stroke-2 hover:stroke-4">
+          <span className="ml-2 stroke-2 hover:stroke-4 select-none">
             <XIcon
               className="size-4"
               style={{ strokeWidth: "inherit" }}
@@ -213,7 +211,7 @@ const Dropdown = ({
               onClick={handleSelectAll}
               className={cn(
                 `rounded-none text-base px-3 hover:cursor-pointer flex flex-row items-center gap-5`,
-                rightCheckbox ? "justify-between" : "",
+                rightCheckbox ? "justify-between" : "gap-0",
                 allSelected
                   ? "bg-[#F3E8FF] border-l-4 border-purplePrimary font-medium"
                   : ""
@@ -236,8 +234,7 @@ const Dropdown = ({
                 disabled={!!opt.disabled}
                 className={cn(
                   `rounded-none text-base px-3 flex flex-row items-center`,
-                  rightCheckbox ? "justify-between" : "",
-                  "gap-5",
+                  rightCheckbox ? "justify-between gap-5" : "gap-0",
                   opt.disabled
                     ? "opacity-50 cursor-not-allowed bg-transparent"
                     : "hover:cursor-pointer",
