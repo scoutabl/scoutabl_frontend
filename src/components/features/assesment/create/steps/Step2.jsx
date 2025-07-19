@@ -31,6 +31,13 @@ import ClockIcon from "@/assets/clockIcon.svg?react";
 import HistIcon from "@/assets/histIcon.svg?react";
 import QuestionIcon from "@/assets/questionIcon.svg?react";
 import { useAllTags } from "@/api/misc/tags";
+import {
+  Dialog,
+  DialogContent,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import AssessmentTestDetail from "@/components/common/AssessmentTestDetails";
 
 // TODO: Fetch from API
 const MAX_TEST_COUNT = 5;
@@ -342,15 +349,23 @@ const Step2 = () => {
                           }
                           className="bg-white rounded-full text-black"
                         />
-                        <Button
-                          className={cn(
-                            "rounded-full bg-white text hover:bg-white",
-                            `text-[${SCOUTABL_TEXT_SECONDARY}]`,
-                            COMMON_VARIANTS.outline
-                          )}
-                        >
-                          Details
-                        </Button>
+                        <Dialog>
+                          <DialogTrigger asChild>
+                            <Button
+                              className={cn(
+                                "rounded-full bg-white text hover:bg-white",
+                                `text-[${SCOUTABL_TEXT_SECONDARY}]`,
+                                COMMON_VARIANTS.outline
+                              )}
+                            >
+                              Details
+                            </Button>
+                          </DialogTrigger>
+                          <DialogContent className="w-[80vw] overflow-y-auto p-0 rounded-3xl">
+                            <DialogTitle hidden>{test.name}</DialogTitle>
+                            <AssessmentTestDetail test={test} />
+                          </DialogContent>
+                        </Dialog>
                       </div>
                       {isAdded ? (
                         <Button
