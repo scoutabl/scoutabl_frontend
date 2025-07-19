@@ -38,6 +38,8 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import AssessmentTestDetail from "@/components/common/AssessmentTestDetails";
+import TestAddDialog from "@/components/common/TestAddDialog";
+import QuickStats from "@/components/common/QuickStats";
 
 // TODO: Fetch from API
 const MAX_TEST_COUNT = 5;
@@ -117,12 +119,16 @@ const Step2 = () => {
   const selectedTestIds = (selectedTests || []).map((test) => test.id);
   const TEST_TAGS = ["Recommended", "Popular"];
 
-  const handleAdd = async (testId) => {
+  const handleAdd = async (testId, weightage) => {
     if (isUpdatingAssessment) return;
     await updateAssessment({
       assessmentId: assessment.id,
       data: {
         tests: [...selectedTestIds, testId],
+        test_weights: {
+          ...assessment.test_weights,
+          [testId]: weightage,
+        },
       },
     });
   };
@@ -140,6 +146,10 @@ const Step2 = () => {
       assessmentId: assessment.id,
       data: {
         tests: selectedTestIds.filter((test) => test !== testId),
+        test_weights: {
+          ...assessment.test_weights,
+          [testId]: undefined,
+        },
       },
     });
   };
@@ -167,7 +177,10 @@ const Step2 = () => {
             ))}
           </div>
           <div className="flex flex-row justify-between">
-            <SearchInput placeholder="Search for tests" onChange={handleSearch} />
+            <SearchInput
+              placeholder="Search for tests"
+              onChange={handleSearch}
+            />
             <div className="flex flex-row gap-3">
               <Dropdown
                 name="Library"
@@ -329,22 +342,7 @@ const Step2 = () => {
                 const isAdded = selectedTestIds.includes(test.id);
                 const footer = (
                   <div className="flex flex-col gap-4">
-                    <div className="flex flex-row text-sm">
-                      {stats.map((stat, index) => (
-                        <div
-                          key={stat.key}
-                          className={cn(
-                            `flex flex-row gap-1 items-center px-2`,
-                            `text-[${SCOUTABL_TEXT_SECONDARY}]`,
-                            index < stats.length - 1 &&
-                              `border-r-1 border-[${SCOUTABL_MUTED_PRIMARY}]`
-                          )}
-                        >
-                          {stat.icon}
-                          <span>{stat.value}</span>
-                        </div>
-                      ))}
-                    </div>
+                    <QuickStats stats={stats} />
                     <div className="flex flex-row justify-between">
                       <div className="flex flex-row gap-2">
                         <IconButton
@@ -388,14 +386,22 @@ const Step2 = () => {
                           Remove
                         </Button>
                       ) : (
-                        <Button
-                          className="rounded-full"
-                          style={{ background: SCOUTABL_TEXT }}
-                          onClick={() => handleAdd(test.id)}
-                          // disabled={isUpdatingAssessment}
-                        >
-                          Add
-                        </Button>
+                        <Dialog>
+                          <DialogTrigger asChild>
+                            <Button
+                              className="rounded-full"
+                              style={{ background: SCOUTABL_TEXT }}
+                              // onClick={() => handleAdd(test.id)}
+                              // disabled={isUpdatingAssessment}
+                            >
+                              Add
+                            </Button>
+                          </DialogTrigger>
+                          <DialogContent className="w-180 p-0">
+                            <DialogTitle hidden>{test.name}</DialogTitle>
+                            <TestAddDialog test={test} onAddTest={handleAdd} disabled={isUpdatingAssessment} />
+                          </DialogContent>
+                        </Dialog>
                       )}
                     </div>
                   </div>

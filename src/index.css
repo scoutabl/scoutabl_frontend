@@ -403,3 +403,45 @@ button:hover {
 .gradient-purple {
   background: linear-gradient(89.56deg, #806BFF 0.37%, #A669FD 99.63%);
 }
+
+.SliderRoot {
+	position: relative;
+	display: flex;
+	align-items: center;
+	user-select: none;
+	touch-action: none;
+	/* width: 200px;
+	height: 20px; */
+}
+
+.SliderTrack {
+	background-color: var(--color-purpleSecondary);
+	position: relative;
+	flex-grow: 1;
+	border-radius: 9999px;
+	height: 9px;
+}
+
+.SliderRange {
+	position: absolute;
+	background-color: var(--color-purplePrimary);
+	border-radius: 9999px;
+	height: 100%;
+}
+
+.SliderThumb {
+	display: block;
+	width: 20px;
+	height: 20px;
+	background-color: white;
+	border-radius: 10px;
+  border-width: 2px;
+  border-color: var(--color-purplePrimary);
+}
+.SliderThumb:hover, .SliderThumb:focus {
+	/* background-color: var(--violet-3); */
+  cursor: pointer;
+	/* box-shadow: 0 2px 10px var(--color-purpleQuaternary); */
+  box-shadow: 0px 0px 0px 4px var(--color-purpleQuaternary);
+}
+

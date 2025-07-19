@@ -26,8 +26,8 @@ const stepsArray = [
     value: 2,
     stepId: "configure",
     name: "Configure Assessment",
-    primaryColor: "#806BFF",
-    secondaryColor: "#EEF2FC",
+    primaryColor: "#E68334",
+    secondaryColor: "#FFF0E4",
     enabledSteps: [2, 3, 4],
   },
   {
@@ -42,8 +42,8 @@ const stepsArray = [
     value: 4,
     stepId: "finalize",
     name: "Finalize",
-    primaryColor: "#F2994A",
-    secondaryColor: "#FFF4E5",
+    primaryColor: "#8B5CF6",
+    secondaryColor: "#EEE6FE",
     enabledSteps: [2, 3, 4],
   },
 ];
