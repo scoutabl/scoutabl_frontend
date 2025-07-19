@@ -111,6 +111,7 @@ const Dropdown = ({
         className={cn(
           "flex flex-row items-center rounded-full hover:cursor-pointer px-4",
           "h-10",
+          className,
           !hasValue ? variants[variant].div : ""
         )}
         style={{
