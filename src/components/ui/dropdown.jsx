@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useRef } from "react";
 import {
   DropdownMenu,
   DropdownMenuGroup,
@@ -27,6 +27,38 @@ const variants = {
   },
 };
 
+const Checkbox = ({ active }) => {
+  return (
+    <span className="w-5 h-5 flex items-center justify-center mr-2">
+      <span
+        className={`inline-flex items-center justify-center w-5 h-5 rounded-xs border-2 transition-colors duration-150 ${
+          active
+            ? "border-purplePrimary bg-purplePrimary"
+            : "border-gray-300 bg-white"
+        }`}
+      >
+        {active && (
+          <svg
+            width="14"
+            height="14"
+            viewBox="0 0 16 16"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              d="M4 8.5L7 11.5L12 6.5"
+              stroke="#fff"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </svg>
+        )}
+      </span>
+    </span>
+  );
+};
+
 /**
  * Dropdown component
  * @param {Array<{display: string, value: string|number}>} options - List of dropdown options
@@ -49,7 +81,9 @@ const Dropdown = ({
   clearable = false,
   variant = "default",
   style = {},
+  rightCheckbox = false,
 }) => {
+  const triggerRef = useRef(null);
   const isSelected = (val) =>
     multiselect && Array.isArray(currentValue)
       ? currentValue.includes(val)
@@ -109,8 +143,9 @@ const Dropdown = ({
     <DropdownMenu>
       <div
         className={cn(
-          "flex flex-row items-center rounded-full hover:cursor-pointer px-4",
+          "flex flex-row items-center rounded-full hover:cursor-pointer",
           "h-10",
+          showClearIcon ? "px-4" : "p-0",
           className,
           !hasValue ? variants[variant].div : ""
         )}
@@ -126,10 +161,11 @@ const Dropdown = ({
             className={cn(
               `rounded-full focus:outline-none text-sm`,
               "focus-visible:ring-0 focus-visible:ring-offset-0 focus:ring-0 border-0",
-              "p-0 gap-1",
+              "gap-1 text-ellipsis overflow-hidden",
+              showClearIcon ? "p-0" : "px-4",
               className
             )}
-            onClick={() => console.log("button click")}
+            ref={triggerRef}
             style={{
               color: "inherit",
               background: "inherit",
@@ -175,100 +211,56 @@ const Dropdown = ({
             <DropdownMenuItem
               key="__select_all__"
               onClick={handleSelectAll}
-              className={`rounded-none text-base px-3 hover:cursor-pointer flex flex-row items-center justify-between gap-5 ${
+              className={cn(
+                `rounded-none text-base px-3 hover:cursor-pointer flex flex-row items-center gap-5`,
+                rightCheckbox ? "justify-between" : "",
                 allSelected
                   ? "bg-[#F3E8FF] border-l-4 border-purplePrimary font-medium"
                   : ""
-              }`}
+              )}
             >
+              {!rightCheckbox && <Checkbox active={allSelected} />}
               <span>{"All"}</span>
-              <span className="w-5 h-5 flex items-center justify-center mr-2">
-                <span
-                  className={`inline-flex items-center justify-center w-5 h-5 rounded-xs border-2 transition-colors duration-150 ${
-                    allSelected
-                      ? "border-purplePrimary bg-purplePrimary"
-                      : "border-gray-300 bg-white"
-                  }`}
-                >
-                  {allSelected && (
-                    <svg
-                      width="14"
-                      height="14"
-                      viewBox="0 0 16 16"
-                      fill="none"
-                      xmlns="http://www.w3.org/2000/svg"
-                    >
-                      <path
-                        d="M4 8.5L7 11.5L12 6.5"
-                        stroke="#fff"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      />
-                    </svg>
-                  )}
-                </span>
-              </span>
+              {rightCheckbox && <Checkbox active={allSelected} />}
             </DropdownMenuItem>
           )}
-          {options.map((opt) => (
-            <DropdownMenuItem
-              key={opt.value}
-              onClick={
-                opt.disabled ? undefined : () => handleItemClick(opt.value)
-              }
-              disabled={!!opt.disabled}
-              className={`rounded-none text-base px-3 flex flex-row items-center justify-between gap-5 ${
-                opt.disabled
-                  ? "opacity-50 cursor-not-allowed bg-transparent"
-                  : "hover:cursor-pointer"
-              } ${
-                isSelected(opt.value)
-                  ? "bg-[#F3E8FF] border-l-4 border-purplePrimary font-medium"
-                  : ""
-              }`}
-            >
-              {renderOption ? (
-                renderOption(opt)
-              ) : opt.icon ? (
-                <div className="flex flex-row items-center gap-2">
-                  {opt.icon}
-                  {opt.display}
-                </div>
-              ) : (
-                opt.display
-              )}
-              {multiselect && (
-                <span className="w-5 h-5 flex items-center justify-center mr-2">
-                  <span
-                    className={`inline-flex items-center justify-center w-5 h-5 rounded-xs border-2 transition-colors duration-150 ${
-                      isSelected(opt.value)
-                        ? "border-purplePrimary bg-purplePrimary"
-                        : "border-gray-300 bg-white"
-                    }`}
-                  >
-                    {isSelected(opt.value) && (
-                      <svg
-                        width="14"
-                        height="14"
-                        viewBox="0 0 16 16"
-                        fill="none"
-                        xmlns="http://www.w3.org/2000/svg"
-                      >
-                        <path
-                          d="M4 8.5L7 11.5L12 6.5"
-                          stroke="#fff"
-                          strokeWidth="2"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                        />
-                      </svg>
-                    )}
-                  </span>
-                </span>
-              )}
-            </DropdownMenuItem>
-          ))}
+          {options.map((opt) => {
+            const checkbox = <Checkbox active={isSelected(opt.value)} />;
+
+            return (
+              <DropdownMenuItem
+                key={opt.value}
+                onClick={
+                  opt.disabled ? undefined : () => handleItemClick(opt.value)
+                }
+                disabled={!!opt.disabled}
+                className={cn(
+                  `rounded-none text-base px-3 flex flex-row items-center`,
+                  rightCheckbox ? "justify-between" : "",
+                  "gap-5",
+                  opt.disabled
+                    ? "opacity-50 cursor-not-allowed bg-transparent"
+                    : "hover:cursor-pointer",
+                  isSelected(opt.value)
+                    ? "bg-[#F3E8FF] border-l-4 border-purplePrimary font-medium"
+                    : ""
+                )}
+              >
+                {multiselect && !rightCheckbox && checkbox}
+                {renderOption ? (
+                  renderOption(opt)
+                ) : opt.icon ? (
+                  <div className="flex flex-row items-center gap-2">
+                    {opt.icon}
+                    {opt.display}
+                  </div>
+                ) : (
+                  opt.display
+                )}
+                {multiselect && rightCheckbox && checkbox}
+              </DropdownMenuItem>
+            );
+          })}
         </DropdownMenuGroup>
       </DropdownMenuContent>
     </DropdownMenu>

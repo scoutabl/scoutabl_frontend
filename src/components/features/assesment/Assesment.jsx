@@ -189,6 +189,7 @@ const Assesment = () => {
             <Dropdown
               name="Owner"
               multiselect
+              rightCheckbox
               clearable
               variant="outline"
               showSelectAll
