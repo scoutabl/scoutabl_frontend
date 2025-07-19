@@ -97,6 +97,10 @@ const Step2 = () => {
     searchParams?.tags__in?.filter((t) =>
       skillTags?.some((st) => st.id === t)
     ) || [];
+  const selectedTestTypeTags =
+    searchParams?.tags__in?.filter((t) =>
+      testTypeTags?.some((tt) => tt.id === t)
+    ) || [];
 
   const tests =
     assessmentTestsData?.pages?.flatMap((page) => page.results) || [];
@@ -191,6 +195,31 @@ const Step2 = () => {
                     const newTags = [
                       ...(tags__in || []).filter(
                         (t) => !skillTags.some((st) => st.id === t)
+                      ),
+                      ...val,
+                    ];
+                    return { ...rest, tags__in: newTags };
+                  });
+                }}
+                className="max-w-[200px]"
+              />
+              <Dropdown
+                name="Type"
+                currentValue={selectedTestTypeTags}
+                multiselect
+                showSelectAll
+                clearable
+                variant="outline"
+                options={testTypeTags?.map((t) => ({
+                  display: t.name,
+                  value: t.id,
+                }))}
+                onChange={(val) => {
+                  setSearchParams((prev) => {
+                    const { tags__in, ...rest } = prev;
+                    const newTags = [
+                      ...(tags__in || []).filter(
+                        (t) => !testTypeTags.some((tt) => tt.id === t)
                       ),
                       ...val,
                     ];
