@@ -11,9 +11,9 @@ import { useState } from "react";
 import Chip from "../ui/chip";
 import { Button } from "../ui/button";
 
-const TestAddDialog = ({ test, onAddTest, disabled = false }) => {
+const TestAddDialog = ({ test, onAddTest, weight = 50, disabled = false }) => {
   const { resolveEnum } = useEnums();
-  const [sliderValue, setSliderValue] = useState([50]);
+  const [sliderValue, setSliderValue] = useState([weight]);
 
   const stats = [
     {

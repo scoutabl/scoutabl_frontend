@@ -2,9 +2,8 @@ import { SCOUTABL_PURPLE_SECONDARY, SCOUTABL_TEXT } from "@/lib/constants";
 import { cn } from "@/lib/utils";
 import Dropdown from "../ui/dropdown";
 import { EllipsisVertical } from "lucide-react";
-import EyeIcon from "@/assets/eyeIcon.svg?react";
 
-const AddedTest = ({ test, order }) => {
+const AddedTest = ({ test, order, options, onAction }) => {
   const { name } = test || {};
   const notSet = test == null;
 
@@ -28,15 +27,12 @@ const AddedTest = ({ test, order }) => {
       {!notSet && (
         <Dropdown
           className="bg-inherit border-none focus:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 focus:ring-0 hover:bg-inherit p-0 hover:text-inherit"
-          options={[
-            {
-              value: "preview",
-              display: "Preview Test",
-              icon: <EyeIcon className="size-5" />,
-            },
-          ]}
+          options={options}
           icon={<EllipsisVertical className="ml-2" />}
           iconOnly
+          onChange={onAction}
+          closeOnSelect
+          modal={false}
         />
       )}
     </div>

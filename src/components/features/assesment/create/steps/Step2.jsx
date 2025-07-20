@@ -20,7 +20,13 @@ import {
   COMMON_VARIANTS,
   SCOUTABL_MUTED_PRIMARY,
 } from "@/lib/constants";
-import { EyeIcon } from "lucide-react";
+import {
+  EyeIcon,
+  SquareActivityIcon,
+  SquareKanbanIcon,
+  WeightIcon,
+  TrashIcon,
+} from "lucide-react";
 import { cn, debounce, durationToMinutes } from "@/lib/utils";
 import { useUpdateAssessment } from "@/api/assessments/assessment";
 import SearchInput from "@/components/shared/debounceSearch/SearchInput";
@@ -40,6 +46,7 @@ import {
 import AssessmentTestDetail from "@/components/common/AssessmentTestDetails";
 import TestAddDialog from "@/components/common/TestAddDialog";
 import QuickStats from "@/components/common/QuickStats";
+import ViewDetailsIcon from "@/assets/viewDetailIcon.svg?react";
 
 // TODO: Fetch from API
 const MAX_TEST_COUNT = 5;
@@ -71,8 +78,10 @@ const DURATION_FILTERS = [
 ];
 
 const Step2 = () => {
+  const [openTestId, setOpenTestId] = useState(null);
+  const [openWeightTestId, setOpenWeightTestId] = useState(null);
   const { resolveEnum } = useEnums();
-  const { data: allTags, isLoading: isTagsLoading } = useAllTags();
+  const { data: allTags } = useAllTags();
   const { assessment, steps, selectedStep, handleStepChange } =
     useAssessmentContext();
   const { mutateAsync: updateAssessment, isPending: isUpdatingAssessment } =
@@ -115,11 +124,22 @@ const Step2 = () => {
     assessmentTestsData?.pages?.flatMap((page) => page.results) || [];
   const count = assessmentTestsData?.pages?.[0]?.count || 0;
 
-  const selectedTests = assessment?.test_details || [];
+  const selectedTestsById =
+    assessment?.test_details.length > 0
+      ? assessment.test_details.reduce((acc, test) => {
+          acc[test.id] = test;
+          return acc;
+        }, {})
+      : {};
+  const testsOrder =
+    assessment?.tests_order?.filter((id) => selectedTestsById[id]) ||
+    Object.keys(selectedTestsById);
+  const selectedTests = testsOrder.map((id) => selectedTestsById[id]);
   const selectedTestIds = (selectedTests || []).map((test) => test.id);
+
   const TEST_TAGS = ["Recommended", "Popular"];
 
-  const handleAdd = async (testId, weightage) => {
+  const handleAdd = async (testId, weightage, isEdit = false) => {
     if (isUpdatingAssessment) return;
     await updateAssessment({
       assessmentId: assessment.id,
@@ -129,8 +149,12 @@ const Step2 = () => {
           ...assessment.test_weights,
           [testId]: weightage,
         },
+        tests_order: isEdit
+          ? testsOrder
+          : [...testsOrder.filter((id) => id !== testId), testId],
       },
     });
+    setOpenWeightTestId(null);
   };
 
   const handleSearch = debounce((value) => {
@@ -154,6 +178,36 @@ const Step2 = () => {
     });
   };
 
+  const renderTestDialogs = ({ test, isEdit }) => {
+    return (
+      <>
+        <Dialog
+          open={openTestId === test.id}
+          onOpenChange={() => setOpenTestId(null)}
+        >
+          <DialogContent className="w-[80vw] overflow-y-auto p-0 rounded-3xl">
+            <DialogTitle hidden>{test.name}</DialogTitle>
+            <AssessmentTestDetail test={test} />
+          </DialogContent>
+        </Dialog>
+        <Dialog
+          open={openWeightTestId === test.id}
+          onOpenChange={() => setOpenWeightTestId(null)}
+        >
+          <DialogContent className="w-180 p-0">
+            <DialogTitle hidden>{test.name}</DialogTitle>
+            <TestAddDialog
+              test={test}
+              onAddTest={(...args) => handleAdd(...args, isEdit)}
+              disabled={isUpdatingAssessment}
+              weight={assessment?.test_weights?.[test.id] || 50}
+            />
+          </DialogContent>
+        </Dialog>
+      </>
+    );
+  };
+
   return (
     <div className="flex flex-col gap-10">
       <div>
@@ -166,15 +220,53 @@ const Step2 = () => {
       <Section className="flex flex-col">
         <Section className="bg-white flex flex-col p-3 gap-5">
           <div className="flex flex-row gap-3 justify-between">
-            {Array.from({ length: MAX_TEST_COUNT }).map((_, index) => (
-              <AddedTest
-                key={index}
-                test={
-                  selectedTests.length > index ? selectedTests[index] : null
-                }
-                order={index + 1}
-              />
-            ))}
+            {Array.from({ length: MAX_TEST_COUNT }).map((_, index) => {
+              const test =
+                selectedTests.length > index ? selectedTests[index] : null;
+              return (
+                <>
+                  {test && renderTestDialogs({ test, isEdit: true })}
+                  <AddedTest
+                    key={index}
+                    test={test}
+                    order={index + 1}
+                    options={[
+                      {
+                        value: "preview",
+                        display: "Preview Test",
+                        icon: <EyeIcon className="size-5" />,
+                      },
+                      {
+                        value: "details",
+                        display: "View Details",
+                        icon: <ViewDetailsIcon className="size-5" />,
+                      },
+                      {
+                        value: "weights",
+                        display: "Edit Weightage",
+                        icon: <SquareKanbanIcon className="size-5" />,
+                      },
+                      {
+                        value: "remove",
+                        display: "Remove Test",
+                        icon: <TrashIcon className="size-5" />,
+                      },
+                    ]}
+                    onAction={(val) => {
+                      if (val === "preview") {
+                        setOpenTestId(test.id);
+                      } else if (val === "details") {
+                        setOpenTestId(test.id);
+                      } else if (val === "weights") {
+                        setOpenWeightTestId(test.id);
+                      } else if (val === "remove") {
+                        handleRemove(test.id);
+                      }
+                    }}
+                  />
+                </>
+              );
+            })}
           </div>
           <div className="flex flex-row justify-between">
             <SearchInput
@@ -303,7 +395,6 @@ const Step2 = () => {
         </Section>
         <div className="flex flex-col py-7">
           <h2 className="font-normal">{count} tests available</h2>
-
           <PaginatedScroll
             currentPage={assessmentTestsData?.pages.length || 1}
             totalCount={assessmentTestsData?.pages[0]?.count || 0}
@@ -354,23 +445,16 @@ const Step2 = () => {
                           }
                           className="bg-white rounded-full text-black"
                         />
-                        <Dialog>
-                          <DialogTrigger asChild>
-                            <Button
-                              className={cn(
-                                "rounded-full bg-white text hover:bg-white",
-                                `text-[${SCOUTABL_TEXT_SECONDARY}]`,
-                                COMMON_VARIANTS.outline
-                              )}
-                            >
-                              Details
-                            </Button>
-                          </DialogTrigger>
-                          <DialogContent className="w-[80vw] overflow-y-auto p-0 rounded-3xl">
-                            <DialogTitle hidden>{test.name}</DialogTitle>
-                            <AssessmentTestDetail test={test} />
-                          </DialogContent>
-                        </Dialog>
+                        <Button
+                          className={cn(
+                            "rounded-full bg-white text hover:bg-white",
+                            `text-[${SCOUTABL_TEXT_SECONDARY}]`,
+                            COMMON_VARIANTS.outline
+                          )}
+                          onClick={() => setOpenTestId(test.id)}
+                        >
+                          Details
+                        </Button>
                       </div>
                       {isAdded ? (
                         <Button
@@ -386,42 +470,43 @@ const Step2 = () => {
                           Remove
                         </Button>
                       ) : (
-                        <Dialog>
-                          <DialogTrigger asChild>
-                            <Button
-                              className="rounded-full"
-                              style={{ background: SCOUTABL_TEXT }}
-                              // onClick={() => handleAdd(test.id)}
-                              // disabled={isUpdatingAssessment}
-                            >
-                              Add
-                            </Button>
-                          </DialogTrigger>
-                          <DialogContent className="w-180 p-0">
-                            <DialogTitle hidden>{test.name}</DialogTitle>
-                            <TestAddDialog test={test} onAddTest={handleAdd} disabled={isUpdatingAssessment} />
-                          </DialogContent>
-                        </Dialog>
+                        <Button
+                          className="rounded-full"
+                          style={{ background: SCOUTABL_TEXT }}
+                          onClick={() => setOpenWeightTestId(test.id)}
+                        >
+                          Add
+                        </Button>
                       )}
                     </div>
                   </div>
                 );
 
                 return (
-                  <AssessmentTestCard
-                    key={test.id}
-                    name={test.name}
-                    description={test.description}
-                    footer={footer}
-                    tags={TEST_TAGS.map((t) => ({
-                      text: t,
-                      icon: ICON_MAP[t],
-                      variant:
-                        t === "Recommended" ? "outlinePrimary" : "outline",
-                    }))}
-                    variant={isAdded ? "selected" : "default"}
-                    className="basis-1/3 h-[281px] w-[376px]"
-                  />
+                  <>
+                    {!selectedTestIds.includes(test.id) &&
+                      renderTestDialogs({
+                        test,
+                        openTestId,
+                        setOpenTestId,
+                        openWeightTestId,
+                        setOpenWeightTestId,
+                      })}
+                    <AssessmentTestCard
+                      key={test.id}
+                      name={test.name}
+                      description={test.description}
+                      footer={footer}
+                      tags={TEST_TAGS.map((t) => ({
+                        text: t,
+                        icon: ICON_MAP[t],
+                        variant:
+                          t === "Recommended" ? "outlinePrimary" : "outline",
+                      }))}
+                      variant={isAdded ? "selected" : "default"}
+                      className="basis-1/3 h-[281px] w-[376px]"
+                    />
+                  </>
                 );
               })}
             </div>

@@ -51,6 +51,8 @@ const Dropdown = ({
   variant = "default",
   style = {},
   rightCheckbox = false,
+  closeOnSelect = false,
+  modal = true,
 }) => {
   const isSelected = (val) =>
     multiselect && Array.isArray(currentValue)
@@ -108,7 +110,7 @@ const Dropdown = ({
   };
 
   return (
-    <DropdownMenu>
+    <DropdownMenu modal={modal}>
       <div
         className={cn(
           "flex flex-row items-center rounded-full hover:cursor-pointer",
@@ -184,7 +186,7 @@ const Dropdown = ({
             <DropdownMenuItem
               key="__select_all__"
               onClick={(e) => {
-                e?.preventDefault();
+                if (!closeOnSelect) e?.preventDefault();
                 handleSelectAll();
               }}
               className={cn(
@@ -208,7 +210,7 @@ const Dropdown = ({
               <DropdownMenuItem
                 key={opt.value}
                 onSelect={(e) => {
-                  e?.preventDefault();
+                  if (!closeOnSelect) e?.preventDefault();
                   if (opt.disabled) return;
                   handleItemClick(opt.value);
                 }}
