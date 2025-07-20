@@ -187,7 +187,7 @@ const Step2 = () => {
         >
           <DialogContent className="w-[80vw] overflow-y-auto p-0 rounded-3xl">
             <DialogTitle hidden>{test.name}</DialogTitle>
-            <AssessmentTestDetail test={test} />
+            <AssessmentTestDetail test={test} allTags={allTags} />
           </DialogContent>
         </Dialog>
         <Dialog

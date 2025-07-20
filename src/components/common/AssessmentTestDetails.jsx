@@ -11,7 +11,6 @@ import ClockIcon from "@/assets/clockIcon.svg?react";
 import HistIcon from "@/assets/histIcon.svg?react";
 import QuestionIcon from "@/assets/questionIcon.svg?react";
 import { LanguagesIcon } from "lucide-react";
-import { useAllTags } from "@/api/misc/tags";
 import Chip from "../ui/chip";
 
 const InfoBox = ({ title, description, className = "" }) => {
@@ -28,9 +27,8 @@ const InfoBox = ({ title, description, className = "" }) => {
   );
 };
 
-const AssessmentTestDetail = ({ test }) => {
+const AssessmentTestDetail = ({ test, allTags }) => {
   const { resolveEnum } = useEnums();
-  const { data: allTags } = useAllTags();
 
   const {
     name,
