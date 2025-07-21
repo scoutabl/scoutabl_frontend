@@ -61,11 +61,92 @@ function convertHHMMSSToMinutes(hhmmss) {
 }
 
 //custom hook for question form
+// const useQuestionForm = (initialData, initialQuestion, mode, isOpen, questionType) => {
+//     const schema = getValidationSchema(questionType);
+
+//     const getDefaultValues = () => {
+//         const defaults = {
+//             post: initialData.title || initialQuestion,
+//             timeToAnswer: Number(initialData.timeToAnswer) || 25,
+//             customScore: Number(initialData.customScore) || 25,
+//             isCompulsory: initialData.is_compulsory || false,
+//             saveToLibrary: initialData.is_save_template || false,
+//             selectedAnswer: null,
+//             selectedAnswers: [],
+//             selectedRating: initialData.selectedRating || null,
+//             correctAnswer: initialData.value || 250,
+//             numericCondition: initialData.condition?.toString() || '2',
+//             singleSelectAnswers: DEFAULT_SINGLE_SELECT_ANSWERS,
+//             multipleSelectAnswers: DEFAULT_MULTIPLE_SELECT_ANSWERS,
+//             rearrangeOrder: initialData.correct_order || [],
+//             rearrangeOptions: initialData.options
+//                 ? [...initialData.options].sort((a, b) => a.correct_order - b.correct_order)
+//                 : DEFAULT_REARRANGE_OPTIONS,
+//             // shuffleEnabled: initialData.shuffle_options || false,
+//             shuffleEnabled: false,
+//             relevance_context: initialData.relevance_context || '',
+//             look_for_context: initialData.look_for_context || '',
+//             title: initialData.title || '',
+//         };
+//         if (mode === 'edit' && initialData.choices) {
+//             if (questionType === 'single-select') {
+//                 defaults.singleSelectAnswers = initialData.choices.map(choice => ({
+//                     answerId: Number(choice.id),
+//                     text: choice.text,
+//                 }));
+//                 const correct = initialData.choices.find(c => c.is_correct);
+//                 defaults.selectedAnswer = correct ? Number(correct.id) : null;
+//             }
+//             if (questionType === 'multiple-select') {
+//                 defaults.multipleSelectAnswers = initialData.choices.map(choice => ({
+//                     id: Number(choice.id),
+//                     text: choice.text
+//                 }));
+//                 defaults.selectedAnswers = initialData.choices
+//                     .filter(c => c.is_correct)
+//                     .map(c => Number(c.id));
+//             }
+//             defaults.timeToAnswer = convertHHMMSSToMinutes(initialData.completion_time);
+//             defaults.customScore = initialData.custom_score || 120;
+//             defaults.shuffleEnabled = initialData.shuffle_options || false;
+//             // defaults.isCompulsory = initialData.is_compulsory || false;
+//             // defaults.saveToLibrary = initialData.is_save_template || false;
+//             // defaults.shuffleEnabled = initialData.shuffle_options || false;
+//             // defaults.title = initialData.title || '';
+//             // defaults.relevance_context = initialData.relevance_context || '';
+//             // defaults.look_for_context = initialData.look_for_context || '';
+//         }
+
+//         return defaults;
+//     };
+
+//     const form = useForm({
+//         resolver: zodResolver(schema),
+//         defaultValues: getDefaultValues(),
+//         mode: 'onSubmit', // Validate on change for better UX
+//     });
+
+//     // Reset form when modal opens/closes or mode changes
+//     useEffect(() => {
+//         if (isOpen) {
+//             console.log('Resetting form with:', getDefaultValues());
+//             form.reset(getDefaultValues());
+//         }
+//     }, [mode, isOpen, initialData, questionType]);
+
+//     return form;
+// };
 const useQuestionForm = (initialData, initialQuestion, mode, isOpen, questionType) => {
     const schema = getValidationSchema(questionType);
 
     const getDefaultValues = () => {
-        const defaults = {
+        // Handle coding questions separately due to different field structure
+        if (questionType === 'coding') {
+            return getCodingDefaults();
+        }
+
+        // Base defaults that apply to all non-coding question types
+        const baseDefaults = {
             post: initialData.title || initialQuestion,
             timeToAnswer: Number(initialData.timeToAnswer) || 25,
             customScore: Number(initialData.customScore) || 25,
@@ -82,48 +163,88 @@ const useQuestionForm = (initialData, initialQuestion, mode, isOpen, questionTyp
             rearrangeOptions: initialData.options
                 ? [...initialData.options].sort((a, b) => a.correct_order - b.correct_order)
                 : DEFAULT_REARRANGE_OPTIONS,
-            // shuffleEnabled: initialData.shuffle_options || false,
             shuffleEnabled: false,
             relevance_context: initialData.relevance_context || '',
             look_for_context: initialData.look_for_context || '',
             title: initialData.title || '',
         };
-        if (mode === 'edit' && initialData.choices) {
-            if (questionType === 'single-select') {
-                defaults.singleSelectAnswers = initialData.choices.map(choice => ({
-                    answerId: Number(choice.id),
-                    text: choice.text,
-                }));
-                const correct = initialData.choices.find(c => c.is_correct);
-                defaults.selectedAnswer = correct ? Number(correct.id) : null;
-            }
-            if (questionType === 'multiple-select') {
-                defaults.multipleSelectAnswers = initialData.choices.map(choice => ({
-                    id: Number(choice.id),
-                    text: choice.text
-                }));
-                defaults.selectedAnswers = initialData.choices
-                    .filter(c => c.is_correct)
-                    .map(c => Number(c.id));
-            }
-            defaults.timeToAnswer = convertHHMMSSToMinutes(initialData.completion_time);
-            defaults.customScore = initialData.custom_score || 120;
-            defaults.shuffleEnabled = initialData.shuffle_options || false;
-            // defaults.isCompulsory = initialData.is_compulsory || false;
-            // defaults.saveToLibrary = initialData.is_save_template || false;
-            // defaults.shuffleEnabled = initialData.shuffle_options || false;
-            // defaults.title = initialData.title || '';
-            // defaults.relevance_context = initialData.relevance_context || '';
-            // defaults.look_for_context = initialData.look_for_context || '';
+
+        // Return base defaults for non-edit modes
+        if (mode !== 'edit' || !initialData.choices) {
+            return baseDefaults;
         }
 
-        return defaults;
+        // Edit mode specific overrides
+        const editOverrides = {
+            timeToAnswer: convertHHMMSSToMinutes(initialData.completion_time),
+            customScore: initialData.custom_score || 120,
+            shuffleEnabled: initialData.shuffle_options || false,
+        };
+
+        // Question type specific processing for edit mode
+        const questionTypeOverrides = getQuestionTypeOverrides(initialData, questionType);
+
+        return {
+            ...baseDefaults,
+            ...editOverrides,
+            ...questionTypeOverrides
+        };
+    };
+
+    // Helper function for coding question defaults
+    const getCodingDefaults = () => {
+        return {
+            // Basic question fields
+            question: initialData?.question || initialQuestion || '',
+            difficulty: initialData?.difficulty || '1',
+            inputFormats: initialData?.inputFormats || '',
+            constraints: initialData?.constraints || '',
+            outputFormats: initialData?.outputFormats || '',
+            tags: initialData?.tags || [],
+
+            // Coding-specific fields
+            selectedLanguages: initialData?.selectedLanguages || [],
+            codeStubs: initialData?.codeStubs || {},
+            customScore: initialData?.customScore || 10,
+            saveToLibrary: initialData?.saveToLibrary || false,
+            enablePrecisionCheck: initialData?.enablePrecisionCheck || false,
+            disableCompile: initialData?.disableCompile || false,
+            testCases: initialData?.testCases || [],
+        };
+    };
+
+    // Helper function to handle question type specific logic
+    const getQuestionTypeOverrides = (data, type) => {
+        const overrides = {};
+
+        if (type === 'single-select') {
+            overrides.singleSelectAnswers = data.choices.map(choice => ({
+                answerId: Number(choice.id),
+                text: choice.text,
+            }));
+
+            const correctChoice = data.choices.find(c => c.is_correct);
+            overrides.selectedAnswer = correctChoice ? Number(correctChoice.id) : null;
+        }
+
+        if (type === 'multiple-select') {
+            overrides.multipleSelectAnswers = data.choices.map(choice => ({
+                id: Number(choice.id),
+                text: choice.text
+            }));
+
+            overrides.selectedAnswers = data.choices
+                .filter(c => c.is_correct)
+                .map(c => Number(c.id));
+        }
+
+        return overrides;
     };
 
     const form = useForm({
         resolver: zodResolver(schema),
         defaultValues: getDefaultValues(),
-        mode: 'onSubmit', // Validate on change for better UX
+        mode: 'onSubmit',
     });
 
     // Reset form when modal opens/closes or mode changes
@@ -136,7 +257,6 @@ const useQuestionForm = (initialData, initialQuestion, mode, isOpen, questionTyp
 
     return form;
 };
-
 
 const QuestionModal = memo(({
     trigger,
@@ -179,93 +299,41 @@ const QuestionModal = memo(({
     const onSubmit = (data) => {
         console.log("Form data before submit:", data);
         console.log("shuffleEnabled in form data:", data.shuffleEnabled);
-        // Debug each option with proper type conversion
-        // data.singleSelectAnswers.forEach((opt, index) => {
-        //     const isSelected = String(opt.answerId) === String(data.selectedAnswer);
-        //     // console.log(`Option ${index}:`, {
-        //     //     answerId: opt.answerId,
-        //     //     backendId: opt.answerId, // Add this for debugging
-        //     //     answerIdType: typeof opt.answerId,
-        //     //     text: opt.text,
-        //     //     selectedAnswer: data.selectedAnswer,
-        //     //     selectedAnswerType: typeof data.selectedAnswer,
-        //     //     isSelected: isSelected,
-        //     //     stringComparison: String(opt.answerId) === String(data.selectedAnswer)
-        //     // });
-        // });
 
         const mins = parseInt(data.timeToAnswer, 10) || 0;
         const completion_time = `00:${String(mins).padStart(2, '0')}:00`;
-        // choices = data.multipleSelectAnswers.map(opt => {
-        //     // Find backend id if editing
-        //     const original = initialData.choices?.find(c => String(c.id) === String(opt.answerId));
-        //     return {
-        //         ...(isEdit && original?.id ? { id: original.id } : {}),
-        //         text: opt.text,
-        //         is_correct: data.selectedAnswers.includes(opt.answerId)
-        //     };
-        // });
-        // choices = data.singleSelectAnswers.map(opt => {
-        //     // For edit mode, use backendId if available, otherwise let backend create new ID
-        //     return {
-        //         ...(isEdit && opt.backendId ? { id: opt.backendId } : {}),
-        //         text: opt.text,
-        //         is_correct: String(opt.answerId) === String(data.selectedAnswer)
-        //     };
-        // });
-        // multiple_true = false;
-        // choices = data.singleSelectAnswers.map(opt => {
-        //     const choiceData = {
-        //         text: opt.text,
-        //         is_correct: Number(opt.answerId) === Number(data.selectedAnswer)
-        //     };
-
-        //     // Include ID for existing backend choices
-        //     if (mode === 'edit' && opt.isExisting === true) {
-        //         choiceData.id = opt.answerId;
-        //     }
-
-        //     return choiceData;
-        // });
-        // choices = data.singleSelectAnswers.map(opt => {
-        //     const choiceData = {
-        //         text: opt.text,
-        //         is_correct: String(opt.answerId) === String(data.selectedAnswer)
-        //     };
-        //     if (mode === 'edit' && opt.answerId) {
-        //         choiceData.id = opt.answerId; // Only include id if it exists (i.e., backend option)
-        //     }
-        //     return choiceData;
-        // });
-
-        // let choices = [];
-        // let multiple_true = false;
-        // if (questionType === 'multiple-select') {
-        //     choices = data.multipleSelectAnswers.map(opt => ({
-        //         ...(isEdit && initialData.choices?.some(c => String(c.id) === String(opt.id)) ? { id: opt.id } : {}),
-        //         text: opt.text,
-        //         is_correct: data.selectedAnswers.map(String).includes(String(opt.id))
-        //     }));
-        //     multiple_true = true;
-        // }
-        // else if (questionType === 'single-select') {
-        //     choices = data.singleSelectAnswers.map(opt => {
-        //         const choiceData = {
-        //             text: opt.text,
-        //             is_correct: String(opt.answerId) === String(data.selectedAnswer)
-        //         };
-        //         // Only include id if it matches a backend id
-        //         const isBackendId = initialData.choices?.some(c => String(c.id) === String(opt.answerId));
-        //         if (mode === 'edit' && isBackendId) {
-        //             choiceData.id = opt.answerId;
-        //         }
-        //         return choiceData;
-        //     });
-        //     multiple_true = false;
-        // }
 
         let choices = [];
         let multiple_true = false;
+
+        //coding question payload
+        if (questionType === 'coding') {
+            // Handle coding question submission
+            const payload = {
+                resourcetype: 'CodingQuestion',
+                completion_time: data.customScore,
+                save_template: data.saveToLibrary,
+                content: data.question,
+                difficulty: data.difficulty,
+                input_formats: data.inputFormats,
+                constraints: data.constraints,
+                output_formats: data.outputFormats,
+                tags: data.tags,
+                selected_languages: data.selectedLanguages,
+                code_stubs: data.codeStubs,
+                test_cases: data.testCases,
+                enable_precision_check: data.enablePrecisionCheck,
+                disable_compile: data.disableCompile,
+                // ...add other coding-specific fields as needed
+            };
+
+            if (isEdit) {
+                updateQuestionMutation.mutate({ questionId: initialData.id, payload });
+            } else {
+                addQuestionMutation.mutate(payload);
+            }
+            return;
+        }
 
         if (questionType === 'multiple-select') {
             choices = data.multipleSelectAnswers.map(opt => {
@@ -274,7 +342,6 @@ const QuestionModal = memo(({
                     is_correct: data.selectedAnswers.map(String).includes(String(opt.id))
                 };
 
-                // Only include id if we're in edit mode AND the id exists in backend data
                 if (isEdit && initialData.choices?.some(c => String(c.id) === String(opt.id))) {
                     choiceData.id = opt.id;
                 }
@@ -385,47 +452,22 @@ const QuestionModal = memo(({
             return;
         }
     };
-    const renderAnswerSection = useMemo(() => {
+    const renderQuestionContent = useMemo(() => {
         switch (questionType) {
             case 'single-select':
                 return (
                     <SingleSelectAnswers mode={mode} />
-                    // answers={data.singleSelectAnswers}
-                    // selectedAnswer={data.selectedAnswer}
-                    // onAnswerChange={data.setSelectedAnswer}
-                    // onAnswersChange={data.setSingleSelectAnswers}
-                    // showShuffleToggle={true}
-                    // shuffleEnabled={data.shuffleEnabled}
-                    // setShuffleEnabled={data.setShuffleEnabled}
-                    // errors={
-                    //     hasSubmitted
-                    //         ? [
-                    //             !data.selectedAnswer && "Please select the correct answer",
-                    //             data.singleSelectAnswers.some(answer => !answer.text.trim()) && "All answer options must have text"
-                    //         ].filter(Boolean)
-                    //         : []
-                    // }
-
                 );
             case 'multiple-select':
                 return (
                     <MultipleSelectAnswers mode={mode} />
-                    //         answers = { data.multipleSelectAnswers }
-                    // selectedAnswers = { data.selectedAnswers }
-                    // onAnswersChange = { data.setMultipleSelectAnswers }
-                    // onSelectedChange = { data.setSelectedAnswers }
-                    // showShuffleToggle = { true}
-                    // shuffleEnabled = { data.shuffleEnabled }
-                    // setShuffleEnabled = { data.setShuffleEnabled }
-                    // length = { DEFAULT_MULTIPLE_SELECT_ANSWERS.length }
-                    // error = { data.multipleSelectAnswers.some(answer => !answer.text.trim()) }
                 );
             case 'rating':
                 return (
                     <RatingScaleAnswers
                         scale="star-rating"
-                        selectedRating={data.selectedRating}
-                        onRatingChange={data.setSelectedRating}
+                    // selectedRating={data?.selectedRating}
+                    // onRatingChange={data?.setSelectedRating}
                     />
                 );
             case 'numeric-input':
@@ -435,6 +477,17 @@ const QuestionModal = memo(({
             case 'rearrange':
                 return (
                     <RearrangeAnswers inputRefs={inputRefs} />
+                )
+            case 'code':
+                return (
+                    <FormProvider>
+                        <CodingQuestionContent
+                            initialData={initialData}
+                            initialQuestion={initialQuestion}
+                            form={form} // Pass the form instance
+                            onSubmit={onSubmit} // Pass the onSubmit handler
+                        />
+                    </FormProvider>
                 )
             case 'essay':
             case 'video':
@@ -450,8 +503,8 @@ const QuestionModal = memo(({
     return (
         <Dialog open={isOpen} onOpenChange={setIsOpen}>
             {/* Remove DialogTrigger, modal is controlled from parent */}
-            <DialogContent className="flex flex-col p-6 min-w-[90vw] sm:min-w-[600px] md:min-w-[800px] lg:min-w-[1000px] xl:min-w-[1208px] max-w-[1208px] max-h-[90vh] overflow-y-auto rounded-[24px]">
-
+            {/* <DialogContent className="flex flex-col p-6 min-w-[90vw] sm:min-w-[600px] md:min-w-[800px] lg:min-w-[1000px] xl:min-w-[1208px] max-w-[1208px] max-h-[90vh] overflow-y-auto rounded-[24px]"> */}
+            <DialogContent className="h-[720px] w-[1208px] max-h-[90vh] flex flex-col p-6 overflow-y-auto rounded-[24px]">
                 <div className="flex items-center justify-between mb-4">
                     <DialogHeader className="max-h-9">
                         <DialogTitle className="flex items-center gap-2">
@@ -489,7 +542,9 @@ const QuestionModal = memo(({
                 </div>
 
                 {questionType === 'code' ? (
-                    <CodingQuestionContent initialData={initialData} initialQuestion={initialQuestion} />
+                    <>
+                        {renderQuestionContent}
+                    </>
                 ) : (
                     <div className="flex gap-6">
                         <div className="flex-1 flex flex-col gap-4">
@@ -594,7 +649,7 @@ const QuestionModal = memo(({
                                         </div>
                                     </div>
                                 </div>
-                                {renderAnswerSection}
+                                {renderQuestionContent}
                                 <motion.button
                                     type="submit"
                                     whileHover={{ scale: 1.05 }}

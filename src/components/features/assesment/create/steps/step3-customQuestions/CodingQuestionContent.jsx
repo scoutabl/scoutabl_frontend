@@ -56,6 +56,26 @@ const steps = [
     { id: 4, title: "Test Cases" },
 ];
 
+// const defaultValues = (initialData, initialQuestion, allLanguages, selectedLanguages) => {
+//     const codeStubs = {};
+//     if (allLanguages && selectedLanguages) {
+//         for (const lang of allLanguages.results) {
+//             if (selectedLanguages.includes(lang.id)) {
+//                 codeStubs[lang.name] = lang.default_template.content || '';
+//             }
+//         }
+//     }
+//     return {
+//         question: initialData?.question || initialQuestion || '',
+//         difficulty: initialData?.difficulty || '1',
+//         inputFormats: initialData?.inputFormats || '',
+//         constraints: initialData?.constraints || '',
+//         outputFormats: initialData?.outputFormats || '',
+//         tags: initialData?.tags || [],
+//         selectedLanguages: [],
+//         codeStubs,
+//     };
+// };
 const defaultValues = (initialData, initialQuestion, allLanguages, selectedLanguages) => {
     const codeStubs = {};
     if (allLanguages && selectedLanguages) {
@@ -74,9 +94,14 @@ const defaultValues = (initialData, initialQuestion, allLanguages, selectedLangu
         tags: initialData?.tags || [],
         selectedLanguages: [],
         codeStubs,
+        // Include these fields that were in the original form
+        customScore: 10,
+        saveToLibrary: false,
+        enablePrecisionCheck: false,
+        disableCompile: false,
+        testCases: [],
     };
 };
-
 const languageFileExtensions = {
     "python3": "py",
     "swift": "swift",
@@ -91,7 +116,12 @@ const languageFileExtensions = {
     // Add more as needed
 };
 
-const CodingQuestionContent = ({ initialData = {}, initialQuestion = '' }) => {
+const CodingQuestionContent = ({
+    initialData = {},
+    initialQuestion = '',
+    form, // Accept form instance from parent
+    onSubmit // Accept onSubmit handler from parent
+}) => {
     const [currentStep, setCurrentStep] = useState(1);
     const methods = useForm({
         mode: 'onTouched',
@@ -104,7 +134,7 @@ const CodingQuestionContent = ({ initialData = {}, initialQuestion = '' }) => {
             testCases: [],
         },
     });
-    const { control, register, handleSubmit, clearErrors, trigger, setValue, formState: { errors } } = methods;
+    const { control, register, handleSubmit, clearErrors, trigger, setValue, reset, getValues, watch, formState: { errors } } = form;
 
     // Fetch languages at the top level
     const { data: allLanguages, isLoading: isLanguagesLoading, error: languagesError } = useLanguages();
@@ -113,9 +143,20 @@ const CodingQuestionContent = ({ initialData = {}, initialQuestion = '' }) => {
 
     const selectedLanguages = methods.watch('selectedLanguages');
 
+    // Initialize form with default values when languages are loaded
+    useEffect(() => {
+        if (allLanguages && !getValues('selectedLanguages')?.length) {
+            const defaults = defaultValues(initialData, initialQuestion, allLanguages, []);
+            reset({
+                ...getValues(),
+                ...defaults
+            });
+        }
+    }, [allLanguages, initialData, initialQuestion, reset, getValues]);
+
     useEffect(() => {
         if (allLanguages && selectedLanguages && selectedLanguages.length > 0) {
-            const currentStubs = methods.getValues('codeStubs') || {};
+            const currentStubs = getValues('codeStubs') || {};
             const newStubs = { ...currentStubs };
 
             let changed = false;
@@ -144,13 +185,49 @@ const CodingQuestionContent = ({ initialData = {}, initialQuestion = '' }) => {
             });
 
             if (changed) {
-                methods.reset({
-                    ...methods.getValues(),
-                    codeStubs: newStubs,
-                });
+                setValue('codeStubs', newStubs);
             }
         }
-    }, [allLanguages, selectedLanguages, methods]);
+    }, [allLanguages, selectedLanguages, getValues, setValue]);
+
+    // useEffect(() => {
+    //     if (allLanguages && selectedLanguages && selectedLanguages.length > 0) {
+    //         const currentStubs = methods.getValues('codeStubs') || {};
+    //         const newStubs = { ...currentStubs };
+
+    //         let changed = false;
+
+    //         // Get the selected language IDs (handle both ID array and object array)
+    //         const selectedIds = selectedLanguages.map(item =>
+    //             typeof item === 'object' ? item.id : item
+    //         );
+
+    //         for (const lang of allLanguages.results) {
+    //             if (selectedIds.includes(lang.id) && newStubs[lang.name] === undefined) {
+    //                 newStubs[lang.name] = lang.default_template?.content || '';
+    //                 changed = true;
+    //             }
+    //         }
+
+    //         // Remove stubs for languages that are no longer selected
+    //         Object.keys(newStubs).forEach(langName => {
+    //             if (!selectedIds.some(id => {
+    //                 const lang = allLanguages.results.find(l => l.id === id);
+    //                 return lang && lang.name === langName;
+    //             })) {
+    //                 delete newStubs[langName];
+    //                 changed = true;
+    //             }
+    //         });
+
+    //         if (changed) {
+    //             methods.reset({
+    //                 ...methods.getValues(),
+    //                 codeStubs: newStubs,
+    //             });
+    //         }
+    //     }
+    // }, [allLanguages, selectedLanguages, methods]);
 
     // useEffect(() => {
     //     if (allLanguages && selectedLanguages && selectedLanguages.length > 0) {
@@ -202,18 +279,58 @@ const CodingQuestionContent = ({ initialData = {}, initialQuestion = '' }) => {
         }
         // Add fields for other steps as needed
         const valid = await trigger(fieldsToValidate);
+        // if (valid) {
+        //     // If moving from step 2 to 3, transform selectedLanguages from IDs to objects (only if not already objects)
+        //     const selectedLangsRaw = methods.getValues('selectedLanguages');
+        //     if (
+        //         currentStep === 2 &&
+        //         allLanguages &&
+        //         selectedLangsRaw &&
+        //         typeof selectedLangsRaw[0] !== 'object'
+        //     ) {
+        //         const selectedIds = selectedLangsRaw;
+        //         const popularLanguages = ["Python 3", "Java", "C++", "NodeJS", "PHP", "C#"];
+        //         // Use langResultMap so fileExtension is included
+        //         const langResultMap = allLanguages?.results.map(lang => {
+        //             const override = langOverrides[lang.id] || {};
+        //             return {
+        //                 id: lang.id,
+        //                 name: lang.name,
+        //                 timeLimit: override.timeLimit ?? lang.default_time_limit_seconds,
+        //                 memoryLimit: override.memoryLimit ?? lang.default_memory_limit_mb,
+        //                 defaultTemplate: lang.default_template.content,
+        //                 isPopular: popularLanguages.includes(lang.name),
+        //                 fileExtension: languageFileExtensions[lang.code] || "",
+        //             };
+        //         });
+        //         const selectedLanguageObjects = selectedIds
+        //             .map(id => langResultMap.find(l => l.id === id))
+        //             .filter(Boolean);
+        //         methods.setValue('selectedLanguages', selectedLanguageObjects);
+        //     }
+        //     setCurrentStep((s) => s + 1);
+        // }
+        // else {
+        //     // Show toast for each error in the current step
+        //     fieldsToValidate.forEach(field => {
+        //         if (errors[field]) {
+        //             toast.error(errors[field].message || "This field is required");
+        //         }
+        //     });
+        // }
         if (valid) {
-            // If moving from step 2 to 3, transform selectedLanguages from IDs to objects (only if not already objects)
-            const selectedLangsRaw = methods.getValues('selectedLanguages');
+            // If moving from step 2 to 3, transform selectedLanguages from IDs to objects
+            const selectedLangsRaw = getValues('selectedLanguages');
             if (
                 currentStep === 2 &&
                 allLanguages &&
                 selectedLangsRaw &&
+                selectedLangsRaw.length > 0 &&
                 typeof selectedLangsRaw[0] !== 'object'
             ) {
                 const selectedIds = selectedLangsRaw;
                 const popularLanguages = ["Python 3", "Java", "C++", "NodeJS", "PHP", "C#"];
-                // Use langResultMap so fileExtension is included
+
                 const langResultMap = allLanguages?.results.map(lang => {
                     const override = langOverrides[lang.id] || {};
                     return {
@@ -226,14 +343,15 @@ const CodingQuestionContent = ({ initialData = {}, initialQuestion = '' }) => {
                         fileExtension: languageFileExtensions[lang.code] || "",
                     };
                 });
+
                 const selectedLanguageObjects = selectedIds
                     .map(id => langResultMap.find(l => l.id === id))
                     .filter(Boolean);
-                methods.setValue('selectedLanguages', selectedLanguageObjects);
+
+                setValue('selectedLanguages', selectedLanguageObjects);
             }
             setCurrentStep((s) => s + 1);
-        }
-        else {
+        } else {
             // Show toast for each error in the current step
             fieldsToValidate.forEach(field => {
                 if (errors[field]) {
@@ -1214,97 +1332,96 @@ const CodingQuestionContent = ({ initialData = {}, initialQuestion = '' }) => {
             default: return null;
         }
     }
-    const onSubmit = (data) => {
-        // testCases is now included in data automatically
-        // Send data to your API or backend
-        console.log('Form submitted:', data);
-    };
+    // const onSubmit = (data) => {
+    //     // testCases is now included in data automatically
+    //     // Send data to your API or backend
+    //     console.log('Form submitted:', data);
+    // };
     return (
-        <FormProvider {...methods}>
-            <form onSubmit={handleSubmit(onSubmit)}>
-                <div className='flex gap-6 flex-1'>
-                    <aside
-                        // className='p-6 w-[20.7%] max-w-[240px] flex flex-col justify-between rounded-5xl bg-white border border-seperatorPrimary'>
-                        className='p-3 xl:p-6 w-full sm:w-[180px] md:w-[200px] lg:w-[220px] xl:w-[240px] min-w-0 flex flex-col justify-between rounded-5xl bg-white border border-seperatorPrimary overflow-x-hidden overflow-y-auto max-h-screen'>
-                        <div className="flex flex-col gap-4">
-                            {steps.map((step) => (
+        <form onSubmit={handleSubmit(onSubmit)}>
+            <div className='flex gap-6 flex-1'>
+                <aside
+                    // className='p-6 w-[20.7%] max-w-[240px] flex flex-col justify-between rounded-5xl bg-white border border-seperatorPrimary'>
+                    className='p-3 xl:p-6 w-full sm:w-[180px] md:w-[200px] lg:w-[220px] xl:w-[240px] min-w-0 flex flex-col justify-between rounded-5xl bg-white border border-seperatorPrimary overflow-x-hidden overflow-y-auto max-h-screen'>
+                    <div className="flex flex-col gap-4">
+                        {steps.map((step) => (
+                            <div
+                                key={step.id}
+                                className={cn(
+                                    "px-3 py-2 flex items-center gap-3 rounded-xl min-w-[202px] hover:bg-purpleQuaternary group transition-all duration-300 ease-in",
+                                    currentStep === step.id && "bg-purpleQuaternary"
+                                )}
+                                onClick={() => setCurrentStep(step.id)}
+                                style={{ cursor: "pointer" }}
+                            >
                                 <div
-                                    key={step.id}
                                     className={cn(
-                                        "px-3 py-2 flex items-center gap-3 rounded-xl min-w-[202px] hover:bg-purpleQuaternary group transition-all duration-300 ease-in",
-                                        currentStep === step.id && "bg-purpleQuaternary"
+                                        'h-[51px] w-1 rounded-5xl transition-all duration-300 ease-in',
+                                        currentStep === step.id ? 'bg-purplePrimary opacity-100' : 'bg-purplePrimary opacity-0 group-hover:opacity-100 '
                                     )}
-                                    onClick={() => setCurrentStep(step.id)}
-                                    style={{ cursor: "pointer" }}
-                                >
-                                    <div
-                                        className={cn(
-                                            'h-[51px] w-1 rounded-5xl transition-all duration-300 ease-in',
-                                            currentStep === step.id ? 'bg-purplePrimary opacity-100' : 'bg-purplePrimary opacity-0 group-hover:opacity-100 '
-                                        )}
-                                    />
-                                    <div className="flex items-center gap-4">
-                                        <span className="h-[26px] w-[26px] grid place-content-center text-sm font-semibold text-purplePrimary border border-purplePrimary rounded-full">{step.id}</span>
-                                        <div className="flex flex-col gap-1">
-                                            <span className="text-sm font-normal text-purplePrimary">Step:&nbsp;{step.id}</span>
-                                            <span className="text-sm font-semibold text-greyPrimary text-nowrap">{step.title}</span>
-                                        </div>
+                                />
+                                <div className="flex items-center gap-4">
+                                    <span className="h-[26px] w-[26px] grid place-content-center text-sm font-semibold text-purplePrimary border border-purplePrimary rounded-full">{step.id}</span>
+                                    <div className="flex flex-col gap-1">
+                                        <span className="text-sm font-normal text-purplePrimary">Step:&nbsp;{step.id}</span>
+                                        <span className="text-sm font-semibold text-greyPrimary text-nowrap">{step.title}</span>
                                     </div>
                                 </div>
-                            ))}
-                        </div>
-                        <div className="space-y-4">
-                            <div className="flex items-center gap-[6px]">
-                                <AiIcon className="h-5 w-5 text-purplePrimary" />
-                                <h3 className='text-sm font-semibold bg-gradient-to-r from-[#806BFF] to-[#A669FD] inline-block text-transparent bg-clip-text'>Quality Review</h3>
                             </div>
-                            <div className="flex items-start gap-1">
-                                <CircleAlert size={24} className="text-greyAccent" />
-                                <div className="flex flex-col gap-[6px]">
-                                    <span className="text-xs font-normal text-greyAccent">Scoutabl's AI suggests tests by matchin skills in your job.</span>
-                                    <span className="text-xs font-medium text-purplePrimary">Add sample test cases</span>
-                                </div>
+                        ))}
+                    </div>
+                    <div className="space-y-4">
+                        <div className="flex items-center gap-[6px]">
+                            <AiIcon className="h-5 w-5 text-purplePrimary" />
+                            <h3 className='text-sm font-semibold bg-gradient-to-r from-[#806BFF] to-[#A669FD] inline-block text-transparent bg-clip-text'>Quality Review</h3>
+                        </div>
+                        <div className="flex items-start gap-1">
+                            <CircleAlert size={24} className="text-greyAccent" />
+                            <div className="flex flex-col gap-[6px]">
+                                <span className="text-xs font-normal text-greyAccent">Scoutabl's AI suggests tests by matchin skills in your job.</span>
+                                <span className="text-xs font-medium text-purplePrimary">Add sample test cases</span>
                             </div>
                         </div>
-                    </aside>
-                    {/* step content */}
-                    <section className="flex-1 flex flex-col bg-white min-h-[600px]">
-                        {renderStepContent()}
-                        <div className='flex items-center justify-between mt-auto pt-6'>
+                    </div>
+                </aside>
+                {/* step content */}
+                <section className="flex-1 flex flex-col bg-white min-h-[600px]">
+                    {renderStepContent()}
+                    <div className='flex items-center justify-between mt-auto pt-6'>
+                        <Button
+                            variant="back"
+                            effect="shineHover"
+                            disabled={currentStep === 1}
+                            type="button"
+                            onClick={handleBack}>
+                            <ChevronLeftIcon />
+                            Back
+                        </Button>
+                        {currentStep < 4 ? (
                             <Button
-                                variant="back"
+                                variant="next"
                                 effect="shineHover"
-                                disabled={currentStep === 1}
                                 type="button"
-                                onClick={handleBack}>
-                                <ChevronLeftIcon />
-                                Back
+                                onClick={handleNext}
+                            >
+                                Next
+                                <ChevronRightIcon />
                             </Button>
-                            {currentStep < 4 ? (
-                                <Button
-                                    variant="next"
-                                    effect="shineHover"
-                                    type="button"
-                                    onClick={handleNext}
-                                >
-                                    Next
-                                    <ChevronRightIcon />
-                                </Button>
-                            ) : (
-                                <Button
-                                    variant="next"
-                                    effect="shineHover"
-                                    type="submit"
-                                >
-                                    Submit
-                                    <ChevronRightIcon />
-                                </Button>
-                            )}
-                        </div>
-                    </section>
-                </div>
-            </form>
-        </FormProvider>
+                        ) : (
+                            <Button
+                                variant="next"
+                                effect="shineHover"
+                                type="submit"
+                            >
+                                Submit
+                                <ChevronRightIcon />
+                            </Button>
+                        )}
+                    </div>
+                </section>
+            </div>
+        </form>
+
     )
 }
 
