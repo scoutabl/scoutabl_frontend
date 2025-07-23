@@ -1475,7 +1475,7 @@ import CodeIcon from '@/assets/codeIcon.svg?react'
 import QuestionIcon from '@/assets/questionIcon.svg?react'
 import EditTestIcon from '@/assets/editquestion.svg?react';
 import DeleteIcon from '@/assets/trashIcon.svg?react';
-import UploadZipICon from '@/assets/uploadZipICon.svg?react';
+import UploadZipICon from '@/assets/uploadZipIcon.svg?react';
 import PlusIcon from '@/assets/plusIcon.svg?react'
 const questionTagsList = [
     { value: "arrays", label: "Arrays" },
