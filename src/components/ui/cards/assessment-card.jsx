@@ -6,6 +6,7 @@ import {
   PopoverContent,
 } from "@/components/ui/popover";
 import UserAvatarBadge from "@/components/common/UserAvatarBadge";
+import Chip from "@/components/ui/chip";
 
 /**
  * EntityCard for assessment list
@@ -106,7 +107,10 @@ const AssessmentCard = ({
         </Popover>
       </div>
       <div className="flex flex-col gap-2">
-        <h1 className="text-base text-semibold text-greyPrimary text-xl hover:cursor-pointer" onClick={onTitleClick}>
+        <h1
+          className="text-base text-semibold text-greyPrimary text-xl hover:cursor-pointer"
+          onClick={onTitleClick}
+        >
           {title}
         </h1>
         <div className="flex items-center gap-2 text-sm">
@@ -119,14 +123,9 @@ const AssessmentCard = ({
             <span className="text-xs text-greyPrimary">{expires}</span>
           </div>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 mt-2 mb-2">
           {tags.map((tag, index) => (
-            <div
-              key={index}
-              className="px-3 py-1 bg-blueSecondary rounded-full"
-            >
-              <span className="text-xs text-greyAccent">{tag}</span>
-            </div>
+            <Chip key={index} variant="blueSecondary">{tag}</Chip>
           ))}
         </div>
         <div className="flex flex-row gap-1 items-end">

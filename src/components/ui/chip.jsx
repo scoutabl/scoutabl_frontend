@@ -5,6 +5,8 @@ const variants = {
     default: "text-greyPrimary bg-[#F5F5F5]",
     outline: "border border-primary text-primary bg-white",
     outlinePrimary: "border border-purplePrimary text-purplePrimary bg-white",
+    secondary: "text-greyPrimary bg-purpleSecondary",
+    blueSecondary: "text-greyPrimary bg-blueSecondary"
 }
 
 const Chip = ({ children, className = "", variant = "default", ...rest }) => {

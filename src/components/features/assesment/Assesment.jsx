@@ -37,6 +37,7 @@ import { debounce } from "@/lib/utils";
 import Dropdown from "@/components/ui/dropdown";
 import { useUsers } from "@/api/users/users";
 import UserAvatarBadge from "@/components/common/UserAvatarBadge";
+import { useAssessmentCategoryNameMap } from "@/lib/enum_mapping";
 
 const Assesment = () => {
   const { resolveEnum } = useEnums();
@@ -52,6 +53,7 @@ const Assesment = () => {
   const assessments = data ? data.pages.flatMap((page) => page.results) : [];
   const [openPopoverIndex, setOpenPopoverIndex] = useState(null);
   const navigate = useNavigate();
+  const assessmentCategoryNameMap = useAssessmentCategoryNameMap();
 
   // Placeholder handlers for linter
   const handleEdit = () => {};
@@ -286,7 +288,9 @@ const Assesment = () => {
                   ? new Date(assesment.end_date).toLocaleDateString()
                   : "N/A";
                 // Tags (from first test_details.tags or empty)
-                const tags = assesment.test_details?.[0]?.tags || [];
+                const tags = [
+                  assessmentCategoryNameMap[assesment.category],
+                ];
                 // Candidates (dummy value, as not present)
                 const candidates = assesment.total_candidates || 0;
 
