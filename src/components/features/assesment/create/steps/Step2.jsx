@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useAssessmentContext } from "@/components/common/AssessmentNavbarWrapper";
 import AssessmentStep from "@/components/common/AssessmentStep";
-import Section from "@/components/common/section";
+import Section from "@/components/common/Section";
 import AddedTest from "@/components/common/AddedTest";
 import {
   DEFAULT_LIST_API_PARAMS,
