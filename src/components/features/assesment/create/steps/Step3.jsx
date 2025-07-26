@@ -1,5 +1,4 @@
-import React, { useState } from 'react'
-import DOMPurify from 'dompurify';
+import React, { useState, useEffect } from 'react'
 import QuestionCards from './step3-customQuestions/QuestionCards'
 import { useAssessmentQuestions, useRemoveQuestion, useDuplicateQuestion } from '@/api/createQuestion'
 import { questionTypes } from './step3-customQuestions/QuestionCards'
@@ -17,26 +16,57 @@ import {
     AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 import { motion } from 'framer-motion';
+import {
+    DndContext,
+    closestCenter,
+    PointerSensor,
+    useSensor,
+    useSensors
+} from '@dnd-kit/core';
+import {
+    arrayMove,
+    SortableContext,
+    useSortable,
+    verticalListSortingStrategy
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
+import { restrictToVerticalAxis, restrictToParentElement } from '@dnd-kit/modifiers';
 import Step3Loading from './step3-customQuestions/Step3Loading';
 import AiIcon from '@/assets/AiIcon.svg?react'
 import PlusIcon from '@/assets/plusIcon.svg?react'
 import TrashIcon from '@/assets/trashIcon.svg?react'
-import EditIcon from '@/assets/editquestion.svg?react'
-import DuplicateIcon from '@/assets/duplicateIcon.svg?react'
 import NoTestIcon from '@/assets/noTestIcon.svg?react'
 import ChevronLeftIcon from '@/assets/chevronLeftIcon.svg?react'
 import ChevronRightIcon from '@/assets/chevronRightIcon.svg?react'
-import { Eye, GripVertical } from 'lucide-react'
 import QuestionModal from './step3-customQuestions/QuestionModal';
+import QuestionRow from '@/components/ui/question-row';
 import AssessmentStep from '@/components/common/AssessmentStep';
 import { useAssessmentContext } from '@/components/common/AssessmentNavbarWrapper';
-const Step3 = ({ assessmentId = 14 }) => {
-    const { steps, selectedStep, handleStepChange } = useAssessmentContext();
+import Section from '@/components/common/Section';
+import SectionHeader from '@/components/ui/section-header';
+const Step3 = () => {
+    const { assessment, steps, selectedStep, handleStepChange } = useAssessmentContext();
     const [modalOpen, setModalOpen] = useState(false);
+    
+    // State for question order and selection
+    const [questionOrder, setQuestionOrder] = useState([]);
+    const [selectedQuestions, setSelectedQuestions] = useState(new Set());
+    
+    // Section collapse state
+    const [collapsedSections, setCollapsedSections] = useState({
+        'question-sequence': false,
+    });
+    const { data: questions, isLoading, error } = useAssessmentQuestions(assessment?.id);
+
+    // Set initial question order when questions load
+    useEffect(() => {
+        if (questions && questions.length > 0) {
+            setQuestionOrder(questions.map(q => q.id));
+        }
+    }, [questions]);
     const [modalMode, setModalMode] = useState('add'); // 'add' or 'edit'
     const [modalInitialData, setModalInitialData] = useState({});
     const [modalQuestionType, setModalQuestionType] = useState(null);
-    const { data: questions, isLoading, error } = useAssessmentQuestions(assessmentId);
 
     // Helper to flatten all question type objects
     const allTypeDefs = questionTypes.flatMap(cat => cat.questions);
@@ -52,22 +82,11 @@ const Step3 = ({ assessmentId = 14 }) => {
         return allTypeDefs.find(typeDef => typeDef.resourcetype === q.resourcetype);
     };
 
-    // Format completion time from "HH:MM" to "X hr Y min"
-    function formatCompletionTime(timeStr) {
-        if (!timeStr) return '--';
 
-        const [hours, minutes] = timeStr.split(':').map(Number);
-
-        if (hours && minutes) return `${hours} hr ${minutes} min`;
-        if (hours) return `${hours} hr`;
-        if (minutes) return `${minutes} min`;
-
-        return '--';
-    }
 
 
     //function to delete question
-    const { mutate: removeQuestion } = useRemoveQuestion(assessmentId);
+    const { mutate: removeQuestion } = useRemoveQuestion(assessment?.id);
 
     const handleDelete = (questionId) => {
         removeQuestion({ questionId });
@@ -75,7 +94,7 @@ const Step3 = ({ assessmentId = 14 }) => {
 
 
     //function to duplicate question
-    const { mutate: duplicateQuestion } = useDuplicateQuestion(assessmentId);
+    const { mutate: duplicateQuestion } = useDuplicateQuestion(assessment?.id);
 
     const handleDuplicate = (questionId) => {
         duplicateQuestion({ questionId });
@@ -97,6 +116,92 @@ const Step3 = ({ assessmentId = 14 }) => {
         setModalInitialData(question);
         setModalQuestionType(type);
         setModalOpen(true);
+    };
+
+    // Drag and drop handlers
+    const sensors = useSensors(
+        useSensor(PointerSensor, { activationConstraint: { distance: 5 } })
+    );
+
+    const handleDragEnd = (event) => {
+        const { active, over } = event;
+        if (active.id !== over?.id) {
+            setQuestionOrder((items) => {
+                const oldIndex = items.indexOf(active.id);
+                const newIndex = items.indexOf(over.id);
+                const newOrder = arrayMove(items, oldIndex, newIndex);
+                console.log('Question order updated:', newOrder);
+                return newOrder;
+            });
+        }
+    };
+
+    // Selection handlers
+    const handleQuestionSelect = (questionId, isSelected) => {
+        setSelectedQuestions(prev => {
+            const newSelection = new Set(prev);
+            if (isSelected) {
+                newSelection.add(questionId);
+            } else {
+                newSelection.delete(questionId);
+            }
+            return newSelection;
+        });
+    };
+
+    // Create sortable question row component
+    const SortableQuestionRow = ({ questionId, index }) => {
+        const {
+            attributes,
+            listeners,
+            setNodeRef,
+            transform,
+            transition,
+            isDragging
+        } = useSortable({ id: questionId });
+
+        const style = {
+            transform: CSS.Transform.toString(transform),
+            transition,
+            opacity: isDragging ? 0.95 : 1,
+            zIndex: isDragging ? 100 : 1,
+        };
+
+        const question = questions.find(q => q.id === questionId);
+        if (!question) return null;
+
+        const typeDef = getTypeDef(question) || {};
+
+        return (
+            <div ref={setNodeRef} style={style} {...attributes}>
+                <QuestionRow
+                    questionId={question.id}
+                    isMovable={true}
+                    order={index + 1}
+                    isSelected={selectedQuestions.has(question.id)}
+                    title={question.title}
+                    completionTime={question.completion_time}
+                    questionType={typeDef}
+                    onPreview={() => {/* Handle preview */}}
+                    onEdit={() => handleEdit(question)}
+                    onDuplicate={() => handleDuplicate(question.id)}
+                    onDelete={() => handleDelete(question.id)}
+                    onSelect={handleQuestionSelect}
+                    dragListeners={listeners}
+                />
+            </div>
+        );
+    };
+
+    // Get ordered questions
+    const orderedQuestions = questionOrder.map(id => questions?.find(q => q.id === id)).filter(Boolean);
+
+    // Section toggle function
+    const toggleSectionCollapse = (sectionId) => {
+        setCollapsedSections((prev) => ({
+            ...prev,
+            [sectionId]: !prev[sectionId],
+        }));
     };
 
     if (isLoading) return <div className='flex flex-col items-center'><Step3Loading /></div>;
@@ -126,15 +231,15 @@ const Step3 = ({ assessmentId = 14 }) => {
                 </div>
             </div>
             <QuestionCards onAdd={handleAdd} />
-            <div className='p-4 flex flex-col gap-4 rounded-5xl bg-white border-[1px] border-[rgba(224,224,224,0.65)] [box-shadow:0px_16px_24px_rgba(0,_0,_0,_0.06),_0px_2px_6px_rgba(0,_0,_0,_0.04)]'>
-                {questions.length > 0
-                    ?
-                    <div className='flex flex-col gap-4'>
-                        <div className='flex items-center justify-between'>
-                            <h3 className='text-lg font-semibold text-greyPrimary'>Question Sequence</h3>
+            <Section
+                id="question-sequence"
+                variant="white"
+                header={
+                    <SectionHeader
+                        title="Question Sequence"
+                        headerRight={
                             <div className='flex items-center gap-4'>
                                 <div className='flex items-center gap-2'>
-                                    {/* <input type="checkbox" name="randomize" id="randomize" /> */}
                                     <Checkbox name="randomize" id="randomize" />
                                     <label htmlFor="randomize" className='text-sm font-medium text-greyAccent'>Randomize Order</label>
                                 </div>
@@ -150,7 +255,12 @@ const Step3 = ({ assessmentId = 14 }) => {
                                     <TrashIcon className="text-green-500 font-bold" />
                                 </motion.button>
                             </div>
-                        </div>
+                        }
+                    />
+                }
+            >
+                {questions.length > 0 ? (
+                    <div className='flex flex-col gap-4'>
                         <div
                             className="py-3 px-5 grid gap-4 items-center bg-purpleSecondary rounded-xl"
                             style={{
@@ -163,143 +273,39 @@ const Step3 = ({ assessmentId = 14 }) => {
                             <div className="font-medium text-center">Type</div>
                             <div className="font-medium text-center">Action</div>
                         </div>
-                        {questions && questions.length > 0 && questions.map((q, idx) => {
-                            console.log(q.id)
-                            const typeDef = getTypeDef(q) || {};
-                            const safeTitle = DOMPurify.sanitize(q.title);
-                            return (
-                                <div
-                                    key={q.id}
-                                    className="py-3 px-5 grid gap-4 items-center bg-backgroundPrimary rounded-xl"
-                                    style={{
-                                        gridTemplateColumns: 'clamp(60px, 5vw, 86px) minmax(200px, 1fr) clamp(80px, 8vw, 103px) clamp(120px, 15vw, 198px) clamp(120px, 15vw, 196px)'
-                                    }}
-                                >
-                                    <div className="p-[6px] flex items-center gap-1 border border-purplePrimary rounded-full">
-                                        <GripVertical size={20} color='#5C5C5C' />
-                                        <div className='h-5 w-[30px] grid place-content-center text-xs font-semibold text-white bg-purplePrimary rounded-full'>
-                                            {String(idx + 1).padStart(2, '0')}
-                                        </div>
-                                    </div>
-                                    <div className="flex items-center gap-6">
-                                        <Checkbox name={`questionTitle${q.id}`} id={`questionTitle${q.id}`} />
-                                        {/* <label htmlFor={`questionTitle${q.id}`} className='truncate'>{q.title}</label> */}
-                                        <label
-                                            htmlFor={`questionTitle${q.id}`}
-                                            className="truncate"
-                                            dangerouslySetInnerHTML={{ __html: safeTitle }}
-                                        />
-                                    </div>
-                                    <div className="font-medium text-center">{formatCompletionTime(q.completion_time)}</div>
-                                    <div
-                                        className="font-medium min-w-[150px] max-w-[150px] rounded-full px-[6px] py-[5.5px] flex items-center gap-[6px] mx-auto"
-                                        style={{
-                                            background: typeDef.bg || '#EEE',
-                                            color: typeDef.text || '#333'
-                                        }}
-                                    >
-                                        {typeDef.icon && (
-                                            <div
-                                                className="w-[18px] h-[18px] flex items-center justify-center rounded-full"
-                                                style={{
-                                                    background: typeDef.text || '#EEE',
-                                                }}
-                                            >
-                                                {React.cloneElement(typeDef.icon, {
-                                                    style: { color: typeDef.bg || '#333', width: 12, height: 12 }
-                                                })}
-                                            </div>
-                                        )}
-                                        <span className='text-sm font-medium'>{typeDef.name || q.resourcetype || 'Unknown'}</span>
-                                    </div>
-                                    <div className="flex items-center gap-2 mx-auto">
-                                        <motion.button
-                                            className='w-8 h-8 grid place-content-center bg-white rounded-full'
-                                            whileHover={{ scale: 1.1 }}
-                                            whileTap={{ scale: 0.9 }}
-                                        >
-                                            <Eye className='text-greyPrimary font-normal' size={16} />
-                                        </motion.button>
-                                        <motion.button
-                                            onClick={() => handleDuplicate(q.id)}
-                                            className='w-8 h-8 grid place-content-center bg-white rounded-full'
-                                            whileHover={{ scale: 1.1 }}
-                                            whileTap={{ scale: 0.9 }}
-                                        >
-                                            <DuplicateIcon className="w-4 h-4" />
-                                        </motion.button>
-                                        <motion.button
-                                            onClick={() => handleEdit(q)}
-                                            className='w-8 h-8 grid place-content-center bg-white rounded-full'
-                                            whileHover={{ scale: 1.1 }}
-                                            whileTap={{ scale: 0.9 }}
-                                        >
-                                            <EditIcon className="w-4 h-4" />
-                                        </motion.button>
-                                        <AlertDialog>
-                                            <AlertDialogTrigger asChild>
-                                                <motion.button
-                                                    className='w-8 h-8 grid place-content-center bg-white rounded-full'
-                                                    whileHover={{ scale: 1.1 }}
-                                                    whileTap={{ scale: 0.9 }}
-                                                >
-                                                    <TrashIcon className="w-4 h-4" />
-                                                </motion.button>
-                                            </AlertDialogTrigger>
-                                            <AlertDialogContent>
-                                                <AlertDialogHeader>
-                                                    <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-                                                    <AlertDialogDescription>
-                                                        This action cannot be undone. This will permanently delete your account
-                                                        and remove your data from our servers.
-                                                    </AlertDialogDescription>
-                                                </AlertDialogHeader>
-                                                <AlertDialogFooter>
-                                                    <AlertDialogCancel className='rounded-md bg-dangerPrimary hover:bg-red-900 text-white hover:text-white'>Cancel</AlertDialogCancel>
-                                                    <AlertDialogAction
-                                                        className='rounded-md bg-greenPrimary hover:bg-green-950 text-greyPrimary hover:text-white'
-                                                        onClick={() => handleDelete(q.id)}
-                                                    >
-                                                        Continue
-                                                    </AlertDialogAction>
-                                                </AlertDialogFooter>
-                                            </AlertDialogContent>
-                                        </AlertDialog>
-                                        {/* <motion.button
-                                            onClick={() => handleDelete(q.id)}
-                                            className='w-8 h-8 grid place-content-center bg-white rounded-full'
-                                            whileHover={{ scale: 1.1 }}
-                                            whileTap={{ scale: 0.9 }}
-                                        >
-                                            <TrashIcon className="w-4 h-4" />
-                                        </motion.button> */}
-                                    </div>
-                                </div>
-                            );
-                        })}
+                        <DndContext
+                            sensors={sensors}
+                            collisionDetection={closestCenter}
+                            onDragEnd={handleDragEnd}
+                            modifiers={[restrictToVerticalAxis, restrictToParentElement]}
+                        >
+                            <SortableContext
+                                items={questionOrder}
+                                strategy={verticalListSortingStrategy}
+                            >
+                                {orderedQuestions.map((q, idx) => (
+                                    <SortableQuestionRow
+                                        key={q.id}
+                                        questionId={q.id}
+                                        index={idx}
+                                    />
+                                ))}
+                            </SortableContext>
+                        </DndContext>
                     </div>
-                    :
-                    <div className='flex flex-col gap-4'>
-                        <div className='flex items-center justify-between'>
-                            <h3 className='text-lg font-semibold text-greyPrimary'>Question Sequence</h3>
-                            <div className='flex items-center gap-2'>
-                                <Checkbox name="randomize" id="randomize" />
-                                <label htmlFor="randomize" className='text-sm font-medium text-greyAccent'>Randomize Order</label>
-                            </div>
+                ) : (
+                    <div className='flex flex-col items-center justify-center gap-6'>
+                        <NoTestIcon />
+                        <div>
+                            <h5 className='pb-[6px] text-center'>You haven't added any question yet!</h5>
+                            <span className='text-greyAccent text-sm font-medium text-center block'>Stay productive by creating a task.</span>
                         </div>
-                        <div className='flex flex-col items-center justify-center gap-6'>
-                            <NoTestIcon />
-                            <div>
-                                <h5 className='pb-[6px] text-center'>You haven't added any question yet!</h5>
-                                <span className='text-greyAccent text-sm font-medium text-center block'>Stay productive by creating a task.</span>
-                            </div>
-                            <Button effect="expandIcon" icon={PlusIcon} iconPlacement="right" className="px-4 py-2 rounded-xl bg-purplePrimary hover:bg-[#EEF2FC] text-sm font-medium hover:text-purplePrimary text-white border border-transparent hover:border-purplePrimary [&_svg]:size-3">
-                                Add from Library
-                            </Button>
-                        </div>
+                        <Button effect="expandIcon" icon={PlusIcon} iconPlacement="right" className="px-4 py-2 rounded-xl bg-purplePrimary hover:bg-[#EEF2FC] text-sm font-medium hover:text-purplePrimary text-white border border-transparent hover:border-purplePrimary [&_svg]:size-3">
+                            Add from Library
+                        </Button>
                     </div>
-                }
-            </div>
+                )}
+            </Section>
             <QuestionModal
                 key={modalMode + (modalInitialData?.id || '')}
                 isOpen={modalOpen}
@@ -308,7 +314,7 @@ const Step3 = ({ assessmentId = 14 }) => {
                 initialData={modalInitialData}
                 questionType={modalQuestionType}
                 setQuestionType={setModalQuestionType}
-                assessmentId={assessmentId}
+                asssessmentId={assessment.id}
             // You can add onSave or other props as needed
             />
             <div className='flex items-center justify-between'>
