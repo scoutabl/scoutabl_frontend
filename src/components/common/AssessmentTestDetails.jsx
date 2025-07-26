@@ -109,7 +109,7 @@ const AssessmentTestDetail = ({ test, allTags }) => {
             </div>
           )}
         </div>
-        <Section className="flex flex-col gap-12 bg-white w-[430px] shadow-md">
+        <Section variant="white" className="w-[430px] shadow-md" contentClassName="flex flex-col gap-12">
           {stats.map((s) => (
             <div className="flex flex-col gap-2">
               <s.Icon className="size-8 text-purplePrimary" />

@@ -217,8 +217,8 @@ const Step2 = () => {
           onSelect={handleStepChange}
         />
       </div>
-      <Section className="flex flex-col">
-        <Section className="bg-white flex flex-col p-3 gap-5">
+      <Section contentClassName="flex flex-col">
+        <Section variant="white" className="p-3" contentClassName="flex flex-col gap-5">
           <div className="flex flex-row gap-3 justify-between">
             {Array.from({ length: MAX_TEST_COUNT }).map((_, index) => {
               const test =

@@ -128,7 +128,7 @@ const Assesment = () => {
       </div>
 
       {/* flex counter */}
-      <Section className="flex flex-row gap-5 w-full justify-center">
+      <Section contentClassName="flex flex-row gap-5 w-full justify-center">
         {options.map((option, index) => (
           <StatCard
             key={index}
@@ -141,9 +141,9 @@ const Assesment = () => {
         ))}
       </Section>
       {/* search Filter & asssesments section */}
-      <Section className="flex flex-col gap-6">
+      <Section contentClassName="flex flex-col gap-6">
         {/* search */}
-        <Section className="flex flex-row items-center justify-between bg-white">
+        <Section variant="white" contentClassName="flex flex-row items-center justify-between bg-white">
           <SearchInput
             placeholder="Search for Assessments"
             onChange={handleSearch}

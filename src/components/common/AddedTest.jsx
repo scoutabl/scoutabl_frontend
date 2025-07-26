@@ -10,7 +10,7 @@ const AddedTest = ({ test, order, options, onAction }) => {
   return (
     <div
       className={cn(
-        "flex flex-row items-center justify-between w-full rounded-xl px-4 py-1",
+        "flex flex-row items-center justify-between w-full rounded-xl px-4 py-1 h-[45px]",
         notSet ? "text-black" : "text-white font-semibold"
       )}
       style={{

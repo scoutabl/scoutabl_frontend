@@ -46,9 +46,9 @@ const TestAddDialog = ({ test, onAddTest, weight = 50, disabled = false }) => {
         <h2 className="font-semibold text-purplePrimary">{test.name}</h2>
         <QuickStats stats={stats} />
       </div>
-      <Section className="flex flex-col gap-2">
+      <Section contentClassName="flex flex-col gap-2">
         <h3 className={cn("text-md font-semibold")}>Test Info</h3>
-        <Section className="flex flex-col gap-2 bg-white">
+        <Section variant="white" className="p-4 rounded-xl" contentClassName="flex flex-col gap-2">
           <p className={`text-[${SCOUTABL_TEXT_SECONDARY}]`}>
             {test.description}
           </p>
