@@ -44,6 +44,7 @@ import AssessmentStep from '@/components/common/AssessmentStep';
 import { useAssessmentContext } from '@/components/common/AssessmentNavbarWrapper';
 import Section from '@/components/common/Section';
 import SectionHeader from '@/components/ui/section-header';
+import EmptyState from '@/components/ui/empty-state';
 const Step3 = () => {
     const { assessment, steps, selectedStep, handleStepChange } = useAssessmentContext();
     const [modalOpen, setModalOpen] = useState(false);
@@ -294,16 +295,20 @@ const Step3 = () => {
                         </DndContext>
                     </div>
                 ) : (
-                    <div className='flex flex-col items-center justify-center gap-6'>
-                        <NoTestIcon />
-                        <div>
-                            <h5 className='pb-[6px] text-center'>You haven't added any question yet!</h5>
-                            <span className='text-greyAccent text-sm font-medium text-center block'>Stay productive by creating a task.</span>
-                        </div>
-                        <Button effect="expandIcon" icon={PlusIcon} iconPlacement="right" className="px-4 py-2 rounded-xl bg-purplePrimary hover:bg-[#EEF2FC] text-sm font-medium hover:text-purplePrimary text-white border border-transparent hover:border-purplePrimary [&_svg]:size-3">
-                            Add from Library
-                        </Button>
-                    </div>
+                    <Section variant="white">
+                        <EmptyState
+                            text="You haven't added any question yet!"
+                            subtext="Stay productive by creating a task."
+                        >
+                            <Button variant="outline" className="rounded-xl">
+                                <PlusIcon className="w-4 h-4 mr-2" />
+                                Add Question
+                            </Button>
+                            <Button className="rounded-xl bg-purplePrimary hover:bg-purplePrimary/80">
+                                Add from Library
+                            </Button>
+                        </EmptyState>
+                    </Section>
                 )}
             </Section>
             <QuestionModal
