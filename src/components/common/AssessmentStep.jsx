@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React from "react";
 import Dropdown from "@/components/ui/dropdown";
 import { cn } from "@/lib/utils";
 import {
@@ -23,15 +23,6 @@ const AssessmentStep = ({
   const currentStep = steps[currentStepIndex] || {};
   const nextStep = steps[currentStepIndex + 1];
   const enabledSteps = steps[currentStepIndex].enabledSteps;
-
-  useEffect(() => {
-    console.log('Current step index:', currentStepIndex);
-    console.log('Steps length:', steps.length);
-    console.log('Progress:', progress);
-    console.log('enable steps:', enabledSteps);
-  }, [currentStepIndex, steps.length]);
-
-  const description = "A radial chart with text"
 
   // const progress = ((currentStepIndex + 1) / steps.length) * 100;
   const progress = ((currentStepIndex + 1) / steps.length) * 100;

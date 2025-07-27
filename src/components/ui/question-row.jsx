@@ -59,7 +59,10 @@ const QuestionRow = ({
       {/* Order/Grip Section */}
       <div className="p-[6px] flex justify-between items-center gap-1 border border-purplePrimary rounded-full w-[65px] h-[30px]">
         {isMovable && (
-          <div {...dragListeners} className="cursor-grab">
+          <div 
+            {...dragListeners} 
+            className="cursor-grab"
+          >
             <GripVertical size={17} className="text-purplePrimary" />
           </div>
         )}
@@ -74,13 +77,21 @@ const QuestionRow = ({
           name={`questionTitle${questionId}`}
           id={`questionTitle${questionId}`}
           checked={isSelected}
-          onCheckedChange={(checked) =>
-            onSelect && onSelect(questionId, checked)
-          }
+          onCheckedChange={(checked, event) => {
+            if (event) {
+              event.preventDefault();
+              event.stopPropagation();
+            }
+            onSelect && onSelect(questionId, checked);
+          }}
         />
         <label
-          htmlFor={`questionTitle${questionId}`}
-          className="truncate"
+          className="truncate cursor-pointer"
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            onSelect && onSelect(questionId, !isSelected);
+          }}
           dangerouslySetInnerHTML={{ __html: safeTitle }}
         />
       </div>

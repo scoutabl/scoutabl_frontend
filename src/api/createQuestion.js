@@ -44,7 +44,6 @@ const getQuestion = async (questionId) => {
       'Authorization': accessToken ? `Bearer ${accessToken}` : '',
     },
   });
-  console.log(data)
   return data;
 };
 

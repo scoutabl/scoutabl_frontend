@@ -4,17 +4,6 @@ import { useAssessmentQuestions, useRemoveQuestion, useDuplicateQuestion } from 
 import { questionTypes } from './step3-customQuestions/QuestionCards'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
-import {
-    AlertDialog,
-    AlertDialogAction,
-    AlertDialogCancel,
-    AlertDialogContent,
-    AlertDialogDescription,
-    AlertDialogFooter,
-    AlertDialogHeader,
-    AlertDialogTitle,
-    AlertDialogTrigger,
-} from '@/components/ui/alert-dialog';
 import { motion } from 'framer-motion';
 import {
     DndContext,
@@ -46,29 +35,37 @@ import Section from '@/components/common/Section';
 import SectionHeader from '@/components/ui/section-header';
 import EmptyState from '@/components/ui/empty-state';
 import Chip from '@/components/ui/chip'
+import { useUpdateAssessment } from '@/api/assessments/assessment'
 const Step3 = () => {
     const { assessment, steps, selectedStep, handleStepChange } = useAssessmentContext();
     const [modalOpen, setModalOpen] = useState(false);
-    
-    // State for question order and selection
     const [questionOrder, setQuestionOrder] = useState([]);
     const [selectedQuestions, setSelectedQuestions] = useState(new Set());
-    
-    // Section collapse state
-    const [collapsedSections, setCollapsedSections] = useState({
-        'question-sequence': false,
-    });
     const { data: questions, isLoading, error } = useAssessmentQuestions(assessment?.id);
-
-    // Set initial question order when questions load
-    useEffect(() => {
-        if (questions && questions.length > 0) {
-            setQuestionOrder(questions.map(q => q.id));
-        }
-    }, [questions]);
     const [modalMode, setModalMode] = useState('add'); // 'add' or 'edit'
     const [modalInitialData, setModalInitialData] = useState({});
     const [modalQuestionType, setModalQuestionType] = useState(null);
+    const { mutateAsync: updateAssessment, isPending: isUpdatingAssessment } = useUpdateAssessment();
+
+    // Set initial question order when questions load
+    useEffect(() => {
+        setQuestionOrder(assessment?.custom_questions_order || [])
+    }, [assessment?.custom_questions_order]);
+
+    // Update questiosn order
+    useEffect(() => {
+        // If order is unchanged don't update
+        if (JSON.stringify(questionOrder) === JSON.stringify(assessment?.custom_questions_order)) return;
+
+        if (assessment?.id && questionOrder.length > 0 && !isUpdatingAssessment) {
+            updateAssessment({
+                assessmentId: assessment.id,
+                data: {
+                    custom_questions_order: questionOrder
+                }
+            })
+        }
+    }, [assessment?.id, questionOrder, updateAssessment, isUpdatingAssessment, assessment?.custom_questions_order])
 
     // Helper to flatten all question type objects
     const allTypeDefs = questionTypes.flatMap(cat => cat.questions);
@@ -110,10 +107,8 @@ const Step3 = () => {
     };
     // For edit
     const handleEdit = (question) => {
-        console.log('Editing question:', question);
         const typeDef = getTypeDef(question);
         const type = typeDef?.type;
-        console.log(type); // This should now log the correct type
         setModalMode('edit');
         setModalInitialData(question);
         setModalQuestionType(type);
@@ -122,7 +117,11 @@ const Step3 = () => {
 
     // Drag and drop handlers
     const sensors = useSensors(
-        useSensor(PointerSensor, { activationConstraint: { distance: 0 } })
+        useSensor(PointerSensor, { 
+            activationConstraint: { distance: 3 },
+            // Prevent drag from starting on form elements
+            activationKeyboardConstraint: { distance: 3 }
+        })
     );
 
     const handleDragEnd = (event) => {
@@ -197,14 +196,6 @@ const Step3 = () => {
 
     // Get ordered questions
     const orderedQuestions = questionOrder.map(id => questions?.find(q => q.id === id)).filter(Boolean);
-
-    // Section toggle function
-    const toggleSectionCollapse = (sectionId) => {
-        setCollapsedSections((prev) => ({
-            ...prev,
-            [sectionId]: !prev[sectionId],
-        }));
-    };
 
     if (isLoading) return <div className='flex flex-col items-center'><Step3Loading /></div>;
     if (error) return <div>Error loading questions</div>;
@@ -282,6 +273,9 @@ const Step3 = () => {
                             collisionDetection={closestCenter}
                             onDragEnd={handleDragEnd}
                             modifiers={[restrictToVerticalAxis, restrictToParentElement]}
+                            autoScroll={{
+                                enabled: false
+                            }}
                         >
                             <SortableContext
                                 items={questionOrder}

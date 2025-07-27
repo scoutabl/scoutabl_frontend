@@ -51,7 +51,7 @@ const Dropdown = ({
   variant = "default",
   style = {},
   rightCheckbox = false,
-  closeOnSelect = false,
+  closeOnSelect = false, // eslint-disable-line no-unused-vars
   modal = true,
 }) => {
   const isSelected = (val) =>
@@ -166,7 +166,11 @@ const Dropdown = ({
             <XIcon
               className="size-4"
               style={{ strokeWidth: "inherit" }}
-              onClick={handleClear}
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                handleClear();
+              }}
             />
           </span>
         )}
@@ -186,7 +190,8 @@ const Dropdown = ({
             <DropdownMenuItem
               key="__select_all__"
               onClick={(e) => {
-                if (!closeOnSelect) e?.preventDefault();
+                e?.preventDefault();
+                e?.stopPropagation();
                 handleSelectAll();
               }}
               className={cn(
@@ -210,7 +215,8 @@ const Dropdown = ({
               <DropdownMenuItem
                 key={opt.value}
                 onSelect={(e) => {
-                  if (!closeOnSelect) e?.preventDefault();
+                  e?.preventDefault();
+                  e?.stopPropagation();
                   if (opt.disabled) return;
                   handleItemClick(opt.value);
                 }}
