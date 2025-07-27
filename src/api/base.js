@@ -10,6 +10,11 @@ export default class BaseAPI {
     }
 
     defaultListParams(params) {
+        if (params?.fetch_all === 1) {
+            return {
+                ...(params || {}),
+            }
+        }
         return {
             ...DEFAULT_LIST_API_PARAMS,
             ...(params || {}),

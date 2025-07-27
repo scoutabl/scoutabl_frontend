@@ -36,16 +36,24 @@ import SectionHeader from '@/components/ui/section-header';
 import EmptyState from '@/components/ui/empty-state';
 import Chip from '@/components/ui/chip'
 import { useUpdateAssessment } from '@/api/assessments/assessment'
+import { useQuestions } from '@/api/assessments/question'
 const Step3 = () => {
     const { assessment, steps, selectedStep, handleStepChange } = useAssessmentContext();
     const [modalOpen, setModalOpen] = useState(false);
     const [questionOrder, setQuestionOrder] = useState([]);
     const [selectedQuestions, setSelectedQuestions] = useState(new Set());
-    const { data: questions, isLoading, error } = useAssessmentQuestions(assessment?.id);
+    // const { data: questions, isLoading, error } = useAssessmentQuestions(assessment?.id);
     const [modalMode, setModalMode] = useState('add'); // 'add' or 'edit'
     const [modalInitialData, setModalInitialData] = useState({});
     const [modalQuestionType, setModalQuestionType] = useState(null);
     const { mutateAsync: updateAssessment, isPending: isUpdatingAssessment } = useUpdateAssessment();
+    const { data: questions, isLoading, error } = useQuestions({
+        params: {
+            id__in: (assessment?.custom_questions || []).join(","),
+            fetch_all: 1,
+        },
+        enabled: !!assessment?.id
+    });
 
     // Set initial question order when questions load
     useEffect(() => {
@@ -168,7 +176,7 @@ const Step3 = () => {
             zIndex: isDragging ? 100 : 1,
         };
 
-        const question = questions.find(q => q.id === questionId);
+        const question = questions?.find(q => q.id === questionId);
         if (!question) return null;
 
         const typeDef = getTypeDef(question) || {};
@@ -195,7 +203,7 @@ const Step3 = () => {
     };
 
     // Get ordered questions
-    const orderedQuestions = questionOrder.map(id => questions?.find(q => q.id === id)).filter(Boolean);
+    const orderedQuestions = questions?.length > 0 ? questionOrder.map(id => questions.find(q => q.id === id)).filter(Boolean) : [];
 
     if (isLoading) return <div className='flex flex-col items-center'><Step3Loading /></div>;
     if (error) return <div>Error loading questions</div>;
@@ -254,7 +262,7 @@ const Step3 = () => {
                     />
                 }
             >
-                {questions.length > 0 ? (
+                {questions?.length > 0 ? (
                     <div className='flex flex-col gap-4 text-sm'>
                         <div
                             className="py-3 px-5 grid gap-4 items-center bg-purpleSecondary rounded-xl font-semibold"
@@ -308,17 +316,19 @@ const Step3 = () => {
                     </Section>
                 )}
             </Section>
-            <QuestionModal
-                key={modalMode + (modalInitialData?.id || '')}
-                isOpen={modalOpen}
-                setIsOpen={setModalOpen}
-                mode={modalMode}
-                initialData={modalInitialData}
-                questionType={modalQuestionType}
-                setQuestionType={setModalQuestionType}
-                asssessmentId={assessment.id}
-            // You can add onSave or other props as needed
-            />
+            {questions?.length > 0 && (
+                <QuestionModal
+                    key={modalMode + (modalInitialData?.id || '')}
+                    isOpen={modalOpen}
+                    setIsOpen={setModalOpen}
+                    mode={modalMode}
+                    initialData={modalInitialData}
+                    questionType={modalQuestionType}
+                    setQuestionType={setModalQuestionType}
+                    asssessmentId={assessment?.id}
+                // You can add onSave or other props as needed
+                />
+            )}
             <div className='flex items-center justify-between'>
                 <Button variant="back" effect="shineHover">
                     <ChevronLeftIcon />
