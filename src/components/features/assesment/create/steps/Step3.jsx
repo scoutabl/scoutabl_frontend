@@ -45,6 +45,7 @@ import { useAssessmentContext } from '@/components/common/AssessmentNavbarWrappe
 import Section from '@/components/common/Section';
 import SectionHeader from '@/components/ui/section-header';
 import EmptyState from '@/components/ui/empty-state';
+import Chip from '@/components/ui/chip'
 const Step3 = () => {
     const { assessment, steps, selectedStep, handleStepChange } = useAssessmentContext();
     const [modalOpen, setModalOpen] = useState(false);
@@ -121,7 +122,7 @@ const Step3 = () => {
 
     // Drag and drop handlers
     const sensors = useSensors(
-        useSensor(PointerSensor, { activationConstraint: { distance: 5 } })
+        useSensor(PointerSensor, { activationConstraint: { distance: 0 } })
     );
 
     const handleDragEnd = (event) => {
@@ -245,15 +246,17 @@ const Step3 = () => {
                                     <label htmlFor="randomize" className='text-sm font-medium text-greyAccent'>Randomize Order</label>
                                 </div>
                                 <div>
-                                    <span className='font-semibold text-sm text-greyPrimary'>Total Score:&nbsp;</span>
-                                    <span>900</span>
+                                    <Chip className='bg-purpleSecondary rounded-full'>
+                                        <span className='font-semibold text-sm text-greyPrimary'>Total Score:&nbsp;</span>
+                                        <span>900</span>
+                                    </Chip>
                                 </div>
                                 <motion.button
                                     className='h-8 w-8 rounded-full grid place-content-center border border-seperatorPrimary'
                                     whileHover={{ scale: 1.1 }}
                                     whileTap={{ scale: 0.9 }}
                                 >
-                                    <TrashIcon className="text-green-500 font-bold" />
+                                    <TrashIcon />
                                 </motion.button>
                             </div>
                         }
@@ -261,18 +264,18 @@ const Step3 = () => {
                 }
             >
                 {questions.length > 0 ? (
-                    <div className='flex flex-col gap-4'>
+                    <div className='flex flex-col gap-4 text-sm'>
                         <div
-                            className="py-3 px-5 grid gap-4 items-center bg-purpleSecondary rounded-xl"
+                            className="py-3 px-5 grid gap-4 items-center bg-purpleSecondary rounded-xl font-semibold"
                             style={{
                                 gridTemplateColumns: 'clamp(60px, 5vw, 86px) minmax(200px, 1fr) clamp(80px, 8vw, 103px) clamp(120px, 15vw, 198px) clamp(120px, 15vw, 196px)'
                             }}
                         >
-                            <div className="font-medium">No.</div>
-                            <div className="font-medium">Question</div>
-                            <div className="font-medium text-center">Time</div>
-                            <div className="font-medium text-center">Type</div>
-                            <div className="font-medium text-center">Action</div>
+                            <div className="">No.</div>
+                            <div className="">Question</div>
+                            <div className="text-center">Time</div>
+                            <div className="text-center">Type</div>
+                            <div className="text-center">Action</div>
                         </div>
                         <DndContext
                             sensors={sensors}
