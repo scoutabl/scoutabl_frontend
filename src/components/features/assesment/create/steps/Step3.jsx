@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import QuestionCards from './step3-customQuestions/QuestionCards'
-import { useAssessmentQuestions, useRemoveQuestion, useDuplicateQuestion } from '@/api/createQuestion'
+import { useDuplicateQuestion } from '@/api/createQuestion'
 import { questionTypes } from './step3-customQuestions/QuestionCards'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
@@ -37,6 +37,8 @@ import EmptyState from '@/components/ui/empty-state';
 import Chip from '@/components/ui/chip'
 import { useUpdateAssessment } from '@/api/assessments/assessment'
 import { useQuestions } from '@/api/assessments/question'
+import { cn } from '@/lib/utils'
+
 const Step3 = () => {
     const { assessment, steps, selectedStep, handleStepChange } = useAssessmentContext();
     const [modalOpen, setModalOpen] = useState(false);
@@ -55,13 +57,25 @@ const Step3 = () => {
         enabled: !!assessment?.id
     });
 
+    // Ref to track if we're updating from API response to prevent infinite loops
+    const isUpdatingFromAPI = useRef(false);
+
     // Set initial question order when questions load
     useEffect(() => {
+        console.log("setting questions order", assessment?.custom_questions_order)
+        isUpdatingFromAPI.current = true;
         setQuestionOrder(assessment?.custom_questions_order || [])
+        // Reset the flag after state update
+        setTimeout(() => {
+            isUpdatingFromAPI.current = false;
+        }, 0);
     }, [assessment?.custom_questions_order]);
 
-    // Update questiosn order
+    // Update questions order - only when user makes changes, not from API responses
     useEffect(() => {
+        // Skip if we're updating from API response
+        if (isUpdatingFromAPI.current) return;
+        
         // If order is unchanged don't update
         if (JSON.stringify(questionOrder) === JSON.stringify(assessment?.custom_questions_order)) return;
 
@@ -92,12 +106,24 @@ const Step3 = () => {
 
 
 
-    //function to delete question
-    const { mutate: removeQuestion } = useRemoveQuestion(assessment?.id);
+    const removeQuestions = async (questionIds) => {
+        await updateAssessment({
+            assessmentId: assessment?.id,
+            data: {
+                custom_questions: assessment?.custom_questions?.filter(q => !questionIds.includes(q)),
+                custom_questions_order: assessment?.custom_questions_order?.filter(q => !questionIds.includes(q))
+            }
+        })
+    }
 
     const handleDelete = (questionId) => {
-        removeQuestion({ questionId });
+        removeQuestions([questionId])
     };
+
+    const handleDeleteMultiple = async () => {
+        await removeQuestions(Array.from(selectedQuestions))
+        setSelectedQuestions(new Set())
+    }
 
 
     //function to duplicate question
@@ -251,9 +277,10 @@ const Step3 = () => {
                                     </Chip>
                                 </div>
                                 <motion.button
-                                    className='h-8 w-8 rounded-full grid place-content-center border border-seperatorPrimary'
+                                    className={cn('h-8 w-8 rounded-full grid place-content-center border border-seperatorPrimary', selectedQuestions.size === 0 && 'hidden')}
                                     whileHover={{ scale: 1.1 }}
                                     whileTap={{ scale: 0.9 }}
+                                    onClick={handleDeleteMultiple}
                                 >
                                     <TrashIcon />
                                 </motion.button>
