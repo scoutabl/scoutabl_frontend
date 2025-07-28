@@ -37,7 +37,7 @@ import EmptyState from '@/components/ui/empty-state';
 import Chip from '@/components/ui/chip'
 import { useUpdateAssessment } from '@/api/assessments/assessment'
 import { useQuestions } from '@/api/assessments/question'
-import { cn } from '@/lib/utils'
+import { cn, debounce } from '@/lib/utils'
 
 const Step3 = () => {
     const { assessment, steps, selectedStep, handleStepChange } = useAssessmentContext();
@@ -56,6 +56,12 @@ const Step3 = () => {
         },
         enabled: !!assessment?.id
     });
+    const [localRandomize, setLocalRandomize] = useState(assessment?.custom_questions_randomize || false);
+
+    // Update local state when assessment changes
+    useEffect(() => {
+        setLocalRandomize(assessment?.custom_questions_randomize || false);
+    }, [assessment?.custom_questions_randomize]);
 
     // Ref to track if we're updating from API response to prevent infinite loops
     const isUpdatingFromAPI = useRef(false);
@@ -103,9 +109,6 @@ const Step3 = () => {
         return allTypeDefs.find(typeDef => typeDef.resourcetype === q.resourcetype);
     };
 
-
-
-
     const removeQuestions = async (questionIds) => {
         await updateAssessment({
             assessmentId: assessment?.id,
@@ -125,6 +128,23 @@ const Step3 = () => {
         setSelectedQuestions(new Set())
     }
 
+    const debouncedUpdateRandomize = useRef(
+        debounce((checked) => {
+            updateAssessment({
+                assessmentId: assessment?.id,
+                data: {
+                    custom_questions_randomize: checked
+                }
+            });
+        }, 500)
+    ).current;
+
+    const handleRandomize = (checked) => {
+        // Update UI immediately
+        setLocalRandomize(checked);
+        // Debounce the API call
+        debouncedUpdateRandomize(checked);
+    };
 
     //function to duplicate question
     const { mutate: duplicateQuestion } = useDuplicateQuestion(assessment?.id);
@@ -267,7 +287,7 @@ const Step3 = () => {
                         headerRight={
                             <div className='flex items-center gap-4'>
                                 <div className='flex items-center gap-2'>
-                                    <Checkbox name="randomize" id="randomize" />
+                                    <Checkbox name="randomize" id="randomize" checked={localRandomize} onCheckedChange={handleRandomize} />
                                     <label htmlFor="randomize" className='text-sm font-medium text-greyAccent'>Randomize Order</label>
                                 </div>
                                 <div>
