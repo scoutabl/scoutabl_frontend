@@ -28,7 +28,6 @@ import {
   TrashIcon,
 } from "lucide-react";
 import { cn, debounce, durationToMinutes } from "@/lib/utils";
-import { useUpdateAssessment } from "@/api/assessments/assessment";
 import SearchInput from "@/components/shared/debounceSearch/SearchInput";
 import Dropdown from "@/components/ui/dropdown";
 import { useBootstrap } from "@/context/BootstrapContext";
@@ -82,10 +81,8 @@ const Step2 = () => {
   const [openWeightTestId, setOpenWeightTestId] = useState(null);
   const { resolveEnum } = useEnums();
   const { data: allTags } = useAllTags();
-  const { assessment, steps, selectedStep, handleStepChange } =
+  const { assessment, updateAssessment, isUpdatingAssessment, steps, selectedStep, handleStepChange } =
     useAssessmentContext();
-  const { mutateAsync: updateAssessment, isPending: isUpdatingAssessment } =
-    useUpdateAssessment();
   const { platformLibraryId, organisationLibraryId } = useBootstrap();
   const [searchParams, setSearchParams] = useState({
     ...DEFAULT_LIST_API_PARAMS,

@@ -92,10 +92,11 @@ export const useCreateAssessment = () => {
     });
 }
 
-export const useUpdateAssessment = () => {
+export const useUpdateAssessment = (mutationKey = "updateAssessment") => {
     const queryClient = useQueryClient();
     return useMutation({
         mutationFn: ({assessmentId, data}) => assesmentAPI.updateAssessment(assessmentId, data),
+        mutationKey: [mutationKey],
         onSuccess: (data) => {
             queryClient.setQueryData(["assessment", data.id], data);
         },

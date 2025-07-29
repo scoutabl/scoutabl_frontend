@@ -8,6 +8,8 @@ import EditIcon from "@/assets/editIcon.svg?react";
 import { Button } from "../ui/button";
 import { useNavigate, useParams } from "react-router-dom";
 import { ROUTES } from "@/lib/routes";
+import Loading from "@/components/ui/loading";
+import CloudIcon from "@/assets/cloudIcon.svg?react";
 
 const AssessmentContext = createContext();
 
@@ -56,7 +58,8 @@ const AssessmentNavbarWrapper = ({ children }) => {
   const [assessmentName, setAssessmentName] = useState(
     assessment ? assessment.name : "Untitled Assessment"
   );
-  const { mutateAsync: updateAssessment } = useUpdateAssessment();
+  const { mutateAsync: updateAssessment, isPending: isUpdatingAssessment } =
+    useUpdateAssessment(parseInt(assessmentId));
   const selectedStep =
     stepsArray.find((step) => step.stepId === stepId)?.value || 1;
   const navigate = useNavigate();
@@ -139,12 +142,19 @@ const AssessmentNavbarWrapper = ({ children }) => {
   );
 
   const actions = (
-    <Button
-      className="rounded-full bg-white text-purplePrimary hover:bg-white w-20 h-9 p-0"
-      onClick={() => navigate(ROUTES.ASSESSMENT)}
-    >
-      Exit
-    </Button>
+    <div className="flex flex-row items-center gap-5">
+      {isUpdatingAssessment ? (
+        <Loading iconClassName="w-6 h-6" variant="white" />
+      ) : (
+        <CloudIcon className="w-6 h-6 text-white" />
+      )}
+      <Button
+        className="rounded-full bg-white text-purplePrimary hover:bg-white w-20 h-9 p-0"
+        onClick={() => navigate(ROUTES.ASSESSMENT)}
+      >
+        Exit
+      </Button>
+    </div>
   );
 
   return (
@@ -155,6 +165,8 @@ const AssessmentNavbarWrapper = ({ children }) => {
           value={{
             assessment,
             assessmentName,
+            updateAssessment,
+            isUpdatingAssessment,
             // setAssessmentId,
             steps: stepsArray,
             selectedStep,
