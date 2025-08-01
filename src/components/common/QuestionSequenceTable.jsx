@@ -1,0 +1,385 @@
+import React, { useCallback, useEffect, useRef, useState } from "react";
+import { motion } from "framer-motion";
+import {
+  DndContext,
+  closestCenter,
+  PointerSensor,
+  useSensor,
+  useSensors,
+} from "@dnd-kit/core";
+import {
+  arrayMove,
+  SortableContext,
+  useSortable,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
+import {
+  restrictToParentElement,
+  restrictToVerticalAxis,
+} from "@dnd-kit/modifiers";
+
+import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
+import Chip from "@/components/ui/chip";
+import EmptyState from "@/components/ui/empty-state";
+import QuestionRow from "@/components/ui/question-row";
+import Section from "@/components/common/Section";
+import SectionHeader from "@/components/ui/section-header";
+
+import { useQuestions } from "@/api/assessments/question";
+import { useAssessment, useUpdateAssessment } from "@/api/assessments/assessment";
+import { useDuplicateQuestion } from "@/api/createQuestion";
+
+import Step3Loading from "@/components/features/assesment/create/steps/step3-customQuestions/Step3Loading";
+import { questionTypes } from "@/components/features/assesment/create/steps/step3-customQuestions/QuestionCards";
+
+import TrashIcon from "@/assets/trashIcon.svg?react";
+import PlusIcon from "@/assets/plusIcon.svg?react";
+
+import { cn, debounce } from "@/lib/utils";
+
+/**
+ * Re-usable component that renders the “Question Sequence” table used while
+ * configuring an assessment. It encapsulates all logic for
+ * – fetching questions
+ * – re-ordering via drag & drop
+ * – randomising order
+ * – duplicating & deleting questions (single / multi-select)
+ *
+ * Props
+ * ───────────────────────────────────────────────────────────
+ *  • assessmentId   – number | string  (required)
+ *  • onEdit(question) – callback invoked when the user clicks the Edit action
+ */
+const QuestionSequenceTable = ({ assessmentId, onEdit }) => {
+  /***************************************************************************
+   * Data fetching                                                            *
+   ***************************************************************************/
+  const {
+    data: assessment,
+    isLoading: isAssessmentLoading,
+  } = useAssessment(assessmentId);
+
+  const {
+    mutate: updateAssessment,
+    isPending: isUpdatingAssessment,
+  } = useUpdateAssessment();
+
+  const {
+    data: questions,
+    isLoading: isQuestionsLoading,
+    error: questionsError,
+  } = useQuestions({
+    params: {
+      id__in: (assessment?.custom_questions || []).join(","),
+      fetch_all: 1,
+    },
+    enabled: !!assessmentId,
+  });
+
+  /***************************************************************************
+   * Local state                                                              *
+   ***************************************************************************/
+  const [questionOrder, setQuestionOrder] = useState([]);
+  const [selectedQuestions, setSelectedQuestions] = useState(new Set());
+  const [localRandomize, setLocalRandomize] = useState(false);
+
+  // Track whether the current questionOrder update originates from the API so
+  // we don’t send PATCH requests back in response to our own response handling
+  const isUpdatingFromAPI = useRef(false);
+
+  /* ----------------------------------------------------------------------- */
+  /*  Sync local state with assessment                                        */
+  /* ----------------------------------------------------------------------- */
+  useEffect(() => {
+    setLocalRandomize(assessment?.custom_questions_randomize || false);
+  }, [assessment?.custom_questions_randomize]);
+
+  useEffect(() => {
+    isUpdatingFromAPI.current = true;
+    setQuestionOrder(assessment?.custom_questions_order || []);
+    // Reset the flag immediately after paint
+    setTimeout(() => {
+      isUpdatingFromAPI.current = false;
+    }, 0);
+  }, [assessment?.custom_questions_order]);
+
+  // Persist order changes back to the server (debounced by React-Query mutation)
+  useEffect(() => {
+    if (isUpdatingFromAPI.current) return;
+    if (
+      JSON.stringify(questionOrder) ===
+      JSON.stringify(assessment?.custom_questions_order)
+    )
+      return;
+
+    if (assessment?.id && questionOrder.length > 0 && !isUpdatingAssessment) {
+      updateAssessment({
+        assessmentId: assessment.id,
+        data: {
+          custom_questions_order: questionOrder,
+        },
+      });
+    }
+  }, [assessment?.id, questionOrder, isUpdatingAssessment, assessment?.custom_questions_order, updateAssessment]);
+
+  /***************************************************************************
+   * Helpers                                                                  *
+   ***************************************************************************/
+  const allTypeDefs = questionTypes.flatMap((cat) => cat.questions);
+
+  const getTypeDef = (q) => {
+    if (q.resourcetype === "MCQuestion") {
+      return allTypeDefs.find(
+        (typeDef) =>
+          typeDef.resourcetype === "MCQuestion" &&
+          typeDef.multiple_true === !!q.multiple_true
+      );
+    }
+    return allTypeDefs.find((typeDef) => typeDef.resourcetype === q.resourcetype);
+  };
+
+  const removeQuestions = async (questionIds) => {
+    await updateAssessment({
+      assessmentId: assessment?.id,
+      data: {
+        custom_questions: assessment?.custom_questions?.filter(
+          (q) => !questionIds.includes(q)
+        ),
+        custom_questions_order: assessment?.custom_questions_order?.filter(
+          (q) => !questionIds.includes(q)
+        ),
+      },
+    });
+  };
+
+  const handleDelete = (questionId) => {
+    removeQuestions([questionId]);
+  };
+
+  const handleDeleteMultiple = async () => {
+    await removeQuestions(Array.from(selectedQuestions));
+    setSelectedQuestions(new Set());
+  };
+
+  const debouncedUpdateRandomize = useCallback(
+    debounce((checked) => {
+      updateAssessment({
+        assessmentId: assessment?.id,
+        data: {
+          custom_questions_randomize: checked,
+        },
+      });
+    }, 500),
+    [updateAssessment, assessment?.id]
+  );
+
+  const handleRandomize = (checked) => {
+    setLocalRandomize(checked);
+    debouncedUpdateRandomize(checked);
+  };
+
+  const { mutate: duplicateQuestion } = useDuplicateQuestion(assessment?.id);
+  const handleDuplicate = (questionId) => {
+    duplicateQuestion({ questionId });
+  };
+
+  /***************************************************************************
+   * Drag-and-drop                                                            *
+   ***************************************************************************/
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: { distance: 3 },
+      activationKeyboardConstraint: { distance: 3 },
+    })
+  );
+
+  const handleDragEnd = (event) => {
+    const { active, over } = event;
+    if (active.id !== over?.id) {
+      setQuestionOrder((items) => {
+        const oldIndex = items.indexOf(active.id);
+        const newIndex = items.indexOf(over.id);
+        const newOrder = arrayMove(items, oldIndex, newIndex);
+        return newOrder;
+      });
+    }
+  };
+
+  const handleQuestionSelect = (questionId, isSelected) => {
+    setSelectedQuestions((prev) => {
+      const next = new Set(prev);
+      isSelected ? next.add(questionId) : next.delete(questionId);
+      return next;
+    });
+  };
+
+  /***************************************************************************
+   * Sortable row                                                             *
+   ***************************************************************************/
+  const SortableQuestionRow = ({ questionId, index }) => {
+    const {
+      attributes,
+      listeners,
+      setNodeRef,
+      transform,
+      transition,
+      isDragging,
+    } = useSortable({ id: questionId });
+
+    const style = {
+      transform: CSS.Transform.toString(transform),
+      transition,
+      opacity: isDragging ? 0.95 : 1,
+      zIndex: isDragging ? 100 : 1,
+    };
+
+    const question = questions?.find((q) => q.id === questionId);
+    if (!question) return null;
+
+    const typeDef = getTypeDef(question) || {};
+
+    return (
+      <div ref={setNodeRef} style={style} {...attributes}>
+        <QuestionRow
+          questionId={question.id}
+          isMovable
+          order={index + 1}
+          isSelected={selectedQuestions.has(question.id)}
+          title={question.title}
+          completionTime={question.completion_time}
+          questionType={typeDef}
+          onPreview={() => {}}
+          onEdit={() => onEdit && onEdit(question)}
+          onDuplicate={() => handleDuplicate(question.id)}
+          onDelete={() => handleDelete(question.id)}
+          onSelect={handleQuestionSelect}
+          dragListeners={listeners}
+        />
+      </div>
+    );
+  };
+
+  /***************************************************************************
+   * Derived data                                                             *
+   ***************************************************************************/
+  const orderedQuestions =
+    questions?.length > 0
+      ? questionOrder.map((id) => questions.find((q) => q.id === id)).filter(Boolean)
+      : [];
+
+  /***************************************************************************
+   * Render                                                                   *
+   ***************************************************************************/
+  if (isAssessmentLoading || isQuestionsLoading) {
+    return (
+      <div className="flex flex-col items-center">
+        <Step3Loading />
+      </div>
+    );
+  }
+  if (questionsError) return <div>Error loading questions</div>;
+
+  return (
+    <Section
+      id="question-sequence"
+      variant="white"
+      header={
+        <SectionHeader
+          title="Question Sequence"
+          headerRight={
+            <div className="flex items-center gap-4">
+              {/* Randomise check-box */}
+              <div className="flex items-center gap-2">
+                <Checkbox
+                  name="randomize"
+                  id="randomize"
+                  checked={localRandomize}
+                  onCheckedChange={handleRandomize}
+                />
+                <label
+                  htmlFor="randomize"
+                  className="text-sm font-medium text-greyAccent"
+                >
+                  Randomize Order
+                </label>
+              </div>
+
+              {/* Total score (static for now) */}
+              <Chip className="bg-purpleSecondary rounded-full">
+                <span className="font-semibold text-sm text-greyPrimary">
+                  Total Score:&nbsp;
+                </span>
+                <span>900</span>
+              </Chip>
+
+              {/* Delete multiple */}
+              <motion.button
+                className={cn(
+                  "h-8 w-8 rounded-full grid place-content-center border border-seperatorPrimary",
+                  selectedQuestions.size === 0 && "hidden"
+                )}
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.9 }}
+                onClick={handleDeleteMultiple}
+              >
+                <TrashIcon />
+              </motion.button>
+            </div>
+          }
+        />
+      }
+    >
+      {questions?.length > 0 ? (
+        <div className="flex flex-col gap-4 text-sm">
+          {/* Table header */}
+          <div
+            className="py-3 px-5 grid gap-4 items-center bg-purpleSecondary rounded-xl font-semibold"
+            style={{
+              gridTemplateColumns:
+                "clamp(60px, 5vw, 86px) minmax(200px, 1fr) clamp(80px, 8vw, 103px) clamp(120px, 15vw, 198px) clamp(120px, 15vw, 196px)",
+            }}
+          >
+            <div>No.</div>
+            <div>Question</div>
+            <div className="text-center">Time</div>
+            <div className="text-center">Type</div>
+            <div className="text-center">Action</div>
+          </div>
+
+          {/* Row list (sortable) */}
+          <DndContext
+            sensors={sensors}
+            collisionDetection={closestCenter}
+            onDragEnd={handleDragEnd}
+            modifiers={[restrictToVerticalAxis, restrictToParentElement]}
+            autoScroll={{ enabled: false }}
+          >
+            <SortableContext items={questionOrder} strategy={verticalListSortingStrategy}>
+              {orderedQuestions.map((q, idx) => (
+                <SortableQuestionRow key={q.id} questionId={q.id} index={idx} />
+              ))}
+            </SortableContext>
+          </DndContext>
+        </div>
+      ) : (
+        <Section variant="white">
+          <EmptyState
+            text="You haven't added any question yet!"
+            subtext="Stay productive by creating a task."
+          >
+            <Button variant="outline" className="rounded-xl">
+              <PlusIcon className="w-4 h-4 mr-2" /> Add Question
+            </Button>
+            <Button className="rounded-xl bg-purplePrimary hover:bg-purplePrimary/80">
+              Add from Library
+            </Button>
+          </EmptyState>
+        </Section>
+      )}
+    </Section>
+  );
+};
+
+export default QuestionSequenceTable;
