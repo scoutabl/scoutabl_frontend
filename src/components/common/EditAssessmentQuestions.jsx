@@ -166,10 +166,10 @@ const EditAssessmentQuestions = () => {
         <Section
           className="flex-1"
           variant="transparent"
-          contentClassName="gap-4 h-full"
+          contentClassName="h-full"
         >
           {/* List of available questions */}
-          <div className="flex flex-wrap gap-4 max-h-[60vh] overflow-y-auto pr-2">
+          <div className="flex flex-wrap gap-4 h-full pr-2">
             {isLoading && <p>Loading…</p>}
             {!isLoading && availableQuestions.length === 0 && (
               <p className="text-sm text-gray-400">No questions found.</p>
@@ -197,7 +197,7 @@ const EditAssessmentQuestions = () => {
                   name={q.title || `Question #${q.id}`}
                   description={q.description}
                   footer={footer}
-                  className="basis-[calc(50%-0.5rem)] max-w-[calc(50%-0.5rem)] flex-shrink-0 h-[250px]"
+                  className="basis-[calc(50%-0.5rem)] max-w-[calc(50%-0.5rem)] h-[250px]"
                 />
               );
             })}
