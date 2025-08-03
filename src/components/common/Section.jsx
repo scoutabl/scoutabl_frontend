@@ -5,6 +5,7 @@ const variants = {
   default: "bg-purpleSecondary",
   suggestion: "bg-purpleQuaternary border border-1 border-purplePrimary",
   white: "bg-white",
+  transparent: "bg-inherit border-none p-0"
 };
 
 const Section = ({
@@ -28,7 +29,7 @@ const Section = ({
     <section
       id={id}
       className={cn(
-        "rounded-3xl border p-5",
+        "rounded-2xl border p-5",
         variants[variant],
         className
       )}

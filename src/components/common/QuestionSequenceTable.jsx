@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
-import { motion } from "framer-motion";
+import { motion as Motion } from "framer-motion";
 import {
   DndContext,
   closestCenter,
@@ -52,7 +52,7 @@ import { cn, debounce } from "@/lib/utils";
  *  • assessmentId   – number | string  (required)
  *  • onEdit(question) – callback invoked when the user clicks the Edit action
  */
-const QuestionSequenceTable = ({ assessmentId, onEdit }) => {
+const QuestionSequenceTable = ({ assessmentId, onEdit, minimal = false, className = "" }) => {
   /***************************************************************************
    * Data fetching                                                            *
    ***************************************************************************/
@@ -250,12 +250,15 @@ const QuestionSequenceTable = ({ assessmentId, onEdit }) => {
           title={question.title}
           completionTime={question.completion_time}
           questionType={typeDef}
-          onPreview={() => {}}
-          onEdit={() => onEdit && onEdit(question)}
-          onDuplicate={() => handleDuplicate(question.id)}
+          {...(!minimal ? {
+            onPreview: () => {},
+            onEdit: () => onEdit && onEdit(question),
+            onDuplicate: () => handleDuplicate(question.id),
+          } : {})}
           onDelete={() => handleDelete(question.id)}
           onSelect={handleQuestionSelect}
           dragListeners={listeners}
+          minimal={minimal}
         />
       </div>
     );
@@ -285,26 +288,30 @@ const QuestionSequenceTable = ({ assessmentId, onEdit }) => {
     <Section
       id="question-sequence"
       variant="white"
+      className={className}
       header={
         <SectionHeader
           title="Question Sequence"
           headerRight={
             <div className="flex items-center gap-4">
               {/* Randomise check-box */}
-              <div className="flex items-center gap-2">
-                <Checkbox
-                  name="randomize"
-                  id="randomize"
-                  checked={localRandomize}
-                  onCheckedChange={handleRandomize}
-                />
-                <label
-                  htmlFor="randomize"
-                  className="text-sm font-medium text-greyAccent"
-                >
-                  Randomize Order
-                </label>
-              </div>
+              {!minimal && (
+                <div className="flex items-center gap-2">
+                  <Checkbox
+                    name="randomize"
+                    id="randomize"
+                    checked={localRandomize}
+                    onCheckedChange={handleRandomize}
+                  />
+                  <label
+                    htmlFor="randomize"
+                    className="text-sm font-medium text-greyAccent"
+                  >
+                    Randomize Order
+                  </label>
+                </div>
+              )
+              }
 
               {/* Total score (static for now) */}
               <Chip className="bg-purpleSecondary rounded-full">
@@ -315,7 +322,7 @@ const QuestionSequenceTable = ({ assessmentId, onEdit }) => {
               </Chip>
 
               {/* Delete multiple */}
-              <motion.button
+              <Motion.button
                 className={cn(
                   "h-8 w-8 rounded-full grid place-content-center border border-seperatorPrimary",
                   selectedQuestions.size === 0 && "hidden"
@@ -325,7 +332,7 @@ const QuestionSequenceTable = ({ assessmentId, onEdit }) => {
                 onClick={handleDeleteMultiple}
               >
                 <TrashIcon />
-              </motion.button>
+              </Motion.button>
             </div>
           }
         />
@@ -334,19 +341,17 @@ const QuestionSequenceTable = ({ assessmentId, onEdit }) => {
       {questions?.length > 0 ? (
         <div className="flex flex-col gap-4 text-sm">
           {/* Table header */}
-          <div
-            className="py-3 px-5 grid gap-4 items-center bg-purpleSecondary rounded-xl font-semibold"
-            style={{
-              gridTemplateColumns:
-                "clamp(60px, 5vw, 86px) minmax(200px, 1fr) clamp(80px, 8vw, 103px) clamp(120px, 15vw, 198px) clamp(120px, 15vw, 196px)",
-            }}
-          >
-            <div>No.</div>
-            <div>Question</div>
-            <div className="text-center">Time</div>
-            <div className="text-center">Type</div>
-            <div className="text-center">Action</div>
-          </div>
+          {!minimal && (
+            <div
+              className="py-3 px-5 flex items-center gap-4 bg-purpleSecondary rounded-xl font-semibold"
+            >
+              <div className="w-[65px] flex-shrink-0 text-center">No.</div>
+              <div className="flex-1">Question</div>
+              <div className="w-24 flex-shrink-0 text-center">Time</div>
+              <div className="w-[200px] flex-shrink-0 text-center">Type</div>
+              <div className="w-[140px] flex-shrink-0 text-center">Action</div>
+            </div>
+          )}
 
           {/* Row list (sortable) */}
           <DndContext

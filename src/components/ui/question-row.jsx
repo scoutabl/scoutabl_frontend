@@ -1,5 +1,5 @@
 import React from "react";
-import { motion } from "framer-motion";
+import { motion as Motion } from "framer-motion";
 import { Eye, GripVertical } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
@@ -32,6 +32,7 @@ const QuestionRow = ({
   onSelect,
   questionId,
   dragListeners,
+  minimal = false,
 }) => {
   // Format completion time from "HH:MM" to "X hr Y min"
   const formatCompletionTime = (timeStr) => {
@@ -49,20 +50,11 @@ const QuestionRow = ({
   const safeTitle = DOMPurify.sanitize(title);
 
   return (
-    <div
-      className="py-2 px-5 grid gap-4 items-center bg-backgroundPrimary rounded-xl"
-      style={{
-        gridTemplateColumns:
-          "clamp(60px, 5vw, 86px) minmax(200px, 1fr) clamp(80px, 8vw, 103px) clamp(120px, 15vw, 198px) clamp(120px, 15vw, 196px)",
-      }}
-    >
+    <div className="py-2 px-5 flex items-center gap-4 bg-backgroundPrimary rounded-xl">
       {/* Order/Grip Section */}
       <div className="p-[6px] flex justify-between items-center gap-1 border border-purplePrimary rounded-full w-[65px] h-[30px]">
         {isMovable && (
-          <div 
-            {...dragListeners} 
-            className="cursor-grab"
-          >
+          <div {...dragListeners} className="cursor-grab">
             <GripVertical size={17} className="text-purplePrimary" />
           </div>
         )}
@@ -72,7 +64,7 @@ const QuestionRow = ({
       </div>
 
       {/* Title Section */}
-      <div className="flex items-center gap-5">
+      <div className="flex items-center gap-5 flex-1 min-w-0">
         <Checkbox
           name={`questionTitle${questionId}`}
           id={`questionTitle${questionId}`}
@@ -97,81 +89,87 @@ const QuestionRow = ({
       </div>
 
       {/* Completion Time */}
-      <div className="font-medium text-center">
-        {formatCompletionTime(completionTime)}
-      </div>
+      {!minimal && (
+        <div className="font-medium text-center w-24 flex-none">
+          {formatCompletionTime(completionTime)}
+        </div>
+      )}
 
-      {/* Question Type */}
-      <div
-        className="font-medium min-w-[150px] max-w-[150px] rounded-full px-[6px] py-[5.5px] flex items-center gap-[6px] mx-auto"
-        style={{
-          background: questionType?.bg || "#EEE",
-          color: questionType?.text || "#333",
-        }}
-      >
-        {questionType?.icon && (
+      {!minimal && (
+        <div className="flex w-[200px] justify-center flex-shrink-0">
           <div
-            className="w-[18px] h-[18px] flex items-center justify-center rounded-full"
+            className="font-medium w-[150px] text-ellipsis rounded-full px-[6px] py-[5.5px] flex items-center gap-[6px]"
             style={{
-              background: questionType?.text || "#EEE",
+              background: questionType?.bg || "#EEE",
+              color: questionType?.text || "#333",
             }}
           >
-            {React.cloneElement(questionType.icon, {
-              style: {
-                color: questionType?.bg || "#333",
-                width: 12,
-                height: 12,
-              },
-            })}
+            {questionType?.icon && (
+              <div
+                className="w-[18px] h-[18px] flex items-center justify-center rounded-full"
+                style={{
+                  background: questionType?.text || "#EEE",
+                }}
+              >
+                {React.cloneElement(questionType.icon, {
+                  style: {
+                    color: questionType?.bg || "#333",
+                    width: 12,
+                    height: 12,
+                  },
+                })}
+              </div>
+            )}
+            <span className="text-sm font-medium">
+              {questionType?.name || "Unknown"}
+            </span>
           </div>
-        )}
-        <span className="text-sm font-medium">
-          {questionType?.name || "Unknown"}
-        </span>
-      </div>
+        </div>
+      )}
 
       {/* Actions */}
-      <div className="flex items-center gap-2 mx-auto">
-        {/* Preview Button */}
-        <motion.button
-          onClick={() => onPreview && onPreview()}
-          className="w-8 h-8 grid place-content-center bg-white rounded-full"
-          whileHover={{ scale: 1.1 }}
-          whileTap={{ scale: 0.9 }}
-        >
-          <Eye className="text-greyPrimary font-normal" size={16} />
-        </motion.button>
+      <div className="flex items-center gap-2 w-[140px] flex-shrink-0 justify-end">
+        {!minimal && (
+          <>
+            <Motion.button
+              onClick={() => onPreview && onPreview()}
+              className="w-8 h-8 grid place-content-center bg-white rounded-full"
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.9 }}
+            >
+              <Eye className="text-greyPrimary font-normal" size={16} />
+            </Motion.button>
 
-        {/* Duplicate Button */}
-        <motion.button
-          onClick={() => onDuplicate && onDuplicate()}
-          className="w-8 h-8 grid place-content-center bg-white rounded-full"
-          whileHover={{ scale: 1.1 }}
-          whileTap={{ scale: 0.9 }}
-        >
-          <DuplicateIcon className="w-4 h-4" />
-        </motion.button>
+            <Motion.button
+              onClick={() => onDuplicate && onDuplicate()}
+              className="w-8 h-8 grid place-content-center bg-white rounded-full"
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.9 }}
+            >
+              <DuplicateIcon className="w-4 h-4" />
+            </Motion.button>
 
-        {/* Edit Button */}
-        <motion.button
-          onClick={() => onEdit && onEdit()}
-          className="w-8 h-8 grid place-content-center bg-white rounded-full"
-          whileHover={{ scale: 1.1 }}
-          whileTap={{ scale: 0.9 }}
-        >
-          <EditIcon className="w-4 h-4" />
-        </motion.button>
+            <Motion.button
+              onClick={() => onEdit && onEdit()}
+              className="w-8 h-8 grid place-content-center bg-white rounded-full"
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.9 }}
+            >
+              <EditIcon className="w-4 h-4" />
+            </Motion.button>
+          </>
+        )}
 
         {/* Delete Button with Alert Dialog */}
         <AlertDialog>
           <AlertDialogTrigger asChild>
-            <motion.button
+            <Motion.button
               className="w-8 h-8 grid place-content-center bg-white rounded-full"
               whileHover={{ scale: 1.1 }}
               whileTap={{ scale: 0.9 }}
             >
               <TrashIcon className="w-4 h-4" />
-            </motion.button>
+            </Motion.button>
           </AlertDialogTrigger>
           <AlertDialogContent>
             <AlertDialogHeader>

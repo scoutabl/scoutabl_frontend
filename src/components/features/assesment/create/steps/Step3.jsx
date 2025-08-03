@@ -11,6 +11,9 @@ import { Button } from "@/components/ui/button";
 import AiIcon from "@/assets/AiIcon.svg?react";
 import ChevronLeftIcon from "@/assets/chevronLeftIcon.svg?react";
 import ChevronRightIcon from "@/assets/chevronRightIcon.svg?react";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
+import EditAssessmentQuestions from "@/components/common/EditAssessmentQuestions";
+import Section from "@/components/common/Section";
 
 // -------------------------------------------------------------
 // Step-3 – Add Custom Questions
@@ -35,6 +38,7 @@ const Step3 = () => {
   const [modalMode, setModalMode] = useState("add"); // "add" | "edit"
   const [modalInitialData, setModalInitialData] = useState({});
   const [modalQuestionType, setModalQuestionType] = useState(null);
+  const [questionLibraryOpen, setQuestionLibraryOpen] = useState(false);
 
   // For the floating QuestionCards ➜ "Add question" buttons
   const handleAdd = (type) => {
@@ -51,6 +55,10 @@ const Step3 = () => {
     setModalQuestionType(question.__type); // Sequencer passes a decorated field
     setModalOpen(true);
   };
+
+  const handleAddFromLibrary = () => {
+    setQuestionLibraryOpen(true);
+  }
 
   return (
     <div className="flex flex-col gap-6 py-6">
@@ -83,7 +91,7 @@ const Step3 = () => {
           <Button className="px-4 py-2 rounded-xl border border-purplePrimary bg-[#EEF2FC] text-purplePrimary text-sm font-medium hover:bg-purplePrimary hover:text-white transition-all duration-300 ease-in">
             Skip to Finalize
           </Button>
-          <Button className="px-4 py-2 rounded-xl bg-purplePrimary hover:bg-[#EEF2FC] text-sm font-medium hover:text-purplePrimary text-white transition-all duration-300 ease-in border border-purplePrimary">
+          <Button className="px-4 py-2 rounded-xl bg-purplePrimary hover:bg-[#EEF2FC] text-sm font-medium hover:text-purplePrimary text-white transition-all duration-300 ease-in border border-purplePrimary" onClick={handleAddFromLibrary}>
             Add from Library
           </Button>
         </div>
@@ -106,6 +114,18 @@ const Step3 = () => {
         setQuestionType={setModalQuestionType}
         asssessmentId={assessment?.id}
       />
+
+      <Dialog open={questionLibraryOpen} onOpenChange={setQuestionLibraryOpen}>
+        <DialogContent className="w-[80vw] h-[80vh] overflow-y-hidden p-0 border-0">
+          <Section variant="default" className="rounded-none h-full border-0" contentClassName="flex flex-col gap-4 h-full">
+            <div className="flex flex-col gap-1">
+              <h2 className="text-2xl font-semibold text-greyPrimary">Add Questions From Library</h2>
+              <p className="text-md text-greyAccent">Custom questions are added to the end of the assessment</p>
+            </div>
+            <EditAssessmentQuestions />
+          </Section>
+        </DialogContent>
+      </Dialog>
 
       {/* Back / Next navigation buttons */}
       <div className="flex items-center justify-between">

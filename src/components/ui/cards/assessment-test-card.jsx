@@ -27,7 +27,7 @@ const AssessmentTestCard = ({
   return (
     <div
       className={cn(
-        `rounded-2xl p-6 flex flex-col gap-4 min-w-[320px] max-w-[370px] w-full h-full`,
+        `rounded-2xl p-6 flex flex-col gap-4 min-w-[320px] max-w-[380px] w-full h-full`,
         variants[variant],
         className
       )}
