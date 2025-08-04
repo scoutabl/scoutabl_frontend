@@ -13,6 +13,7 @@ import { useAllTags } from "@/api/misc/tags";
 import { useBootstrap } from "@/context/BootstrapContext";
 import { useEnums } from "@/context/EnumsContext";
 import Dropdown from "../ui/dropdown";
+import PaginatedScroll from "./PaginatedScroll";
 
 const EditAssessmentQuestions = () => {
   /***************************************************************************
@@ -24,7 +25,7 @@ const EditAssessmentQuestions = () => {
   const { data: allTags } = useAllTags();
   const { resolveEnum } = useEnums();
 
-  const [searchParams, setSearchParams] = useState({ search: "" });
+  const [searchParams, setSearchParams] = useState({ search: "", page_size: 10 });
 
   const skillTags =
     allTags?.filter((t) => t.tag_type === resolveEnum("TagType.SKILL")) || [];
@@ -41,7 +42,7 @@ const EditAssessmentQuestions = () => {
     ) || selectedQuestionIds;
 
   // Fetch candidate questions list (simple — no infinite scroll)
-  const { data: questionsData, isLoading } = useInfiniteQuestionPages({ ...searchParams });
+  const { data: questionsData, isLoading, isFetchingNextPage, hasNextPage, fetchNextPage } = useInfiniteQuestionPages({ ...searchParams });
 
   // Filter out already-selected questions from the library list
   const questions = questionsData?.pages?.flatMap((page) => page.results) || [];
@@ -169,39 +170,50 @@ const EditAssessmentQuestions = () => {
           contentClassName="h-full"
         >
           {/* List of available questions */}
-          <div className="flex flex-wrap gap-4 h-full pr-2">
-            {isLoading && <p>Loading…</p>}
-            {!isLoading && availableQuestions.length === 0 && (
-              <p className="text-sm text-gray-400">No questions found.</p>
-            )}
-            {availableQuestions.map((q) => {
-              const footer = (
-                <div className="flex justify-between">
-                  <IconButton
-                    variant="circleOutline"
-                    iconOutline={<EyeIcon className="size-5" />}
-                    disabled
-                  />
-                  <Button
-                    size="sm"
-                    className="rounded-full bg-purplePrimary hover:bg-purplePrimary/90 text-white"
-                    onClick={() => handleAdd(q.id)}
-                  >
-                    Add
-                  </Button>
-                </div>
-              );
-              return (
-                <AssessmentQuestionCard
-                  key={q.id}
-                  name={q.title || `Question #${q.id}`}
-                  description={q.description}
-                  footer={footer}
-                  className="basis-[calc(50%-0.5rem)] max-w-[calc(50%-0.5rem)] h-[250px]"
-                />
-              );
-            })}
-          </div>
+          <PaginatedScroll
+            currentPage={questionsData?.pages.length || 1}
+            totalCount={questionsData?.pages[0]?.count || 0}
+            pageSize={searchParams.page_size}
+            onNextPage={() => {
+              if (hasNextPage && !isFetchingNextPage) fetchNextPage();
+            }}
+            loading={isFetchingNextPage || isLoading}
+            useWindowScroll
+          >
+            <div className="flex flex-wrap gap-4 h-full pr-2">
+                {isLoading && <p>Loading…</p>}
+                {!isLoading && availableQuestions.length === 0 && (
+                <p className="text-sm text-gray-400">No questions found.</p>
+                )}
+                {availableQuestions.map((q) => {
+                const footer = (
+                    <div className="flex justify-between">
+                    <IconButton
+                        variant="circleOutline"
+                        iconOutline={<EyeIcon className="size-5" />}
+                        disabled
+                    />
+                    <Button
+                        size="sm"
+                        className="rounded-full bg-purplePrimary hover:bg-purplePrimary/90 text-white"
+                        onClick={() => handleAdd(q.id)}
+                    >
+                        Add
+                    </Button>
+                    </div>
+                );
+                return (
+                    <AssessmentQuestionCard
+                    key={q.id}
+                    name={q.title || `Question #${q.id}`}
+                    description={q.description}
+                    footer={footer}
+                    className="basis-[calc(50%-0.5rem)] max-w-[calc(50%-0.5rem)] h-[250px]"
+                    />
+                );
+                })}
+            </div>
+          </PaginatedScroll>
         </Section>
 
         {/* Right – mini sequence table */}
