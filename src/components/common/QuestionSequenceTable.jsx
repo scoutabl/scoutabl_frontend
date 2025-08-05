@@ -28,7 +28,10 @@ import Section from "@/components/common/Section";
 import SectionHeader from "@/components/ui/section-header";
 
 import { useQuestions } from "@/api/assessments/question";
-import { useAssessment, useUpdateAssessment } from "@/api/assessments/assessment";
+import {
+  useAssessment,
+  useUpdateAssessment,
+} from "@/api/assessments/assessment";
 import { useDuplicateQuestion } from "@/api/createQuestion";
 
 import Step3Loading from "@/components/features/assesment/create/steps/step3-customQuestions/Step3Loading";
@@ -38,6 +41,7 @@ import TrashIcon from "@/assets/trashIcon.svg?react";
 import PlusIcon from "@/assets/plusIcon.svg?react";
 
 import { cn, debounce } from "@/lib/utils";
+import Loading from "../ui/loading";
 
 /**
  * Re-usable component that renders the “Question Sequence” table used while
@@ -52,19 +56,20 @@ import { cn, debounce } from "@/lib/utils";
  *  • assessmentId   – number | string  (required)
  *  • onEdit(question) – callback invoked when the user clicks the Edit action
  */
-const QuestionSequenceTable = ({ assessmentId, onEdit, minimal = false, className = "" }) => {
+const QuestionSequenceTable = ({
+  assessmentId,
+  onEdit,
+  minimal = false,
+  className = "",
+}) => {
   /***************************************************************************
    * Data fetching                                                            *
    ***************************************************************************/
-  const {
-    data: assessment,
-    isLoading: isAssessmentLoading,
-  } = useAssessment(assessmentId);
+  const { data: assessment, isLoading: isAssessmentLoading } =
+    useAssessment(assessmentId);
 
-  const {
-    mutate: updateAssessment,
-    isPending: isUpdatingAssessment,
-  } = useUpdateAssessment();
+  const { mutate: updateAssessment, isPending: isUpdatingAssessment } =
+    useUpdateAssessment();
 
   const {
     data: questions,
@@ -122,7 +127,13 @@ const QuestionSequenceTable = ({ assessmentId, onEdit, minimal = false, classNam
         },
       });
     }
-  }, [assessment?.id, questionOrder, isUpdatingAssessment, assessment?.custom_questions_order, updateAssessment]);
+  }, [
+    assessment?.id,
+    questionOrder,
+    isUpdatingAssessment,
+    assessment?.custom_questions_order,
+    updateAssessment,
+  ]);
 
   /***************************************************************************
    * Helpers                                                                  *
@@ -137,7 +148,9 @@ const QuestionSequenceTable = ({ assessmentId, onEdit, minimal = false, classNam
           typeDef.multiple_true === !!q.multiple_true
       );
     }
-    return allTypeDefs.find((typeDef) => typeDef.resourcetype === q.resourcetype);
+    return allTypeDefs.find(
+      (typeDef) => typeDef.resourcetype === q.resourcetype
+    );
   };
 
   const removeQuestions = async (questionIds) => {
@@ -250,11 +263,13 @@ const QuestionSequenceTable = ({ assessmentId, onEdit, minimal = false, classNam
           title={question.title}
           completionTime={question.completion_time}
           questionType={typeDef}
-          {...(!minimal ? {
-            onPreview: () => {},
-            onEdit: () => onEdit && onEdit(question),
-            onDuplicate: () => handleDuplicate(question.id),
-          } : {})}
+          {...(!minimal
+            ? {
+                onPreview: () => {},
+                onEdit: () => onEdit && onEdit(question),
+                onDuplicate: () => handleDuplicate(question.id),
+              }
+            : {})}
           onDelete={() => handleDelete(question.id)}
           onSelect={handleQuestionSelect}
           dragListeners={listeners}
@@ -269,19 +284,14 @@ const QuestionSequenceTable = ({ assessmentId, onEdit, minimal = false, classNam
    ***************************************************************************/
   const orderedQuestions =
     questions?.length > 0
-      ? questionOrder.map((id) => questions.find((q) => q.id === id)).filter(Boolean)
+      ? questionOrder
+          .map((id) => questions.find((q) => q.id === id))
+          .filter(Boolean)
       : [];
 
   /***************************************************************************
    * Render                                                                   *
    ***************************************************************************/
-  if (isAssessmentLoading || isQuestionsLoading) {
-    return (
-      <div className="flex flex-col items-center">
-        <Step3Loading />
-      </div>
-    );
-  }
   if (questionsError) return <div>Error loading questions</div>;
 
   return (
@@ -310,8 +320,7 @@ const QuestionSequenceTable = ({ assessmentId, onEdit, minimal = false, classNam
                     Randomize Order
                   </label>
                 </div>
-              )
-              }
+              )}
 
               {/* Total score (static for now) */}
               <Chip className="bg-purpleSecondary rounded-full">
@@ -338,13 +347,13 @@ const QuestionSequenceTable = ({ assessmentId, onEdit, minimal = false, classNam
         />
       }
     >
-      {questions?.length > 0 ? (
+      {isAssessmentLoading || isQuestionsLoading ? (
+        <Loading />
+      ) : questions?.length > 0 ? (
         <div className="flex flex-col gap-4 text-sm">
           {/* Table header */}
           {!minimal && (
-            <div
-              className="py-3 px-5 flex items-center gap-4 bg-purpleSecondary rounded-xl font-semibold"
-            >
+            <div className="py-3 px-5 flex items-center gap-4 bg-purpleSecondary rounded-xl font-semibold">
               <div className="w-[65px] flex-shrink-0 text-center">No.</div>
               <div className="flex-1">Question</div>
               <div className="w-24 flex-shrink-0 text-center">Time</div>
@@ -361,7 +370,10 @@ const QuestionSequenceTable = ({ assessmentId, onEdit, minimal = false, classNam
             modifiers={[restrictToVerticalAxis, restrictToParentElement]}
             autoScroll={{ enabled: false }}
           >
-            <SortableContext items={questionOrder} strategy={verticalListSortingStrategy}>
+            <SortableContext
+              items={questionOrder}
+              strategy={verticalListSortingStrategy}
+            >
               {orderedQuestions.map((q, idx) => (
                 <SortableQuestionRow key={q.id} questionId={q.id} index={idx} />
               ))}

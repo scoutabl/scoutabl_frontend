@@ -32,33 +32,32 @@ const AssessmentQuestionCard = ({
   return (
     <div
       className={cn(
-        "rounded-2xl p-6 flex flex-col gap-4 h-full",
+        "rounded-2xl p-6 flex flex-col gap-2 h-full",
         variants[variant],
         className
       )}
     >
       {/* Tags */}
       <div className="flex flex-row gap-2 mb-2">
-        {tags.map((tag, idx) => (
+        {tags.slice(0, 3).map((tag, idx) => (
           <Chip
             key={idx}
-            className="flex flex-row gap-1 rounded-full items-center text-[12px]"
-            variant={tag.variant || "outline"}
+            className="flex flex-row gap-1 items-center text-[12px]"
+            variant="blueSecondary"
           >
-            {tag.icon && <span className="mr-1">{tag.icon}</span>}
-            {tag.text}
+            {tag.name}
           </Chip>
         ))}
       </div>
 
       {/* Title */}
-      <div className="text-md font-semibold mb-1 truncate" title={name}>
+      <div className="text-md font-semibold truncate" title={name}>
         {name}
       </div>
 
       {/* Description */}
       {description && (
-        <div className="text-sm text-gray-600 flex-1 max-h-[40px] line-clamp-2">
+        <div className="text-sm text-grayAccent flex-1 max-h-[40px] line-clamp-2 text-ellipsis">
           {description}
         </div>
       )}

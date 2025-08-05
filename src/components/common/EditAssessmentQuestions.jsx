@@ -25,7 +25,11 @@ const EditAssessmentQuestions = () => {
   const { data: allTags } = useAllTags();
   const { resolveEnum } = useEnums();
 
-  const [searchParams, setSearchParams] = useState({ search: "", page_size: 10 });
+  const [searchParams, setSearchParams] = useState({
+    search: "",
+    page_size: 10,
+    library: organisationLibraryId,
+  });
 
   const skillTags =
     allTags?.filter((t) => t.tag_type === resolveEnum("TagType.SKILL")) || [];
@@ -42,7 +46,13 @@ const EditAssessmentQuestions = () => {
     ) || selectedQuestionIds;
 
   // Fetch candidate questions list (simple — no infinite scroll)
-  const { data: questionsData, isLoading, isFetchingNextPage, hasNextPage, fetchNextPage } = useInfiniteQuestionPages({ ...searchParams });
+  const {
+    data: questionsData,
+    isLoading,
+    isFetchingNextPage,
+    hasNextPage,
+    fetchNextPage,
+  } = useInfiniteQuestionPages({ ...searchParams });
 
   // Filter out already-selected questions from the library list
   const questions = questionsData?.pages?.flatMap((page) => page.results) || [];
@@ -181,37 +191,45 @@ const EditAssessmentQuestions = () => {
             useWindowScroll
           >
             <div className="flex flex-wrap gap-4 h-full pr-2">
-                {isLoading && <p>Loading…</p>}
-                {!isLoading && availableQuestions.length === 0 && (
+              {isLoading && <p>Loading…</p>}
+              {!isLoading && availableQuestions.length === 0 && (
                 <p className="text-sm text-gray-400">No questions found.</p>
-                )}
-                {availableQuestions.map((q) => {
+              )}
+              {availableQuestions.map((q) => {
+                const isAdded = selectedQuestionIds.includes(q.id);
+                const questionTags = skillTags.filter((t) => q.tags.includes(t.id));
                 const footer = (
-                    <div className="flex justify-between">
-                    <IconButton
-                        variant="circleOutline"
-                        iconOutline={<EyeIcon className="size-5" />}
-                        disabled
-                    />
-                    <Button
+                  <div className="flex justify-end">
+                    {isAdded ? (
+                      <Button
                         size="sm"
-                        className="rounded-full bg-purplePrimary hover:bg-purplePrimary/90 text-white"
+                        className="rounded-full text-white bg-dangerSecondary"
                         onClick={() => handleAdd(q.id)}
-                    >
+                      >
                         Add
-                    </Button>
-                    </div>
+                      </Button>
+                    ) : (
+                      <Button
+                        size="sm"
+                        className="rounded-full text-white"
+                        onClick={() => handleAdd(q.id)}
+                      >
+                        Add
+                      </Button>
+                    )}
+                  </div>
                 );
                 return (
-                    <AssessmentQuestionCard
+                  <AssessmentQuestionCard
                     key={q.id}
                     name={q.title || `Question #${q.id}`}
-                    description={q.description}
+                    tags={questionTags}
+                    description={q.content}
                     footer={footer}
-                    className="basis-[calc(50%-0.5rem)] max-w-[calc(50%-0.5rem)] h-[250px]"
-                    />
+                    className="basis-[calc(50%-0.5rem)] max-w-[calc(50%-0.5rem)] h-[220px]"
+                  />
                 );
-                })}
+              })}
             </div>
           </PaginatedScroll>
         </Section>

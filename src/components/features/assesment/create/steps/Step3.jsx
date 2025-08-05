@@ -117,7 +117,7 @@ const Step3 = () => {
 
       <Dialog open={questionLibraryOpen} onOpenChange={setQuestionLibraryOpen}>
         <DialogTitle hidden>Add Questions</DialogTitle>
-        <DialogContent className="h-[80vh] w-[80vw] flex flex-col overflow-y-auto p-0 border-0">
+        <DialogContent className="max-h-[80vh] w-[80vw] flex flex-col overflow-y-auto p-0 border-0">
           <Section variant="default" className="rounded-none border-0" contentClassName="flex flex-col gap-4 h-full">
             <div className="flex flex-col gap-1">
               <h2 className="text-2xl font-semibold text-greyPrimary">Add Questions From Library</h2>
