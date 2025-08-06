@@ -30,6 +30,7 @@ const EditAssessmentQuestions = () => {
     search: "",
     page_size: 10,
     library: organisationLibraryId,
+    question_type: resolveEnum("QuestionType.CUSTOM_QUESTION"),
   });
 
   const skillTags =

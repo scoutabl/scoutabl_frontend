@@ -7,6 +7,7 @@ import {
   useCallback,
 } from "react";
 import { fetchEnums } from "@/api/monacoCodeApi";
+import Loading from "@/components/ui/loading";
 
 const EnumsContext = createContext();
 
@@ -36,11 +37,11 @@ export const EnumsProvider = ({ children }) => {
         .catch(console.error)
         .finally(() => setEnumsLoading(false));
     }
-  }, [enums]);
+  }, [enums, enumsLoading]);
 
   return (
     <EnumsContext.Provider value={{ enums, enumsLoading, resolveEnum }}>
-      {children}
+      {enumsLoading ? <Loading /> : children}
     </EnumsContext.Provider>
   );
 };

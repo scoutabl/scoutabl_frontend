@@ -42,6 +42,7 @@ import PlusIcon from "@/assets/plusIcon.svg?react";
 
 import { cn, debounce } from "@/lib/utils";
 import Loading from "../ui/loading";
+import { useEnums } from "@/context/EnumsContext";
 
 /**
  * Re-usable component that renders the “Question Sequence” table used while
@@ -70,6 +71,7 @@ const QuestionSequenceTable = ({
 
   const { mutate: updateAssessment, isPending: isUpdatingAssessment } =
     useUpdateAssessment();
+    const {resolveEnum} = useEnums();
 
   const {
     data: questions,
@@ -78,6 +80,7 @@ const QuestionSequenceTable = ({
   } = useQuestions({
     params: {
       id__in: (assessment?.custom_questions || []).join(","),
+      question_type: resolveEnum("QuestionType.CUSTOM_QUESTION"),
       fetch_all: 1,
     },
     enabled: !!assessmentId,
