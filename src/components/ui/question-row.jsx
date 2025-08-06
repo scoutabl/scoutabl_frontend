@@ -17,6 +17,7 @@ import EditIcon from "@/assets/editquestion.svg?react";
 import DuplicateIcon from "@/assets/duplicateIcon.svg?react";
 import TrashIcon from "@/assets/trashIcon.svg?react";
 import DOMPurify from "dompurify";
+import QuestionTypeTag from "@/components/ui/question-type-tag";
 
 const QuestionRow = ({
   isMovable = true,
@@ -97,33 +98,10 @@ const QuestionRow = ({
 
       {!minimal && (
         <div className="flex w-[200px] justify-center flex-shrink-0">
-          <div
-            className="font-medium w-[150px] text-ellipsis rounded-full px-[6px] py-[5.5px] flex items-center gap-[6px]"
-            style={{
-              background: questionType?.bg || "#EEE",
-              color: questionType?.text || "#333",
-            }}
-          >
-            {questionType?.icon && (
-              <div
-                className="w-[18px] h-[18px] flex items-center justify-center rounded-full"
-                style={{
-                  background: questionType?.text || "#EEE",
-                }}
-              >
-                {React.cloneElement(questionType.icon, {
-                  style: {
-                    color: questionType?.bg || "#333",
-                    width: 12,
-                    height: 12,
-                  },
-                })}
-              </div>
-            )}
-            <span className="text-sm font-medium">
-              {questionType?.name || "Unknown"}
-            </span>
-          </div>
+          <QuestionTypeTag 
+            type={questionType} 
+            className="w-[150px] text-ellipsis"
+          />
         </div>
       )}
 

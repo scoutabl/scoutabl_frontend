@@ -1,8 +1,6 @@
 // QuestionCards.jsx - Usage Example
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Plus } from 'lucide-react';
-import QuestionModal from './QuestionModal';
 import PlusIcon from '@/assets/plusIcon.svg?react'
 import TickIcon from '@/assets/tick.svg?react'
 import MultiSelect from '@/assets/multiSelect.svg?react'
@@ -152,11 +150,7 @@ export const questionTypes = [
 ];
 
 const QuestionCards = ({ onAdd }) => {
-    const handleQuestionSave = (questionData) => {
-        console.log('Question saved:', questionData);
-    };
-
-    const QuestionCard = ({ question, category }) => {
+    const QuestionCard = ({ question }) => {
         const PlusButton = (
             <motion.button
                 className='h-6 w-6 grid place-content-center bg-white rounded-full ml-auto group'

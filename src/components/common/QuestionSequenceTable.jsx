@@ -35,7 +35,7 @@ import {
 import { useDuplicateQuestion } from "@/api/createQuestion";
 
 import Step3Loading from "@/components/features/assesment/create/steps/step3-customQuestions/Step3Loading";
-import { questionTypes } from "@/components/features/assesment/create/steps/step3-customQuestions/QuestionCards";
+import { getQuestionType } from "@/lib/questionTypes";
 
 import TrashIcon from "@/assets/trashIcon.svg?react";
 import PlusIcon from "@/assets/plusIcon.svg?react";
@@ -138,19 +138,8 @@ const QuestionSequenceTable = ({
   /***************************************************************************
    * Helpers                                                                  *
    ***************************************************************************/
-  const allTypeDefs = questionTypes.flatMap((cat) => cat.questions);
-
-  const getTypeDef = (q) => {
-    if (q.resourcetype === "MCQuestion") {
-      return allTypeDefs.find(
-        (typeDef) =>
-          typeDef.resourcetype === "MCQuestion" &&
-          typeDef.multiple_true === !!q.multiple_true
-      );
-    }
-    return allTypeDefs.find(
-      (typeDef) => typeDef.resourcetype === q.resourcetype
-    );
+  const getQuestionTypeString = (q) => {
+    return getQuestionType(q.resourcetype, q.multiple_true);
   };
 
   const removeQuestions = async (questionIds) => {
@@ -251,7 +240,7 @@ const QuestionSequenceTable = ({
     const question = questions?.find((q) => q.id === questionId);
     if (!question) return null;
 
-    const typeDef = getTypeDef(question) || {};
+    const questionTypeString = getQuestionTypeString(question);
 
     return (
       <div ref={setNodeRef} style={style} {...attributes}>
@@ -262,7 +251,7 @@ const QuestionSequenceTable = ({
           isSelected={selectedQuestions.has(question.id)}
           title={question.title}
           completionTime={question.completion_time}
-          questionType={typeDef}
+          questionType={questionTypeString}
           {...(!minimal
             ? {
                 onPreview: () => {},

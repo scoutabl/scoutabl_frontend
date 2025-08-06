@@ -2,6 +2,7 @@ import React from "react";
 import Chip from "../chip";
 import { cn } from "@/lib/utils";
 import { SCOUTABL_PINK } from "@/lib/constants";
+import QuestionTypeTag from "../question-type-tag";
 
 const variants = {
   default: "bg-white",
@@ -27,6 +28,7 @@ const AssessmentQuestionCard = ({
   tags = [],
   footer,
   variant = "default",
+  questionType,
   className = "",
 }) => {
   return (
@@ -38,7 +40,7 @@ const AssessmentQuestionCard = ({
       )}
     >
       {/* Tags */}
-      <div className="flex flex-row gap-2 mb-2">
+      <div className="flex flex-wrap flex-row gap-2 mb-2 overflow-x-hidden">
         {tags.slice(0, 3).map((tag, idx) => (
           <Chip
             key={idx}
@@ -48,6 +50,7 @@ const AssessmentQuestionCard = ({
             {tag.name}
           </Chip>
         ))}
+        {questionType && <QuestionTypeTag hideIcon textClassName="text-[12px]" className="rounded-md" type={questionType} />}
       </div>
 
       {/* Title */}

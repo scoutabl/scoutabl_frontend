@@ -14,6 +14,7 @@ import { useBootstrap } from "@/context/BootstrapContext";
 import { useEnums } from "@/context/EnumsContext";
 import Dropdown from "../ui/dropdown";
 import PaginatedScroll from "./PaginatedScroll";
+import { getQuestionType } from "@/lib/questionTypes";
 
 const EditAssessmentQuestions = () => {
   /***************************************************************************
@@ -227,6 +228,7 @@ const EditAssessmentQuestions = () => {
                     description={q.content}
                     footer={footer}
                     className="basis-[calc(50%-0.5rem)] max-w-[calc(50%-0.5rem)] h-[220px]"
+                    questionType={getQuestionType(q.resourcetype, q.multiple_true)}
                   />
                 );
               })}
