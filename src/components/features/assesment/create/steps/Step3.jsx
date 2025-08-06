@@ -101,7 +101,11 @@ const Step3 = () => {
       <QuestionCards onAdd={handleAdd} />
 
       {/* The reusable question list component */}
-      <QuestionSequenceTable assessmentId={assessment?.id} onEdit={handleEdit} />
+      <QuestionSequenceTable 
+        assessmentId={assessment?.id} 
+        questionType="custom"
+        onEdit={handleEdit} 
+      />
 
       {/* Add / Edit modal */}
       <QuestionModal

@@ -18,9 +18,10 @@ import FilesColored from "@/assets/filesColored.svg?react";
 import { X, Crown, HelpCircle } from "lucide-react";
 import SectionHeader from "@/components/ui/section-header";
 import EmptyState from "@/components/ui/empty-state";
+import QuestionSequenceTable from "@/components/common/QuestionSequenceTable";
 
 const Step4 = () => {
-  const { steps, selectedStep, handleStepChange } = useAssessmentContext();
+  const { assessment, steps, selectedStep, handleStepChange } = useAssessmentContext();
   const [activeTab, setActiveTab] = useState("essential-settings");
   const [domains, setDomains] = useState(["gmail.com", "abc.com"]);
   const [selectedUsers, setSelectedUsers] = useState([
@@ -124,20 +125,12 @@ const Step4 = () => {
         >
           <Section contentClassName="text-center flex flex-col gap-5">
             <SectionHeader number={1} title="Qualifying Questions" tooltipText="Qualifying questions are presented to candidates ahead of the tests. The answers to these questions determine if candidates satisfy the essential requirements of the job. Only if all questions are answered as required, they proceed to the tests." />
-            <Section variant="white">
-              <EmptyState
-                text="You haven't added anything yet!"
-                subtext="Stay productive by creating a task."
-              >
-                <Button variant="outline" className="rounded-xl">
-                  <PlusIcon className="w-4 h-4 mr-2" />
-                  Add Question
-                </Button>
-                <Button className="rounded-xl bg-purplePrimary hover:bg-purplePrimary/80">
-                  Add from Library
-                </Button>
-              </EmptyState>
-            </Section>
+            <QuestionSequenceTable 
+              assessmentId={assessment?.id}
+              questionType="qualifying"
+              onEdit={() => {}}
+              minimal={false}
+            />
           </Section>
         </Section>
 

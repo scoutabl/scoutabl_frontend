@@ -45,7 +45,7 @@ import Loading from "../ui/loading";
 import { useEnums } from "@/context/EnumsContext";
 
 /**
- * Re-usable component that renders the “Question Sequence” table used while
+ * Re-usable component that renders the "Question Sequence" table used while
  * configuring an assessment. It encapsulates all logic for
  * – fetching questions
  * – re-ordering via drag & drop
@@ -55,10 +55,12 @@ import { useEnums } from "@/context/EnumsContext";
  * Props
  * ───────────────────────────────────────────────────────────
  *  • assessmentId   – number | string  (required)
+ *  • questionType   – "custom" | "qualifying" (default: "custom")
  *  • onEdit(question) – callback invoked when the user clicks the Edit action
  */
 const QuestionSequenceTable = ({
   assessmentId,
+  questionType = "custom",
   onEdit,
   minimal = false,
   className = "",
@@ -73,14 +75,26 @@ const QuestionSequenceTable = ({
     useUpdateAssessment();
     const {resolveEnum} = useEnums();
 
+  // Determine which fields to use based on questionType
+  const isCustom = questionType === "custom";
+  const questionIds = isCustom 
+    ? (assessment?.custom_questions || [])
+    : (assessment?.qualifying_questions || []);
+  const questionOrder = isCustom
+    ? (assessment?.custom_questions_order || [])
+    : (assessment?.qualifying_questions_order || []);
+  const questionRandomize = isCustom
+    ? (assessment?.custom_questions_randomize || false)
+    : (assessment?.qualifying_questions_randomize || false);
+
   const {
     data: questions,
     isLoading: isQuestionsLoading,
     error: questionsError,
   } = useQuestions({
     params: {
-      id__in: (assessment?.custom_questions || []).join(","),
-      question_type: resolveEnum("QuestionType.CUSTOM_QUESTION"),
+      id__in: questionIds.join(","),
+      question_type: resolveEnum(isCustom ? "QuestionType.CUSTOM_QUESTION" : "QuestionType.QUALIFYING_QUESTION"),
       fetch_all: 1,
     },
     enabled: !!assessmentId,
@@ -89,53 +103,56 @@ const QuestionSequenceTable = ({
   /***************************************************************************
    * Local state                                                              *
    ***************************************************************************/
-  const [questionOrder, setQuestionOrder] = useState([]);
+  const [localQuestionOrder, setLocalQuestionOrder] = useState([]);
   const [selectedQuestions, setSelectedQuestions] = useState(new Set());
   const [localRandomize, setLocalRandomize] = useState(false);
 
   // Track whether the current questionOrder update originates from the API so
-  // we don’t send PATCH requests back in response to our own response handling
+  // we don't send PATCH requests back in response to our own response handling
   const isUpdatingFromAPI = useRef(false);
 
   /* ----------------------------------------------------------------------- */
   /*  Sync local state with assessment                                        */
   /* ----------------------------------------------------------------------- */
   useEffect(() => {
-    setLocalRandomize(assessment?.custom_questions_randomize || false);
-  }, [assessment?.custom_questions_randomize]);
+    setLocalRandomize(questionRandomize);
+  }, [questionRandomize]);
 
   useEffect(() => {
     isUpdatingFromAPI.current = true;
-    setQuestionOrder(assessment?.custom_questions_order || []);
+    setLocalQuestionOrder(questionOrder);
     // Reset the flag immediately after paint
     setTimeout(() => {
       isUpdatingFromAPI.current = false;
     }, 0);
-  }, [assessment?.custom_questions_order]);
+  }, [questionOrder]);
 
   // Persist order changes back to the server (debounced by React-Query mutation)
   useEffect(() => {
     if (isUpdatingFromAPI.current) return;
     if (
-      JSON.stringify(questionOrder) ===
-      JSON.stringify(assessment?.custom_questions_order)
+      JSON.stringify(localQuestionOrder) ===
+      JSON.stringify(questionOrder)
     )
       return;
 
-    if (assessment?.id && questionOrder.length > 0 && !isUpdatingAssessment) {
+    if (assessment?.id && localQuestionOrder.length > 0 && !isUpdatingAssessment) {
+      const updateData = isCustom
+        ? { custom_questions_order: localQuestionOrder }
+        : { qualifying_questions_order: localQuestionOrder };
+      
       updateAssessment({
         assessmentId: assessment.id,
-        data: {
-          custom_questions_order: questionOrder,
-        },
+        data: updateData,
       });
     }
   }, [
     assessment?.id,
-    questionOrder,
+    localQuestionOrder,
     isUpdatingAssessment,
-    assessment?.custom_questions_order,
+    questionOrder,
     updateAssessment,
+    isCustom,
   ]);
 
   /***************************************************************************
@@ -146,16 +163,26 @@ const QuestionSequenceTable = ({
   };
 
   const removeQuestions = async (questionIds) => {
+    const currentQuestions = isCustom
+      ? (assessment?.custom_questions || [])
+      : (assessment?.qualifying_questions || []);
+    const currentOrder = isCustom
+      ? (assessment?.custom_questions_order || [])
+      : (assessment?.qualifying_questions_order || []);
+
+    const updateData = isCustom
+      ? {
+          custom_questions: currentQuestions.filter((q) => !questionIds.includes(q)),
+          custom_questions_order: currentOrder.filter((q) => !questionIds.includes(q)),
+        }
+      : {
+          qualifying_questions: currentQuestions.filter((q) => !questionIds.includes(q)),
+          qualifying_questions_order: currentOrder.filter((q) => !questionIds.includes(q)),
+        };
+
     await updateAssessment({
       assessmentId: assessment?.id,
-      data: {
-        custom_questions: assessment?.custom_questions?.filter(
-          (q) => !questionIds.includes(q)
-        ),
-        custom_questions_order: assessment?.custom_questions_order?.filter(
-          (q) => !questionIds.includes(q)
-        ),
-      },
+      data: updateData,
     });
   };
 
@@ -170,14 +197,16 @@ const QuestionSequenceTable = ({
 
   const debouncedUpdateRandomize = useCallback(
     debounce((checked) => {
+      const updateData = isCustom
+        ? { custom_questions_randomize: checked }
+        : { qualifying_questions_randomize: checked };
+
       updateAssessment({
         assessmentId: assessment?.id,
-        data: {
-          custom_questions_randomize: checked,
-        },
+        data: updateData,
       });
     }, 500),
-    [updateAssessment, assessment?.id]
+    [updateAssessment, assessment?.id, isCustom]
   );
 
   const handleRandomize = (checked) => {
@@ -203,7 +232,7 @@ const QuestionSequenceTable = ({
   const handleDragEnd = (event) => {
     const { active, over } = event;
     if (active.id !== over?.id) {
-      setQuestionOrder((items) => {
+      setLocalQuestionOrder((items) => {
         const oldIndex = items.indexOf(active.id);
         const newIndex = items.indexOf(over.id);
         const newOrder = arrayMove(items, oldIndex, newIndex);
@@ -276,7 +305,7 @@ const QuestionSequenceTable = ({
    ***************************************************************************/
   const orderedQuestions =
     questions?.length > 0
-      ? questionOrder
+      ? localQuestionOrder
           .map((id) => questions.find((q) => q.id === id))
           .filter(Boolean)
       : [];
@@ -286,6 +315,8 @@ const QuestionSequenceTable = ({
    ***************************************************************************/
   if (questionsError) return <div>Error loading questions</div>;
 
+  const sectionTitle = isCustom ? "Question Sequence" : "Qualifying Questions";
+
   return (
     <Section
       id="question-sequence"
@@ -293,7 +324,7 @@ const QuestionSequenceTable = ({
       className={className}
       header={
         <SectionHeader
-          title="Question Sequence"
+          title={sectionTitle}
           headerRight={
             <div className="flex items-center gap-4">
               {/* Randomise check-box */}
@@ -363,7 +394,7 @@ const QuestionSequenceTable = ({
             autoScroll={{ enabled: false }}
           >
             <SortableContext
-              items={questionOrder}
+              items={localQuestionOrder}
               strategy={verticalListSortingStrategy}
             >
               {orderedQuestions.map((q, idx) => (
@@ -375,7 +406,7 @@ const QuestionSequenceTable = ({
       ) : (
         <Section variant="white">
           <EmptyState
-            text="You haven't added any question yet!"
+            text={`You haven't added any ${isCustom ? 'custom' : 'qualifying'} question yet!`}
             subtext="Stay productive by creating a task."
           >
             <Button variant="outline" className="rounded-xl">

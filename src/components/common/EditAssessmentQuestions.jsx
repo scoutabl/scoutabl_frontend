@@ -242,6 +242,7 @@ const EditAssessmentQuestions = () => {
           className="w-[40%] overflow-y-auto h-[fit-content]"
           variant="white"
           assessmentId={assessment?.id}
+          questionType="custom"
           onEdit={() => {}}
           minimal
         />
