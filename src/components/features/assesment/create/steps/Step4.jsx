@@ -19,15 +19,19 @@ import { X, Crown, HelpCircle } from "lucide-react";
 import SectionHeader from "@/components/ui/section-header";
 import EmptyState from "@/components/ui/empty-state";
 import QuestionSequenceTable from "@/components/common/QuestionSequenceTable";
+import EditAssessmentQuestionsPopup from "./EditAssessmentQuestionsPopup";
 
 const Step4 = () => {
-  const { assessment, steps, selectedStep, handleStepChange } = useAssessmentContext();
+  const { assessment, steps, selectedStep, handleStepChange } =
+    useAssessmentContext();
   const [activeTab, setActiveTab] = useState("essential-settings");
   const [domains, setDomains] = useState(["gmail.com", "abc.com"]);
   const [selectedUsers, setSelectedUsers] = useState([
     "sxcscascsc",
     "scacascasc",
   ]);
+  const [customQuestionLibraryOpen, setCustomQuestionLibraryOpen] = useState(false);
+  const [qualifyingQuestionLibraryOpen, setQualifyingQuestionLibraryOpen] = useState(false);
 
   // Section collapse state
   const [collapsedSections, setCollapsedSections] = useState({
@@ -73,6 +77,9 @@ const Step4 = () => {
 
   return (
     <div className="flex flex-col gap-6">
+      <EditAssessmentQuestionsPopup questionType="qualifying" open={qualifyingQuestionLibraryOpen} onOpenChange={setQualifyingQuestionLibraryOpen} />
+      <EditAssessmentQuestionsPopup questionType="custom" open={customQuestionLibraryOpen} onOpenChange={setCustomQuestionLibraryOpen} />
+
       {/* Progress Section */}
       <div className="flex flex-row justify-between items-end">
         <AssessmentStep
@@ -122,16 +129,31 @@ const Step4 = () => {
           collapsable={true}
           collapsed={collapsedSections["sequence"]}
           onToggle={() => toggleSectionCollapse("sequence")}
+          contentClassName="flex flex-col gap-10"
         >
-          <Section contentClassName="text-center flex flex-col gap-5">
-            <SectionHeader number={1} title="Qualifying Questions" tooltipText="Qualifying questions are presented to candidates ahead of the tests. The answers to these questions determine if candidates satisfy the essential requirements of the job. Only if all questions are answered as required, they proceed to the tests." />
-            <QuestionSequenceTable 
-              assessmentId={assessment?.id}
-              questionType="qualifying"
-              onEdit={() => {}}
-              minimal={false}
-            />
-          </Section>
+          {/* <SectionHeader number={1} title="Qualifying Questions" tooltipText="Qualifying questions are presented to candidates ahead of the tests. The answers to these questions determine if candidates satisfy the essential requirements of the job. Only if all questions are answered as required, they proceed to the tests." /> */}
+          <QuestionSequenceTable
+            assessmentId={assessment?.id}
+            questionType="qualifying"
+            onEdit={() => {}}
+            minimal={false}
+            headerProps={{ number: 1 }}
+            secitonProps={{ variant: "default" }}
+            variant="finalize"
+            showSubHeader
+            onAddFromLibrary={() => setQualifyingQuestionLibraryOpen(true)}
+          />
+          <QuestionSequenceTable
+            assessmentId={assessment?.id}
+            questionType="custom"
+            onEdit={() => {}}
+            minimal={false}
+            headerProps={{ number: 3 }}
+            secitonProps={{ variant: "default" }}
+            variant="finalize"
+            showSubHeader
+            onAddFromLibrary={() => setCustomQuestionLibraryOpen(true)}
+          />
         </Section>
 
         {/* Essential Settings Section */}

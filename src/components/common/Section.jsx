@@ -29,7 +29,7 @@ const Section = ({
     <section
       id={id}
       className={cn(
-        "rounded-2xl border p-5",
+        "rounded-2xl p-5",
         variants[variant],
         className
       )}

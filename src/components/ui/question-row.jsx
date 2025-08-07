@@ -18,6 +18,16 @@ import DuplicateIcon from "@/assets/duplicateIcon.svg?react";
 import TrashIcon from "@/assets/trashIcon.svg?react";
 import DOMPurify from "dompurify";
 import QuestionTypeTag from "@/components/ui/question-type-tag";
+import { cn } from "@/lib/utils";
+
+const variants = {
+  "default": {
+    "root": "bg-backgroundPrimary",
+  },
+  "finalize": {
+    "root": "bg-white",
+  }
+}
 
 const QuestionRow = ({
   isMovable = true,
@@ -34,6 +44,7 @@ const QuestionRow = ({
   questionId,
   dragListeners,
   minimal = false,
+  variant="default",
 }) => {
   // Format completion time from "HH:MM" to "X hr Y min"
   const formatCompletionTime = (timeStr) => {
@@ -51,7 +62,7 @@ const QuestionRow = ({
   const safeTitle = DOMPurify.sanitize(title);
 
   return (
-    <div className="py-2 px-5 flex items-center gap-4 bg-backgroundPrimary rounded-xl">
+    <div className={cn("py-2 px-5 flex items-center gap-4 rounded-xl", variants[variant].root)}>
       {/* Order/Grip Section */}
       <div className="p-[6px] flex justify-between items-center gap-1 border border-purplePrimary rounded-full w-[65px] h-[30px]">
         {isMovable && (

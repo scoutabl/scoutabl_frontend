@@ -11,9 +11,7 @@ import { Button } from "@/components/ui/button";
 import AiIcon from "@/assets/AiIcon.svg?react";
 import ChevronLeftIcon from "@/assets/chevronLeftIcon.svg?react";
 import ChevronRightIcon from "@/assets/chevronRightIcon.svg?react";
-import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
-import EditAssessmentQuestions from "@/components/common/EditAssessmentQuestions";
-import Section from "@/components/common/Section";
+import EditAssessmentQuestionsPopup from "./EditAssessmentQuestionsPopup";
 
 // -------------------------------------------------------------
 // Step-3 – Add Custom Questions
@@ -88,10 +86,10 @@ const Step3 = () => {
           <p className="text-sm font-medium text-greyAccent">You can add up to 20 custom questions at a time</p>
         </div>
         <div className="flex items-center gap-3">
-          <Button className="px-4 py-2 rounded-xl border border-purplePrimary bg-[#EEF2FC] text-purplePrimary text-sm font-medium hover:bg-purplePrimary hover:text-white transition-all duration-300 ease-in">
+          <Button variant="outline">
             Skip to Finalize
           </Button>
-          <Button className="px-4 py-2 rounded-xl bg-purplePrimary hover:bg-[#EEF2FC] text-sm font-medium hover:text-purplePrimary text-white transition-all duration-300 ease-in border border-purplePrimary" onClick={handleAddFromLibrary}>
+          <Button variant="primary" onClick={handleAddFromLibrary}>
             Add from Library
           </Button>
         </div>
@@ -109,7 +107,7 @@ const Step3 = () => {
 
       {/* Add / Edit modal */}
       <QuestionModal
-        key={modalMode + (modalInitialData?.id || "")}
+      key={modalMode + (modalInitialData?.id || "")}
         isOpen={modalOpen}
         setIsOpen={setModalOpen}
         mode={modalMode}
@@ -119,18 +117,10 @@ const Step3 = () => {
         asssessmentId={assessment?.id}
       />
 
-      <Dialog open={questionLibraryOpen} onOpenChange={setQuestionLibraryOpen}>
-        <DialogTitle hidden>Add Questions</DialogTitle>
-        <DialogContent className="max-h-[80vh] w-[80vw] flex flex-col overflow-y-auto p-0 border-0">
-          <Section variant="default" className="rounded-none border-0" contentClassName="flex flex-col gap-4 h-full">
-            <div className="flex flex-col gap-1">
-              <h2 className="text-2xl font-semibold text-greyPrimary">Add Questions From Library</h2>
-              <p className="text-md text-greyAccent">Custom questions are added to the end of the assessment</p>
-            </div>
-            <EditAssessmentQuestions />
-          </Section>
-        </DialogContent>
-      </Dialog>
+      <EditAssessmentQuestionsPopup 
+        open={questionLibraryOpen} 
+        onOpenChange={setQuestionLibraryOpen} 
+      />
 
       {/* Back / Next navigation buttons */}
       <div className="flex items-center justify-between">

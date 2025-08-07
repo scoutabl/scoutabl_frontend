@@ -167,6 +167,7 @@ const AssessmentNavbarWrapper = ({ children }) => {
             assessmentName,
             updateAssessment,
             isUpdatingAssessment,
+            isAssessmentLoading,
             // setAssessmentId,
             steps: stepsArray,
             selectedStep,

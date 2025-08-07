@@ -16,7 +16,7 @@ import Dropdown from "../ui/dropdown";
 import PaginatedScroll from "./PaginatedScroll";
 import { getQuestionType } from "@/lib/questionTypes";
 
-const EditAssessmentQuestions = () => {
+const EditAssessmentQuestions = ({ questionType = "custom" }) => {
   /***************************************************************************
    * Context & State                                                         *
    ***************************************************************************/
@@ -26,11 +26,24 @@ const EditAssessmentQuestions = () => {
   const { data: allTags } = useAllTags();
   const { resolveEnum } = useEnums();
 
+  // Determine which fields to use based on questionType
+  const isCustom = questionType === "custom";
+  const questionIds = isCustom
+    ? assessment?.custom_questions || []
+    : assessment?.qualifying_questions || [];
+  const questionOrder = isCustom
+    ? assessment?.custom_questions_order || []
+    : assessment?.qualifying_questions_order || [];
+
   const [searchParams, setSearchParams] = useState({
     search: "",
     page_size: 10,
     library: organisationLibraryId,
-    question_type: resolveEnum("QuestionType.CUSTOM_QUESTION"),
+    question_type: resolveEnum(
+      isCustom
+        ? "QuestionType.CUSTOM_QUESTION"
+        : "QuestionType.QUALIFYING_QUESTION"
+    ),
   });
 
   const skillTags =
@@ -41,11 +54,10 @@ const EditAssessmentQuestions = () => {
     ) || [];
 
   // Selected & order helpers -------------------------------------------------
-  const selectedQuestionIds = assessment?.custom_questions || [];
-  const questionOrder =
-    assessment?.custom_questions_order?.filter((id) =>
-      selectedQuestionIds.includes(id)
-    ) || selectedQuestionIds;
+  const selectedQuestionIds = questionIds;
+  const questionOrderFiltered = questionOrder.filter((id) =>
+    selectedQuestionIds.includes(id)
+  ) || selectedQuestionIds;
 
   // Fetch candidate questions list (simple — no infinite scroll)
   const {
@@ -72,15 +84,26 @@ const EditAssessmentQuestions = () => {
 
   const handleAdd = async (questionId) => {
     if (isUpdatingAssessment) return;
+    
+    const updateData = isCustom
+      ? {
+          custom_questions: [...selectedQuestionIds, questionId],
+          custom_questions_order: [
+            ...questionOrderFiltered.filter((id) => id !== questionId),
+            questionId,
+          ],
+        }
+      : {
+          qualifying_questions: [...selectedQuestionIds, questionId],
+          qualifying_questions_order: [
+            ...questionOrderFiltered.filter((id) => id !== questionId),
+            questionId,
+          ],
+        };
+
     await updateAssessment({
       assessmentId: assessment.id,
-      data: {
-        custom_questions: [...selectedQuestionIds, questionId],
-        custom_questions_order: [
-          ...questionOrder.filter((id) => id !== questionId),
-          questionId,
-        ],
-      },
+      data: updateData,
     });
   };
 
@@ -240,9 +263,9 @@ const EditAssessmentQuestions = () => {
         {/* Right – mini sequence table */}
         <QuestionSequenceTable
           className="w-[40%] overflow-y-auto h-[fit-content]"
-          variant="white"
+          variant="default"
           assessmentId={assessment?.id}
-          questionType="custom"
+          questionType={questionType}
           onEdit={() => {}}
           minimal
         />

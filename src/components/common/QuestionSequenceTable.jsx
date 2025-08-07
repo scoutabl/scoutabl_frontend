@@ -38,11 +38,23 @@ import Step3Loading from "@/components/features/assesment/create/steps/step3-cus
 import { getQuestionType } from "@/lib/questionTypes";
 
 import TrashIcon from "@/assets/trashIcon.svg?react";
-import PlusIcon from "@/assets/plusIcon.svg?react";
+import { Plus } from "lucide-react";
 
 import { cn, debounce } from "@/lib/utils";
 import Loading from "../ui/loading";
 import { useEnums } from "@/context/EnumsContext";
+import { useAssessmentContext } from "./AssessmentNavbarWrapper";
+
+const variants = {
+  default: {
+    header: "bg-purpleSecondary",
+    scoreChip: "bg-purpleSecondary",
+  },
+  finalize: {
+    header: "bg-backgroundPrimary",
+    scoreChip: "bg-white",
+  },
+};
 
 /**
  * Re-usable component that renders the "Question Sequence" table used while
@@ -64,28 +76,37 @@ const QuestionSequenceTable = ({
   onEdit,
   minimal = false,
   className = "",
+  headerProps = {},
+  secitonProps = {},
+  showHeader = true,
+  showSubHeader = false,
+  onAddQuestion,
+  onAddFromLibrary,
+  variant = "default",
 }) => {
   /***************************************************************************
    * Data fetching                                                            *
    ***************************************************************************/
-  const { data: assessment, isLoading: isAssessmentLoading } =
-    useAssessment(assessmentId);
+  const {
+    assessment,
+    updateAssessment,
+    isUpdatingAssessment,
+    isAssessmentLoading,
+  } = useAssessmentContext();
 
-  const { mutate: updateAssessment, isPending: isUpdatingAssessment } =
-    useUpdateAssessment();
-    const {resolveEnum} = useEnums();
+  const { resolveEnum } = useEnums();
 
   // Determine which fields to use based on questionType
   const isCustom = questionType === "custom";
-  const questionIds = isCustom 
-    ? (assessment?.custom_questions || [])
-    : (assessment?.qualifying_questions || []);
+  const questionIds = isCustom
+    ? assessment?.custom_questions || []
+    : assessment?.qualifying_questions || [];
   const questionOrder = isCustom
-    ? (assessment?.custom_questions_order || [])
-    : (assessment?.qualifying_questions_order || []);
+    ? assessment?.custom_questions_order || []
+    : assessment?.qualifying_questions_order || [];
   const questionRandomize = isCustom
-    ? (assessment?.custom_questions_randomize || false)
-    : (assessment?.qualifying_questions_randomize || false);
+    ? assessment?.custom_questions_randomize || false
+    : assessment?.qualifying_questions_randomize || false;
 
   const {
     data: questions,
@@ -94,7 +115,11 @@ const QuestionSequenceTable = ({
   } = useQuestions({
     params: {
       id__in: questionIds.join(","),
-      question_type: resolveEnum(isCustom ? "QuestionType.CUSTOM_QUESTION" : "QuestionType.QUALIFYING_QUESTION"),
+      question_type: resolveEnum(
+        isCustom
+          ? "QuestionType.CUSTOM_QUESTION"
+          : "QuestionType.QUALIFYING_QUESTION"
+      ),
       fetch_all: 1,
     },
     enabled: !!assessmentId,
@@ -130,17 +155,18 @@ const QuestionSequenceTable = ({
   // Persist order changes back to the server (debounced by React-Query mutation)
   useEffect(() => {
     if (isUpdatingFromAPI.current) return;
-    if (
-      JSON.stringify(localQuestionOrder) ===
-      JSON.stringify(questionOrder)
-    )
+    if (JSON.stringify(localQuestionOrder) === JSON.stringify(questionOrder))
       return;
 
-    if (assessment?.id && localQuestionOrder.length > 0 && !isUpdatingAssessment) {
+    if (
+      assessment?.id &&
+      localQuestionOrder.length > 0 &&
+      !isUpdatingAssessment
+    ) {
       const updateData = isCustom
         ? { custom_questions_order: localQuestionOrder }
         : { qualifying_questions_order: localQuestionOrder };
-      
+
       updateAssessment({
         assessmentId: assessment.id,
         data: updateData,
@@ -164,20 +190,28 @@ const QuestionSequenceTable = ({
 
   const removeQuestions = async (questionIds) => {
     const currentQuestions = isCustom
-      ? (assessment?.custom_questions || [])
-      : (assessment?.qualifying_questions || []);
+      ? assessment?.custom_questions || []
+      : assessment?.qualifying_questions || [];
     const currentOrder = isCustom
-      ? (assessment?.custom_questions_order || [])
-      : (assessment?.qualifying_questions_order || []);
+      ? assessment?.custom_questions_order || []
+      : assessment?.qualifying_questions_order || [];
 
     const updateData = isCustom
       ? {
-          custom_questions: currentQuestions.filter((q) => !questionIds.includes(q)),
-          custom_questions_order: currentOrder.filter((q) => !questionIds.includes(q)),
+          custom_questions: currentQuestions.filter(
+            (q) => !questionIds.includes(q)
+          ),
+          custom_questions_order: currentOrder.filter(
+            (q) => !questionIds.includes(q)
+          ),
         }
       : {
-          qualifying_questions: currentQuestions.filter((q) => !questionIds.includes(q)),
-          qualifying_questions_order: currentOrder.filter((q) => !questionIds.includes(q)),
+          qualifying_questions: currentQuestions.filter(
+            (q) => !questionIds.includes(q)
+          ),
+          qualifying_questions_order: currentOrder.filter(
+            (q) => !questionIds.includes(q)
+          ),
         };
 
     await updateAssessment({
@@ -295,6 +329,7 @@ const QuestionSequenceTable = ({
           onSelect={handleQuestionSelect}
           dragListeners={listeners}
           minimal={minimal}
+          variant={variant === "default" ? "default" : "finalize"}
         />
       </div>
     );
@@ -315,7 +350,7 @@ const QuestionSequenceTable = ({
    ***************************************************************************/
   if (questionsError) return <div>Error loading questions</div>;
 
-  const sectionTitle = isCustom ? "Question Sequence" : "Qualifying Questions";
+  const sectionTitle = isCustom ? "Custom Questions" : "Qualifying Questions";
 
   return (
     <Section
@@ -327,31 +362,35 @@ const QuestionSequenceTable = ({
           title={sectionTitle}
           headerRight={
             <div className="flex items-center gap-4">
-              {/* Randomise check-box */}
-              {!minimal && (
-                <div className="flex items-center gap-2">
-                  <Checkbox
-                    name="randomize"
-                    id="randomize"
-                    checked={localRandomize}
-                    onCheckedChange={handleRandomize}
-                  />
-                  <label
-                    htmlFor="randomize"
-                    className="text-sm font-medium text-greyAccent"
-                  >
-                    Randomize Order
-                  </label>
-                </div>
-              )}
+              <div className="flex flex-row px-1 gap-4 justify-between">
+                {/* Randomise check-box */}
+                {!minimal && (
+                  <div className="flex items-center gap-2">
+                    <Checkbox
+                      name="randomize"
+                      id="randomize"
+                      checked={localRandomize}
+                      onCheckedChange={handleRandomize}
+                    />
+                    <label
+                      htmlFor="randomize"
+                      className="text-sm font-medium text-greyAccent"
+                    >
+                      Randomize Order
+                    </label>
+                  </div>
+                )}
 
-              {/* Total score (static for now) */}
-              <Chip className="bg-purpleSecondary rounded-full">
-                <span className="font-semibold text-sm text-greyPrimary">
-                  Total Score:&nbsp;
-                </span>
-                <span>900</span>
-              </Chip>
+                {/* Total score (static for now) */}
+                <Chip
+                  className={cn("rounded-full", variants[variant].scoreChip)}
+                >
+                  <span className="font-semibold text-sm text-greyPrimary">
+                    Total Score:&nbsp;
+                  </span>
+                  <span>900</span>
+                </Chip>
+              </div>
 
               {/* Delete multiple */}
               <Motion.button
@@ -367,17 +406,39 @@ const QuestionSequenceTable = ({
               </Motion.button>
             </div>
           }
+          subHeader={showSubHeader && (
+            <div className="flex items-center justify-end gap-2">
+              <Button
+                variant="outline"
+                icon={Plus}
+                iconPlacement="left"
+                onClick={onAddQuestion}
+              >
+                Add Question
+              </Button>
+              <Button variant="primary" onClick={onAddFromLibrary}>
+                Add from Library
+              </Button>
+            </div>
+          )}
+          {...headerProps}
         />
       }
+      {...secitonProps}
     >
       {isAssessmentLoading || isQuestionsLoading ? (
         <Loading />
       ) : questions?.length > 0 ? (
         <div className="flex flex-col gap-4 text-sm">
           {/* Table header */}
-          {!minimal && (
-            <div className="py-3 px-5 flex items-center gap-4 bg-purpleSecondary rounded-xl font-semibold">
-              <div className="w-[65px] flex-shrink-0 text-center">No.</div>
+          {!minimal && showHeader && (
+            <div
+              className={cn(
+                "py-3 px-5 flex items-center gap-4 rounded-xl font-semibold",
+                variants[variant].header
+              )}
+            >
+              <div className="w-[65px] flex-shrink-0 text-center"></div>
               <div className="flex-1">Question</div>
               <div className="w-24 flex-shrink-0 text-center">Time</div>
               <div className="w-[200px] flex-shrink-0 text-center">Type</div>
@@ -406,15 +467,15 @@ const QuestionSequenceTable = ({
       ) : (
         <Section variant="white">
           <EmptyState
-            text={`You haven't added any ${isCustom ? 'custom' : 'qualifying'} question yet!`}
+            text={`You haven't added any ${
+              isCustom ? "custom" : "qualifying"
+            } question yet!`}
             subtext="Stay productive by creating a task."
           >
-            <Button variant="outline" className="rounded-xl">
-              <PlusIcon className="w-4 h-4 mr-2" /> Add Question
+            <Button variant="outline" icon={Plus} iconPlacement="left">
+              Add Question
             </Button>
-            <Button className="rounded-xl bg-purplePrimary hover:bg-purplePrimary/80">
-              Add from Library
-            </Button>
+            <Button variant="primary">Add from Library</Button>
           </EmptyState>
         </Section>
       )}
