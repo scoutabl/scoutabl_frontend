@@ -61,7 +61,7 @@ const DURATION_FILTERS = [
   },
 ];
 
-const EditAssessmentTests = () => {
+const EditAssessmentTests = ({ modal = false }) => {
   const [openTestId, setOpenTestId] = useState(null);
   const [openWeightTestId, setOpenWeightTestId] = useState(null);
 
@@ -201,6 +201,7 @@ const EditAssessmentTests = () => {
                   key={index}
                   test={test}
                   order={index + 1}
+                  modal={modal}
                   options={[
                     {
                       value: "preview",

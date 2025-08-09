@@ -3,7 +3,7 @@ import { cn } from "@/lib/utils";
 import Dropdown from "../ui/dropdown";
 import { EllipsisVertical } from "lucide-react";
 
-const AddedTest = ({ test, order, options, onAction }) => {
+const AddedTest = ({ test, order, options, onAction, modal = false }) => {
   const { name } = test || {};
   const notSet = test == null;
 
@@ -32,7 +32,7 @@ const AddedTest = ({ test, order, options, onAction }) => {
           iconOnly
           onChange={onAction}
           closeOnSelect
-          modal={false}
+          modal={modal}
         />
       )}
     </div>

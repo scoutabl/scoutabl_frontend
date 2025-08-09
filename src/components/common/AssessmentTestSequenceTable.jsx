@@ -6,15 +6,9 @@ import {
   useSensor,
   useSensors,
 } from "@dnd-kit/core";
-import {
-  arrayMove,
-  SortableContext,
-  useSortable,
-} from "@dnd-kit/sortable";
+import { arrayMove, SortableContext, useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import {
-  restrictToParentElement,
-} from "@dnd-kit/modifiers";
+import { restrictToParentElement } from "@dnd-kit/modifiers";
 
 import { Button } from "@/components/ui/button";
 import Chip from "@/components/ui/chip";
@@ -74,7 +68,10 @@ const AssessmentTestSequenceTable = ({
   } = useAssessmentContext();
 
   // Get test data from assessment
-  const testOrder = useMemo(() => assessment?.tests_order || [], [assessment?.tests_order]);
+  const testOrder = useMemo(
+    () => assessment?.tests_order || [],
+    [assessment?.tests_order]
+  );
   const testWeights = assessment?.test_weights || {};
   const testDetails = assessment?.test_details || [];
 
@@ -106,11 +103,7 @@ const AssessmentTestSequenceTable = ({
     if (isUpdatingFromAPI.current) return;
     if (JSON.stringify(localTestOrder) === JSON.stringify(testOrder)) return;
 
-    if (
-      assessment?.id &&
-      localTestOrder.length > 0 &&
-      !isUpdatingAssessment
-    ) {
+    if (assessment?.id && localTestOrder.length > 0 && !isUpdatingAssessment) {
       updateAssessment({
         assessmentId: assessment.id,
         data: { tests_order: localTestOrder },
@@ -157,7 +150,7 @@ const AssessmentTestSequenceTable = ({
     if (isUpdatingAssessment) return;
     const currentTests = assessment?.tests || [];
     const currentOrder = assessment?.tests_order || [];
-    
+
     await updateAssessment({
       assessmentId: assessment.id,
       data: {
@@ -201,7 +194,10 @@ const AssessmentTestSequenceTable = ({
    ***************************************************************************/
   const renderTestDialogs = ({ test, isEdit }) => (
     <>
-      <Dialog open={openTestId === test.id} onOpenChange={() => setOpenTestId(null)}>
+      <Dialog
+        open={openTestId === test.id}
+        onOpenChange={() => setOpenTestId(null)}
+      >
         <DialogContent className="w-[80vw] overflow-y-auto p-0 rounded-3xl">
           <DialogTitle hidden>{test.name}</DialogTitle>
           <AssessmentTestDetail test={test} allTags={[]} />
@@ -297,25 +293,12 @@ const AssessmentTestSequenceTable = ({
         <SectionHeader
           title="Tests"
           headerRight={
-            <div className="flex items-center gap-4">
-              {/* Total score (static for now) */}
-              <Chip
-                className={cn("rounded-full", variants[variant].scoreChip)}
-              >
-                <span className="font-semibold text-sm text-greyPrimary">
-                  Total Score:&nbsp;
-                </span>
-                <span>900</span>
-              </Chip>
-            </div>
-          }
-          subHeader={showSubHeader && (
             <div className="flex items-center justify-end gap-2">
               <Button variant="primary" onClick={onAddFromLibrary}>
                 Add from Library
               </Button>
             </div>
-          )}
+          }
           {...headerProps}
         />
       }
@@ -331,9 +314,7 @@ const AssessmentTestSequenceTable = ({
             modifiers={[restrictToParentElement]}
             autoScroll={{ enabled: false }}
           >
-            <SortableContext
-              items={localTestOrder}
-            >
+            <SortableContext items={localTestOrder}>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {orderedTests.map((t, idx) => (
                   <SortableTestRow key={t.id} testId={t.id} index={idx} />
@@ -359,4 +340,4 @@ const AssessmentTestSequenceTable = ({
   );
 };
 
-export default AssessmentTestSequenceTable; 
+export default AssessmentTestSequenceTable;

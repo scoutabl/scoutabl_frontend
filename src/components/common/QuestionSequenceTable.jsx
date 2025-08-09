@@ -125,6 +125,8 @@ const QuestionSequenceTable = ({
     enabled: !!assessmentId,
   });
 
+  const totalScore = questions?.reduce((acc, q) => acc + q.custom_score, 0);
+
   /***************************************************************************
    * Local state                                                              *
    ***************************************************************************/
@@ -388,7 +390,7 @@ const QuestionSequenceTable = ({
                   <span className="font-semibold text-sm text-greyPrimary">
                     Total Score:&nbsp;
                   </span>
-                  <span>900</span>
+                  <span>{totalScore}</span>
                 </Chip>
               </div>
 
