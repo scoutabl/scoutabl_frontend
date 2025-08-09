@@ -105,8 +105,7 @@ const QuestionSequenceTable = ({
     ? assessment?.custom_questions_order || []
     : assessment?.qualifying_questions_order || [];
   const questionRandomize = isCustom
-    ? assessment?.custom_questions_randomize || false
-    : assessment?.qualifying_questions_randomize || false;
+    ? assessment?.custom_questions_randomize || false : false;
 
   const {
     data: questions,
@@ -366,7 +365,7 @@ const QuestionSequenceTable = ({
             <div className="flex items-center gap-4">
               <div className="flex flex-row px-1 gap-4 justify-between">
                 {/* Randomise check-box */}
-                {!minimal && (
+                {!minimal && isCustom && (
                   <div className="flex items-center gap-2">
                     <Checkbox
                       name="randomize"
