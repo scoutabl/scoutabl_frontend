@@ -19,7 +19,9 @@ import { X, Crown, HelpCircle } from "lucide-react";
 import SectionHeader from "@/components/ui/section-header";
 import EmptyState from "@/components/ui/empty-state";
 import QuestionSequenceTable from "@/components/common/QuestionSequenceTable";
+import AssessmentTestSequenceTable from "@/components/common/AssessmentTestSequenceTable";
 import EditAssessmentQuestionsPopup from "./EditAssessmentQuestionsPopup";
+import EditAssessmentTestsPopup from "./EditAssessmentTestsPopup";
 
 const Step4 = () => {
   const { assessment, steps, selectedStep, handleStepChange } =
@@ -32,6 +34,7 @@ const Step4 = () => {
   ]);
   const [customQuestionLibraryOpen, setCustomQuestionLibraryOpen] = useState(false);
   const [qualifyingQuestionLibraryOpen, setQualifyingQuestionLibraryOpen] = useState(false);
+  const [testLibraryOpen, setTestLibraryOpen] = useState(false);
 
   // Section collapse state
   const [collapsedSections, setCollapsedSections] = useState({
@@ -79,6 +82,7 @@ const Step4 = () => {
     <div className="flex flex-col gap-6">
       <EditAssessmentQuestionsPopup questionType="qualifying" open={qualifyingQuestionLibraryOpen} onOpenChange={setQualifyingQuestionLibraryOpen} />
       <EditAssessmentQuestionsPopup questionType="custom" open={customQuestionLibraryOpen} onOpenChange={setCustomQuestionLibraryOpen} />
+      <EditAssessmentTestsPopup open={testLibraryOpen} onOpenChange={setTestLibraryOpen} />
 
       {/* Progress Section */}
       <div className="flex flex-row justify-between items-end">
@@ -143,6 +147,17 @@ const Step4 = () => {
             showSubHeader
             onAddFromLibrary={() => setQualifyingQuestionLibraryOpen(true)}
           />
+
+          {/* Test Sequence Table */}
+          <AssessmentTestSequenceTable
+            minimal={false}
+            headerProps={{ number: 2 }}
+            secitonProps={{ variant: "default" }}
+            variant="finalize"
+            showSubHeader
+            onAddFromLibrary={() => setTestLibraryOpen(true)}
+          />
+
           <QuestionSequenceTable
             assessmentId={assessment?.id}
             questionType="custom"

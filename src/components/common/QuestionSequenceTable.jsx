@@ -456,7 +456,7 @@ const QuestionSequenceTable = ({
           >
             <SortableContext
               items={localQuestionOrder}
-              strategy={verticalListSortingStrategy}
+              // strategy={verticalListSortingStrategy}
             >
               {orderedQuestions.map((q, idx) => (
                 <SortableQuestionRow key={q.id} questionId={q.id} index={idx} />
