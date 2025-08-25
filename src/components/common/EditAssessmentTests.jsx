@@ -61,7 +61,7 @@ const DURATION_FILTERS = [
   },
 ];
 
-const EditAssessmentTests = ({ modal = false }) => {
+const EditAssessmentTests = ({ insideModal = false }) => {
   const [openTestId, setOpenTestId] = useState(null);
   const [openWeightTestId, setOpenWeightTestId] = useState(null);
 
@@ -201,7 +201,6 @@ const EditAssessmentTests = ({ modal = false }) => {
                   key={index}
                   test={test}
                   order={index + 1}
-                  modal={modal}
                   options={[
                     {
                       value: "preview",
@@ -263,6 +262,7 @@ const EditAssessmentTests = ({ modal = false }) => {
                   library: val,
                 }));
               }}
+              modal={!insideModal}
             />
             <Dropdown
               name="Skill"
@@ -288,6 +288,7 @@ const EditAssessmentTests = ({ modal = false }) => {
                 });
               }}
               className="max-w-[200px]"
+              modal={!insideModal}
             />
             <Dropdown
               name="Type"
@@ -311,6 +312,7 @@ const EditAssessmentTests = ({ modal = false }) => {
                 });
               }}
               className="max-w-[200px]"
+              modal={!insideModal}
             />
             <Dropdown
               name="Duration"
@@ -354,6 +356,7 @@ const EditAssessmentTests = ({ modal = false }) => {
                   };
                 });
               }}
+              modal={!insideModal}
             />
           </div>
         </div>

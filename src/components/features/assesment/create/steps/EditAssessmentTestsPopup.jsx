@@ -23,7 +23,7 @@ const EditAssessmentTestsPopup = ({ open, onOpenChange }) => {
         </DialogTitle>
 
         <div className="p-6">
-          <EditAssessmentTests modal={true} />
+          <EditAssessmentTests insideModal={true} />
         </div>
       </DialogContent>
     </Dialog>
