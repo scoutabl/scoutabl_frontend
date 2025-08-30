@@ -1,4 +1,10 @@
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import React, {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  useMemo,
+} from "react";
 import { motion as Motion } from "framer-motion";
 import {
   DndContext,
@@ -101,11 +107,21 @@ const QuestionSequenceTable = ({
   const questionIds = isCustom
     ? assessment?.custom_questions || []
     : assessment?.qualifying_questions || [];
-  const questionOrder = isCustom
-    ? assessment?.custom_questions_order || []
-    : assessment?.qualifying_questions_order || [];
-  const questionRandomize = isCustom
-    ? assessment?.custom_questions_randomize || false : false;
+  const questionOrder = useMemo(
+    () =>
+      isCustom
+        ? assessment?.custom_questions_order || []
+        : assessment?.qualifying_questions_order || [],
+    [
+      isCustom,
+      assessment?.custom_questions_order,
+      assessment?.qualifying_questions_order,
+    ]
+  );
+  const questionRandomize = useMemo(
+    () => (isCustom ? assessment?.custom_questions_randomize || false : false),
+    [isCustom, assessment?.custom_questions_randomize]
+  );
 
   const {
     data: questions,
@@ -407,21 +423,23 @@ const QuestionSequenceTable = ({
               </Motion.button>
             </div>
           }
-          subHeader={showSubHeader && (
-            <div className="flex items-center justify-end gap-2">
-              <Button
-                variant="outline"
-                icon={Plus}
-                iconPlacement="left"
-                onClick={onAddQuestion}
-              >
-                Add Question
-              </Button>
-              <Button variant="primary" onClick={onAddFromLibrary}>
-                Add from Library
-              </Button>
-            </div>
-          )}
+          subHeader={
+            showSubHeader && (
+              <div className="flex items-center justify-end gap-2">
+                <Button
+                  variant="outline"
+                  icon={Plus}
+                  iconPlacement="left"
+                  onClick={onAddQuestion}
+                >
+                  Add Question
+                </Button>
+                <Button variant="primary" onClick={onAddFromLibrary}>
+                  Add from Library
+                </Button>
+              </div>
+            )
+          }
           {...headerProps}
         />
       }
