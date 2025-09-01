@@ -5,6 +5,7 @@ const variants = {
   default: "bg-purpleSecondary",
   suggestion: "bg-purpleQuaternary border border-1 border-purplePrimary",
   white: "bg-white",
+  primary: "bg-backgroundPrimary",
   transparent: "bg-inherit border-none p-0"
 };
 

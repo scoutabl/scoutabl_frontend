@@ -151,7 +151,7 @@ const Step4 = () => {
             onEdit={() => {}}
             minimal={false}
             headerProps={{ number: 1 }}
-            secitonProps={{ variant: "default" }}
+            secitonProps={{ variant: "primary" }}
             variant="finalize"
             showSubHeader
             onAddFromLibrary={() => setQualifyingQuestionLibraryOpen(true)}
@@ -161,7 +161,7 @@ const Step4 = () => {
           <AssessmentTestSequenceTable
             minimal={false}
             headerProps={{ number: 2 }}
-            secitonProps={{ variant: "default" }}
+            secitonProps={{ variant: "primary" }}
             variant="finalize"
             showSubHeader
             onAddFromLibrary={() => setTestLibraryOpen(true)}
@@ -173,7 +173,7 @@ const Step4 = () => {
             onEdit={() => {}}
             minimal={false}
             headerProps={{ number: 3 }}
-            secitonProps={{ variant: "default" }}
+            secitonProps={{ variant: "primary" }}
             variant="finalize"
             showSubHeader
             onAddFromLibrary={() => setCustomQuestionLibraryOpen(true)}

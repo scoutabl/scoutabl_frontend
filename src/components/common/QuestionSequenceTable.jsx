@@ -57,7 +57,7 @@ const variants = {
     scoreChip: "bg-purpleSecondary",
   },
   finalize: {
-    header: "bg-backgroundPrimary",
+    header: "bg-purpleSecondary",
     scoreChip: "bg-white",
   },
 };
