@@ -5,12 +5,14 @@ import Section from "@/components/common/Section";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Toggle } from "@/components/ui/toggle";
+import { ToggleSwitch } from "@/components/ui/toggle-switch";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import AiIcon from "@/assets/AiIcon.svg?react";
 import ChevronLeftIcon from "@/assets/chevronLeftIcon.svg?react";
 import ChevronDownIcon from "@/assets/chevronDownIcon.svg?react";
+import SquareIcon from "@/assets/SquareIcon.svg?react";
 import PlusIcon from "@/assets/plusIcon.svg?react";
 import TrashIcon from "@/assets/trashIcon.svg?react";
 import CloudIcon from "@/assets/cloudIcon.svg?react";
@@ -35,6 +37,13 @@ const Step4 = () => {
   const [customQuestionLibraryOpen, setCustomQuestionLibraryOpen] = useState(false);
   const [qualifyingQuestionLibraryOpen, setQualifyingQuestionLibraryOpen] = useState(false);
   const [testLibraryOpen, setTestLibraryOpen] = useState(false);
+
+  // Add toggle state variables
+  const [showResultsToCandidates, setShowResultsToCandidates] = useState(false);
+  const [addIntroVideo, setAddIntroVideo] = useState(false);
+  const [collectCandidateDocuments, setCollectCandidateDocuments] = useState(false);
+  const [assessmentStartDate, setAssessmentStartDate] = useState(false);
+  const [domainRestriction, setDomainRestriction] = useState(false);
 
   // Section collapse state
   const [collapsedSections, setCollapsedSections] = useState({
@@ -85,7 +94,7 @@ const Step4 = () => {
       <EditAssessmentTestsPopup open={testLibraryOpen} onOpenChange={setTestLibraryOpen} />
 
       {/* Progress Section */}
-      <div className="flex flex-row justify-between items-end">
+      <div className="flex flex-row justify-between items-end ">
         <AssessmentStep
           steps={steps}
           selected={selectedStep}
@@ -93,13 +102,13 @@ const Step4 = () => {
         />
 
         {/* Pro Tip */}
-        {/* <div className="min-w-[450px] bg-purple-50 rounded-5xl px-4 py-6 flex items-center gap-3 border">
-                    <AiIcon className="w-4 h-4 flex-shrink-0" />
-                    <p className="text-sm text-gray-600">
-                        <span className="bg-gradient-to-r from-purple-600 to-pink-500 inline-block text-transparent bg-clip-text font-semibold">Pro Tip: </span>
-                        Scoutabl's AI suggests tests by matching skills in your job description with related tests.
-                    </p>
-                </div> */}
+        <div className="w-[500px] min-h-[92px] bg-purple-50 rounded-2xl px-4 py-4 flex items-center gap-3 border shadow-lg ml-8">
+          <AiIcon className="w-4 h-4 flex-shrink-0 text-purple-600" />
+          <p className="text-sm text-gray-600">
+            <span className="bg-purplePrimary inline-block text-transparent bg-clip-text font-semibold">Pro Tip: </span>
+             Scoutabl's AI suggests tests by matching skills in your job description with related tests.
+          </p>
+        </div>
       </div>
 
       {/* Tab Navigation - Centered */}
@@ -178,140 +187,107 @@ const Step4 = () => {
           collapsable={true}
           collapsed={collapsedSections["essential-settings"]}
           onToggle={() => toggleSectionCollapse("essential-settings")}
+          variant="white"
         >
-          <div className="space-y-6">
-            {/* Assessment Description */}
-            <div className="bg-gray-50 rounded-2xl p-6 border">
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-3">
-                  <div className="w-6 h-6 bg-gray-600 rounded-full flex items-center justify-center">
-                    <span className="text-white text-sm">📄</span>
+          <p className="text-sm text-gray-600 mb-4">
+            Qualifying questions are presented to candidates ahead of the tests. The answers to these questions determine if
+          </p>
+          <div className="flex gap-6">
+            {/* Left Column */}
+            <div className="flex-1 space-y-6">
+              <div className="bg-backgroundPrimary rounded-2xl border p-5">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-6 h-6 bg-black rounded-full flex items-center justify-center">
+                    <SquareIcon className="w-4 h-4 text-white" />
                   </div>
-                  <h3 className="text-lg font-semibold">
-                    Assessment Description
-                  </h3>
+                  <h3 className="text-lg font-semibold text-gray-900">Assessment Description</h3>
+                </div>
+                <div className="relative">
+                  <Textarea
+                    placeholder="Software Developer"
+                    className="w-full min-h-[95px] bg-white border rounded-md resize-none focus:ring-0 focus:outline-none p-3 pr-24"
+                  />
+                  <div className="absolute bottom-3 right-3">
+                    <Button variant="outline" size="sm" className="text-purplePrimary border-transparent hover:bg-purple-50">
+                      <AiIcon className="w-4 h-4 mr-1" />
+                      Write with AI
+                    </Button>
+                  </div>
                 </div>
               </div>
-              <div className="bg-white rounded-lg border p-4">
-                <div className="flex justify-between items-center mb-2">
-                  <span className="text-gray-700">Software Developer</span>
-                  <div className="flex items-center gap-2 text-purplePrimary text-sm">
-                    <AiIcon className="w-4 h-4" />
-                    Write with AI
+
+              <div className="bg-backgroundPrimary rounded-2xl p-4 border">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <ToggleSwitch checked={showResultsToCandidates} onCheckedChange={setShowResultsToCandidates} />
+                    <h3 className="text-lg font-semibold text-gray-900">Show results to candidates</h3>
                   </div>
+                  <Button variant="primary" className="rounded-full px-4 py-2 text-sm">
+                    <Crown className="w-4 h-4 mr-1" />
+                    Upgrade
+                  </Button>
+                </div>
+              </div>
+
+              <div className="bg-backgroundPrimary rounded-2xl p-4 border">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <ToggleSwitch checked={addIntroVideo} onCheckedChange={setAddIntroVideo} />
+                    <h3 className="text-lg font-semibold text-gray-900">Add Intro Video</h3>
+                  </div>
+                  <Button variant="primary" className="rounded-full px-4 py-2 text-sm">
+                    <Crown className="w-4 h-4 mr-1" />
+                    Upgrade
+                  </Button>
                 </div>
               </div>
             </div>
 
-            {/* Show Results to Candidates */}
-            <div className="bg-gray-50 rounded-2xl p-6 border">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <Toggle />
-                  <h3 className="text-lg font-semibold">
-                    Show results to candidates
-                  </h3>
-                </div>
-                <Button className="bg-gradient-to-r from-purplePrimary to-pink-500 text-white rounded-full px-4 py-2 text-sm">
-                  <Crown className="w-4 h-4 mr-1" />
-                  Upgrade
-                </Button>
-              </div>
-            </div>
-
-            {/* Add Intro Video */}
-            <div className="bg-gray-50 rounded-2xl p-6 border">
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-3">
-                  <div className="w-6 h-6 bg-gray-600 rounded-full flex items-center justify-center">
-                    <span className="text-white text-sm">🎥</span>
+            {/* Right Column */}
+            <div className="flex-1 space-y-6">
+              <div className="bg-backgroundPrimary rounded-2xl p-5 border">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center gap-3">
+                    <ToggleSwitch checked={collectCandidateDocuments} onCheckedChange={setCollectCandidateDocuments} />
+                    <h3 className="text-lg font-semibold text-gray-900">Collect Candidate Documents</h3>
                   </div>
-                  <h3 className="text-lg font-semibold">Add Intro Video</h3>
+                  <Button variant="primary" className="rounded-full px-4 py-2 text-sm">
+                    <Crown className="w-4 h-4 mr-1" />
+                    Upgrade
+                  </Button>
                 </div>
-                <Button className="bg-gradient-to-r from-purplePrimary to-pink-500 text-white rounded-full px-4 py-2 text-sm">
-                  <Crown className="w-4 h-4 mr-1" />
-                  Upgrade
-                </Button>
-              </div>
-              <div className="space-y-4">
-                <Input
-                  placeholder="Paste a link to your video"
-                  className="w-full"
-                />
-                <div className="text-center text-gray-500">or</div>
-                <div className="border-2 border-dashed border-gray-300 rounded-xl p-8 text-center">
-                  <CloudIcon className="w-8 h-8 mx-auto mb-4 text-blue-500" />
-                  <h4 className="font-medium mb-2">Upload video file</h4>
-                  <p className="text-gray-500 text-sm mb-4">
-                    Drag & Drop file here
+
+                <div className="bg-purple-100 rounded-lg p-4 mb-4">
+                  <h4 className="font-semibold text-purplePrimary mb-2">Learn About Document Hub</h4>
+                  <p className="text-sm text-gray-700">
+                    Qualifying questions are presented to candidates ahead of the tests. The answers to these questions determine if candidates
+                    satisfy the essential requirements of the job. Only if all questions are answered as required.
                   </p>
-                  <p className="text-gray-400 text-xs">Max: 10 Mb</p>
                 </div>
-                <div className="bg-white rounded-lg border p-3 flex items-center gap-3">
-                  <div className="w-6 h-6 bg-blue-500 rounded flex items-center justify-center text-white text-xs">
-                    📄
-                  </div>
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2 text-sm">
-                      <span className="font-medium">XYZ.mp4</span>
-                      <span className="w-1 h-1 bg-gray-400 rounded-full"></span>
-                      <span className="text-blue-600">Preview</span>
-                      <span className="w-1 h-1 bg-gray-400 rounded-full"></span>
-                      <span className="text-gray-500">5.7MB</span>
-                    </div>
-                  </div>
-                  <button className="text-gray-400 hover:text-gray-600">
-                    <X className="w-4 h-4" />
-                  </button>
-                </div>
-              </div>
-            </div>
 
-            {/* Collect Candidate Documents */}
-            <div className="bg-gray-50 rounded-2xl p-6 border">
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-3">
-                  <Toggle />
-                  <h3 className="text-lg font-semibold">
-                    Collect Candidate Documents
-                  </h3>
-                </div>
-                <Button className="bg-gradient-to-r from-purplePrimary to-pink-500 text-white rounded-full px-4 py-2 text-sm">
-                  <Crown className="w-4 h-4 mr-1" />
-                  Join Pro
-                </Button>
-              </div>
-              <div className="bg-purpleQuaternary rounded-2xl p-4 mb-4">
-                <h4 className="font-semibold text-purplePrimary mb-2">
-                  Learn About Document Vault
-                </h4>
-                <p className="text-sm text-gray-700">
-                  Qualifying questions are presented to candidates ahead of the
-                  tests. The answers to these questions determine if candidates
-                  satisfy the essential requirements of the job. Only if all
-                  questions are answered as required, they proceed to the tests.
-                  You can add up to 5 questions.
-                </p>
-              </div>
-              <div className="space-y-3">
-                {[
-                  "Resume",
-                  "Cover Letter",
-                  "Relieving Letter",
-                  "Experience Certificate/ Letter",
-                ].map((doc) => (
-                  <div
-                    key={doc}
-                    className="flex items-center gap-3 p-3 bg-white rounded-lg border"
-                  >
-                    <Checkbox />
-                    <span className="text-sm">{doc}</span>
+                <div className="space-y-2 mb-4">
+                  <div className="flex gap-5">
+                    {["Resume", "Cover Letter", "Relieving Letter", "ID Proof"].map((doc) => (
+                      <div key={doc} className="flex items-center gap-6 p-2 pl-4 pr-4 bg-white rounded-lg border whitespace-nowrap">
+                        <Checkbox />
+                        <span className="text-sm text-gray-700">{doc}</span>
+                      </div>
+                    ))}
                   </div>
-                ))}
-                <div className="flex items-center gap-3 p-3 bg-purplePrimary rounded-lg">
-                  <PlusIcon className="w-4 h-4 text-white" />
-                  <span className="text-sm text-white">Custom (PDF)</span>
+                  <div className="flex gap-5">
+                    {["Contact Number", "Experience Certificate/ Letter"].map((doc) => (
+                      <div key={doc} className="flex items-center gap-6 p-2 pl-4 pr-4 bg-white rounded-lg border whitespace-nowrap">
+                        <Checkbox />
+                        <span className="text-sm text-gray-700">{doc}</span>
+                      </div>
+                    ))}
+                  </div>
                 </div>
+
+                <Button variant="primary" className="w-auto px-4 py-2 rounded-lg">
+                  <PlusIcon className="w-4 h-4 mr-2" />
+                  Custom File Upload
+                </Button>
               </div>
             </div>
           </div>
@@ -320,11 +296,19 @@ const Step4 = () => {
         {/* Assessment Validity Section */}
         <Section
           id="assessment-validity"
+          variant="white"
           header={
-            <div className="flex items-center justify-between w-full">
+            <div className="flex items-center justify-between w-full ">
+              <div>
               <h2 className="text-xl font-semibold">Assessment Validity</h2>
-              <Button className="bg-gradient-to-r from-purplePrimary to-pink-500 text-white rounded-full px-4 py-2 text-sm">
-                <Crown className="w-4 h-4 mr-1" />
+              <p className="text-sm text-gray-600 mb-1 mt-3">
+            Qualifying questions are presented to candidates ahead of the tests. The answers to these questions determine if
+          </p>
+              </div>
+              
+
+              <Button className="bg-purplePrimary text-white rounded-full px-4 py-2 text-sm">
+                <Crown className="w-4 h-4 mr-1 " />
                 Upgrade
               </Button>
             </div>
@@ -334,46 +318,50 @@ const Step4 = () => {
           onToggle={() => toggleSectionCollapse("assessment-validity")}
         >
           <div className="space-y-6">
-            <div className="bg-gray-50 rounded-2xl p-6 border">
-              <div className="flex items-center justify-between mb-4">
+            
+              <div className="bg-backgroundPrimary rounded-2xl p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center gap-3">
+                    <ToggleSwitch checked={assessmentStartDate} onCheckedChange={setAssessmentStartDate}/>
+                    <h3 className="text-lg font-semibold">
+                      Assessment Start and End Date
+                    </h3>
+                  </div>
+                </div>
+                <p className="text-sm text-gray-600 mb-4">
+                  Set an exact date and time for the assessment to expire. This
+                  option is recommended if inviting candidates using link share &
+                  integration. Candidates who are in progress when the assessment
+                  expires can finish.
+                </p>
                 <div className="flex items-center gap-3">
-                  <Toggle />
-                  <h3 className="text-lg font-semibold">
-                    Assessment Start and End Date
-                  </h3>
-                </div>
-              </div>
-              <p className="text-sm text-gray-600 mb-4">
-                Set an exact date and time for the assessment to expire. This
-                option is recommended if inviting candidates using link share &
-                integration. Candidates who are in progress when the assessment
-                expires can finish.
-              </p>
-              <div className="space-y-3">
-                <div className="flex items-center gap-3 p-3 bg-white rounded-lg border">
-                  <span className="text-gray-700">
-                    Start Date & Time: DD/MM/YYYY HH:MM
-                  </span>
-                  <ChevronDownIcon className="w-4 h-4 ml-auto" />
-                </div>
-                <div className="flex items-center gap-3 p-3 bg-white rounded-lg border">
-                  <span className="text-gray-700">
-                    End Date & Time: DD/MM/YYYY HH:MM
-                  </span>
-                  <ChevronDownIcon className="w-4 h-4 ml-auto" />
-                </div>
+                  <div className="flex items-center gap-3 p-3 bg-white rounded-lg border">
+                      <span className="text-gray-400">
+                        Start Date & Time: DD/MM/YYYY HH:MM
+                      </span>
+                      <ChevronDownIcon className="w-4 h-4 ml-auto" />
+                   </div>
+                  
+                    <div className="flex items-center gap-3 p-3 bg-white rounded-lg border">
+                      <span className="text-gray-400">
+                        End Date & Time: DD/MM/YYYY HH:MM
+                      </span>
+                      <ChevronDownIcon className="w-4 h-4 ml-auto" />
+                 </div>
+                </div>  
               </div>
             </div>
-          </div>
+          
         </Section>
 
-        {/* Team Access Section */}
+        {/*Access Section */}
         <Section
           id="team-access"
+          variant="white"
           header={
             <div className="flex items-center justify-between w-full">
               <h2 className="text-xl font-semibold">Access</h2>
-              <Button className="bg-gradient-to-r from-purplePrimary to-pink-500 text-white rounded-full px-4 py-2 text-sm">
+              <Button className="bg-purplePrimary text-white rounded-full px-4 py-2 text-sm">
                 <Crown className="w-4 h-4 mr-1" />
                 Join Pro
               </Button>
@@ -383,33 +371,84 @@ const Step4 = () => {
           collapsed={collapsedSections["team-access"]}
           onToggle={() => toggleSectionCollapse("team-access")}
         >
+          
+          <p className="text-sm text-gray-600 mb-4">
+            Qualifying questions are presented to candidates ahead of the tests. The answers to these questions determine if ca, determinedetermine determine determine
+          </p>
           <div className="space-y-6">
-            {/* Assessment Access */}
-            <div className="bg-gray-50 rounded-2xl p-6 border">
-              <div className="flex items-center gap-2 mb-4">
-                <h3 className="text-lg font-semibold">Assessment Access</h3>
-                <HelpCircle className="w-4 h-4 text-gray-400" />
+            {/* Assessment Access and Domain Restriction - Side by Side */}
+            <div className="grid grid-cols-2 gap-6">
+              {/* Assessment Access */}
+              <div className="bg-backgroundPrimary rounded-2xl p-6 border">
+                <div className="flex items-center gap-2 mb-4">
+                  <h3 className="text-lg font-semibold">Assessment Access</h3>
+                  <HelpCircle className="w-4 h-4 text-gray-400" />
+                </div>
+                <div className="space-y-4">
+                  <div className="flex items-center gap-3 p-3 bg-white rounded-lg border">
+                    <span className="text-gray-500">Selected Users</span>
+                    <ChevronDownIcon className="w-4 h-4 ml-auto" />
+                  </div>
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-3 p-3 bg-white rounded-lg border">
+                      <span className="text-gray-500">Choose Users</span>
+                      <ChevronDownIcon className="w-4 h-4 ml-auto" />
+                    </div>
+                    <div className="flex gap-2">
+                      {selectedUsers.map((user) => (
+                        <Badge
+                          key={user}
+                          variant="secondary"
+                          className="bg-blue-100 text-blue-800"
+                        >
+                          {user}
+                          <button
+                            onClick={() => removeUser(user)}
+                            className="ml-2"
+                          >
+                            <X className="w-3 h-3" />
+                          </button>
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+                </div>
               </div>
-              <div className="space-y-4">
-                <div className="flex items-center gap-3 p-3 bg-white rounded-lg border">
-                  <span className="text-gray-500">Selected Users</span>
-                  <ChevronDownIcon className="w-4 h-4 ml-auto" />
+
+              {/* Domain Restriction */}
+              <div className="bg-backgroundPrimary rounded-2xl p-6 border">
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center gap-3">
+                    <ToggleSwitch 
+                      checked={domainRestriction} 
+                      onCheckedChange={setDomainRestriction} 
+                    />
+                    <div className="flex items-center gap-2">
+                      <h3 className="text-lg font-semibold">
+                        Domain Restriction
+                      </h3>
+                      <HelpCircle className="w-4 h-4 text-gray-400" />
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3 p-1 pr-2 pl-3 bg-white rounded-lg border ml-auto">
+                    <span className="text-gray-500">Allowed</span>
+                    <ChevronDownIcon className="w-4 h-4 ml-auto" />
+                  </div>
                 </div>
                 <div className="space-y-3">
                   <div className="flex items-center gap-3 p-3 bg-white rounded-lg border">
-                    <span className="text-gray-500">Choose Users</span>
-                    <ChevronDownIcon className="w-4 h-4 ml-auto" />
+                    <span className="text-gray-500">Selected Users</span>
                   </div>
                   <div className="flex gap-2">
-                    {selectedUsers.map((user) => (
+                    {domains.map((domain) => (
                       <Badge
-                        key={user}
+                        key={domain}
                         variant="secondary"
                         className="bg-blue-100 text-blue-800"
                       >
-                        {user}
+                        {domain}
                         <button
-                          onClick={() => removeUser(user)}
+                          onClick={() => removeDomain(domain)}
                           className="ml-2"
                         >
                           <X className="w-3 h-3" />
@@ -421,47 +460,23 @@ const Step4 = () => {
               </div>
             </div>
 
-            {/* Domain Restriction */}
-            <div className="bg-gray-50 rounded-2xl p-6 border">
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-3">
-                  <Toggle />
-                  <div className="flex items-center gap-2">
-                    <h3 className="text-lg font-semibold">
-                      Domain Restriction
-                    </h3>
-                    <HelpCircle className="w-4 h-4 text-gray-400" />
-                  </div>
+            {/* Time Zone - Aligned with Assessment Access width */}
+            <div className="grid grid-cols-2 gap-6">
+              <div className="bg-backgroundPrimary rounded-2xl p-6 border">
+                <div className="flex items-center gap-2 mb-4">
+                  <h3 className="text-lg font-semibold">Time Zone</h3>
+                  <HelpCircle className="w-4 h-4 text-gray-400" />
                 </div>
-              </div>
-              <div className="space-y-3">
                 <div className="flex items-center gap-3 p-3 bg-white rounded-lg border">
-                  <span className="text-gray-500">Allowed</span>
+                  <span className="text-gray-500">Selected Time Zone for the assessment</span>
                   <ChevronDownIcon className="w-4 h-4 ml-auto" />
                 </div>
-                <div className="flex items-center gap-3 p-3 bg-white rounded-lg border">
-                  <span className="text-gray-500">Selected Users</span>
-                </div>
-                <div className="flex gap-2">
-                  {domains.map((domain) => (
-                    <Badge
-                      key={domain}
-                      variant="secondary"
-                      className="bg-blue-100 text-blue-800"
-                    >
-                      {domain}
-                      <button
-                        onClick={() => removeDomain(domain)}
-                        className="ml-2"
-                      >
-                        <X className="w-3 h-3" />
-                      </button>
-                    </Badge>
-                  ))}
-                </div>
               </div>
+              {/* Empty div to maintain grid structure */}
+              <div></div>
             </div>
           </div>
+          
         </Section>
 
         {/* Proctoring Section */}
@@ -500,7 +515,7 @@ const Step4 = () => {
                     >
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
-                          <Toggle enabled={item.enabled} />
+                          <Toggle disabled={!item.enabled} />
                           <span className="font-medium">{item.label}</span>
                           <HelpCircle className="w-4 h-4 text-gray-400" />
                         </div>
@@ -533,7 +548,7 @@ const Step4 = () => {
                     >
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
-                          <Toggle enabled={item.enabled} />
+                          <Toggle disabled={!item.enabled} />
                           <span className="font-medium">{item.label}</span>
                           <HelpCircle className="w-4 h-4 text-gray-400" />
                         </div>
@@ -580,7 +595,7 @@ const Step4 = () => {
                 ].map((feature) => (
                   <div key={feature} className="bg-white/20 rounded-xl p-4">
                     <div className="flex items-center gap-3">
-                      <Toggle enabled={false} />
+                      <Toggle disabled={true} />
                       <span className="font-medium">{feature}</span>
                       <HelpCircle className="w-4 h-4 opacity-70" />
                     </div>
@@ -641,7 +656,7 @@ const Step4 = () => {
                     </span>
                     <HelpCircle className="w-4 h-4 text-gray-400" />
                   </div>
-                  <Toggle enabled={true} />
+                  <Toggle />
                 </div>
                 <div className="h-px bg-gray-200"></div>
                 <div className="flex items-center justify-between">
@@ -651,7 +666,7 @@ const Step4 = () => {
                     </span>
                     <HelpCircle className="w-4 h-4 text-gray-400" />
                   </div>
-                  <Toggle enabled={false} />
+                  <Toggle disabled={true} />
                 </div>
               </div>
             </div>
