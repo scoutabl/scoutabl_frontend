@@ -12,7 +12,7 @@ import { Badge } from "@/components/ui/badge";
 import AiIcon from "@/assets/AiIcon.svg?react";
 import ChevronLeftIcon from "@/assets/chevronLeftIcon.svg?react";
 import ChevronDownIcon from "@/assets/chevronDownIcon.svg?react";
-import SquareIcon from "@/assets/SquareIcon.svg?react";
+import SquareIcon from "@/assets/squareIcon.svg?react";
 import PlusIcon from "@/assets/plusIcon.svg?react";
 import TrashIcon from "@/assets/trashIcon.svg?react";
 import CloudIcon from "@/assets/cloudIcon.svg?react";
