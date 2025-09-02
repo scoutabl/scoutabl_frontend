@@ -28,7 +28,7 @@ import AssessmentTestDetail from "@/components/common/AssessmentTestDetails";
 import TestAddDialog from "@/components/common/TestAddDialog";
 
 import { useAssessmentContext } from "./AssessmentNavbarWrapper";
-import { cn } from "@/lib/utils";
+import { cn, durationToMinutes } from "@/lib/utils";
 import Loading from "@/components/ui/loading";
 import { Plus } from "lucide-react";
 import TrashIcon from "@/assets/trashIcon.svg?react";
@@ -304,7 +304,7 @@ const AssessmentTestSequenceTable = ({
           .filter(Boolean)
       : [];
 
-  const totalDuration = testDetails.reduce((total, test) => total + (test.completion_time || 0), 0) / 60;
+  const totalDuration = testDetails.reduce((total, test) => total + (durationToMinutes(test.completion_time) || 0), 0);
 
   /***************************************************************************
    * Render                                                                   *

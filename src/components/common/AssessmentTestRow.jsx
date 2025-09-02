@@ -6,7 +6,8 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { EllipsisVertical } from "lucide-react";
 import ClockIcon from "@/assets/clockIcon.svg?react";
 import QuestionIcon from "@/assets/questionIcon.svg?react";
-import HistIcon from "@/assets/histIcon.svg?react";
+import HistIcon from "@/assets/histIcon.svg?react"
+import WeightageIcon from "@/assets/weightageIcon.svg?react"
 
 /**
  * AssessmentTestRow component for displaying individual test rows in the sequence table
@@ -69,7 +70,7 @@ const AssessmentTestRow = ({
       {/* Test Name */}
       <div className="flex-1 min-w-0">
         <span className="text-sm">
-          <span className="font-medium text-purple-600">Test {order}:</span>
+          <span className="font-medium text-purplePrimary">Test {order}:</span>
           <span className="font-medium text-gray-900 ml-1">{title || "Problem Solving"}</span>
         </span>
       </div>
@@ -77,7 +78,7 @@ const AssessmentTestRow = ({
       {/* Difficulty/Score Pill */}
       <div className="flex items-center gap-2 px-3 py-1 bg-purplePrimary text-white rounded-full text-sm font-medium">
         <div className="w-4 h-4 bg-purplePrimary rounded-full flex items-center justify-center">
-          <span className="text-white text-xs">S</span>
+          <WeightageIcon className="w-4 h-4" />
         </div>
         <span>20</span> 
       </div>

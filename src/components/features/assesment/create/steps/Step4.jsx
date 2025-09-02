@@ -1,11 +1,10 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useAssessmentContext } from "@/components/common/AssessmentNavbarWrapper";
 import AssessmentStep from "@/components/common/AssessmentStep";
 import Section from "@/components/common/Section";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Toggle } from "@/components/ui/toggle";
-import { ToggleSwitch } from "@/components/ui/toggle-switch";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
@@ -24,11 +23,12 @@ import QuestionSequenceTable from "@/components/common/QuestionSequenceTable";
 import AssessmentTestSequenceTable from "@/components/common/AssessmentTestSequenceTable";
 import EditAssessmentQuestionsPopup from "./EditAssessmentQuestionsPopup";
 import EditAssessmentTestsPopup from "./EditAssessmentTestsPopup";
+import { CustomToggleSwitch } from "@/components/ui/custom-toggle-switch";
 
 const Step4 = () => {
   const { assessment, steps, selectedStep, handleStepChange } =
     useAssessmentContext();
-  const [activeTab, setActiveTab] = useState("essential-settings");
+  const [activeTab, setActiveTab] = useState("sequence");
   const [domains, setDomains] = useState(["gmail.com", "abc.com"]);
   const [selectedUsers, setSelectedUsers] = useState([
     "sxcscascsc",
@@ -44,6 +44,38 @@ const Step4 = () => {
   const [collectCandidateDocuments, setCollectCandidateDocuments] = useState(false);
   const [assessmentStartDate, setAssessmentStartDate] = useState(false);
   const [domainRestriction, setDomainRestriction] = useState(false);
+
+  // Proctoring toggle state variables
+  const [proctoringSettings, setProctoringSettings] = useState({
+    // Basic Proctoring - Left Column
+    locationLogging: false,
+    webcamSnapshots: false,
+    plagiarismDetection: false,
+    browserExtensionDetection: false,
+    fullscreenModeDetection: false,
+    mouseOutTracking: false,
+    
+    // Basic Proctoring - Right Column
+    disableCopyPaste: false, // This one starts as enabled
+    ipLogging: false,
+    tabProctoring: false,
+    keystrokeAnalysis: false,
+    screenRecordProtection: false,
+    restrictMultipleMonitors: false,
+    
+    // Advanced Proctoring - All enabled and working
+    faceDetection: false,
+    gptDetection: false,
+    aiIdentityVerification: false,
+    virtualMachineDetection: false,
+    browserFingerprinting: false,
+  });
+
+  // Legal section toggle state variables
+  const [legalSettings, setLegalSettings] = useState({
+    nonFluentEnglishSpeakers: false,
+    concentrationMemoryImpairments: false,
+  });
 
   // Section collapse state
   const [collapsedSections, setCollapsedSections] = useState({
@@ -63,6 +95,34 @@ const Step4 = () => {
     { id: "proctoring", label: "Proctoring" },
     { id: "legal", label: "Legal" },
   ];
+
+  // Add scroll detection
+  useEffect(() => {
+    const handleScroll = () => {
+      const sections = tabs.map(tab => document.getElementById(tab.id));
+      const scrollPosition = window.scrollY + 100; // Offset for better detection
+
+      // Find which section is currently in view
+      for (let i = sections.length - 1; i >= 0; i--) {
+        const section = sections[i];
+        if (section) {
+          const sectionTop = section.offsetTop;
+          const sectionBottom = sectionTop + section.offsetHeight;
+          
+          if (scrollPosition >= sectionTop && scrollPosition < sectionBottom) {
+            setActiveTab(tabs[i].id);
+            break;
+          }
+        }
+      }
+    };
+
+    // Add scroll event listener
+    window.addEventListener('scroll', handleScroll);
+    
+    // Cleanup
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   const removeDomain = (domain) => {
     setDomains(domains.filter((d) => d !== domain));
@@ -87,6 +147,22 @@ const Step4 = () => {
     }));
   };
 
+  // Proctoring toggle handlers
+  const handleProctoringToggle = (settingName) => {
+    setProctoringSettings(prev => ({
+      ...prev,
+      [settingName]: !prev[settingName]
+    }));
+  };
+
+  // Legal section toggle handlers
+  const handleLegalToggle = (settingName) => {
+    setLegalSettings(prev => ({
+      ...prev,
+      [settingName]: !prev[settingName]
+    }));
+  };
+
   return (
     <div className="flex flex-col gap-6">
       <EditAssessmentQuestionsPopup questionType="qualifying" open={qualifyingQuestionLibraryOpen} onOpenChange={setQualifyingQuestionLibraryOpen} />
@@ -94,7 +170,7 @@ const Step4 = () => {
       <EditAssessmentTestsPopup open={testLibraryOpen} onOpenChange={setTestLibraryOpen} />
 
       {/* Progress Section */}
-      <div className="flex flex-row justify-between items-end ">
+      <div className="flex flex-row justify-between items-end  ">
         <AssessmentStep
           steps={steps}
           selected={selectedStep}
@@ -102,7 +178,7 @@ const Step4 = () => {
         />
 
         {/* Pro Tip */}
-        <div className="w-[500px] min-h-[92px] bg-purple-50 rounded-2xl px-4 py-4 flex items-center gap-3 border shadow-lg ml-8">
+        <div className="w-[500px] min-h-[92px] bg-purple-50 rounded-2xl px-4 py-4 flex items-center gap-3 border shadow-md ml-8">
           <AiIcon className="w-4 h-4 flex-shrink-0 text-purple-600" />
           <p className="text-sm text-gray-600">
             <span className="bg-purplePrimary inline-block text-transparent bg-clip-text font-semibold">Pro Tip: </span>
@@ -112,8 +188,8 @@ const Step4 = () => {
       </div>
 
       {/* Tab Navigation - Centered */}
-      <div className="flex justify-center">
-        <div className="bg-white rounded-full p-2 border">
+      <div className="flex justify-center sticky top-0 z-10 bg-backgroundPrimary py-2">
+        <div className="bg-white rounded-full p-2 border shadow-sm">
           <div className="flex gap-3">
             {tabs.map((tab) => (
               <button
@@ -121,8 +197,8 @@ const Step4 = () => {
                 onClick={() => scrollToSection(tab.id)}
                 className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
                   activeTab === tab.id
-                    ? "bg-purplePrimary text-white"
-                    : "text-gray-600 hover:text-gray-800"
+                    ? "bg-purplePrimary text-white shadow-md"
+                    : "text-gray-600 hover:text-gray-800 hover:bg-gray-100"
                 }`}
               >
                 {tab.label}
@@ -143,6 +219,7 @@ const Step4 = () => {
           collapsed={collapsedSections["sequence"]}
           onToggle={() => toggleSectionCollapse("sequence")}
           contentClassName="flex flex-col gap-10"
+          className="shadow-lg"
         >
           {/* <SectionHeader number={1} title="Qualifying Questions" tooltipText="Qualifying questions are presented to candidates ahead of the tests. The answers to these questions determine if candidates satisfy the essential requirements of the job. Only if all questions are answered as required, they proceed to the tests." /> */}
           <QuestionSequenceTable
@@ -188,6 +265,7 @@ const Step4 = () => {
           collapsed={collapsedSections["essential-settings"]}
           onToggle={() => toggleSectionCollapse("essential-settings")}
           variant="white"
+          className="shadow-lg"
         >
           <p className="text-sm text-gray-600 mb-4">
             Qualifying questions are presented to candidates ahead of the tests. The answers to these questions determine if
@@ -219,7 +297,7 @@ const Step4 = () => {
               <div className="bg-backgroundPrimary rounded-2xl p-4 border">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    <ToggleSwitch checked={showResultsToCandidates} onCheckedChange={setShowResultsToCandidates} />
+                    <CustomToggleSwitch checked={showResultsToCandidates} onCheckedChange={setShowResultsToCandidates} />
                     <h3 className="text-lg font-semibold text-gray-900">Show results to candidates</h3>
                   </div>
                   <Button variant="primary" className="rounded-full px-4 py-2 text-sm">
@@ -232,7 +310,7 @@ const Step4 = () => {
               <div className="bg-backgroundPrimary rounded-2xl p-4 border">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    <ToggleSwitch checked={addIntroVideo} onCheckedChange={setAddIntroVideo} />
+                    <CustomToggleSwitch checked={addIntroVideo} onCheckedChange={setAddIntroVideo} />
                     <h3 className="text-lg font-semibold text-gray-900">Add Intro Video</h3>
                   </div>
                   <Button variant="primary" className="rounded-full px-4 py-2 text-sm">
@@ -248,7 +326,7 @@ const Step4 = () => {
               <div className="bg-backgroundPrimary rounded-2xl p-5 border">
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center gap-3">
-                    <ToggleSwitch checked={collectCandidateDocuments} onCheckedChange={setCollectCandidateDocuments} />
+                    <CustomToggleSwitch checked={collectCandidateDocuments} onCheckedChange={setCollectCandidateDocuments} />
                     <h3 className="text-lg font-semibold text-gray-900">Collect Candidate Documents</h3>
                   </div>
                   <Button variant="primary" className="rounded-full px-4 py-2 text-sm">
@@ -316,13 +394,14 @@ const Step4 = () => {
           collapsable={true}
           collapsed={collapsedSections["assessment-validity"]}
           onToggle={() => toggleSectionCollapse("assessment-validity")}
+          className="shadow-lg"
         >
           <div className="space-y-6">
             
               <div className="bg-backgroundPrimary rounded-2xl p-6">
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center gap-3">
-                    <ToggleSwitch checked={assessmentStartDate} onCheckedChange={setAssessmentStartDate}/>
+                    <CustomToggleSwitch checked={assessmentStartDate} onCheckedChange={setAssessmentStartDate}/>
                     <h3 className="text-lg font-semibold">
                       Assessment Start and End Date
                     </h3>
@@ -370,6 +449,7 @@ const Step4 = () => {
           collapsable={true}
           collapsed={collapsedSections["team-access"]}
           onToggle={() => toggleSectionCollapse("team-access")}
+          className="shadow-lg"
         >
           
           <p className="text-sm text-gray-600 mb-4">
@@ -385,12 +465,12 @@ const Step4 = () => {
                   <HelpCircle className="w-4 h-4 text-gray-400" />
                 </div>
                 <div className="space-y-4">
-                  <div className="flex items-center gap-3 p-3 bg-white rounded-lg border">
+                  <div className="flex items-center gap-3 p-2 bg-white rounded-lg border">
                     <span className="text-gray-500">Selected Users</span>
                     <ChevronDownIcon className="w-4 h-4 ml-auto" />
                   </div>
                   <div className="space-y-3">
-                    <div className="flex items-center gap-3 p-3 bg-white rounded-lg border">
+                    <div className="flex items-center gap-3 p-2 bg-white rounded-lg border">
                       <span className="text-gray-500">Choose Users</span>
                       <ChevronDownIcon className="w-4 h-4 ml-auto" />
                     </div>
@@ -419,7 +499,7 @@ const Step4 = () => {
               <div className="bg-backgroundPrimary rounded-2xl p-6 border">
                 <div className="flex items-center justify-between mb-2">
                   <div className="flex items-center gap-3">
-                    <ToggleSwitch 
+                    <CustomToggleSwitch 
                       checked={domainRestriction} 
                       onCheckedChange={setDomainRestriction} 
                     />
@@ -436,7 +516,7 @@ const Step4 = () => {
                   </div>
                 </div>
                 <div className="space-y-3">
-                  <div className="flex items-center gap-3 p-3 bg-white rounded-lg border">
+                  <div className="flex items-center gap-3 p-2 bg-white rounded-lg border">
                     <span className="text-gray-500">Selected Users</span>
                   </div>
                   <div className="flex gap-2">
@@ -467,7 +547,7 @@ const Step4 = () => {
                   <h3 className="text-lg font-semibold">Time Zone</h3>
                   <HelpCircle className="w-4 h-4 text-gray-400" />
                 </div>
-                <div className="flex items-center gap-3 p-3 bg-white rounded-lg border">
+                <div className="flex items-center gap-3 p-2 bg-white rounded-lg border">
                   <span className="text-gray-500">Selected Time Zone for the assessment</span>
                   <ChevronDownIcon className="w-4 h-4 ml-auto" />
                 </div>
@@ -483,13 +563,20 @@ const Step4 = () => {
         <Section
           id="proctoring"
           header="Proctoring"
+          variant="white"
           collapsable={true}
           collapsed={collapsedSections["proctoring"]}
           onToggle={() => toggleSectionCollapse("proctoring")}
+          className="shadow-lg"
         >
+          <p className="text-sm text-gray-600 mb-4">
+            Auto grade your assessments wit AI Auto grade your assessments
+            wit AIAuto grade your assessments wit AIAuto grade your
+            assessments wit AI
+          </p>
           <div className="space-y-6">
             {/* Basic Proctoring */}
-            <div className="bg-gray-50 rounded-2xl p-6 border">
+            <div className="bg-backgroundPrimary rounded-2xl p-6 border">
               <div className="mb-4">
                 <h3 className="text-lg font-semibold mb-2">Basic Proctoring</h3>
                 <p className="text-sm text-gray-600">
@@ -502,12 +589,12 @@ const Step4 = () => {
                 {/* Left Column */}
                 <div className="space-y-4">
                   {[
-                    { label: "Location logging", enabled: false },
-                    { label: "Webcam snapshots", enabled: false },
-                    { label: "Plagiarism detection", enabled: false },
-                    { label: "Browser extension detection", enabled: false },
-                    { label: "Fullscreen mode detection", enabled: false },
-                    { label: "Mouse out tracking", enabled: false },
+                    { label: "Location logging", key: "locationLogging" },
+                    { label: "Webcam snapshots", key: "webcamSnapshots" },
+                    { label: "Plagiarism detection", key: "plagiarismDetection" },
+                    { label: "Browser extension detection", key: "browserExtensionDetection" },
+                    { label: "Fullscreen mode detection", key: "fullscreenModeDetection" },
+                    { label: "Mouse out tracking", key: "mouseOutTracking" },
                   ].map((item) => (
                     <div
                       key={item.label}
@@ -515,18 +602,16 @@ const Step4 = () => {
                     >
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
-                          <Toggle disabled={!item.enabled} />
+                          <CustomToggleSwitch 
+                            checked={proctoringSettings[item.key]} 
+                            onCheckedChange={() => handleProctoringToggle(item.key)} 
+                          />
                           <span className="font-medium">{item.label}</span>
                           <HelpCircle className="w-4 h-4 text-gray-400" />
                         </div>
-                        {!item.enabled && (
-                          <Button
-                            size="sm"
-                            className="bg-gradient-to-r from-purplePrimary to-pink-500 text-white rounded-full px-3 py-1"
-                          >
-                            <Crown className="w-3 h-3" />
-                          </Button>
-                        )}
+                        <div className="w-10 h-8 bg-purplePrimary rounded-2xl flex items-center justify-center">
+                          <Crown className="w-5 h-5 text-white" />
+                        </div>
                       </div>
                     </div>
                   ))}
@@ -535,12 +620,12 @@ const Step4 = () => {
                 {/* Right Column */}
                 <div className="space-y-4">
                   {[
-                    { label: "Disable copy & Paste", enabled: true },
-                    { label: "IP logging", enabled: false },
-                    { label: "Tab proctoring", enabled: false },
-                    { label: "Keystroke analysis", enabled: false },
-                    { label: "Screen record protection", enabled: false },
-                    { label: "Restrict multiple monitors", enabled: false },
+                    { label: "Disable copy & Paste", key: "disableCopyPaste" },
+                    { label: "IP logging", key: "ipLogging" },
+                    { label: "Tab proctoring", key: "tabProctoring" },
+                    { label: "Keystroke analysis", key: "keystrokeAnalysis" },
+                    { label: "Screen record protection", key: "screenRecordProtection" },
+                    { label: "Restrict multiple monitors", key: "restrictMultipleMonitors" },
                   ].map((item) => (
                     <div
                       key={item.label}
@@ -548,18 +633,16 @@ const Step4 = () => {
                     >
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
-                          <Toggle disabled={!item.enabled} />
+                          <CustomToggleSwitch 
+                            checked={proctoringSettings[item.key]} 
+                            onCheckedChange={() => handleProctoringToggle(item.key)} 
+                          />
                           <span className="font-medium">{item.label}</span>
                           <HelpCircle className="w-4 h-4 text-gray-400" />
                         </div>
-                        {!item.enabled && (
-                          <Button
-                            size="sm"
-                            className="bg-gradient-to-r from-purplePrimary to-pink-500 text-white rounded-full px-3 py-1"
-                          >
-                            <Crown className="w-3 h-3" />
-                          </Button>
-                        )}
+                        <div className="w-10 h-8 bg-purplePrimary rounded-2xl flex items-center justify-center">
+                          <Crown className="w-5 h-5 text-white" />
+                        </div>
                       </div>
                     </div>
                   ))}
@@ -568,35 +651,38 @@ const Step4 = () => {
             </div>
 
             {/* Advanced Proctoring */}
-            <div className="bg-gradient-to-r from-purplePrimary via-pink-500 to-yellow-400 rounded-2xl p-6 text-white">
+            <div className="bg-gradient-to-tr from-[#4158D0]/25 via-[#C850C0]/25 to-[#FFCC70]/25 rounded-2xl p-6 text-white">
               <div className="flex items-center justify-between mb-4">
                 <div>
-                  <h3 className="text-lg font-semibold mb-2">
+                  <h3 className="text-lg font-semibold mb-2 text-gray-900">
                     Advanced Proctoring
                   </h3>
-                  <p className="text-sm opacity-90">
+                  <p className="text-sm opacity-90 text-gray-700">
                     Auto grade your assessments wit AI Auto grade your
                     assessments wit AIAuto grade your assessments wit AIAuto
                     grade your assessments wit AI
                   </p>
                 </div>
-                <Button className="bg-white text-gray-800 rounded-full px-4 py-2">
+                <Button className="bg-purplePrimary text-white rounded-full px-4 py-2">
                   <Crown className="w-4 h-4 mr-1" />
                   Join Pro
                 </Button>
               </div>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-2 gap-4 text-gray-700">  
                 {[
-                  "Face Detection",
-                  "GPT Detection",
-                  "AI Identity Verification",
-                  "Virtual Machine Detection",
-                  "Browser fingerprinting",
+                  { label: "Multiple Face Detection", key: "faceDetection" },
+                  { label: "Virtual Machine Detection", key: "virtualMachineDetection" },
+                  { label: "GPT Detection", key: "gptDetection" },
+                  { label: "Browser fingerprinting", key: "browserFingerprinting" },
+                  { label: "AI Identity Verification", key: "aiIdentityVerification" },
                 ].map((feature) => (
-                  <div key={feature} className="bg-white/20 rounded-xl p-4">
+                  <div key={feature.label} className="bg-white rounded-xl p-4">
                     <div className="flex items-center gap-3">
-                      <Toggle disabled={true} />
-                      <span className="font-medium">{feature}</span>
+                      <CustomToggleSwitch 
+                        checked={proctoringSettings[feature.key]} 
+                        onCheckedChange={() => handleProctoringToggle(feature.key)} 
+                      />
+                      <span className="font-medium">{feature.label}</span>
                       <HelpCircle className="w-4 h-4 opacity-70" />
                     </div>
                   </div>
@@ -610,63 +696,77 @@ const Step4 = () => {
         <Section
           id="legal"
           header="Legal"
+          variant="white"
           collapsable={true}
           collapsed={collapsedSections["legal"]}
           onToggle={() => toggleSectionCollapse("legal")}
+          className="shadow-lg"
         >
+          <p className="text-sm text-gray-600 mb-4">
+            Qualifying questions are presented to candidates ahead of the tests. The answers to these questions determine if ca, determinedetermine determine determine
+          </p>
+        
           <div className="space-y-6">
-            {/* Extra Time */}
-            <div className="bg-gray-50 rounded-2xl p-6 border">
-              <h3 className="text-lg font-semibold mb-2">Extra Time</h3>
-              <p className="text-sm text-gray-600 mb-4">
-                Qualifying questions are presented to candidates ahead of the
-                tests. The answers to these questions determine if ca,
-                determinedetermine determine determine
-              </p>
-              <div className="flex items-center gap-3 p-3 bg-white rounded-lg border mb-4">
-                <span className="text-gray-700">Time</span>
-                <ChevronDownIcon className="w-4 h-4 ml-auto" />
-              </div>
-              <div className="bg-purpleQuaternary rounded-xl p-4">
-                <p className="text-sm text-gray-700">
-                  Candidates with concentration/ memory impairments Candidates
-                  with concentration/ memory impairments Candidates with
-                  concentration/ memory impairments Candidates with
-                  concentration/ memory impairments. Candidates with
-                  concentration.
+            <div className="grid grid-cols-2 gap-6">
+              {/* Extra Time */}
+              <div className="bg-backgroundPrimary rounded-2xl p-6 border h-full">
+                <h3 className="text-lg font-semibold mb-2">Extra Time</h3>
+                <p className="text-sm text-gray-600 mb-4">
+                  Qualifying questions are presented to candidates ahead of the
+                  tests. The answers to these questions determine if ca,
+                  determinedetermine determine determine
                 </p>
-              </div>
-            </div>
-
-            {/* Accommodation for candidates */}
-            <div className="bg-gray-50 rounded-2xl p-6 border">
-              <h3 className="text-lg font-semibold mb-2">
-                Accommodation for candidates
-              </h3>
-              <p className="text-sm text-gray-600 mb-4">
-                Qualifying questions are presented to candidates ahead of the
-                tests. The answers to these questions determine if ca,
-                determinedetermine determine determine
-              </p>
-              <div className="bg-white rounded-xl p-4 space-y-4">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <span className="font-medium">
-                      Non fluent English speakers
-                    </span>
-                    <HelpCircle className="w-4 h-4 text-gray-400" />
-                  </div>
-                  <Toggle />
+                <div className="flex items-center gap-3 p-2 pl-3 bg-white rounded-lg border mb-4">
+                  <span className="text-gray-500">Time</span>
+                  <ChevronDownIcon className="w-4 h-4 ml-auto" />
                 </div>
-                <div className="h-px bg-gray-200"></div>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <span className="font-medium">
-                      Candidates with concentration/ memory impairments
-                    </span>
-                    <HelpCircle className="w-4 h-4 text-gray-400" />
+                <div className="bg-purpleQuaternary rounded-xl p-4 flex-1">
+                  <p className="text-sm text-gray-700">
+                    Candidates with concentration/ memory impairments Candidates
+                    with concentration/ memory impairments Candidates with
+                    concentration/ memory impairments Candidates with
+                    concentration/ memory impairments. Candidates with
+                    concentration.
+                  </p>
+                </div>
+              </div>
+
+              {/* Accommodation for candidates */}
+              <div className="bg-backgroundPrimary rounded-2xl p-6 border h-full">
+                <h3 className="text-lg font-semibold mb-2">
+                  Accommodation for candidates
+                </h3>
+                <p className="text-sm text-gray-600 mb-4">
+                  Qualifying questions are presented to candidates ahead of the
+                  tests. The answers to these questions determine if ca,
+                  determinedetermine determine determine
+                </p>
+                <div className="bg-white rounded-2xl p-4 space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <span className="font-medium text-gray-700">
+                        Non fluent English speakers
+                      </span>
+                      <HelpCircle className="w-4 h-4 text-gray-400" />
+                    </div>
+                    <CustomToggleSwitch 
+                      checked={legalSettings.nonFluentEnglishSpeakers} 
+                      onCheckedChange={() => handleLegalToggle("nonFluentEnglishSpeakers")} 
+                    />
                   </div>
-                  <Toggle disabled={true} />
+                  <div className="h-px bg-gray-200"></div>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <span className="font-medium text-gray-700">
+                        Candidates with concentration/ memory impairments
+                      </span>
+                      <HelpCircle className="w-4 h-4 text-gray-400" />
+                    </div>
+                    <CustomToggleSwitch 
+                      checked={legalSettings.concentrationMemoryImpairments} 
+                      onCheckedChange={() => handleLegalToggle("concentrationMemoryImpairments")} 
+                    />
+                  </div>
                 </div>
               </div>
             </div>
@@ -681,7 +781,7 @@ const Step4 = () => {
           Back
         </Button>
         <Button
-          className="rounded-full px-6 py-2 bg-gray-300 text-gray-500 cursor-not-allowed"
+          className="rounded-full px-6 py-2 bg-gray-300 text-gray-500  cursor-not-allowed"
           disabled
         >
           Finish
