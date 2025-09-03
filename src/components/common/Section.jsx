@@ -44,9 +44,9 @@ const Section = ({
           )}
           {collapsable && (
             <button onClick={handleToggle} className="flex items-center gap-2">
-              <ChevronDownIcon
+              <ChevronDownIcon  
                 className={cn(
-                  "w-5 h-5 text-gray-400 transition-transform",
+                  "w-6 h-6 text-gray-600 transition-transform border  border-solid border-gray-400 rounded-full",
                   collapsed && "rotate-180"
                 )}
               />

@@ -3,7 +3,7 @@ import { durationToMinutes } from "@/lib/utils";
 import Dropdown from "@/components/ui/dropdown";
 import { Checkbox } from "@/components/ui/checkbox";
 
-import { EllipsisVertical } from "lucide-react";
+import { EllipsisVertical, GripVertical } from "lucide-react";
 import ClockIcon from "@/assets/clockIcon.svg?react";
 import QuestionIcon from "@/assets/questionIcon.svg?react";
 import HistIcon from "@/assets/histIcon.svg?react"
@@ -59,7 +59,26 @@ const AssessmentTestRow = ({
   };
 
   return (
+
+     
+    
     <div className="flex items-center gap-3 p-2 pl-4 rounded-lg border bg-white hover:bg-gray-50 transition-all">
+      
+      {/*Drag Handle Section*/}
+      <div className="p-[6px] flex justify-between items-center gap-1 border border-purplePrimary rounded-full w-[65px] h-[30px]">
+        {isMovable && (
+          <div {...dragListeners} className="cursor-grab active:cursor-grabbing">
+            <GripVertical size={17} className="text-purplePrimary" />
+          </div>
+        )}
+        <div className="h-5 w-[30px] grid place-content-center text-xs font-semibold text-white bg-purplePrimary rounded-full">
+          {String(order).padStart(2, "0")}
+        </div>
+      </div>
+      
+      
+      
+      
       {/* Selection Checkbox */}
       <Checkbox 
         checked={isSelected}
@@ -67,11 +86,12 @@ const AssessmentTestRow = ({
         className="flex-shrink-0"
       />
 
+     
+
       {/* Test Name */}
       <div className="flex-1 min-w-0">
         <span className="text-sm">
-          <span className="font-medium text-purplePrimary">Test {order}:</span>
-          <span className="font-medium text-gray-900 ml-1">{title || "Problem Solving"}</span>
+          <span className="font-medium text-gray-900">{title || "Problem Solving"}</span>
         </span>
       </div>
 

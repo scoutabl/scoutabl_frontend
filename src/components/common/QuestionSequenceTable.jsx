@@ -42,6 +42,7 @@ import { useDuplicateQuestion } from "@/api/createQuestion";
 
 import Step3Loading from "@/components/features/assesment/create/steps/step3-customQuestions/Step3Loading";
 import { getQuestionType } from "@/lib/questionTypes";
+import AiIcon from "@/assets/AiIcon.svg?react";   
 
 import TrashIcon from "@/assets/trashIcon.svg?react";
 import { Plus } from "lucide-react";
@@ -379,35 +380,23 @@ const QuestionSequenceTable = ({
           title={sectionTitle}
           headerRight={
             <div className="flex items-center gap-4">
-              <div className="flex flex-row px-1 gap-4 justify-between">
-                {/* Randomise check-box */}
-                {!minimal && isCustom && (
-                  <div className="flex items-center gap-2">
-                    <Checkbox
-                      name="randomize"
-                      id="randomize"
-                      checked={localRandomize}
-                      onCheckedChange={handleRandomize}
-                    />
-                    <label
-                      htmlFor="randomize"
-                      className="text-sm font-medium text-greyAccent"
-                    >
-                      Randomize Order
-                    </label>
-                  </div>
-                )}
-
-                {/* Total score (static for now) */}
-                <Chip
-                  className={cn("rounded-full", variants[variant].scoreChip)}
-                >
-                  <span className="font-semibold text-sm text-greyPrimary">
-                    Total Score:&nbsp;
-                  </span>
-                  <span>{totalScore}</span>
-                </Chip>
-              </div>
+              {/* Randomise check-box */}
+              {!minimal && isCustom && (
+                <div className="flex items-center gap-2">
+                  <Checkbox
+                    name="randomize"
+                    id="randomize"
+                    checked={localRandomize}
+                    onCheckedChange={handleRandomize}
+                  />
+                  <label
+                    htmlFor="randomize"
+                    className="text-sm font-medium text-greyAccent"
+                  >
+                    Randomize Order
+                  </label>
+                </div>
+              )}
 
               {/* Delete multiple */}
               <Motion.button
@@ -423,81 +412,86 @@ const QuestionSequenceTable = ({
               </Motion.button>
             </div>
           }
-          subHeader={
-            showSubHeader && (
-              <div className="flex items-center justify-end gap-2">
-                <Button
-                  variant="outline"
-                  icon={Plus}
-                  iconPlacement="left"
-                  onClick={onAddQuestion}
-                >
-                  Add Question
-                </Button>
-                <Button variant="primary" onClick={onAddFromLibrary}>
-                  Add from Library
-                </Button>
-              </div>
-            )
-          }
           {...headerProps}
         />
       }
       {...secitonProps}
     >
-      {isAssessmentLoading || isQuestionsLoading ? (
-        <Loading />
-      ) : questions?.length > 0 ? (
-        <div className="flex flex-col gap-4 text-sm">
-          {/* Table header */}
-          {!minimal && showHeader && (
-            <div
-              className={cn(
-                "py-3 px-5 flex items-center gap-4 rounded-xl font-semibold",
-                variants[variant].header
-              )}
-            >
-              <div className="w-[65px] flex-shrink-0 text-center"></div>
-              <div className="flex-1">Question</div>
-              <div className="w-24 flex-shrink-0 text-center">Time</div>
-              <div className="w-[200px] flex-shrink-0 text-center">Type</div>
-              <div className="w-[140px] flex-shrink-0 text-center">Action</div>
-            </div>
-          )}
+             {/* Recommendation frame for qualifying questions */}
+       {!isCustom && (
+         <div className="mb-6 p-4 bg-purpleQuaternary rounded-2xl  ">
+           <div className="flex items-start gap-3 mb-4">
+             <div className="flex-shrink-0 mt-1">
+               
+                <AiIcon className="w-4 h-4 text-purplePrimary" />
+                
+             </div>
+             <div className="flex-1">
+               <h4 className="text-md text-black font-semibold mb-1">Recommendation for you</h4>
+               <p className="text-sm text-greyPrimary leading-relaxed">
+                 Qualifying questions are presented to candidates ahead of the tests. The answers to these questions determine if candidates satisfy the essential requirements of the job. Only if all questions are answered as required, they proceed to the tests. You can add up to 5 questions.
+               </p>
+             </div>
+           </div>
+           
+         
+           
+         </div>
+       )}
+       
+       {isAssessmentLoading || isQuestionsLoading ? (
+         <Loading />
+       ) : questions?.length > 0 ? (
+         <div className="flex flex-col gap-4 text-sm">
+           {/* Table header */}
+           {!minimal && showHeader && (
+             <div
+               className={cn(
+                 "py-3 px-5 flex items-center gap-4 rounded-xl font-semibold",
+                 variants[variant].header
+               )}
+             >
+               <div className="w-[65px] flex-shrink-0 text-center"></div>
+               <div className="flex-1">Question</div>
+               <div className="w-24 flex-shrink-0 text-center">Time</div>
+               <div className="w-[200px] flex-shrink-0 text-center">Type</div>
+               <div className="w-[140px] flex-shrink-0 text-center">Action</div>
+             </div>
+           )}
 
-          {/* Row list (sortable) */}
-          <DndContext
-            sensors={sensors}
-            collisionDetection={closestCenter}
-            onDragEnd={handleDragEnd}
-            modifiers={[restrictToVerticalAxis, restrictToParentElement]}
-            autoScroll={{ enabled: false }}
-          >
-            <SortableContext
-              items={localQuestionOrder}
-              // strategy={verticalListSortingStrategy}
-            >
-              {orderedQuestions.map((q, idx) => (
-                <SortableQuestionRow key={q.id} questionId={q.id} index={idx} />
-              ))}
-            </SortableContext>
-          </DndContext>
-        </div>
-      ) : (
-        <Section variant="white">
-          <EmptyState
-            text={`You haven't added any ${
-              isCustom ? "custom" : "qualifying"
-            } question yet!`}
-            subtext="Stay productive by creating a task."
-          >
-            <Button variant="outline" icon={Plus} iconPlacement="left">
-              Add Question
-            </Button>
-            <Button variant="primary">Add from Library</Button>
-          </EmptyState>
-        </Section>
-      )}
+           {/* Row list (sortable) */}
+           <DndContext
+             sensors={sensors}
+             collisionDetection={closestCenter}
+             onDragEnd={handleDragEnd}
+             modifiers={[restrictToVerticalAxis, restrictToParentElement]}
+             autoScroll={{ enabled: false }}
+           >
+             <SortableContext
+               items={localQuestionOrder}
+               // strategy={verticalListSortingStrategy}
+             >
+               {orderedQuestions.map((q, idx) => (
+                 <SortableQuestionRow key={q.id} questionId={q.id} index={idx} />
+               ))}
+             </SortableContext>
+           </DndContext>
+         </div>
+       ) : (
+         <Section variant="white">
+           <EmptyState
+             text={`You haven't added any ${
+               isCustom ? "custom" : "qualifying"
+             } question yet!`}
+             subtext="Stay productive by creating a task."
+           >
+             <Button variant="outline" icon={Plus} iconPlacement="left">
+               Add Question
+             </Button>
+             <Button variant="primary">Add from Library</Button>
+           </EmptyState>
+         </Section>
+       )}
     </Section>
   );
 };

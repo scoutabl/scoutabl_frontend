@@ -4,6 +4,7 @@ import React, { useState, useEffect, useCallback, useMemo, memo, useRef } from '
 import { useForm, Controller } from 'react-hook-form';
 import { FormProvider } from "react-hook-form";
 import { motion } from 'framer-motion';
+import { CustomToggleSwitch } from '@/components/ui/custom-toggle-switch';
 import CodingQuestionContent from './CodingQuestionContent';
 import { Eye, X } from 'lucide-react';
 import {
@@ -47,12 +48,22 @@ const DEFAULT_MULTIPLE_SELECT_ANSWERS = [
     { id: 2, text: 'C++' }
 ];
 
+// Toggle handlers with proper form state management
+const handleToggleCompulsory = (checked) => {
+    setValue('isCompulsory', checked, { shouldValidate: true });
+};
+
+const handleToggleSaveToLibrary = (checked) => {
+    setValue('saveToLibrary', checked, { shouldValidate: true });
+};
+
+
+
 const DEFAULT_REARRANGE_OPTIONS = [
     { id: 1, text: 'runs' },
     { id: 2, text: 'quickly' },
     { id: 3, text: 'dog' },
 ]
-
 
 function convertHHMMSSToMinutes(hhmmss) {
     if (!hhmmss) return 120; // fallback
@@ -585,23 +596,7 @@ const QuestionModal = memo(({
                                         </div>
                                         <div className="flex items-center gap-8">
                                             <span className="text-base font-medium text-greyPrimary">Compulsory Question</span>
-                                            <Controller
-                                                name="isCompulsory"
-                                                control={control}
-                                                render={({ field }) => (
-                                                    <label className="relative inline-flex items-center cursor-pointer">
-                                                        <input
-                                                            type="checkbox"
-                                                            checked={field.value}
-                                                            onChange={field.onChange}
-                                                            className="sr-only"
-                                                        />
-                                                        <div className={`w-11 h-6 rounded-full transition-colors ${field.value ? 'bg-purplePrimary' : 'bg-greyAccent'}`}>
-                                                            <div className={`w-5 h-5 bg-white rounded-full shadow-md transform transition-transform ${field.value ? 'translate-x-5' : 'translate-x-0'} mt-0.5 ml-0.5`}></div>
-                                                        </div>
-                                                    </label>
-                                                )}
-                                            />
+                                            <CustomToggleSwitch checked={Boolean(watchedValues.isCompulsory)} onCheckedChange={handleToggleCompulsory} />
                                         </div>
                                     </div>
                                     <div className='flex items-center justify-between'>
@@ -629,23 +624,8 @@ const QuestionModal = memo(({
                                         </div>
                                         <div className="flex items-center justify-between gap-4">
                                             <span className="text-base font-medium text-greyPrimary">Save question to library</span>
-                                            <Controller
-                                                name="saveToLibrary"
-                                                control={control}
-                                                render={({ field }) => (
-                                                    <label className="relative inline-flex items-center cursor-pointer">
-                                                        <input
-                                                            type="checkbox"
-                                                            checked={field.value}
-                                                            onChange={field.onChange}
-                                                            className="sr-only"
-                                                        />
-                                                        <div className={`w-11 h-6 rounded-full transition-colors ${field.value ? 'bg-purplePrimary' : 'bg-greyAccent'}`}>
-                                                            <div className={`w-5 h-5 bg-white rounded-full shadow-md transform transition-transform ${field.value ? 'translate-x-5' : 'translate-x-0'} mt-0.5 ml-0.5`}></div>
-                                                        </div>
-                                                    </label>
-                                                )}
-                                            />
+                                           
+                                            <CustomToggleSwitch checked={Boolean(watchedValues.saveToLibrary)} onCheckedChange={handleToggleSaveToLibrary} />
                                         </div>
                                     </div>
                                 </div>

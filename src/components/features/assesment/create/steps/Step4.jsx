@@ -24,6 +24,7 @@ import AssessmentTestSequenceTable from "@/components/common/AssessmentTestSeque
 import EditAssessmentQuestionsPopup from "./EditAssessmentQuestionsPopup";
 import EditAssessmentTestsPopup from "./EditAssessmentTestsPopup";
 import { CustomToggleSwitch } from "@/components/ui/custom-toggle-switch";
+import FileIcon from "@/assets/fileIcon.svg?react";
 
 const Step4 = () => {
   const { assessment, steps, selectedStep, handleStepChange } =
@@ -300,8 +301,8 @@ const Step4 = () => {
                     <CustomToggleSwitch checked={showResultsToCandidates} onCheckedChange={setShowResultsToCandidates} />
                     <h3 className="text-lg font-semibold text-gray-900">Show results to candidates</h3>
                   </div>
-                  <Button variant="primary" className="rounded-full px-4 py-2 text-sm">
-                    <Crown className="w-4 h-4 mr-1" />
+                  <Button className="rounded-full px-4 py-2 text-sm bg-purpleUpgrade text-black border-purplePrimary">
+                    <Crown className="w-4 h-4 mr-1 text-purplePrimary fill-purplePrimary " />
                     Upgrade
                   </Button>
                 </div>
@@ -313,11 +314,60 @@ const Step4 = () => {
                     <CustomToggleSwitch checked={addIntroVideo} onCheckedChange={setAddIntroVideo} />
                     <h3 className="text-lg font-semibold text-gray-900">Add Intro Video</h3>
                   </div>
-                  <Button variant="primary" className="rounded-full px-4 py-2 text-sm">
-                    <Crown className="w-4 h-4 mr-1" />
+                  <Button className="rounded-full px-4 py-2 text-sm bg-purpleUpgrade text-black border-purplePrimary">
+                  <Crown className="w-4 h-4 mr-1 text-purplePrimary fill-purplePrimary " />
                     Upgrade
                   </Button>
                 </div>
+                
+                {/* Collapsible content for Add Intro Video */}
+                {addIntroVideo && (
+                  <div className="mt-4 space-y-4">
+                    {/* Video Link Input */}
+                    
+                      <Input className="bg-white rounded-lg p-3 h-[37px] border"
+                        placeholder="Paste a link to your video"
+                       
+                      />
+                    
+                    
+                    {/* Or separator */}
+                    <div className="text-center">
+                      <span className="text-gray-500 text-sm">(or)</span>
+                    </div>
+                    
+                    {/* File Upload Area */}
+                    <div className="bg-white rounded-lg p-3 border-2 border-dashed border-gray-300 hover:border-purplePrimary transition-colors">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <FileIcon className="w-9 h-9 text-blue-600" />
+                          <div>
+                            <p className="font-medium text-gray-900">Upload video file</p>
+                            <p className="text-sm text-gray-500">Drag & Drop file here</p>
+                          </div>
+                        </div>
+                        <span className="text-sm text-gray-500">Max: 10 Mb</span>
+                      </div>
+                    </div>
+                    
+                    {/* Uploaded File Display (if any) */}
+                    <div className="bg-white rounded-lg p-2 border w-1/2">
+                       <div className="flex items-center justify-between">
+                         <div className="flex items-center gap-1">
+                           <FileIcon className="w-5 h-5 text-blue-600" />
+                           <span className="text-sm text-gray-900">XYZ.mp4</span>
+                           <span className="text-gray-400">•</span>
+                           <a className="text-blue-500 text-sm hover:underline">Preview</a>
+                           <span className="text-gray-400">•</span>
+                           <span className="text-sm text-gray-500">5.7MB</span>
+                         </div>
+                         <button className="text-gray-400 hover:text-black transition-colors">
+                           <X className="w-4 h-4" />
+                         </button>
+                       </div>
+                     </div>
+                  </div>
+                )}
               </div>
             </div>
 
@@ -329,8 +379,8 @@ const Step4 = () => {
                     <CustomToggleSwitch checked={collectCandidateDocuments} onCheckedChange={setCollectCandidateDocuments} />
                     <h3 className="text-lg font-semibold text-gray-900">Collect Candidate Documents</h3>
                   </div>
-                  <Button variant="primary" className="rounded-full px-4 py-2 text-sm">
-                    <Crown className="w-4 h-4 mr-1" />
+                  <Button className="rounded-full px-4 py-2 text-sm bg-purpleUpgrade text-black border-purplePrimary">
+                    <Crown className="w-4 h-4 mr-1 text-purplePrimary fill-purplePrimary " />
                     Upgrade
                   </Button>
                 </div>
@@ -385,8 +435,8 @@ const Step4 = () => {
               </div>
               
 
-              <Button className="bg-purplePrimary text-white rounded-full px-4 py-2 text-sm">
-                <Crown className="w-4 h-4 mr-1 " />
+              <Button className="rounded-full px-4 py-2 text-sm bg-purpleUpgrade text-black border-purplePrimary">
+                    <Crown className="w-4 h-4 mr-1 text-purplePrimary fill-purplePrimary " />
                 Upgrade
               </Button>
             </div>
@@ -440,8 +490,8 @@ const Step4 = () => {
           header={
             <div className="flex items-center justify-between w-full">
               <h2 className="text-xl font-semibold">Access</h2>
-              <Button className="bg-purplePrimary text-white rounded-full px-4 py-2 text-sm">
-                <Crown className="w-4 h-4 mr-1" />
+              <Button className="rounded-full px-4 py-2 text-sm bg-purpleUpgrade text-black border-purplePrimary">
+              <Crown className="w-4 h-4 mr-1 text-purplePrimary fill-purplePrimary " />
                 Join Pro
               </Button>
             </div>
@@ -609,8 +659,8 @@ const Step4 = () => {
                           <span className="font-medium">{item.label}</span>
                           <HelpCircle className="w-4 h-4 text-gray-400" />
                         </div>
-                        <div className="w-10 h-8 bg-purplePrimary rounded-2xl flex items-center justify-center">
-                          <Crown className="w-5 h-5 text-white" />
+                        <div className="w-10 h-8 bg-purpleUpgrade rounded-2xl flex items-center justify-center">
+                          <Crown className="w-5 h-5 text-purplePrimary fill-purplePrimary " />
                         </div>
                       </div>
                     </div>
@@ -640,8 +690,8 @@ const Step4 = () => {
                           <span className="font-medium">{item.label}</span>
                           <HelpCircle className="w-4 h-4 text-gray-400" />
                         </div>
-                        <div className="w-10 h-8 bg-purplePrimary rounded-2xl flex items-center justify-center">
-                          <Crown className="w-5 h-5 text-white" />
+                        <div className="w-10 h-8 bg-purpleUpgrade rounded-2xl flex items-center justify-center">
+                        <Crown className="w-5 h-5 text-purplePrimary fill-purplePrimary " />
                         </div>
                       </div>
                     </div>
@@ -663,8 +713,8 @@ const Step4 = () => {
                     grade your assessments wit AI
                   </p>
                 </div>
-                <Button className="bg-purplePrimary text-white rounded-full px-4 py-2">
-                  <Crown className="w-4 h-4 mr-1" />
+                <Button className="rounded-full px-4 py-2 text-sm bg-purpleUpgrade text-black border-purplePrimary">
+                <Crown className="w-4 h-4 mr-1 text-purplePrimary fill-purplePrimary " />
                   Join Pro
                 </Button>
               </div>
