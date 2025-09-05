@@ -45,6 +45,7 @@ const Step4 = () => {
   const [collectCandidateDocuments, setCollectCandidateDocuments] = useState(false);
   const [assessmentStartDate, setAssessmentStartDate] = useState(false);
   const [domainRestriction, setDomainRestriction] = useState(false);
+  const [status, setStatus] = useState("allowed"); 
 
   // Proctoring toggle state variables
   const [proctoringSettings, setProctoringSettings] = useState({
@@ -353,7 +354,7 @@ const Step4 = () => {
                     {/* Uploaded File Display (if any) */}
                     <div className="bg-white rounded-lg p-2 border w-1/2">
                        <div className="flex items-center justify-between">
-                         <div className="flex items-center gap-1">
+                         <div className="flex items-center gap-0.5">
                            <FileIcon className="w-5 h-5 text-blue-600" />
                            <span className="text-sm text-gray-900">XYZ.mp4</span>
                            <span className="text-gray-400">•</span>
@@ -463,6 +464,7 @@ const Step4 = () => {
                   integration. Candidates who are in progress when the assessment
                   expires can finish.
                 </p>
+                {assessmentStartDate && (
                 <div className="flex items-center gap-3">
                   <div className="flex items-center gap-3 p-3 bg-white rounded-lg border">
                       <span className="text-gray-400">
@@ -478,6 +480,7 @@ const Step4 = () => {
                       <ChevronDownIcon className="w-4 h-4 ml-auto" />
                  </div>
                 </div>  
+                )}
               </div>
             </div>
           
@@ -561,8 +564,15 @@ const Step4 = () => {
                     </div>
                   </div>
                   <div className="flex items-center gap-3 p-1 pr-2 pl-3 bg-white rounded-lg border ml-auto">
-                    <span className="text-gray-500">Allowed</span>
-                    <ChevronDownIcon className="w-4 h-4 ml-auto" />
+                    <select 
+                      value={status} 
+                      onChange={(e) => setStatus(e.target.value)}
+                      className="text-gray-500 bg-transparent rounded-lg border-none outline-none cursor-pointer [&>option]:rounded-lg"
+                    >
+                      <option value="allowed">Allowed</option>
+                      <option value="disallowed">Disallowed</option>
+                    </select>
+                   
                   </div>
                 </div>
                 <div className="space-y-3">
@@ -760,15 +770,17 @@ const Step4 = () => {
             <div className="grid grid-cols-2 gap-6">
               {/* Extra Time */}
               <div className="bg-backgroundPrimary rounded-2xl p-6 border h-full">
-                <h3 className="text-lg font-semibold mb-2">Extra Time</h3>
-                <p className="text-sm text-gray-600 mb-4">
+                <h3 className="text-lg font-semibold mb-2 pl-2">Extra Time</h3>
+                <div className="flex flex-row gap-4">
+                <p className="text-sm text-gray-600 mb-4 pl-2">
                   Qualifying questions are presented to candidates ahead of the
                   tests. The answers to these questions determine if ca,
                   determinedetermine determine determine
                 </p>
-                <div className="flex items-center gap-3 p-2 pl-3 bg-white rounded-lg border mb-4">
-                  <span className="text-gray-500">Time</span>
-                  <ChevronDownIcon className="w-4 h-4 ml-auto" />
+                <div className="flex items-center  bg-white rounded-lg border p-1  extreme right corner w-1/2 h-10 w">
+                  <span className="text-gray-400 pl-4">10%</span>
+                  <ChevronDownIcon className="w-4 h-4 ml-auto text-gray-400" />
+                </div>
                 </div>
                 <div className="bg-purpleQuaternary rounded-xl p-4 flex-1">
                   <p className="text-sm text-gray-700">

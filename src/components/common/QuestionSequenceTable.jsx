@@ -485,10 +485,17 @@ const QuestionSequenceTable = ({
              } question yet!`}
              subtext="Stay productive by creating a task."
            >
-             <Button variant="outline" icon={Plus} iconPlacement="left">
-               Add Question
-             </Button>
-             <Button variant="primary">Add from Library</Button>
+              <Button
+                  variant="outline"
+                  icon={Plus}
+                  iconPlacement="left"
+                  onClick={onAddQuestion}
+                >
+                  Add Question
+                </Button>
+                <Button variant="primary" onClick={onAddFromLibrary}>
+                  Add from Library
+                </Button>
            </EmptyState>
          </Section>
        )}
