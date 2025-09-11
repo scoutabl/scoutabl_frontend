@@ -58,6 +58,23 @@ const Step3 = () => {
     setQuestionLibraryOpen(true);
   }
 
+  // Navigation handlers
+  const handleBack = () => {
+    const currentStepIndex = steps.findIndex((s) => s.value === selectedStep);
+    if (currentStepIndex > 0) {
+      const previousStep = steps[currentStepIndex - 1];
+      handleStepChange(previousStep.value);
+    }
+  };
+
+  const handleNext = () => {
+    const currentStepIndex = steps.findIndex((s) => s.value === selectedStep);
+    if (currentStepIndex < steps.length - 1) {
+      const nextStep = steps[currentStepIndex + 1];
+      handleStepChange(nextStep.value);
+    }
+  };
+
   return (
     <div className="flex flex-col gap-6 py-6">
       {/* Wizard nav + AI pro-tip banner */}
@@ -124,10 +141,18 @@ const Step3 = () => {
 
       {/* Back / Next navigation buttons */}
       <div className="flex items-center justify-between">
-        <Button variant="back" effect="shineHover">
+        <Button 
+          variant="back" 
+          effect="shineHover"
+          onClick={handleBack}
+        >
           <ChevronLeftIcon /> Back
         </Button>
-        <Button variant="next" effect="shineHover">
+        <Button 
+          variant="next" 
+          effect="shineHover"
+          onClick={handleNext}
+        >
           Next <ChevronRightIcon />
         </Button>
       </div>

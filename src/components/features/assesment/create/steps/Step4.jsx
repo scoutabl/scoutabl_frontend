@@ -25,6 +25,11 @@ import EditAssessmentQuestionsPopup from "./EditAssessmentQuestionsPopup";
 import EditAssessmentTestsPopup from "./EditAssessmentTestsPopup";
 import { CustomToggleSwitch } from "@/components/ui/custom-toggle-switch";
 import FileIcon from "@/assets/fileIcon.svg?react";
+import Dropdown from "@/components/ui/dropdown";
+import { Controller, useForm } from 'react-hook-form';
+import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
+
+
 
 const Step4 = () => {
   const { assessment, steps, selectedStep, handleStepChange } =
@@ -40,12 +45,13 @@ const Step4 = () => {
   const [testLibraryOpen, setTestLibraryOpen] = useState(false);
 
   // Add toggle state variables
-  const [showResultsToCandidates, setShowResultsToCandidates] = useState(false);
-  const [addIntroVideo, setAddIntroVideo] = useState(false);
-  const [collectCandidateDocuments, setCollectCandidateDocuments] = useState(false);
-  const [assessmentStartDate, setAssessmentStartDate] = useState(false);
-  const [domainRestriction, setDomainRestriction] = useState(false);
+  const [ishowResultsToCandidatesEnabled, setshowResultsToCandidatesEnabled] = useState(false);
+  const [isaddIntroVideoEnabled, setAddIntroVideoEnabled] = useState(false);
+  const [iscollectCandidateDocumentsEnabled, setcollectCandidateDocumentsEnabled] = useState(false);
+  const [isAssessmentStartDateEnabled, setAssessmentStartDateEnabled] = useState(false);
+  const [isdomainRestrictionEnabled, setdomainRestrictionEnabled] = useState(false);
   const [status, setStatus] = useState("allowed"); 
+  const [dropdownKey, setDropdownKey] = useState(0);
 
   // Proctoring toggle state variables
   const [proctoringSettings, setProctoringSettings] = useState({
@@ -97,6 +103,22 @@ const Step4 = () => {
     { id: "proctoring", label: "Proctoring" },
     { id: "legal", label: "Legal" },
   ];
+
+  // Initialize React Hook Form
+  const { control, handleSubmit, watch, setValue } = useForm({
+    defaultValues: {
+      extraTime: 10, // Default value for extra time
+    }
+  });
+
+  // Navigation handlers
+  const handleBack = () => {
+    const currentStepIndex = steps.findIndex((s) => s.value === selectedStep);
+    if (currentStepIndex > 0) {
+      const previousStep = steps[currentStepIndex - 1];
+      handleStepChange(previousStep.value);
+    }
+  };
 
   // Add scroll detection
   useEffect(() => {
@@ -272,9 +294,9 @@ const Step4 = () => {
           <p className="text-sm text-gray-600 mb-4">
             Qualifying questions are presented to candidates ahead of the tests. The answers to these questions determine if
           </p>
-          <div className="flex gap-6">
+          <div className="flex gap-6 items-start">
             {/* Left Column */}
-            <div className="flex-1 space-y-6">
+            <div className="w-1/2 space-y-6">
               <div className="bg-backgroundPrimary rounded-2xl border p-5">
                 <div className="flex items-center gap-3 mb-4">
                   <div className="w-6 h-6 bg-black rounded-full flex items-center justify-center">
@@ -299,7 +321,7 @@ const Step4 = () => {
               <div className="bg-backgroundPrimary rounded-2xl p-4 border">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    <CustomToggleSwitch checked={showResultsToCandidates} onCheckedChange={setShowResultsToCandidates} />
+                    <CustomToggleSwitch checked={ishowResultsToCandidatesEnabled} onCheckedChange={setshowResultsToCandidatesEnabled} />
                     <h3 className="text-lg font-semibold text-gray-900">Show results to candidates</h3>
                   </div>
                   <Button className="rounded-full px-4 py-2 text-sm bg-purpleUpgrade text-black border-purplePrimary">
@@ -312,7 +334,7 @@ const Step4 = () => {
               <div className="bg-backgroundPrimary rounded-2xl p-4 border">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    <CustomToggleSwitch checked={addIntroVideo} onCheckedChange={setAddIntroVideo} />
+                    <CustomToggleSwitch checked={isaddIntroVideoEnabled} onCheckedChange={setAddIntroVideoEnabled} />
                     <h3 className="text-lg font-semibold text-gray-900">Add Intro Video</h3>
                   </div>
                   <Button className="rounded-full px-4 py-2 text-sm bg-purpleUpgrade text-black border-purplePrimary">
@@ -322,7 +344,7 @@ const Step4 = () => {
                 </div>
                 
                 {/* Collapsible content for Add Intro Video */}
-                {addIntroVideo && (
+                {isaddIntroVideoEnabled && (
                   <div className="mt-4 space-y-4">
                     {/* Video Link Input */}
                     
@@ -373,19 +395,20 @@ const Step4 = () => {
             </div>
 
             {/* Right Column */}
-            <div className="flex-1 space-y-6">
+            <div className="w-1/2 space-y-6">
               <div className="bg-backgroundPrimary rounded-2xl p-5 border">
-                <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center justify-between mb-4 ">
                   <div className="flex items-center gap-3">
-                    <CustomToggleSwitch checked={collectCandidateDocuments} onCheckedChange={setCollectCandidateDocuments} />
-                    <h3 className="text-lg font-semibold text-gray-900">Collect Candidate Documents</h3>
+                    <CustomToggleSwitch checked={iscollectCandidateDocumentsEnabled} onCheckedChange={setcollectCandidateDocumentsEnabled} />
+                    <h3 className="text-lg font-semibold text-gray-900">Collect Candidate Details</h3>
                   </div>
                   <Button className="rounded-full px-4 py-2 text-sm bg-purpleUpgrade text-black border-purplePrimary">
                     <Crown className="w-4 h-4 mr-1 text-purplePrimary fill-purplePrimary " />
                     Upgrade
                   </Button>
                 </div>
-
+              
+                 <div className="mt-4 space-y-4">
                 <div className="bg-purple-100 rounded-lg p-4 mb-4">
                   <h4 className="font-semibold text-purplePrimary mb-2">Learn About Document Hub</h4>
                   <p className="text-sm text-gray-700">
@@ -394,10 +417,11 @@ const Step4 = () => {
                   </p>
                 </div>
 
-                <div className="space-y-2 mb-4">
+                {iscollectCandidateDocumentsEnabled && (
+                  <div>
                   <div className="flex gap-5">
                     {["Resume", "Cover Letter", "Relieving Letter", "ID Proof"].map((doc) => (
-                      <div key={doc} className="flex items-center gap-6 p-2 pl-4 pr-4 bg-white rounded-lg border whitespace-nowrap">
+                      <div key={doc} className="flex items-center gap-2 p-2 pl-2 pr-2 mb-2 bg-white rounded-lg border whitespace-nowrap">
                         <Checkbox />
                         <span className="text-sm text-gray-700">{doc}</span>
                       </div>
@@ -405,19 +429,24 @@ const Step4 = () => {
                   </div>
                   <div className="flex gap-5">
                     {["Contact Number", "Experience Certificate/ Letter"].map((doc) => (
-                      <div key={doc} className="flex items-center gap-6 p-2 pl-4 pr-4 bg-white rounded-lg border whitespace-nowrap">
+                      <div key={doc} className="flex items-center gap-2 p-2 pl-2 pr-2 mb-4 bg-white rounded-lg border whitespace-nowrap">
                         <Checkbox />
                         <span className="text-sm text-gray-700">{doc}</span>
                       </div>
                     ))}
                   </div>
-                </div>
+                
 
-                <Button variant="primary" className="w-auto px-4 py-2 rounded-lg">
+                <Button variant="primary" className="w-auto px-4 py-2  rounded-lg">
                   <PlusIcon className="w-4 h-4 mr-2" />
                   Custom File Upload
                 </Button>
+                </div>
+                )}
               </div>
+             
+              </div>
+               
             </div>
           </div>
         </Section>
@@ -431,12 +460,10 @@ const Step4 = () => {
               <div>
               <h2 className="text-xl font-semibold">Assessment Validity</h2>
               <p className="text-sm text-gray-600 mb-1 mt-3">
-            Qualifying questions are presented to candidates ahead of the tests. The answers to these questions determine if
-          </p>
+                Qualifying questions are presented to candidates ahead of the tests. The answers to these questions determine if
+               </p>
               </div>
-              
-
-              <Button className="rounded-full px-4 py-2 text-sm bg-purpleUpgrade text-black border-purplePrimary">
+                       <Button className="rounded-full px-4 py-2 text-sm bg-purpleUpgrade text-black border-purplePrimary">
                     <Crown className="w-4 h-4 mr-1 text-purplePrimary fill-purplePrimary " />
                 Upgrade
               </Button>
@@ -452,7 +479,7 @@ const Step4 = () => {
               <div className="bg-backgroundPrimary rounded-2xl p-6">
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center gap-3">
-                    <CustomToggleSwitch checked={assessmentStartDate} onCheckedChange={setAssessmentStartDate}/>
+                    <CustomToggleSwitch checked={isAssessmentStartDateEnabled} onCheckedChange={setAssessmentStartDateEnabled}/>
                     <h3 className="text-lg font-semibold">
                       Assessment Start and End Date
                     </h3>
@@ -464,7 +491,7 @@ const Step4 = () => {
                   integration. Candidates who are in progress when the assessment
                   expires can finish.
                 </p>
-                {assessmentStartDate && (
+                {isAssessmentStartDateEnabled && (
                 <div className="flex items-center gap-3">
                   <div className="flex items-center gap-3 p-3 bg-white rounded-lg border">
                       <span className="text-gray-400">
@@ -550,11 +577,11 @@ const Step4 = () => {
 
               {/* Domain Restriction */}
               <div className="bg-backgroundPrimary rounded-2xl p-6 border">
-                <div className="flex items-center justify-between mb-2">
-                  <div className="flex items-center gap-3">
+                <div className="flex items-center justify-between mb-2 h-10 ">
+                  <div className="flex items-center gap-3 ">
                     <CustomToggleSwitch 
-                      checked={domainRestriction} 
-                      onCheckedChange={setDomainRestriction} 
+                      checked={isdomainRestrictionEnabled} 
+                      onCheckedChange={setdomainRestrictionEnabled} 
                     />
                     <div className="flex items-center gap-2">
                       <h3 className="text-lg font-semibold">
@@ -563,40 +590,48 @@ const Step4 = () => {
                       <HelpCircle className="w-4 h-4 text-gray-400" />
                     </div>
                   </div>
-                  <div className="flex items-center gap-3 p-1 pr-2 pl-3 bg-white rounded-lg border ml-auto">
-                    <select 
-                      value={status} 
-                      onChange={(e) => setStatus(e.target.value)}
-                      className="text-gray-500 bg-transparent rounded-lg border-none outline-none cursor-pointer [&>option]:rounded-lg"
-                    >
-                      <option value="allowed">Allowed</option>
-                      <option value="disallowed">Disallowed</option>
-                    </select>
-                   
-                  </div>
+                  
+                  {isdomainRestrictionEnabled && (
+                    <div className="flex items-center gap-3 p-1 pr-2 pl-3 bg-white rounded-lg border ml-auto">
+                      <Dropdown
+                        key={dropdownKey}
+                        options={[{display: "Allowed", value: "allowed"}, {display: "Disallowed", value: "disallowed"}]}
+                        onChange={(value) => {
+                          setStatus(value);
+                          setDropdownKey(prev => prev + 1); 
+                        }}
+                        currentValue={status}
+                        className="w-30 h-6 text-m p-1 gap-0"
+                        style={{ background: "P", color: "inherit" }}
+                      />
+                    </div>
+                  )}
                 </div>
-                <div className="space-y-3">
-                  <div className="flex items-center gap-3 p-2 bg-white rounded-lg border">
-                    <span className="text-gray-500">Selected Users</span>
-                  </div>
-                  <div className="flex gap-2">
-                    {domains.map((domain) => (
-                      <Badge
-                        key={domain}
-                        variant="secondary"
-                        className="bg-blue-100 text-blue-800"
-                      >
-                        {domain}
-                        <button
-                          onClick={() => removeDomain(domain)}
-                          className="ml-2"
+                
+                {isdomainRestrictionEnabled && (
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-3 p-2 bg-white rounded-lg border">
+                      <span className="text-gray-500">Selected Users</span>
+                    </div>
+                    <div className="flex gap-2">
+                      {domains.map((domain) => (
+                        <Badge
+                          key={domain}
+                          variant="secondary"
+                          className="bg-blue-100 text-blue-800"
                         >
-                          <X className="w-3 h-3" />
-                        </button>
-                      </Badge>
-                    ))}
+                          {domain}
+                          <button
+                            onClick={() => removeDomain(domain)}
+                            className="ml-2"
+                          >
+                            <X className="w-3 h-3" />
+                          </button>
+                        </Badge>
+                      ))}
+                    </div>
                   </div>
-                </div>
+                )}
               </div>
             </div>
 
@@ -763,7 +798,7 @@ const Step4 = () => {
           className="shadow-lg"
         >
           <p className="text-sm text-gray-600 mb-4">
-            Qualifying questions are presented to candidates ahead of the tests. The answers to these questions determine if ca, determinedetermine determine determine
+            The Legal section allows you to configure legal settings for your assessment. You can provide extra time for candidates with specific needs.
           </p>
         
           <div className="space-y-6">
@@ -773,14 +808,23 @@ const Step4 = () => {
                 <h3 className="text-lg font-semibold mb-2 pl-2">Extra Time</h3>
                 <div className="flex flex-row gap-4">
                 <p className="text-sm text-gray-600 mb-4 pl-2">
-                  Qualifying questions are presented to candidates ahead of the
-                  tests. The answers to these questions determine if ca,
-                  determinedetermine determine determine
+                Provide extra time for candidates with specific needs. This will be added to the total time of the assessment.
                 </p>
-                <div className="flex items-center  bg-white rounded-lg border p-1  extreme right corner w-1/2 h-10 w">
-                  <span className="text-gray-400 pl-4">10%</span>
-                  <ChevronDownIcon className="w-4 h-4 ml-auto text-gray-400" />
-                </div>
+                 
+                <Controller
+                  name="extraTime"
+                  control={control}
+                  render={({ field }) => (
+                      <Input
+                          {...field}
+                          type="number"
+                          placeholder='120 Min'
+                          className='px-3 py-2 max-h-10 max-w-[114px] text-base font-medium text-greyAccent bg-white rounded-tr-md rounded-br-md rounded-tl-none rounded-bl-none border-0 rounded-xl'
+                          onChange={(e) => field.onChange(Number(e.target.value))}
+                      />
+                  )}
+                 />
+                  
                 </div>
                 <div className="bg-purpleQuaternary rounded-xl p-4 flex-1">
                   <p className="text-sm text-gray-700">
@@ -799,9 +843,7 @@ const Step4 = () => {
                   Accommodation for candidates
                 </h3>
                 <p className="text-sm text-gray-600 mb-4">
-                  Qualifying questions are presented to candidates ahead of the
-                  tests. The answers to these questions determine if ca,
-                  determinedetermine determine determine
+                Provide accommodation for candidates with specific needs.
                 </p>
                 <div className="bg-white rounded-2xl p-4 space-y-4">
                   <div className="flex items-center justify-between">
@@ -822,7 +864,14 @@ const Step4 = () => {
                       <span className="font-medium text-gray-700">
                         Candidates with concentration/ memory impairments
                       </span>
-                      <HelpCircle className="w-4 h-4 text-gray-400" />
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <HelpCircle className="w-4 h-4 text-gray-400" />
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p>Candidates will be given extra time.</p>
+                        </TooltipContent>
+                      </Tooltip>
                     </div>
                     <CustomToggleSwitch 
                       checked={legalSettings.concentrationMemoryImpairments} 
@@ -838,12 +887,17 @@ const Step4 = () => {
 
       {/* Navigation Buttons */}
       <div className="flex justify-between items-center">
-        <Button variant="outline" className="rounded-full px-6 py-2">
+        <Button variant="back"
+        effect="shineHover"
+         className="rounded-full mb-6 px-6 py-2" onClick={handleBack}>
           <ChevronLeftIcon className="w-4 h-4 mr-2" />
           Back
         </Button>
         <Button
-          className="rounded-full px-6 py-2 bg-gray-300 text-gray-500  cursor-not-allowed"
+          variant="next"
+          effect="shineHover"
+          
+          className="rounded-full mb-6 px-6 py-2 bg-gray-300 text-gray-500  cursor-not-allowed"
           disabled
         >
           Finish
