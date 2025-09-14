@@ -28,6 +28,7 @@ import FileIcon from "@/assets/fileIcon.svg?react";
 import Dropdown from "@/components/ui/dropdown";
 import { Controller, useForm } from 'react-hook-form';
 import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
+import { DateTimePicker } from "@/components/ui/datetimepicker";
 
 
 
@@ -493,19 +494,9 @@ const Step4 = () => {
                 </p>
                 {isAssessmentStartDateEnabled && (
                 <div className="flex items-center gap-3">
-                  <div className="flex items-center gap-3 p-3 bg-white rounded-lg border">
-                      <span className="text-gray-400">
-                        Start Date & Time: DD/MM/YYYY HH:MM
-                      </span>
-                      <ChevronDownIcon className="w-4 h-4 ml-auto" />
-                   </div>
-                  
-                    <div className="flex items-center gap-3 p-3 bg-white rounded-lg border">
-                      <span className="text-gray-400">
-                        End Date & Time: DD/MM/YYYY HH:MM
-                      </span>
-                      <ChevronDownIcon className="w-4 h-4 ml-auto" />
-                 </div>
+                 <DateTimePicker className="w-full"/>
+                
+                 <DateTimePicker className="w-full"/>
                 </div>  
                 )}
               </div>
