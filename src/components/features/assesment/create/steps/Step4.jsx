@@ -48,6 +48,8 @@ const Step4 = () => {
   // Add toggle state variables
   const [ishowResultsToCandidatesEnabled, setshowResultsToCandidatesEnabled] = useState(false);
   const [isaddIntroVideoEnabled, setAddIntroVideoEnabled] = useState(false);
+  const [uploadedFile, setUploadedFile] = useState(null);
+  const [fileError, setFileError] = useState("");
   const [iscollectCandidateDocumentsEnabled, setcollectCandidateDocumentsEnabled] = useState(false);
   const [isAssessmentStartDateEnabled, setAssessmentStartDateEnabled] = useState(false);
   const [isdomainRestrictionEnabled, setdomainRestrictionEnabled] = useState(false);
@@ -186,6 +188,31 @@ const Step4 = () => {
       ...prev,
       [settingName]: !prev[settingName]
     }));
+  };
+
+  // File upload handler
+  const handleFileUpload = (event) => {
+    const file = event.target.files[0];
+    if (file) {
+      // Check if file is MP3 format
+      if (file.type === 'audio/mpeg' || file.name.toLowerCase().endsWith('.mp3')) {
+        // Check file size (10MB limit)
+        if (file.size <= 10 * 1024 * 1024) {
+          setUploadedFile(file);
+          setFileError("");
+        } else {
+          setFileError("File size must be less than 10MB");
+        }
+      } else {
+        setFileError("Please upload only MP3 format files");
+      }
+    }
+  };
+
+  // Remove uploaded file
+  const removeUploadedFile = () => {
+    setUploadedFile(null);
+    setFileError("");
   };
 
   return (
@@ -338,10 +365,12 @@ const Step4 = () => {
                     <CustomToggleSwitch checked={isaddIntroVideoEnabled} onCheckedChange={setAddIntroVideoEnabled} />
                     <h3 className="text-lg font-semibold text-gray-900">Add Intro Video</h3>
                   </div>
+                
                   <Button className="rounded-full px-4 py-2 text-sm bg-purpleUpgrade text-black border-purplePrimary">
                   <Crown className="w-4 h-4 mr-1 text-purplePrimary fill-purplePrimary " />
                     Upgrade
                   </Button>
+                 
                 </div>
                 
                 {/* Collapsible content for Add Intro Video */}
@@ -362,34 +391,56 @@ const Step4 = () => {
                     
                     {/* File Upload Area */}
                     <div className="bg-white rounded-lg p-3 border-2 border-dashed border-gray-300 hover:border-purplePrimary transition-colors">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                          <FileIcon className="w-9 h-9 text-blue-600" />
-                          <div>
-                            <p className="font-medium text-gray-900">Upload video file</p>
-                            <p className="text-sm text-gray-500">Drag & Drop file here</p>
+                      <input
+                        type="file"
+                        accept=".mp3,audio/mpeg"
+                        onChange={handleFileUpload}
+                        className="hidden"
+                        id="audio-upload"
+                      />
+                      <label htmlFor="audio-upload" className="cursor-pointer">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-3">
+                            <FileIcon className="w-9 h-9 text-blue-600" />
+                            <div>
+                              <p className="font-medium text-gray-900">Upload audio file</p>
+                              <p className="text-sm text-gray-500">Drag & Drop MP3 file here</p>
+                              
+                            </div>
                           </div>
+                          <span className="text-sm text-gray-500">Max: 10 Mb</span>
                         </div>
-                        <span className="text-sm text-gray-500">Max: 10 Mb</span>
-                      </div>
+                      </label>
                     </div>
+
+                    {/* Error Message */}
+                    {fileError && (
+                      <div className="text-red-500 text-sm bg-red-50 p-2 rounded-lg">
+                        {fileError}
+                      </div>
+                    )}
                     
                     {/* Uploaded File Display (if any) */}
-                    <div className="bg-white rounded-lg p-2 border w-1/2">
-                       <div className="flex items-center justify-between">
-                         <div className="flex items-center gap-0.5">
-                           <FileIcon className="w-5 h-5 text-blue-600" />
-                           <span className="text-sm text-gray-900">XYZ.mp4</span>
-                           <span className="text-gray-400">•</span>
-                           <a className="text-blue-500 text-sm hover:underline">Preview</a>
-                           <span className="text-gray-400">•</span>
-                           <span className="text-sm text-gray-500">5.7MB</span>
+                    {uploadedFile && (
+                      <div className="bg-white rounded-lg p-2 border w-1/2">
+                         <div className="flex items-center justify-between">
+                           <div className="flex items-center gap-0.5">
+                             <FileIcon className="w-5 h-5 text-blue-600" />
+                             <span className="text-sm text-gray-900">{uploadedFile.name}</span>
+                             <span className="text-gray-400">•</span>
+                             <a className="text-blue-500 text-sm hover:underline">Preview</a>
+                             <span className="text-gray-400">•</span>
+                             <span className="text-sm text-gray-500">{(uploadedFile.size / (1024 * 1024)).toFixed(1)}MB</span>
+                           </div>
+                           <button 
+                             onClick={removeUploadedFile}
+                             className="text-gray-400 hover:text-black transition-colors"
+                           >
+                             <X className="w-4 h-4" />
+                           </button>
                          </div>
-                         <button className="text-gray-400 hover:text-black transition-colors">
-                           <X className="w-4 h-4" />
-                         </button>
                        </div>
-                     </div>
+                    )}
                   </div>
                 )}
               </div>
@@ -464,7 +515,7 @@ const Step4 = () => {
                 Qualifying questions are presented to candidates ahead of the tests. The answers to these questions determine if
                </p>
               </div>
-                       <Button className="rounded-full px-4 py-2 text-sm bg-purpleUpgrade text-black border-purplePrimary">
+                        <Button className="rounded-full px-4 py-2 text-sm bg-purpleUpgrade text-black border-purplePrimary">
                     <Crown className="w-4 h-4 mr-1 text-purplePrimary fill-purplePrimary " />
                 Upgrade
               </Button>
@@ -511,7 +562,7 @@ const Step4 = () => {
           header={
             <div className="flex items-center justify-between w-full">
               <h2 className="text-xl font-semibold">Access</h2>
-              <Button className="rounded-full px-4 py-2 text-sm bg-purpleUpgrade text-black border-purplePrimary">
+              <Button className="rounded-full px-4 py-2 text-sm bg-purpleUpgrade text-black border-purplePrimary ">
               <Crown className="w-4 h-4 mr-1 text-purplePrimary fill-purplePrimary " />
                 Join Pro
               </Button>
@@ -526,11 +577,12 @@ const Step4 = () => {
           <p className="text-sm text-gray-600 mb-4">
             Qualifying questions are presented to candidates ahead of the tests. The answers to these questions determine if ca, determinedetermine determine determine
           </p>
+
           <div className="space-y-6">
-            {/* Assessment Access and Domain Restriction - Side by Side */}
-            <div className="grid grid-cols-2 gap-6">
+            {/* Assessment Access and Domain Restriction - Independent Components */}
+            <div className="flex gap-6 items-start">
               {/* Assessment Access */}
-              <div className="bg-backgroundPrimary rounded-2xl p-6 border">
+              <div className="w-1/2 bg-backgroundPrimary rounded-2xl p-6 border">
                 <div className="flex items-center gap-2 mb-4">
                   <h3 className="text-lg font-semibold">Assessment Access</h3>
                   <HelpCircle className="w-4 h-4 text-gray-400" />
@@ -541,11 +593,7 @@ const Step4 = () => {
                     <ChevronDownIcon className="w-4 h-4 ml-auto" />
                   </div>
                   <div className="space-y-3">
-                    <div className="flex items-center gap-3 p-2 bg-white rounded-lg border">
-                      <span className="text-gray-500">Choose Users</span>
-                      <ChevronDownIcon className="w-4 h-4 ml-auto" />
-                    </div>
-                    <div className="flex gap-2">
+                  <div className="flex gap-2">
                       {selectedUsers.map((user) => (
                         <Badge
                           key={user}
@@ -567,23 +615,23 @@ const Step4 = () => {
               </div>
 
               {/* Domain Restriction */}
-              <div className="bg-backgroundPrimary rounded-2xl p-6 border">
-                <div className="flex items-center justify-between mb-2 h-10 ">
-                  <div className="flex items-center gap-3 ">
+              <div className="w-1/2 bg-backgroundPrimary rounded-2xl p-4 border">
+                <div className="flex items-center items-start justify-between mb-2">
+                  <div className="flex items-center gap-3">
                     <CustomToggleSwitch 
                       checked={isdomainRestrictionEnabled} 
                       onCheckedChange={setdomainRestrictionEnabled} 
                     />
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 mt-1  ml-1">
                       <h3 className="text-lg font-semibold">
                         Domain Restriction
                       </h3>
                       <HelpCircle className="w-4 h-4 text-gray-400" />
-                    </div>
                   </div>
-                  
-                  {isdomainRestrictionEnabled && (
-                    <div className="flex items-center gap-3 p-1 pr-2 pl-3 bg-white rounded-lg border ml-auto">
+                </div>
+                
+                {isdomainRestrictionEnabled && (
+                    <div className="flex items-center text-gray-500 gap-3 p-1.5  bg-white rounded-lg border ml-auto">
                       <Dropdown
                         key={dropdownKey}
                         options={[{display: "Allowed", value: "allowed"}, {display: "Disallowed", value: "disallowed"}]}
@@ -592,55 +640,41 @@ const Step4 = () => {
                           setDropdownKey(prev => prev + 1); 
                         }}
                         currentValue={status}
-                        className="w-30 h-6 text-m p-1 gap-0"
+                        className="w-30 h-6 text-m p-1 gap-0 "
                         style={{ background: "P", color: "inherit" }}
                       />
                     </div>
                   )}
-                </div>
-                
-                {isdomainRestrictionEnabled && (
-                  <div className="space-y-3">
-                    <div className="flex items-center gap-3 p-2 bg-white rounded-lg border">
-                      <span className="text-gray-500">Selected Users</span>
                     </div>
-                    <div className="flex gap-2">
-                      {domains.map((domain) => (
-                        <Badge
-                          key={domain}
-                          variant="secondary"
-                          className="bg-blue-100 text-blue-800"
-                        >
-                          {domain}
-                          <button
-                            onClick={() => removeDomain(domain)}
-                            className="ml-2"
+                    
+                {isdomainRestrictionEnabled && (
+                    <div className="space-y-3">
+                      <div className="flex items-center gap-3 p-2 bg-white rounded-lg border">
+                        <span className="text-gray-500">Selected Users</span>
+                      </div>
+                      <div className="flex gap-2">
+                        {domains.map((domain) => (
+                          <Badge
+                            key={domain}
+                            variant="secondary"
+                            className="bg-blue-100 text-blue-800"
                           >
-                            <X className="w-3 h-3" />
-                          </button>
-                        </Badge>
-                      ))}
+                            {domain}
+                            <button
+                              onClick={() => removeDomain(domain)}
+                              className="ml-2"
+                            >
+                              <X className="w-3 h-3" />
+                            </button>
+                          </Badge>
+                        ))}
                     </div>
                   </div>
                 )}
               </div>
             </div>
 
-            {/* Time Zone - Aligned with Assessment Access width */}
-            <div className="grid grid-cols-2 gap-6">
-              <div className="bg-backgroundPrimary rounded-2xl p-6 border">
-                <div className="flex items-center gap-2 mb-4">
-                  <h3 className="text-lg font-semibold">Time Zone</h3>
-                  <HelpCircle className="w-4 h-4 text-gray-400" />
-                </div>
-                <div className="flex items-center gap-3 p-2 bg-white rounded-lg border">
-                  <span className="text-gray-500">Selected Time Zone for the assessment</span>
-                  <ChevronDownIcon className="w-4 h-4 ml-auto" />
-                </div>
-              </div>
-              {/* Empty div to maintain grid structure */}
-              <div></div>
-            </div>
+            
           </div>
           
         </Section>

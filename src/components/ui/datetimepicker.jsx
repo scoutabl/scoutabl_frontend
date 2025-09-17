@@ -22,9 +22,15 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 
-export function DateTimePicker() {
+export function DateTimePicker({ currentValue, onChange }) {
   const [open, setOpen] = React.useState(false)
-  const [dateTime, setDateTime] = React.useState(new Date())
+  const [dateTime, setDateTime] = React.useState(currentValue || new Date())
+
+  React.useEffect(() => {
+    if (currentValue) {
+      setDateTime(currentValue)
+    }
+  }, [currentValue])
 
   const today = new Date()
 
@@ -33,7 +39,11 @@ export function DateTimePicker() {
       const updated = new Date(prev)
 
       if (newDate) {
-        updated.setFullYear(newDate.getFullYear(), newDate.getMonth(), newDate.getDate())
+        updated.setFullYear(
+          newDate.getFullYear(),
+          newDate.getMonth(),
+          newDate.getDate()
+        )
       }
       if (newHour !== undefined) {
         let h = parseInt(newHour, 10)
@@ -54,6 +64,7 @@ export function DateTimePicker() {
         if (!amFlag && h < 12) updated.setHours(h + 12)
       }
 
+      if (onChange) onChange(updated)
       return updated
     })
   }
@@ -81,7 +92,6 @@ export function DateTimePicker() {
   const [currentMonth, setCurrentMonth] = React.useState(dateTime.getMonth())
   const [currentYear, setCurrentYear] = React.useState(dateTime.getFullYear())
 
-  // Month and year options
   const months = [
     "January", "February", "March", "April", "May", "June",
     "July", "August", "September", "October", "November", "December"
@@ -115,14 +125,14 @@ export function DateTimePicker() {
       <PopoverTrigger asChild>
         <Button
           variant="outline"
-          className="w-full justify-start text-left font-normal"
+          className="w-full justify-start text-left font-normal bg-white border-0 text-gray-500"
         >
           <CalendarIcon className="mr-2 h-4 w-4" />
           {dateTime ? formatHeader(dateTime) : "Select Date & Time"}
         </Button>
       </PopoverTrigger>
       <PopoverContent
-        className="w-[360px] p-0 rounded-3xl shadow-lg"
+        className="w-[360px] p-0 rounded-2xl shadow-lg"
         align="start"
       >
         {/* Header */}
@@ -322,6 +332,7 @@ export function DateTimePicker() {
               setDateTime(now)
               setCurrentMonth(now.getMonth())
               setCurrentYear(now.getFullYear())
+              if (onChange) onChange(now)
             }}
           >
             Clear

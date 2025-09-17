@@ -147,13 +147,13 @@ const Dropdown = ({
                 </span>
                 {multiselect && showCurrentValue
                   ? hasValue
-                    ? `: ${options
+                    ? `${name ? ': ' : ''}${options
                         .filter((opt) => currentValue.includes(opt.value))
                         .map((opt) => opt.display)
                         .join(", ")}`
                     : ""
                   : showCurrentValue && currentOption
-                  ? `: ${currentOption.display}`
+                  ? `${name ? ': ' : ''}${currentOption.display}`
                   : ""}
               </span>
             )}
