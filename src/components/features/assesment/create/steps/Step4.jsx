@@ -28,6 +28,11 @@ import FileIcon from "@/assets/fileIcon.svg?react";
 import Dropdown from "@/components/ui/dropdown";
 import { Controller, useForm } from 'react-hook-form';
 import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
+
+// Video file MIME types and extensions
+const VIDEO_MIME_TYPES = ['video/mp4', 'video/webm', 'video/mov', 'video/avi', 'video/wmv', 'video/flv', 'video/mkv', 'video/m4v', 'video/3gp'];
+const VIDEO_EXTENSIONS = ['.mp4', '.webm', '.mov', '.avi', '.wmv', '.flv', '.mkv', '.m4v', '.3gp'];
+const ACCEPTED_VIDEO_TYPES = VIDEO_MIME_TYPES.join(',');
 import { DateTimePicker } from "@/components/ui/datetimepicker";
 import { CustomTooltip } from "@/components/ui/custom-tooltip";
 
@@ -195,9 +200,12 @@ const Step4 = () => {
   const handleFileUpload = (event) => {
     const file = event.target.files[0];
     if (file) {
-      // Check if file is MP3 format
-      if (file.type === 'audio/mpeg' || file.name.toLowerCase().endsWith('.mp3')) {
-        // Check file size (10MB limit)
+      // Check if file is video format
+      const isValidVideoType = VIDEO_MIME_TYPES.includes(file.type) || 
+        VIDEO_EXTENSIONS.some(ext => file.name.toLowerCase().endsWith(ext));
+      
+      if (isValidVideoType) {
+        // Check file size (100MB limit for video files)
         if (file.size <= 10 * 1024 * 1024) {
           setUploadedFile(file);
           setFileError("");
@@ -205,7 +213,7 @@ const Step4 = () => {
           setFileError("File size must be less than 10MB");
         }
       } else {
-        setFileError("Please upload only MP3 format files");
+        setFileError("Please upload only video format files (MP4, WebM, MOV, AVI, etc.)");
       }
     }
   };
@@ -394,18 +402,18 @@ const Step4 = () => {
                     <div className="bg-white rounded-lg p-3 border-2 border-dashed border-gray-300 hover:border-purplePrimary transition-colors">
                       <input
                         type="file"
-                        accept=".mp3,audio/mpeg"
+                        accept={ACCEPTED_VIDEO_TYPES}
                         onChange={handleFileUpload}
                         className="hidden"
-                        id="audio-upload"
+                        id="video-upload"
                       />
-                      <label htmlFor="audio-upload" className="cursor-pointer">
+                      <label htmlFor="video-upload" className="cursor-pointer">
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-3">
                             <FileIcon className="w-9 h-9 text-blue-600" />
                             <div>
-                              <p className="font-medium text-gray-900">Upload audio file</p>
-                              <p className="text-sm text-gray-500">Drag & Drop MP3 file here</p>
+                              <p className="font-medium text-gray-900">Upload Video file</p>
+                              <p className="text-sm text-gray-500">Drag & Drop Video file here</p>
                               
                             </div>
                           </div>
