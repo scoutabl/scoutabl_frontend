@@ -17,6 +17,7 @@ import {
 } from "@dnd-kit/modifiers";
 
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import Chip from "@/components/ui/chip";
 import EmptyState from "@/components/ui/empty-state";
 import Section from "@/components/common/Section";
@@ -27,9 +28,10 @@ import AssessmentTestDetail from "@/components/common/AssessmentTestDetails";
 import TestAddDialog from "@/components/common/TestAddDialog";
 
 import { useAssessmentContext } from "./AssessmentNavbarWrapper";
-import { cn } from "@/lib/utils";
+import { cn, durationToMinutes } from "@/lib/utils";
 import Loading from "@/components/ui/loading";
 import { Plus } from "lucide-react";
+import TrashIcon from "@/assets/trashIcon.svg?react";
 
 const variants = {
   default: {
@@ -62,6 +64,7 @@ const AssessmentTestSequenceTable = ({
   showSubHeader = false,
   onAddFromLibrary,
   variant = "default",
+  title = "Skills Assessment",
 }) => {
   /***************************************************************************
    * Data fetching                                                            *
@@ -84,6 +87,7 @@ const AssessmentTestSequenceTable = ({
   const [localTestOrder, setLocalTestOrder] = useState([]);
   const [openTestId, setOpenTestId] = useState(null);
   const [openWeightTestId, setOpenWeightTestId] = useState(null);
+  const [selectedTests, setSelectedTests] = useState(new Set());
 
   // Track whether the current testOrder update originates from the API so
   // we don't send PATCH requests back in response to our own response handling
@@ -151,6 +155,21 @@ const AssessmentTestSequenceTable = ({
 
   const handleDelete = (testId) => {
     removeTests([testId]);
+  };
+
+  const handleDeleteSelected = async () => {
+    if (selectedTests.size > 0) {
+      await removeTests(Array.from(selectedTests));
+      setSelectedTests(new Set());
+    }
+  };
+
+  const handleTestSelect = (testId, isSelected) => {
+    setSelectedTests((prev) => {
+      const next = new Set(prev);
+      isSelected ? next.add(testId) : next.delete(testId);
+      return next;
+    });
   };
 
   const handleAdd = async (testId, weightage, isEdit = false) => {
@@ -258,6 +277,8 @@ const AssessmentTestSequenceTable = ({
           completionTime={test.completion_time}
           questionCount={test.question_count}
           weight={testWeights[test.id] || 0}
+          isSelected={selectedTests.has(test.id)}
+          onSelect={(checked) => handleTestSelect(test.id, checked)}
           {...(!minimal
             ? {
                 onPreview: () => setOpenTestId(test.id),
@@ -283,6 +304,8 @@ const AssessmentTestSequenceTable = ({
           .filter(Boolean)
       : [];
 
+  const totalDuration = testDetails.reduce((total, test) => total + (durationToMinutes(test.completion_time) || 0), 0);
+
   /***************************************************************************
    * Render                                                                   *
    ***************************************************************************/
@@ -295,27 +318,24 @@ const AssessmentTestSequenceTable = ({
       className={className}
       header={
         <SectionHeader
-          title="Tests"
+          title={title}
           headerRight={
             <div className="flex items-center gap-4">
-              {/* Total score (static for now) */}
-              <Chip
-                className={cn("rounded-full", variants[variant].scoreChip)}
+              {/* Edit weights button */}
+              <Button variant="outline" className="rounded-full" onClick={() => {}}>
+                Edit weights
+              </Button>
+              {/* Delete button */}
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="rounded-full"
+                onClick={handleDeleteSelected}
               >
-                <span className="font-semibold text-sm text-greyPrimary">
-                  Total Score:&nbsp;
-                </span>
-                <span>900</span>
-              </Chip>
-            </div>
-          }
-          subHeader={showSubHeader && (
-            <div className="flex items-center justify-end gap-2">
-              <Button variant="primary" onClick={onAddFromLibrary}>
-                Add from Library
+                <TrashIcon className="w-4 h-4 text-black" />
               </Button>
             </div>
-          )}
+          }
           {...headerProps}
         />
       }
@@ -323,7 +343,14 @@ const AssessmentTestSequenceTable = ({
     >
       {testDetails.length > 0 ? (
         <div className="flex flex-col gap-4">
-          {/* Grid list (sortable) */}
+          {/* Assessment Summary */}
+          <div className="flex items-center gap-6 text-sm  text-gray-600 ">
+            <span>Number of Tests: {testDetails.length}</span>
+            <div className="w-px h-4 bg-gray-300"></div>
+            <span>Duration: {Math.round(totalDuration)} min</span>
+          </div>
+
+          {/* List layout (sortable) */}
           <DndContext
             sensors={sensors}
             collisionDetection={closestCenter}
@@ -334,7 +361,7 @@ const AssessmentTestSequenceTable = ({
             <SortableContext
               items={localTestOrder}
             >
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div className="flex flex-col gap-3 ">
                 {orderedTests.map((t, idx) => (
                   <SortableTestRow key={t.id} testId={t.id} index={idx} />
                 ))}

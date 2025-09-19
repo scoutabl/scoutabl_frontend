@@ -214,7 +214,9 @@ function SortableItem({ id, children }) {
     //     cursor: 'grab'
     // };
     const style = {
-        transform: CSS.Transform.toString(transform),
+        transform: isDragging
+            ? `${CSS.Transform.toString(transform)} scale(1.03)`
+            : CSS.Transform.toString(transform),
         transition,
         opacity: isDragging ? 0.95 : 1,
         background: 'white',
@@ -224,10 +226,6 @@ function SortableItem({ id, children }) {
             : '0 1px 3px 0 rgba(0,0,0,0.06)',
         zIndex: isDragging ? 100 : 1,
         cursor: 'grab',
-        // Optionally add a slight scale for more feedback
-        transform: isDragging
-            ? `${CSS.Transform.toString(transform)} scale(1.03)`
-            : CSS.Transform.toString(transform),
     };
 
     return (

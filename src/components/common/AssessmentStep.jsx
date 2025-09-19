@@ -30,7 +30,7 @@ const AssessmentStep = ({
   const chartData = [{ value: progress }];
 
   return (
-    <div className="w-[550px] p-4 bg-white rounded-5xl flex items-center gap-4 border-[1px] border-[rgba(224,224,224,0.65)] [box-shadow:0px_16px_24px_rgba(0,_0,_0,_0.06),_0px_2px_6px_rgba(0,_0,_0,_0.04)]">
+    <div className="w-[550px] p-4 bg-white rounded-5xl flex items-center gap-4 border-[1px] border-[rgba(224,224,224,0.65)] shadow-md">
       {/* Circular Step No */}
       <div className="w-[60px] h-[60px] relative flex items-center justify-center">
         {/* <RadialBarChart

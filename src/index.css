@@ -327,10 +327,12 @@
   --color-blueBtn: #0077C2;
   --color-bluePrimary: #0084FF;
   --color-blueSecondary: #E2EAFF;
+  --color-blueTertiary: #E3E7F1;
   --color-purplePrimary: #8B5CF6;
   --color-purpleSecondary: #CFDDFD;
   --color-purpleTertiary: #E8DEFD;
   --color-purpleQuaternary: #FAEEFF;
+  --color-purpleUpgrade: #DAD7FD;
   --color-greyAccent: #5C5C5C;
   --color-greyPrimary: #333333;
   --color-greyTertiary: #9E9E9E;
@@ -340,6 +342,7 @@
   --color-seperatorPrimary: #E0E0E0;
   --color-dangerPrimary: #E45270;
   --color-dangerSecondary: #EB5757;
+  --color-pinkPrimary: #fce7f3;
   --animate-shine: shine 3s ease-out infinite;
   --animate-gradient-flow: gradientFlow 10s ease infinite;
 

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useAssessmentContext } from "@/components/common/AssessmentNavbarWrapper";
 import AssessmentStep from "@/components/common/AssessmentStep";
 import Section from "@/components/common/Section";
@@ -11,6 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import AiIcon from "@/assets/AiIcon.svg?react";
 import ChevronLeftIcon from "@/assets/chevronLeftIcon.svg?react";
 import ChevronDownIcon from "@/assets/chevronDownIcon.svg?react";
+import SquareIcon from "@/assets/squareIcon.svg?react";
 import PlusIcon from "@/assets/plusIcon.svg?react";
 import TrashIcon from "@/assets/trashIcon.svg?react";
 import CloudIcon from "@/assets/cloudIcon.svg?react";
@@ -22,11 +23,25 @@ import QuestionSequenceTable from "@/components/common/QuestionSequenceTable";
 import AssessmentTestSequenceTable from "@/components/common/AssessmentTestSequenceTable";
 import EditAssessmentQuestionsPopup from "./EditAssessmentQuestionsPopup";
 import EditAssessmentTestsPopup from "./EditAssessmentTestsPopup";
+import { CustomToggleSwitch } from "@/components/ui/custom-toggle-switch";
+import FileIcon from "@/assets/fileIcon.svg?react";
+import Dropdown from "@/components/ui/dropdown";
+import { Controller, useForm } from 'react-hook-form';
+import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
+
+// Video file MIME types and extensions
+const VIDEO_MIME_TYPES = ['video/mp4', 'video/webm', 'video/mov', 'video/avi', 'video/wmv', 'video/flv', 'video/mkv', 'video/m4v', 'video/3gp'];
+const VIDEO_EXTENSIONS = ['.mp4', '.webm', '.mov', '.avi', '.wmv', '.flv', '.mkv', '.m4v', '.3gp'];
+const ACCEPTED_VIDEO_TYPES = VIDEO_MIME_TYPES.join(',');
+import { DateTimePicker } from "@/components/ui/datetimepicker";
+import { CustomTooltip } from "@/components/ui/custom-tooltip";
+
+
 
 const Step4 = () => {
   const { assessment, steps, selectedStep, handleStepChange } =
     useAssessmentContext();
-  const [activeTab, setActiveTab] = useState("essential-settings");
+  const [activeTab, setActiveTab] = useState("sequence");
   const [domains, setDomains] = useState(["gmail.com", "abc.com"]);
   const [selectedUsers, setSelectedUsers] = useState([
     "sxcscascsc",
@@ -35,6 +50,49 @@ const Step4 = () => {
   const [customQuestionLibraryOpen, setCustomQuestionLibraryOpen] = useState(false);
   const [qualifyingQuestionLibraryOpen, setQualifyingQuestionLibraryOpen] = useState(false);
   const [testLibraryOpen, setTestLibraryOpen] = useState(false);
+
+  // Add toggle state variables
+  const [ishowResultsToCandidatesEnabled, setshowResultsToCandidatesEnabled] = useState(false);
+  const [isaddIntroVideoEnabled, setAddIntroVideoEnabled] = useState(false);
+  const [uploadedFile, setUploadedFile] = useState(null);
+  const [fileError, setFileError] = useState("");
+  const [iscollectCandidateDocumentsEnabled, setcollectCandidateDocumentsEnabled] = useState(false);
+  const [isAssessmentStartDateEnabled, setAssessmentStartDateEnabled] = useState(false);
+  const [isdomainRestrictionEnabled, setdomainRestrictionEnabled] = useState(false);
+  const [status, setStatus] = useState("allowed"); 
+  const [dropdownKey, setDropdownKey] = useState(0);
+
+  // Proctoring toggle state variables
+  const [proctoringSettings, setProctoringSettings] = useState({
+    // Basic Proctoring - Left Column
+    locationLogging: false,
+    webcamSnapshots: false,
+    plagiarismDetection: false,
+    browserExtensionDetection: false,
+    fullscreenModeDetection: false,
+    mouseOutTracking: false,
+    
+    // Basic Proctoring - Right Column
+    disableCopyPaste: false, // This one starts as enabled
+    ipLogging: false,
+    tabProctoring: false,
+    keystrokeAnalysis: false,
+    screenRecordProtection: false,
+    restrictMultipleMonitors: false,
+    
+    // Advanced Proctoring - All enabled and working
+    faceDetection: false,
+    gptDetection: false,
+    aiIdentityVerification: false,
+    virtualMachineDetection: false,
+    browserFingerprinting: false,
+  });
+
+  // Legal section toggle state variables
+  const [legalSettings, setLegalSettings] = useState({
+    nonFluentEnglishSpeakers: false,
+    concentrationMemoryImpairments: false,
+  });
 
   // Section collapse state
   const [collapsedSections, setCollapsedSections] = useState({
@@ -54,6 +112,50 @@ const Step4 = () => {
     { id: "proctoring", label: "Proctoring" },
     { id: "legal", label: "Legal" },
   ];
+
+  // Initialize React Hook Form
+  const { control, handleSubmit, watch, setValue } = useForm({
+    defaultValues: {
+      extraTime: 10, // Default value for extra time
+    }
+  });
+
+  // Navigation handlers
+  const handleBack = () => {
+    const currentStepIndex = steps.findIndex((s) => s.value === selectedStep);
+    if (currentStepIndex > 0) {
+      const previousStep = steps[currentStepIndex - 1];
+      handleStepChange(previousStep.value);
+    }
+  };
+
+  // Add scroll detection
+  useEffect(() => {
+    const handleScroll = () => {
+      const sections = tabs.map(tab => document.getElementById(tab.id));
+      const scrollPosition = window.scrollY + 100; // Offset for better detection
+
+      // Find which section is currently in view
+      for (let i = sections.length - 1; i >= 0; i--) {
+        const section = sections[i];
+        if (section) {
+          const sectionTop = section.offsetTop;
+          const sectionBottom = sectionTop + section.offsetHeight;
+          
+          if (scrollPosition >= sectionTop && scrollPosition < sectionBottom) {
+            setActiveTab(tabs[i].id);
+            break;
+          }
+        }
+      }
+    };
+
+    // Add scroll event listener
+    window.addEventListener('scroll', handleScroll);
+    
+    // Cleanup
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   const removeDomain = (domain) => {
     setDomains(domains.filter((d) => d !== domain));
@@ -78,6 +180,50 @@ const Step4 = () => {
     }));
   };
 
+  // Proctoring toggle handlers
+  const handleProctoringToggle = (settingName) => {
+    setProctoringSettings(prev => ({
+      ...prev,
+      [settingName]: !prev[settingName]
+    }));
+  };
+
+  // Legal section toggle handlers
+  const handleLegalToggle = (settingName) => {
+    setLegalSettings(prev => ({
+      ...prev,
+      [settingName]: !prev[settingName]
+    }));
+  };
+
+  // File upload handler
+  const handleFileUpload = (event) => {
+    const file = event.target.files[0];
+    if (file) {
+      // Check if file is video format
+      const isValidVideoType = VIDEO_MIME_TYPES.includes(file.type) || 
+        VIDEO_EXTENSIONS.some(ext => file.name.toLowerCase().endsWith(ext));
+      
+      if (isValidVideoType) {
+        // Check file size (100MB limit for video files)
+        if (file.size <= 10 * 1024 * 1024) {
+          setUploadedFile(file);
+          setFileError("");
+        } else {
+          setFileError("File size must be less than 10MB");
+        }
+      } else {
+        setFileError("Please upload only video format files (MP4, WebM, MOV, AVI, etc.)");
+      }
+    }
+  };
+
+  // Remove uploaded file
+  const removeUploadedFile = () => {
+    setUploadedFile(null);
+    setFileError("");
+  };
+
   return (
     <div className="flex flex-col gap-6">
       <EditAssessmentQuestionsPopup questionType="qualifying" open={qualifyingQuestionLibraryOpen} onOpenChange={setQualifyingQuestionLibraryOpen} />
@@ -85,7 +231,7 @@ const Step4 = () => {
       <EditAssessmentTestsPopup open={testLibraryOpen} onOpenChange={setTestLibraryOpen} />
 
       {/* Progress Section */}
-      <div className="flex flex-row justify-between items-end">
+      <div className="flex flex-row justify-between items-end  ">
         <AssessmentStep
           steps={steps}
           selected={selectedStep}
@@ -93,18 +239,18 @@ const Step4 = () => {
         />
 
         {/* Pro Tip */}
-        {/* <div className="min-w-[450px] bg-purple-50 rounded-5xl px-4 py-6 flex items-center gap-3 border">
-                    <AiIcon className="w-4 h-4 flex-shrink-0" />
-                    <p className="text-sm text-gray-600">
-                        <span className="bg-gradient-to-r from-purple-600 to-pink-500 inline-block text-transparent bg-clip-text font-semibold">Pro Tip: </span>
-                        Scoutabl's AI suggests tests by matching skills in your job description with related tests.
-                    </p>
-                </div> */}
+        <div className="w-[500px] min-h-[92px] bg-purple-50 rounded-2xl px-4 py-4 flex items-center gap-3 border shadow-md ml-8">
+          <AiIcon className="w-4 h-4 flex-shrink-0 text-purple-600" />
+          <p className="text-sm text-gray-600">
+            <span className="bg-purplePrimary inline-block text-transparent bg-clip-text font-semibold">Pro Tip: </span>
+             Scoutabl's AI suggests tests by matching skills in your job description with related tests.
+          </p>
+        </div>
       </div>
 
       {/* Tab Navigation - Centered */}
-      <div className="flex justify-center">
-        <div className="bg-white rounded-full p-2 border">
+      <div className="flex justify-center sticky top-0 z-10 bg-backgroundPrimary py-2">
+        <div className="bg-white rounded-full p-2 border shadow-sm">
           <div className="flex gap-3">
             {tabs.map((tab) => (
               <button
@@ -112,8 +258,8 @@ const Step4 = () => {
                 onClick={() => scrollToSection(tab.id)}
                 className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
                   activeTab === tab.id
-                    ? "bg-purplePrimary text-white"
-                    : "text-gray-600 hover:text-gray-800"
+                    ? "bg-purplePrimary text-white shadow-md"
+                    : "text-gray-600 hover:text-gray-800 hover:bg-gray-100"
                 }`}
               >
                 {tab.label}
@@ -134,6 +280,7 @@ const Step4 = () => {
           collapsed={collapsedSections["sequence"]}
           onToggle={() => toggleSectionCollapse("sequence")}
           contentClassName="flex flex-col gap-10"
+          className="shadow-lg"
         >
           {/* <SectionHeader number={1} title="Qualifying Questions" tooltipText="Qualifying questions are presented to candidates ahead of the tests. The answers to these questions determine if candidates satisfy the essential requirements of the job. Only if all questions are answered as required, they proceed to the tests." /> */}
           <QuestionSequenceTable
@@ -142,7 +289,7 @@ const Step4 = () => {
             onEdit={() => {}}
             minimal={false}
             headerProps={{ number: 1 }}
-            secitonProps={{ variant: "default" }}
+            secitonProps={{ variant: "primary" }}
             variant="finalize"
             showSubHeader
             onAddFromLibrary={() => setQualifyingQuestionLibraryOpen(true)}
@@ -152,7 +299,7 @@ const Step4 = () => {
           <AssessmentTestSequenceTable
             minimal={false}
             headerProps={{ number: 2 }}
-            secitonProps={{ variant: "default" }}
+            secitonProps={{ variant: "primary" }}
             variant="finalize"
             showSubHeader
             onAddFromLibrary={() => setTestLibraryOpen(true)}
@@ -164,7 +311,7 @@ const Step4 = () => {
             onEdit={() => {}}
             minimal={false}
             headerProps={{ number: 3 }}
-            secitonProps={{ variant: "default" }}
+            secitonProps={{ variant: "primary" }}
             variant="finalize"
             showSubHeader
             onAddFromLibrary={() => setCustomQuestionLibraryOpen(true)}
@@ -178,141 +325,189 @@ const Step4 = () => {
           collapsable={true}
           collapsed={collapsedSections["essential-settings"]}
           onToggle={() => toggleSectionCollapse("essential-settings")}
+          variant="white"
+          className="shadow-lg"
         >
-          <div className="space-y-6">
-            {/* Assessment Description */}
-            <div className="bg-gray-50 rounded-2xl p-6 border">
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-3">
-                  <div className="w-6 h-6 bg-gray-600 rounded-full flex items-center justify-center">
-                    <span className="text-white text-sm">📄</span>
+          <p className="text-sm text-gray-600 mb-4">
+            Qualifying questions are presented to candidates ahead of the tests. The answers to these questions determine if
+          </p>
+          <div className="flex gap-6 items-start">
+            {/* Left Column */}
+            <div className="w-1/2 space-y-6">
+              <div className="bg-backgroundPrimary rounded-2xl border p-5">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-6 h-6 bg-black rounded-full flex items-center justify-center">
+                    <SquareIcon className="w-4 h-4 text-white" />
                   </div>
-                  <h3 className="text-lg font-semibold">
-                    Assessment Description
-                  </h3>
+                  <h3 className="text-lg font-semibold text-gray-900">Assessment Description</h3>
+                </div>
+                <div className="relative">
+                  <Textarea
+                    placeholder="Software Developer"
+                    className="w-full min-h-[95px] bg-white border rounded-md resize-none focus:ring-0 focus:outline-none p-3 pr-24"
+                  />
+                  <div className="absolute bottom-3 right-3">
+                    <Button variant="outline" size="sm" className="text-purplePrimary border-transparent hover:bg-purple-50">
+                      <AiIcon className="w-4 h-4 mr-1" />
+                      Write with AI
+                    </Button>
+                  </div>
                 </div>
               </div>
-              <div className="bg-white rounded-lg border p-4">
-                <div className="flex justify-between items-center mb-2">
-                  <span className="text-gray-700">Software Developer</span>
-                  <div className="flex items-center gap-2 text-purplePrimary text-sm">
-                    <AiIcon className="w-4 h-4" />
-                    Write with AI
-                  </div>
-                </div>
-              </div>
-            </div>
 
-            {/* Show Results to Candidates */}
-            <div className="bg-gray-50 rounded-2xl p-6 border">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <Toggle />
-                  <h3 className="text-lg font-semibold">
-                    Show results to candidates
-                  </h3>
+              <div className="bg-backgroundPrimary rounded-2xl p-4 border">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <CustomToggleSwitch checked={ishowResultsToCandidatesEnabled} onCheckedChange={setshowResultsToCandidatesEnabled} />
+                    <h3 className="text-lg font-semibold text-gray-900">Show results to candidates</h3>
+                  </div>
+                  <Button className="rounded-full px-4 py-2 text-sm bg-purpleUpgrade text-black border-purplePrimary">
+                    <Crown className="w-4 h-4 mr-1 text-purplePrimary fill-purplePrimary " />
+                    Upgrade
+                  </Button>
                 </div>
-                <Button className="bg-gradient-to-r from-purplePrimary to-pink-500 text-white rounded-full px-4 py-2 text-sm">
-                  <Crown className="w-4 h-4 mr-1" />
-                  Upgrade
-                </Button>
               </div>
-            </div>
 
-            {/* Add Intro Video */}
-            <div className="bg-gray-50 rounded-2xl p-6 border">
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-3">
-                  <div className="w-6 h-6 bg-gray-600 rounded-full flex items-center justify-center">
-                    <span className="text-white text-sm">🎥</span>
+              <div className="bg-backgroundPrimary rounded-2xl p-4 border">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <CustomToggleSwitch checked={isaddIntroVideoEnabled} onCheckedChange={setAddIntroVideoEnabled} />
+                    <h3 className="text-lg font-semibold text-gray-900">Add Intro Video</h3>
                   </div>
-                  <h3 className="text-lg font-semibold">Add Intro Video</h3>
+                
+                  <Button className="rounded-full px-4 py-2 text-sm bg-purpleUpgrade text-black border-purplePrimary">
+                  <Crown className="w-4 h-4 mr-1 text-purplePrimary fill-purplePrimary " />
+                    Upgrade
+                  </Button>
+                 
                 </div>
-                <Button className="bg-gradient-to-r from-purplePrimary to-pink-500 text-white rounded-full px-4 py-2 text-sm">
-                  <Crown className="w-4 h-4 mr-1" />
-                  Upgrade
-                </Button>
-              </div>
-              <div className="space-y-4">
-                <Input
-                  placeholder="Paste a link to your video"
-                  className="w-full"
-                />
-                <div className="text-center text-gray-500">or</div>
-                <div className="border-2 border-dashed border-gray-300 rounded-xl p-8 text-center">
-                  <CloudIcon className="w-8 h-8 mx-auto mb-4 text-blue-500" />
-                  <h4 className="font-medium mb-2">Upload video file</h4>
-                  <p className="text-gray-500 text-sm mb-4">
-                    Drag & Drop file here
-                  </p>
-                  <p className="text-gray-400 text-xs">Max: 10 Mb</p>
-                </div>
-                <div className="bg-white rounded-lg border p-3 flex items-center gap-3">
-                  <div className="w-6 h-6 bg-blue-500 rounded flex items-center justify-center text-white text-xs">
-                    📄
-                  </div>
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2 text-sm">
-                      <span className="font-medium">XYZ.mp4</span>
-                      <span className="w-1 h-1 bg-gray-400 rounded-full"></span>
-                      <span className="text-blue-600">Preview</span>
-                      <span className="w-1 h-1 bg-gray-400 rounded-full"></span>
-                      <span className="text-gray-500">5.7MB</span>
+                
+                {/* Collapsible content for Add Intro Video */}
+                {isaddIntroVideoEnabled && (
+                  <div className="mt-4 space-y-4">
+                    {/* Video Link Input */}
+                    
+                      <Input className="bg-white rounded-lg p-3 h-[37px] border"
+                        placeholder="Paste a link to your video"
+                       
+                      />
+                    
+                    
+                    {/* Or separator */}
+                    <div className="text-center">
+                      <span className="text-gray-500 text-sm">(or)</span>
                     </div>
+                    
+                    {/* File Upload Area */}
+                    <div className="bg-white rounded-lg p-3 border-2 border-dashed border-gray-300 hover:border-purplePrimary transition-colors">
+                      <input
+                        type="file"
+                        accept={ACCEPTED_VIDEO_TYPES}
+                        onChange={handleFileUpload}
+                        className="hidden"
+                        id="video-upload"
+                      />
+                      <label htmlFor="video-upload" className="cursor-pointer">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-3">
+                            <FileIcon className="w-9 h-9 text-blue-600" />
+                            <div>
+                              <p className="font-medium text-gray-900">Upload Video file</p>
+                              <p className="text-sm text-gray-500">Drag & Drop Video file here</p>
+                              
+                            </div>
+                          </div>
+                          <span className="text-sm text-gray-500">Max: 10 Mb</span>
+                        </div>
+                      </label>
+                    </div>
+
+                    {/* Error Message */}
+                    {fileError && (
+                      <div className="text-red-500 text-sm bg-red-50 p-2 rounded-lg">
+                        {fileError}
+                      </div>
+                    )}
+                    
+                    {/* Uploaded File Display (if any) */}
+                    {uploadedFile && (
+                      <div className="bg-white rounded-lg p-2 border w-1/2">
+                         <div className="flex items-center justify-between">
+                           <div className="flex items-center gap-0.5">
+                             <FileIcon className="w-5 h-5 text-blue-600" />
+                             <span className="text-sm text-gray-900">{uploadedFile.name}</span>
+                             <span className="text-gray-400">•</span>
+                             <a className="text-blue-500 text-sm hover:underline">Preview</a>
+                             <span className="text-gray-400">•</span>
+                             <span className="text-sm text-gray-500">{(uploadedFile.size / (1024 * 1024)).toFixed(1)}MB</span>
+                           </div>
+                           <button 
+                             onClick={removeUploadedFile}
+                             className="text-gray-400 hover:text-black transition-colors"
+                           >
+                             <X className="w-4 h-4" />
+                           </button>
+                         </div>
+                       </div>
+                    )}
                   </div>
-                  <button className="text-gray-400 hover:text-gray-600">
-                    <X className="w-4 h-4" />
-                  </button>
-                </div>
+                )}
               </div>
             </div>
 
-            {/* Collect Candidate Documents */}
-            <div className="bg-gray-50 rounded-2xl p-6 border">
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-3">
-                  <Toggle />
-                  <h3 className="text-lg font-semibold">
-                    Collect Candidate Documents
-                  </h3>
-                </div>
-                <Button className="bg-gradient-to-r from-purplePrimary to-pink-500 text-white rounded-full px-4 py-2 text-sm">
-                  <Crown className="w-4 h-4 mr-1" />
-                  Join Pro
-                </Button>
-              </div>
-              <div className="bg-purpleQuaternary rounded-2xl p-4 mb-4">
-                <h4 className="font-semibold text-purplePrimary mb-2">
-                  Learn About Document Vault
-                </h4>
-                <p className="text-sm text-gray-700">
-                  Qualifying questions are presented to candidates ahead of the
-                  tests. The answers to these questions determine if candidates
-                  satisfy the essential requirements of the job. Only if all
-                  questions are answered as required, they proceed to the tests.
-                  You can add up to 5 questions.
-                </p>
-              </div>
-              <div className="space-y-3">
-                {[
-                  "Resume",
-                  "Cover Letter",
-                  "Relieving Letter",
-                  "Experience Certificate/ Letter",
-                ].map((doc) => (
-                  <div
-                    key={doc}
-                    className="flex items-center gap-3 p-3 bg-white rounded-lg border"
-                  >
-                    <Checkbox />
-                    <span className="text-sm">{doc}</span>
+            {/* Right Column */}
+            <div className="w-1/2 space-y-6">
+              <div className="bg-backgroundPrimary rounded-2xl p-5 border">
+                <div className="flex items-center justify-between mb-4 ">
+                  <div className="flex items-center gap-3">
+                    <CustomToggleSwitch checked={iscollectCandidateDocumentsEnabled} onCheckedChange={setcollectCandidateDocumentsEnabled} />
+                    <h3 className="text-lg font-semibold text-gray-900">Collect Candidate Details</h3>
                   </div>
-                ))}
-                <div className="flex items-center gap-3 p-3 bg-purplePrimary rounded-lg">
-                  <PlusIcon className="w-4 h-4 text-white" />
-                  <span className="text-sm text-white">Custom (PDF)</span>
+                  <Button className="rounded-full px-4 py-2 text-sm bg-purpleUpgrade text-black border-purplePrimary">
+                    <Crown className="w-4 h-4 mr-1 text-purplePrimary fill-purplePrimary " />
+                    Upgrade
+                  </Button>
                 </div>
+              
+                 <div className="mt-4 space-y-4">
+                <div className="bg-purple-100 rounded-lg p-4 mb-4">
+                  <h4 className="font-semibold text-purplePrimary mb-2">Learn About Document Hub</h4>
+                  <p className="text-sm text-gray-700">
+                    Qualifying questions are presented to candidates ahead of the tests. The answers to these questions determine if candidates
+                    satisfy the essential requirements of the job. Only if all questions are answered as required.
+                  </p>
+                </div>
+
+                {iscollectCandidateDocumentsEnabled && (
+                  <div>
+                  <div className="flex gap-5">
+                    {["Resume", "Cover Letter", "Relieving Letter", "ID Proof"].map((doc) => (
+                      <div key={doc} className="flex items-center gap-2 p-2 pl-2 pr-2 mb-2 bg-white rounded-lg border whitespace-nowrap">
+                        <Checkbox />
+                        <span className="text-sm text-gray-700">{doc}</span>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="flex gap-5">
+                    {["Contact Number", "Experience Certificate/ Letter"].map((doc) => (
+                      <div key={doc} className="flex items-center gap-2 p-2 pl-2 pr-2 mb-4 bg-white rounded-lg border whitespace-nowrap">
+                        <Checkbox />
+                        <span className="text-sm text-gray-700">{doc}</span>
+                      </div>
+                    ))}
+                  </div>
+                
+
+                <Button variant="primary" className="w-auto px-4 py-2  rounded-lg">
+                  <PlusIcon className="w-4 h-4 mr-2" />
+                  Custom File Upload
+                </Button>
+                </div>
+                )}
               </div>
+             
+              </div>
+               
             </div>
           </div>
         </Section>
@@ -320,11 +515,17 @@ const Step4 = () => {
         {/* Assessment Validity Section */}
         <Section
           id="assessment-validity"
+          variant="white"
           header={
-            <div className="flex items-center justify-between w-full">
+            <div className="flex items-center justify-between w-full ">
+              <div>
               <h2 className="text-xl font-semibold">Assessment Validity</h2>
-              <Button className="bg-gradient-to-r from-purplePrimary to-pink-500 text-white rounded-full px-4 py-2 text-sm">
-                <Crown className="w-4 h-4 mr-1" />
+              <p className="text-sm text-gray-600 mb-1 mt-3">
+                Qualifying questions are presented to candidates ahead of the tests. The answers to these questions determine if
+               </p>
+              </div>
+                        <Button className="rounded-full px-4 py-2 text-sm bg-purpleUpgrade text-black border-purplePrimary">
+                    <Crown className="w-4 h-4 mr-1 text-purplePrimary fill-purplePrimary " />
                 Upgrade
               </Button>
             </div>
@@ -332,49 +533,46 @@ const Step4 = () => {
           collapsable={true}
           collapsed={collapsedSections["assessment-validity"]}
           onToggle={() => toggleSectionCollapse("assessment-validity")}
+          className="shadow-lg"
         >
           <div className="space-y-6">
-            <div className="bg-gray-50 rounded-2xl p-6 border">
-              <div className="flex items-center justify-between mb-4">
+            
+              <div className="bg-backgroundPrimary rounded-2xl p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center gap-3">
+                    <CustomToggleSwitch checked={isAssessmentStartDateEnabled} onCheckedChange={setAssessmentStartDateEnabled}/>
+                    <h3 className="text-lg font-semibold">
+                      Assessment Start and End Date
+                    </h3>
+                  </div>
+                </div>
+                <p className="text-sm text-gray-600 mb-4">
+                  Set an exact date and time for the assessment to expire. This
+                  option is recommended if inviting candidates using link share &
+                  integration. Candidates who are in progress when the assessment
+                  expires can finish.
+                </p>
+                {isAssessmentStartDateEnabled && (
                 <div className="flex items-center gap-3">
-                  <Toggle />
-                  <h3 className="text-lg font-semibold">
-                    Assessment Start and End Date
-                  </h3>
-                </div>
-              </div>
-              <p className="text-sm text-gray-600 mb-4">
-                Set an exact date and time for the assessment to expire. This
-                option is recommended if inviting candidates using link share &
-                integration. Candidates who are in progress when the assessment
-                expires can finish.
-              </p>
-              <div className="space-y-3">
-                <div className="flex items-center gap-3 p-3 bg-white rounded-lg border">
-                  <span className="text-gray-700">
-                    Start Date & Time: DD/MM/YYYY HH:MM
-                  </span>
-                  <ChevronDownIcon className="w-4 h-4 ml-auto" />
-                </div>
-                <div className="flex items-center gap-3 p-3 bg-white rounded-lg border">
-                  <span className="text-gray-700">
-                    End Date & Time: DD/MM/YYYY HH:MM
-                  </span>
-                  <ChevronDownIcon className="w-4 h-4 ml-auto" />
-                </div>
+                 <DateTimePicker className="w-full"/>
+                
+                 <DateTimePicker className="w-full"/>
+                </div>  
+                )}
               </div>
             </div>
-          </div>
+          
         </Section>
 
-        {/* Team Access Section */}
+        {/*Access Section */}
         <Section
           id="team-access"
+          variant="white"
           header={
             <div className="flex items-center justify-between w-full">
               <h2 className="text-xl font-semibold">Access</h2>
-              <Button className="bg-gradient-to-r from-purplePrimary to-pink-500 text-white rounded-full px-4 py-2 text-sm">
-                <Crown className="w-4 h-4 mr-1" />
+              <Button className="rounded-full px-4 py-2 text-sm bg-purpleUpgrade text-black border-purplePrimary ">
+              <Crown className="w-4 h-4 mr-1 text-purplePrimary fill-purplePrimary " />
                 Join Pro
               </Button>
             </div>
@@ -382,99 +580,132 @@ const Step4 = () => {
           collapsable={true}
           collapsed={collapsedSections["team-access"]}
           onToggle={() => toggleSectionCollapse("team-access")}
+          className="shadow-lg"
         >
+          
+          <p className="text-sm text-gray-600 mb-4">
+            Qualifying questions are presented to candidates ahead of the tests. The answers to these questions determine if ca, determinedetermine determine determine
+          </p>
+
           <div className="space-y-6">
-            {/* Assessment Access */}
-            <div className="bg-gray-50 rounded-2xl p-6 border">
-              <div className="flex items-center gap-2 mb-4">
-                <h3 className="text-lg font-semibold">Assessment Access</h3>
-                <HelpCircle className="w-4 h-4 text-gray-400" />
-              </div>
-              <div className="space-y-4">
-                <div className="flex items-center gap-3 p-3 bg-white rounded-lg border">
-                  <span className="text-gray-500">Selected Users</span>
-                  <ChevronDownIcon className="w-4 h-4 ml-auto" />
+            {/* Assessment Access and Domain Restriction - Independent Components */}
+            <div className="flex gap-6 items-start">
+              {/* Assessment Access */}
+              <div className="w-1/2 bg-backgroundPrimary rounded-2xl p-6 border">
+                <div className="flex items-center gap-2 mb-4">
+                  <h3 className="text-lg font-semibold">Assessment Access</h3>
+                  <HelpCircle className="w-4 h-4 text-gray-400" />
                 </div>
-                <div className="space-y-3">
-                  <div className="flex items-center gap-3 p-3 bg-white rounded-lg border">
-                    <span className="text-gray-500">Choose Users</span>
+                <div className="space-y-4">
+                  <div className="flex items-center gap-3 p-2 bg-white rounded-lg border">
+                    <span className="text-gray-500">Selected Users</span>
                     <ChevronDownIcon className="w-4 h-4 ml-auto" />
                   </div>
+                  <div className="space-y-3">
                   <div className="flex gap-2">
-                    {selectedUsers.map((user) => (
-                      <Badge
-                        key={user}
-                        variant="secondary"
-                        className="bg-blue-100 text-blue-800"
-                      >
-                        {user}
-                        <button
-                          onClick={() => removeUser(user)}
-                          className="ml-2"
+                      {selectedUsers.map((user) => (
+                        <Badge
+                          key={user}
+                          variant="secondary"
+                          className="bg-blue-100 text-blue-800"
                         >
-                          <X className="w-3 h-3" />
-                        </button>
-                      </Badge>
-                    ))}
+                          {user}
+                          <button
+                            onClick={() => removeUser(user)}
+                            className="ml-2"
+                          >
+                            <X className="w-3 h-3" />
+                          </button>
+                        </Badge>
+                      ))}
+                    </div>
                   </div>
                 </div>
+              </div>
+
+              {/* Domain Restriction */}
+              <div className="w-1/2 bg-backgroundPrimary rounded-2xl p-4 border">
+                <div className="flex items-center items-start justify-between mb-2">
+                  <div className="flex items-center gap-3">
+                    <CustomToggleSwitch 
+                      checked={isdomainRestrictionEnabled} 
+                      onCheckedChange={setdomainRestrictionEnabled} 
+                    />
+                    <div className="flex items-center gap-2 mt-1  ml-1">
+                      <h3 className="text-lg font-semibold">
+                        Domain Restriction
+                      </h3>
+                      <HelpCircle className="w-4 h-4 text-gray-400" />
+                  </div>
+                </div>
+                
+                {isdomainRestrictionEnabled && (
+                    <div className="flex items-center text-gray-500 gap-3 p-1.5  bg-white rounded-lg border ml-auto">
+                      <Dropdown
+                        key={dropdownKey}
+                        options={[{display: "Allowed", value: "allowed"}, {display: "Disallowed", value: "disallowed"}]}
+                        onChange={(value) => {
+                          setStatus(value);
+                          setDropdownKey(prev => prev + 1); 
+                        }}
+                        currentValue={status}
+                        className="w-30 h-6 text-m p-1 gap-0 "
+                        style={{ background: "P", color: "inherit" }}
+                      />
+                    </div>
+                  )}
+                    </div>
+                    
+                {isdomainRestrictionEnabled && (
+                    <div className="space-y-3">
+                      <div className="flex items-center gap-3 p-2 bg-white rounded-lg border">
+                        <span className="text-gray-500">Selected Users</span>
+                      </div>
+                      <div className="flex gap-2">
+                        {domains.map((domain) => (
+                          <Badge
+                            key={domain}
+                            variant="secondary"
+                            className="bg-blue-100 text-blue-800"
+                          >
+                            {domain}
+                            <button
+                              onClick={() => removeDomain(domain)}
+                              className="ml-2"
+                            >
+                              <X className="w-3 h-3" />
+                            </button>
+                          </Badge>
+                        ))}
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
 
-            {/* Domain Restriction */}
-            <div className="bg-gray-50 rounded-2xl p-6 border">
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-3">
-                  <Toggle />
-                  <div className="flex items-center gap-2">
-                    <h3 className="text-lg font-semibold">
-                      Domain Restriction
-                    </h3>
-                    <HelpCircle className="w-4 h-4 text-gray-400" />
-                  </div>
-                </div>
-              </div>
-              <div className="space-y-3">
-                <div className="flex items-center gap-3 p-3 bg-white rounded-lg border">
-                  <span className="text-gray-500">Allowed</span>
-                  <ChevronDownIcon className="w-4 h-4 ml-auto" />
-                </div>
-                <div className="flex items-center gap-3 p-3 bg-white rounded-lg border">
-                  <span className="text-gray-500">Selected Users</span>
-                </div>
-                <div className="flex gap-2">
-                  {domains.map((domain) => (
-                    <Badge
-                      key={domain}
-                      variant="secondary"
-                      className="bg-blue-100 text-blue-800"
-                    >
-                      {domain}
-                      <button
-                        onClick={() => removeDomain(domain)}
-                        className="ml-2"
-                      >
-                        <X className="w-3 h-3" />
-                      </button>
-                    </Badge>
-                  ))}
-                </div>
-              </div>
-            </div>
+            
           </div>
+          
         </Section>
 
         {/* Proctoring Section */}
         <Section
           id="proctoring"
           header="Proctoring"
+          variant="white"
           collapsable={true}
           collapsed={collapsedSections["proctoring"]}
           onToggle={() => toggleSectionCollapse("proctoring")}
+          className="shadow-lg"
         >
+          <p className="text-sm text-gray-600 mb-4">
+            Auto grade your assessments wit AI Auto grade your assessments
+            wit AIAuto grade your assessments wit AIAuto grade your
+            assessments wit AI
+          </p>
           <div className="space-y-6">
             {/* Basic Proctoring */}
-            <div className="bg-gray-50 rounded-2xl p-6 border">
+            <div className="bg-backgroundPrimary rounded-2xl p-6 border">
               <div className="mb-4">
                 <h3 className="text-lg font-semibold mb-2">Basic Proctoring</h3>
                 <p className="text-sm text-gray-600">
@@ -487,12 +718,12 @@ const Step4 = () => {
                 {/* Left Column */}
                 <div className="space-y-4">
                   {[
-                    { label: "Location logging", enabled: false },
-                    { label: "Webcam snapshots", enabled: false },
-                    { label: "Plagiarism detection", enabled: false },
-                    { label: "Browser extension detection", enabled: false },
-                    { label: "Fullscreen mode detection", enabled: false },
-                    { label: "Mouse out tracking", enabled: false },
+                    { label: "Location logging", key: "locationLogging" },
+                    { label: "Webcam snapshots", key: "webcamSnapshots" },
+                    { label: "Plagiarism detection", key: "plagiarismDetection" },
+                    { label: "Browser extension detection", key: "browserExtensionDetection" },
+                    { label: "Fullscreen mode detection", key: "fullscreenModeDetection" },
+                    { label: "Mouse out tracking", key: "mouseOutTracking" },
                   ].map((item) => (
                     <div
                       key={item.label}
@@ -500,18 +731,16 @@ const Step4 = () => {
                     >
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
-                          <Toggle enabled={item.enabled} />
+                          <CustomToggleSwitch 
+                            checked={proctoringSettings[item.key]} 
+                            onCheckedChange={() => handleProctoringToggle(item.key)} 
+                          />
                           <span className="font-medium">{item.label}</span>
                           <HelpCircle className="w-4 h-4 text-gray-400" />
                         </div>
-                        {!item.enabled && (
-                          <Button
-                            size="sm"
-                            className="bg-gradient-to-r from-purplePrimary to-pink-500 text-white rounded-full px-3 py-1"
-                          >
-                            <Crown className="w-3 h-3" />
-                          </Button>
-                        )}
+                        <div className="w-10 h-8 bg-purpleUpgrade rounded-2xl flex items-center justify-center">
+                          <Crown className="w-5 h-5 text-purplePrimary fill-purplePrimary " />
+                        </div>
                       </div>
                     </div>
                   ))}
@@ -520,12 +749,12 @@ const Step4 = () => {
                 {/* Right Column */}
                 <div className="space-y-4">
                   {[
-                    { label: "Disable copy & Paste", enabled: true },
-                    { label: "IP logging", enabled: false },
-                    { label: "Tab proctoring", enabled: false },
-                    { label: "Keystroke analysis", enabled: false },
-                    { label: "Screen record protection", enabled: false },
-                    { label: "Restrict multiple monitors", enabled: false },
+                    { label: "Disable copy & Paste", key: "disableCopyPaste" },
+                    { label: "IP logging", key: "ipLogging" },
+                    { label: "Tab proctoring", key: "tabProctoring" },
+                    { label: "Keystroke analysis", key: "keystrokeAnalysis" },
+                    { label: "Screen record protection", key: "screenRecordProtection" },
+                    { label: "Restrict multiple monitors", key: "restrictMultipleMonitors" },
                   ].map((item) => (
                     <div
                       key={item.label}
@@ -533,18 +762,16 @@ const Step4 = () => {
                     >
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
-                          <Toggle enabled={item.enabled} />
+                          <CustomToggleSwitch 
+                            checked={proctoringSettings[item.key]} 
+                            onCheckedChange={() => handleProctoringToggle(item.key)} 
+                          />
                           <span className="font-medium">{item.label}</span>
                           <HelpCircle className="w-4 h-4 text-gray-400" />
                         </div>
-                        {!item.enabled && (
-                          <Button
-                            size="sm"
-                            className="bg-gradient-to-r from-purplePrimary to-pink-500 text-white rounded-full px-3 py-1"
-                          >
-                            <Crown className="w-3 h-3" />
-                          </Button>
-                        )}
+                        <div className="w-10 h-8 bg-purpleUpgrade rounded-2xl flex items-center justify-center">
+                        <Crown className="w-5 h-5 text-purplePrimary fill-purplePrimary " />
+                        </div>
                       </div>
                     </div>
                   ))}
@@ -553,35 +780,38 @@ const Step4 = () => {
             </div>
 
             {/* Advanced Proctoring */}
-            <div className="bg-gradient-to-r from-purplePrimary via-pink-500 to-yellow-400 rounded-2xl p-6 text-white">
+            <div className="bg-gradient-to-tr from-[#4158D0]/25 via-[#C850C0]/25 to-[#FFCC70]/25 rounded-2xl p-6 text-white">
               <div className="flex items-center justify-between mb-4">
                 <div>
-                  <h3 className="text-lg font-semibold mb-2">
+                  <h3 className="text-lg font-semibold mb-2 text-gray-900">
                     Advanced Proctoring
                   </h3>
-                  <p className="text-sm opacity-90">
+                  <p className="text-sm opacity-90 text-gray-700">
                     Auto grade your assessments wit AI Auto grade your
                     assessments wit AIAuto grade your assessments wit AIAuto
                     grade your assessments wit AI
                   </p>
                 </div>
-                <Button className="bg-white text-gray-800 rounded-full px-4 py-2">
-                  <Crown className="w-4 h-4 mr-1" />
+                <Button className="rounded-full px-4 py-2 text-sm bg-purpleUpgrade text-black border-purplePrimary">
+                <Crown className="w-4 h-4 mr-1 text-purplePrimary fill-purplePrimary " />
                   Join Pro
                 </Button>
               </div>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-2 gap-4 text-gray-700">  
                 {[
-                  "Face Detection",
-                  "GPT Detection",
-                  "AI Identity Verification",
-                  "Virtual Machine Detection",
-                  "Browser fingerprinting",
+                  { label: "Multiple Face Detection", key: "faceDetection" },
+                  { label: "Virtual Machine Detection", key: "virtualMachineDetection" },
+                  { label: "GPT Detection", key: "gptDetection" },
+                  { label: "Browser fingerprinting", key: "browserFingerprinting" },
+                  { label: "AI Identity Verification", key: "aiIdentityVerification" },
                 ].map((feature) => (
-                  <div key={feature} className="bg-white/20 rounded-xl p-4">
+                  <div key={feature.label} className="bg-white rounded-xl p-4">
                     <div className="flex items-center gap-3">
-                      <Toggle enabled={false} />
-                      <span className="font-medium">{feature}</span>
+                      <CustomToggleSwitch 
+                        checked={proctoringSettings[feature.key]} 
+                        onCheckedChange={() => handleProctoringToggle(feature.key)} 
+                      />
+                      <span className="font-medium">{feature.label}</span>
                       <HelpCircle className="w-4 h-4 opacity-70" />
                     </div>
                   </div>
@@ -595,63 +825,86 @@ const Step4 = () => {
         <Section
           id="legal"
           header="Legal"
+          variant="white"
           collapsable={true}
           collapsed={collapsedSections["legal"]}
           onToggle={() => toggleSectionCollapse("legal")}
+          className="shadow-lg"
         >
+          <p className="text-sm text-gray-600 mb-4">
+            The Legal section allows you to configure legal settings for your assessment. You can provide extra time for candidates with specific needs.
+          </p>
+        
           <div className="space-y-6">
-            {/* Extra Time */}
-            <div className="bg-gray-50 rounded-2xl p-6 border">
-              <h3 className="text-lg font-semibold mb-2">Extra Time</h3>
-              <p className="text-sm text-gray-600 mb-4">
-                Qualifying questions are presented to candidates ahead of the
-                tests. The answers to these questions determine if ca,
-                determinedetermine determine determine
-              </p>
-              <div className="flex items-center gap-3 p-3 bg-white rounded-lg border mb-4">
-                <span className="text-gray-700">Time</span>
-                <ChevronDownIcon className="w-4 h-4 ml-auto" />
-              </div>
-              <div className="bg-purpleQuaternary rounded-xl p-4">
-                <p className="text-sm text-gray-700">
-                  Candidates with concentration/ memory impairments Candidates
-                  with concentration/ memory impairments Candidates with
-                  concentration/ memory impairments Candidates with
-                  concentration/ memory impairments. Candidates with
-                  concentration.
+            <div className="grid grid-cols-2 gap-6">
+              {/* Extra Time */}
+              <div className="bg-backgroundPrimary rounded-2xl p-6 border h-full">
+                <h3 className="text-lg font-semibold mb-2 pl-2">Extra Time</h3>
+                <div className="flex flex-row gap-4">
+                <p className="text-sm text-gray-600 mb-4 pl-2">
+                Provide extra time for candidates with specific needs. This will be added to the total time of the assessment.
                 </p>
-              </div>
-            </div>
-
-            {/* Accommodation for candidates */}
-            <div className="bg-gray-50 rounded-2xl p-6 border">
-              <h3 className="text-lg font-semibold mb-2">
-                Accommodation for candidates
-              </h3>
-              <p className="text-sm text-gray-600 mb-4">
-                Qualifying questions are presented to candidates ahead of the
-                tests. The answers to these questions determine if ca,
-                determinedetermine determine determine
-              </p>
-              <div className="bg-white rounded-xl p-4 space-y-4">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <span className="font-medium">
-                      Non fluent English speakers
-                    </span>
-                    <HelpCircle className="w-4 h-4 text-gray-400" />
-                  </div>
-                  <Toggle enabled={true} />
+                 
+                <Controller
+                  name="extraTime"
+                  control={control}
+                  render={({ field }) => (
+                      <Input
+                          {...field}
+                          type="number"
+                          placeholder='120 Min'
+                          className='px-3 py-2 max-h-10 max-w-[114px] text-base font-medium text-greyAccent bg-white rounded-tr-md rounded-br-md rounded-tl-none rounded-bl-none border-0 rounded-xl'
+                          onChange={(e) => field.onChange(Number(e.target.value))}
+                      />
+                  )}
+                 />
+                  
                 </div>
-                <div className="h-px bg-gray-200"></div>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <span className="font-medium">
-                      Candidates with concentration/ memory impairments
-                    </span>
-                    <HelpCircle className="w-4 h-4 text-gray-400" />
+                <div className="bg-purpleQuaternary rounded-xl p-4 flex-1">
+                  <p className="text-sm text-gray-700">
+                    Candidates with concentration/ memory impairments Candidates
+                    with concentration/ memory impairments Candidates with
+                    concentration/ memory impairments Candidates with
+                    concentration/ memory impairments. Candidates with
+                    concentration.
+                  </p>
+                </div>
+              </div>
+
+              {/* Accommodation for candidates */}
+              <div className="bg-backgroundPrimary rounded-2xl p-6 border h-full">
+                <h3 className="text-lg font-semibold mb-2">
+                  Accommodation for candidates
+                </h3>
+                <p className="text-sm text-gray-600 mb-4">
+                Provide accommodation for candidates with specific needs.
+                </p>
+                <div className="bg-white rounded-2xl p-4 space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <span className="font-medium text-gray-700">
+                        Non fluent English speakers
+                      </span>
+                      <CustomTooltip message="Non fluent English speakers are eligible for accommodation." />
+                    </div>
+                    <CustomToggleSwitch 
+                      checked={legalSettings.nonFluentEnglishSpeakers}  
+                      onCheckedChange={() => handleLegalToggle("nonFluentEnglishSpeakers")} 
+                    />
                   </div>
-                  <Toggle enabled={false} />
+                  <div className="h-px bg-gray-200"></div>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <span className="font-medium text-gray-700">
+                        Candidates with concentration/ memory impairments
+                      </span>
+                      <CustomTooltip message="Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s." />
+                    </div>
+                    <CustomToggleSwitch 
+                      checked={legalSettings.concentrationMemoryImpairments} 
+                      onCheckedChange={() => handleLegalToggle("concentrationMemoryImpairments")} 
+                    />
+                  </div>
                 </div>
               </div>
             </div>
@@ -661,12 +914,17 @@ const Step4 = () => {
 
       {/* Navigation Buttons */}
       <div className="flex justify-between items-center">
-        <Button variant="outline" className="rounded-full px-6 py-2">
+        <Button variant="back"
+        effect="shineHover"
+         className="rounded-full mb-6 px-6 py-2" onClick={handleBack}>
           <ChevronLeftIcon className="w-4 h-4 mr-2" />
           Back
         </Button>
         <Button
-          className="rounded-full px-6 py-2 bg-gray-300 text-gray-500 cursor-not-allowed"
+          variant="next"
+          effect="shineHover"
+          
+          className="rounded-full mb-6 px-6 py-2 bg-gray-300 text-gray-500  cursor-not-allowed"
           disabled
         >
           Finish
