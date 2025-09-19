@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useAssessmentContext } from "@/components/common/AssessmentNavbarWrapper";
 import AssessmentStep from "@/components/common/AssessmentStep";
 import Section from "@/components/common/Section";
@@ -35,11 +35,12 @@ const VIDEO_EXTENSIONS = ['.mp4', '.webm', '.mov', '.avi', '.wmv', '.flv', '.mkv
 const ACCEPTED_VIDEO_TYPES = VIDEO_MIME_TYPES.join(',');
 import { DateTimePicker } from "@/components/ui/datetimepicker";
 import { CustomTooltip } from "@/components/ui/custom-tooltip";
+import { debounce } from "@/lib/utils";
 
 
 
 const Step4 = () => {
-  const { assessment, steps, selectedStep, handleStepChange } =
+  const { assessment, steps, selectedStep, handleStepChange, isAssessmentLoading } =
     useAssessmentContext();
   const [activeTab, setActiveTab] = useState("sequence");
   const [domains, setDomains] = useState(["gmail.com", "abc.com"]);
@@ -61,6 +62,14 @@ const Step4 = () => {
   const [isdomainRestrictionEnabled, setdomainRestrictionEnabled] = useState(false);
   const [status, setStatus] = useState("allowed"); 
   const [dropdownKey, setDropdownKey] = useState(0);
+  const [assessmentDescription, setAssessmentDescription] = useState();
+
+  useEffect(() => {
+    if (!isAssessmentLoading) {
+      setAssessmentDescription(assessment?.description)
+      setAssessmentStartDateEnabled(assessment?.enable_time_restrictions);
+    }
+  }, [isAssessmentLoading, setAssessmentDescription, assessment?.description, assessment?.enable_time_restrictions]);
 
   // Proctoring toggle state variables
   const [proctoringSettings, setProctoringSettings] = useState({
@@ -164,6 +173,10 @@ const Step4 = () => {
   const removeUser = (user) => {
     setSelectedUsers(selectedUsers.filter((u) => u !== user));
   };
+
+  const handleDescriptionChange = useCallback((e) => {
+    setAssessmentDescription(e.target.value);
+  }, [setAssessmentDescription]);
 
   const scrollToSection = (sectionId) => {
     setActiveTab(sectionId);
@@ -344,6 +357,8 @@ const Step4 = () => {
                 <div className="relative">
                   <Textarea
                     placeholder="Software Developer"
+                    value={assessmentDescription}
+                    onChange={handleDescriptionChange}
                     className="w-full min-h-[95px] bg-white border rounded-md resize-none focus:ring-0 focus:outline-none p-3 pr-24"
                   />
                   <div className="absolute bottom-3 right-3">
