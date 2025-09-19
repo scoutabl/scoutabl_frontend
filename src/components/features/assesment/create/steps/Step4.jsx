@@ -29,6 +29,7 @@ import Dropdown from "@/components/ui/dropdown";
 import { Controller, useForm } from 'react-hook-form';
 import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 import { DateTimePicker } from "@/components/ui/datetimepicker";
+import { CustomTooltip } from "@/components/ui/custom-tooltip";
 
 
 
@@ -876,10 +877,10 @@ const Step4 = () => {
                       <span className="font-medium text-gray-700">
                         Non fluent English speakers
                       </span>
-                      <HelpCircle className="w-4 h-4 text-gray-400" />
+                      <CustomTooltip message="Non fluent English speakers are eligible for accommodation." />
                     </div>
                     <CustomToggleSwitch 
-                      checked={legalSettings.nonFluentEnglishSpeakers} 
+                      checked={legalSettings.nonFluentEnglishSpeakers}  
                       onCheckedChange={() => handleLegalToggle("nonFluentEnglishSpeakers")} 
                     />
                   </div>
@@ -889,14 +890,7 @@ const Step4 = () => {
                       <span className="font-medium text-gray-700">
                         Candidates with concentration/ memory impairments
                       </span>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <HelpCircle className="w-4 h-4 text-gray-400" />
-                        </TooltipTrigger>
-                        <TooltipContent>
-                          <p>Candidates will be given extra time.</p>
-                        </TooltipContent>
-                      </Tooltip>
+                      <CustomTooltip message="Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s." />
                     </div>
                     <CustomToggleSwitch 
                       checked={legalSettings.concentrationMemoryImpairments} 
