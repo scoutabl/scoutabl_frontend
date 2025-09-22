@@ -398,6 +398,8 @@ const QuestionSequenceTable = ({
                 </div>
               )}
 
+              
+
               {/* Delete multiple */}
               <Motion.button
                 className={cn(

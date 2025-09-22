@@ -928,18 +928,19 @@ const Step4 = () => {
       </div>
 
       {/* Navigation Buttons */}
-      <div className="flex justify-between items-center">
-        <Button variant="back"
+      <div className="flex justify-between items-center pb-6">
+        <Button 
+        variant="back"
         effect="shineHover"
-         className="rounded-full mb-6 px-6 py-2" onClick={handleBack}>
-          <ChevronLeftIcon className="w-4 h-4 mr-2" />
+        onClick={handleBack}
+        >
+        <ChevronLeftIcon />
           Back
         </Button>
         <Button
           variant="next"
           effect="shineHover"
-          
-          className="rounded-full mb-6 px-6 py-2 bg-gray-300 text-gray-500  cursor-not-allowed"
+          className="rounded-full bg-gray-300 text-gray-500  cursor-not-allowed"
           disabled
         >
           Finish
