@@ -398,7 +398,15 @@ const QuestionSequenceTable = ({
                 </div>
               )}
 
-              
+              {/* Total score (static for now) */}
+              <Chip
+                className={cn("rounded-full px-2", variants[variant].scoreChip)}
+              >
+                <span className="font-semibold text-sm text-greyPrimary">
+                  Total Score:&nbsp;
+                </span>
+                <span>{totalScore}</span>
+              </Chip>
 
               {/* Delete multiple */}
               <Motion.button
