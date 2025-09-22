@@ -203,12 +203,12 @@ const Step4 = () => {
         VIDEO_EXTENSIONS.some(ext => file.name.toLowerCase().endsWith(ext));
       
       if (isValidVideoType) {
-        // Check file size (100MB limit for video files)
-        if (file.size <= 100 * 1024 * 1024) { // Changed to 100MB for video
+        // Check file size (10MB limit for video files)
+        if (file.size <= 10 * 1024 * 1024) { // Changed to 10MB for video
           setUploadedFile(file);
           setFileError("");
         } else {
-          setFileError("File size must be less than 100MB");
+          setFileError("File size must be less than 10MB");
         }
       } else {
         setFileError("Please upload only video format files (MP4, WebM, MOV, AVI, etc.)");
