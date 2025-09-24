@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from "react";
+import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { useAssessmentContext } from "@/components/common/AssessmentNavbarWrapper";
 import AssessmentStep from "@/components/common/AssessmentStep";
 import Section from "@/components/common/Section";
@@ -186,14 +186,14 @@ const PROCTORING_TOGGLE_MAP = {
     legal: false,
   });
 
-  const tabs = [
+  const tabs = useMemo(() => [
     { id: "sequence", label: "Sequence" },
     { id: "essential-settings", label: "Essential Settings" },
     { id: "assessment-validity", label: "Assessment Validity" },
     { id: "team-access", label: "Team Access" },
     { id: "proctoring", label: "Proctoring" },
     { id: "legal", label: "Legal" },
-  ];
+  ], []);
 
   // Initialize React Hook Form
   const { control, handleSubmit, watch, setValue } = useForm({
@@ -237,7 +237,7 @@ const PROCTORING_TOGGLE_MAP = {
     
     // Cleanup
     return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
+  }, [tabs]);
 
   const removeDomain = (domain) => {
     setDomains(domains.filter((d) => d !== domain));
