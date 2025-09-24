@@ -29,6 +29,12 @@ import Dropdown from "@/components/ui/dropdown";
 import { Controller, useForm } from 'react-hook-form';
 import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 
+// Api imports
+import { useUpdateAssessment } from "@/api/assessments/assessment";
+import { useEnums } from "@/context/EnumsContext";
+import { toast } from "sonner";
+
+
 // Video file MIME types and extensions
 const VIDEO_MIME_TYPES = ['video/mp4', 'video/webm', 'video/mov', 'video/avi', 'video/wmv', 'video/flv', 'video/mkv', 'video/m4v', 'video/3gp'];
 const VIDEO_EXTENSIONS = ['.mp4', '.webm', '.mov', '.avi', '.wmv', '.flv', '.mkv', '.m4v', '.3gp'];
@@ -52,7 +58,7 @@ const Step4 = () => {
   const [qualifyingQuestionLibraryOpen, setQualifyingQuestionLibraryOpen] = useState(false);
   const [testLibraryOpen, setTestLibraryOpen] = useState(false);
 
-  // Add toggle state variables
+  // Toggle state variables
   const [ishowResultsToCandidatesEnabled, setshowResultsToCandidatesEnabled] = useState(false);
   const [isaddIntroVideoEnabled, setAddIntroVideoEnabled] = useState(false);
   const [uploadedFile, setUploadedFile] = useState(null);
@@ -64,12 +70,20 @@ const Step4 = () => {
   const [dropdownKey, setDropdownKey] = useState(0);
   const [assessmentDescription, setAssessmentDescription] = useState();
 
+  // State variables for date/time
+  const [startDate, setStartDate] = useState(null);
+  const [endDate, setEndDate] = useState(null);
+  const [extraTime, setExtraTime] = useState(0);
+
   useEffect(() => {
     if (!isAssessmentLoading) {
       setAssessmentDescription(assessment?.description)
       setAssessmentStartDateEnabled(assessment?.enable_time_restrictions);
+      setStartDate(assessment?.start_date ? new Date(assessment.start_date) : null);
+      setEndDate(assessment?.end_date ? new Date(assessment.end_date) : null);
+      setExtraTime(assessment?.extra_time_percentage_for_tests || 0);
     }
-  }, [isAssessmentLoading, setAssessmentDescription, assessment?.description, assessment?.enable_time_restrictions]);
+  }, [isAssessmentLoading, setAssessmentDescription, assessment?.description, assessment?.enable_time_restrictions, assessment?.start_date, assessment?.end_date, assessment?.extra_time_percentage_for_tests]);
 
   // Proctoring toggle state variables
   const [proctoringSettings, setProctoringSettings] = useState({
@@ -82,7 +96,7 @@ const Step4 = () => {
     mouseOutTracking: false,
     
     // Basic Proctoring - Right Column
-    disableCopyPaste: false, // This one starts as enabled
+    disableCopyPaste: false,
     ipLogging: false,
     tabProctoring: false,
     keystrokeAnalysis: false,
@@ -103,7 +117,66 @@ const Step4 = () => {
     concentrationMemoryImpairments: false,
   });
 
-  // Section collapse state
+  // Api imports
+  const { mutateAsync: updateAssessment, isPending: isUpdating } = useUpdateAssessment();
+  const { resolveEnum } = useEnums();
+
+  // Form data structure for API
+const [formData, setFormData] = useState({
+  // Essential Settings
+  description: assessmentDescription || "",
+  show_results_to_candidates: ishowResultsToCandidatesEnabled,
+  add_intro_video: isaddIntroVideoEnabled,
+  collect_candidate_documents: iscollectCandidateDocumentsEnabled,
+  
+  // Assessment Validity
+  enable_time_restrictions: isAssessmentStartDateEnabled,
+  start_date: null,
+  end_date: null,
+  
+  // Team Access
+  selected_users: selectedUsers,
+  domain_restriction: {
+    enabled: isdomainRestrictionEnabled,
+    status: status,
+    domains: domains
+  },
+  
+  // Proctoring Settings (using serial numbers)
+  proctor_settings: {
+    settings: [] // Prcotor setting are stored as numbers [1, 3, 6]
+  },
+  
+  // Legal Settings
+  legal_settings: {
+    extra_time_percentage_for_tests: 0,
+    enable_accomadation_for_disabled: legalSettings.concentrationMemoryImpairments,
+    enable_accomadation_for_nonenglish: legalSettings.nonFluentEnglishSpeakers
+  }
+});
+
+// Map proctoring toggles to numbers
+const PROCTORING_TOGGLE_MAP = {
+  locationLogging: 1,
+  webcamSnapshots: 2,
+  plagiarismDetection: 3,
+  browserExtensionDetection: 4,
+  fullscreenModeDetection: 5,
+  mouseOutTracking: 6,
+  disableCopyPaste: 7,
+  ipLogging: 8,
+  tabProctoring: 9,
+  keystrokeAnalysis: 10,
+  screenRecordProtection: 11,
+  restrictMultipleMonitors: 12,
+  faceDetection: 13,
+  gptDetection: 14,
+  aiIdentityVerification: 15,
+  virtualMachineDetection: 16,
+  browserFingerprinting: 17
+};
+
+// Section collapse state
   const [collapsedSections, setCollapsedSections] = useState({
     sequence: false,
     "essential-settings": false,
@@ -176,7 +249,7 @@ const Step4 = () => {
 
   const handleDescriptionChange = useCallback((e) => {
     setAssessmentDescription(e.target.value);
-  }, [setAssessmentDescription]);
+  }, []);
 
   const scrollToSection = (sectionId) => {
     setActiveTab(sectionId);
@@ -218,7 +291,7 @@ const Step4 = () => {
         VIDEO_EXTENSIONS.some(ext => file.name.toLowerCase().endsWith(ext));
       
       if (isValidVideoType) {
-        // Check file size (100MB limit for video files)
+        // Check file size (10MB limit for video files)
         if (file.size <= 10 * 1024 * 1024) {
           setUploadedFile(file);
           setFileError("");
@@ -235,6 +308,64 @@ const Step4 = () => {
   const removeUploadedFile = () => {
     setUploadedFile(null);
     setFileError("");
+  };
+
+  // Form submission handler
+  const handleFormSubmit = async () => {
+    try {
+    
+      // const enabledToggles = [];
+      // Object.keys(proctoringSettings).forEach(key => {
+      //   if (proctoringSettings[key] === true) {
+      //     const toggleNumber = PROCTORING_TOGGLE_MAP[key];
+      //     if (typeof toggleNumber === 'number') {
+      //       enabledToggles.push(toggleNumber);
+      //     }
+      //   }
+      // });
+
+      // Prepare data for API
+      const apiData = {
+        // Essential Settings
+        description: assessmentDescription,
+        email_candidate_results: ishowResultsToCandidatesEnabled,
+        enable_collect_documents: iscollectCandidateDocumentsEnabled,
+        
+        // Assessment Validity
+        enable_time_restrictions: isAssessmentStartDateEnabled,
+        start_date: startDate,
+        end_date: endDate,
+        
+        // Domain Restrictions
+        enable_domain_restrictions: isdomainRestrictionEnabled,
+        domain_restriction_type: status === "allowed" ? 0 : 1,
+        domain_restrictions: domains,
+        
+        // (Commented out for validation)
+        // Proctoring Settings 
+        // proctor_settings: {
+        //   settings: enabledToggles
+        // },
+        
+        // Legal Settings
+        enable_accomadation_for_disabled: legalSettings.concentrationMemoryImpairments,
+        enable_accomadation_for_nonenglish: legalSettings.nonFluentEnglishSpeakers,
+        extra_time_percentage_for_tests: extraTime || 0
+      };
+
+      console.log("Sending data:", apiData);
+
+      await updateAssessment({
+        assessmentId: assessment?.id,
+        data: apiData
+      });
+
+      toast.success("Assessment settings saved successfully!");
+      
+    } catch (error) {
+      console.error("Error:", error.response?.data);
+      toast.error("Failed to save settings. Please try again.");
+    }
   };
 
   return (
@@ -569,9 +700,17 @@ const Step4 = () => {
                 </p>
                 {isAssessmentStartDateEnabled && (
                 <div className="flex items-center gap-3">
-                 <DateTimePicker className="w-full"/>
+                 <DateTimePicker 
+                  className="w-full"
+                  value={startDate}
+                  onChange={setStartDate}
+                 />
                 
-                 <DateTimePicker className="w-full"/>
+                 <DateTimePicker 
+                  className="w-full"
+                  value={endDate}
+                  onChange={setEndDate}
+                 />
                 </div>  
                 )}
               </div>
@@ -864,13 +1003,16 @@ const Step4 = () => {
                   name="extraTime"
                   control={control}
                   render={({ field }) => (
-                      <Input
-                          {...field}
-                          type="number"
-                          placeholder='120 Min'
-                          className='px-3 py-2 max-h-10 max-w-[114px] text-base font-medium text-greyAccent bg-white rounded-tr-md rounded-br-md rounded-tl-none rounded-bl-none border-0 rounded-xl'
-                          onChange={(e) => field.onChange(Number(e.target.value))}
-                      />
+                    <Input
+                        {...field}
+                        type="number"
+                        placeholder='120 Min'
+                        className='px-3 py-2 max-h-10 max-w-[114px] text-base font-medium text-greyAccent bg-white rounded-tr-md rounded-br-md rounded-tl-none rounded-bl-none border-0 rounded-xl'
+                        onChange={(e) => {
+                          field.onChange(Number(e.target.value));
+                          setExtraTime(Number(e.target.value));
+                        }}
+                    />
                   )}
                  />
                   
@@ -940,10 +1082,11 @@ const Step4 = () => {
         <Button
           variant="next"
           effect="shineHover"
-          className="rounded-full bg-gray-300 text-gray-500  cursor-not-allowed"
-          disabled
+          onClick={handleFormSubmit}
+          disabled={isUpdating}
+          className="rounded-full bg-purplePrimary text-white"
         >
-          Finish
+          {isUpdating ? "Saving..." : "Finish"}
         </Button>
       </div>
     </div>
