@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useMemo } from "react";
 import {
   DropdownMenu,
   DropdownMenuGroup,
@@ -15,7 +15,7 @@ import {
   SCOUTABL_WHITE,
   COMMON_VARIANTS,
 } from "@/lib/constants";
-import { XIcon } from "lucide-react";
+import { XIcon, Search } from "lucide-react";
 import { cn } from "@/lib/utils";
 import Checkbox from "./checkbox2";
 
@@ -26,6 +26,9 @@ const variants = {
   outline: {
     div: COMMON_VARIANTS.outline,
   },
+  white: {
+    div: "bg-white",
+  },
 };
 
 /**
@@ -34,6 +37,7 @@ const variants = {
  * @param {function} onChange - Callback when an option is selected (receives value)
  * @param {string|number} currentValue - Currently selected value
  * @param {string} className - Additional className for the button
+ * @param {boolean} searchable - Enable search functionality
  */
 const Dropdown = ({
   name,
@@ -53,13 +57,51 @@ const Dropdown = ({
   rightCheckbox = false,
   closeOnSelect = false, // eslint-disable-line no-unused-vars
   modal = true,
+  searchable = false,
 }) => {
+  const [searchTerm, setSearchTerm] = useState("");
+
+  // Filter options based on search term
+  const filteredOptions = useMemo(() => {
+    if (!searchable || !searchTerm.trim()) {
+      return options;
+    }
+    
+    const searchLower = searchTerm.toLowerCase();
+    
+    return options.filter((option) => {
+      // Search in display field
+      if (option.display?.toLowerCase().includes(searchLower)) {
+        return true;
+      }
+      
+      // Search in user object if it exists (for username, email, etc.)
+      if (option.user) {
+        if (option.user.username?.toLowerCase().includes(searchLower) ||
+            option.user.email?.toLowerCase().includes(searchLower) ||
+            option.user.first_name?.toLowerCase().includes(searchLower) ||
+            option.user.last_name?.toLowerCase().includes(searchLower)) {
+          return true;
+        }
+      }
+      
+      // Search in any other searchable fields
+      if (option.searchableFields) {
+        return option.searchableFields.some(field => 
+          field?.toLowerCase().includes(searchLower)
+        );
+      }
+      
+      return false;
+    });
+  }, [options, searchTerm, searchable]);
+
   const isSelected = (val) =>
     multiselect && Array.isArray(currentValue)
       ? currentValue.includes(val)
       : currentValue === val;
 
-  const allValues = options.map((opt) => opt.value);
+  const allValues = filteredOptions.map((opt) => opt.value);
   const allSelected =
     multiselect &&
     Array.isArray(currentValue) &&
@@ -107,6 +149,10 @@ const Dropdown = ({
     } else {
       onChange(null);
     }
+  };
+
+  const handleSearchChange = (e) => {
+    setSearchTerm(e.target.value);
   };
 
   return (
@@ -186,6 +232,26 @@ const Dropdown = ({
           className="p-0 min-w-[200px]"
           style={{ color: SCOUTABL_TEXT_SECONDARY }}
         >
+          {searchable && (
+            <div className="px-3 py-2 border-b border-gray-200">
+              <div className="relative">
+                <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 text-gray-400 size-4" />
+                <input
+                  type="text"
+                  placeholder="Search..."
+                  value={searchTerm}
+                  onChange={handleSearchChange}
+                  className="w-full pl-8 pr-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                  onClick={(e) => e.stopPropagation()}
+                  onKeyDown={(e) => {
+                    // Prevent dropdown from closing when typing
+                    e.stopPropagation();
+                  }}
+                  autoFocus
+                />
+              </div>
+            </div>
+          )}
           {multiselect && showSelectAll && (
             <DropdownMenuItem
               key="__select_all__"
@@ -208,43 +274,53 @@ const Dropdown = ({
               {rightCheckbox && <Checkbox active={allSelected} />}
             </DropdownMenuItem>
           )}
-          {options.map((opt) => {
-            const checkbox = <Checkbox active={isSelected(opt.value)} />;
+          {filteredOptions.length > 0 ? (
+            filteredOptions.map((opt) => {
+              const checkbox = <Checkbox active={isSelected(opt.value)} />;
 
-            return (
-              <DropdownMenuItem
-                key={opt.value}
-                onSelect={(e) => {
-                  e?.preventDefault();
-                  e?.stopPropagation();
-                  if (opt.disabled) return;
-                  handleItemClick(opt.value);
-                }}
-                disabled={!!opt.disabled}
-                className={cn(
-                  `rounded-none text-base px-3 flex flex-row items-center`,
-                  rightCheckbox ? "justify-between gap-5" : "gap-0",
-                  opt.disabled
-                    ? "opacity-50 cursor-not-allowed bg-transparent"
-                    : "hover:cursor-pointer hover:border-l-2 hover:border-purplePrimary",
-                  isSelected(opt.value) ? "bg-[#F3E8FF] font-medium" : ""
-                )}
-              >
-                {multiselect && !rightCheckbox && checkbox}
-                {renderOption ? (
-                  renderOption(opt)
-                ) : opt.icon ? (
-                  <div className="flex flex-row items-center gap-2">
-                    {opt.icon}
-                    {opt.display}
-                  </div>
-                ) : (
-                  opt.display
-                )}
-                {multiselect && rightCheckbox && checkbox}
-              </DropdownMenuItem>
-            );
-          })}
+              return (
+                <DropdownMenuItem
+                  key={opt.value}
+                  onSelect={(e) => {
+                    e?.preventDefault();
+                    e?.stopPropagation();
+                    if (opt.disabled) return;
+                    handleItemClick(opt.value);
+                    // For searchable multiselect dropdowns, prevent closing
+                    if (searchable && multiselect) {
+                      e?.preventDefault();
+                    }
+                  }}
+                  disabled={!!opt.disabled}
+                  className={cn(
+                    `rounded-none text-base px-3 flex flex-row items-center`,
+                    rightCheckbox ? "justify-between gap-5" : "gap-0",
+                    opt.disabled
+                      ? "opacity-50 cursor-not-allowed bg-transparent"
+                      : "hover:cursor-pointer hover:border-l-2 hover:border-purplePrimary",
+                    isSelected(opt.value) ? "bg-[#F3E8FF] font-medium" : ""
+                  )}
+                >
+                  {multiselect && !rightCheckbox && checkbox}
+                  {renderOption ? (
+                    renderOption(opt)
+                  ) : opt.icon ? (
+                    <div className="flex flex-row items-center gap-2">
+                      {opt.icon}
+                      {opt.display}
+                    </div>
+                  ) : (
+                    opt.display
+                  )}
+                  {multiselect && rightCheckbox && checkbox}
+                </DropdownMenuItem>
+              );
+            })
+          ) : (
+            <div className="px-3 py-2 text-sm text-gray-500 text-center">
+              No options found
+            </div>
+          )}
         </DropdownMenuGroup>
       </DropdownMenuContent>
     </DropdownMenu>
@@ -271,6 +347,7 @@ Dropdown.propTypes = {
   renderOption: PropTypes.func, // Optional custom render function
   multiselect: PropTypes.bool, // Enable multi-select
   showSelectAll: PropTypes.bool, // Show select all option in multi-select
+  searchable: PropTypes.bool, // Enable search functionality
 };
 
 export default Dropdown;

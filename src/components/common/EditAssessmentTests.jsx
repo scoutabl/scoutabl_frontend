@@ -246,6 +246,7 @@ const EditAssessmentTests = ({ insideModal = false }) => {
               name="Library"
               variant="outline"
               currentValue={searchParams.library}
+              searchable 
               options={[
                 {
                   display: "Scoutabl",
@@ -319,6 +320,7 @@ const EditAssessmentTests = ({ insideModal = false }) => {
               clearable
               variant="outline"
               currentValue={durationFilter}
+              searchable
               options={[
                 {
                   display: "upto 10 min",

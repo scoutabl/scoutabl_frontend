@@ -27,22 +27,26 @@ import { CustomToggleSwitch } from "@/components/ui/custom-toggle-switch";
 import FileIcon from "@/assets/fileIcon.svg?react";
 import Dropdown from "@/components/ui/dropdown";
 import { Controller, useForm } from 'react-hook-form';
-import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
+import { DateTimePicker } from "@/components/ui/datetimepicker";
+import { CustomTooltip } from "@/components/ui/custom-tooltip";
 
 // Api imports
 import { useUpdateAssessment } from "@/api/assessments/assessment";
 import { useEnums } from "@/context/EnumsContext";
 import { toast } from "sonner";
+import { useUsers } from "@/api/users/users";
+import UserAvatarBadge from "@/components/common/UserAvatarBadge";
 
 
 // Video file MIME types and extensions
 const VIDEO_MIME_TYPES = ['video/mp4', 'video/webm', 'video/mov', 'video/avi', 'video/wmv', 'video/flv', 'video/mkv', 'video/m4v', 'video/3gp'];
 const VIDEO_EXTENSIONS = ['.mp4', '.webm', '.mov', '.avi', '.wmv', '.flv', '.mkv', '.m4v', '.3gp'];
 const ACCEPTED_VIDEO_TYPES = VIDEO_MIME_TYPES.join(',');
-import { DateTimePicker } from "@/components/ui/datetimepicker";
-import { CustomTooltip } from "@/components/ui/custom-tooltip";
-import { debounce } from "@/lib/utils";
 
+
+
+import { debounce } from "@/lib/utils";
+import { useProctorSettingsMap } from "@/lib/enum_mapping";
 
 
 const Step4 = () => {
@@ -50,10 +54,12 @@ const Step4 = () => {
     useAssessmentContext();
   const [activeTab, setActiveTab] = useState("sequence");
   const [domains, setDomains] = useState(["gmail.com", "abc.com"]);
-  const [selectedUsers, setSelectedUsers] = useState([
-    "sxcscascsc",
-    "scacascasc",
-  ]);
+  
+  // Update selectedUsers state to work with user objects
+  const [selectedUsers, setSelectedUsers] = useState([]);
+  
+  // Fetch users data
+  const { data: users } = useUsers();
   const [customQuestionLibraryOpen, setCustomQuestionLibraryOpen] = useState(false);
   const [qualifyingQuestionLibraryOpen, setQualifyingQuestionLibraryOpen] = useState(false);
   const [testLibraryOpen, setTestLibraryOpen] = useState(false);
@@ -75,15 +81,96 @@ const Step4 = () => {
   const [endDate, setEndDate] = useState(null);
   const [extraTime, setExtraTime] = useState(0);
 
+  // state variables
+  const [videoLinkValue, setVideoLinkValue] = useState("");
+  const [selectedDocumentTypes, setSelectedDocumentTypes] = useState([]);
+
+  // Add handlers for document checkboxes
+  const handleDocumentTypeToggle = (docType) => {
+    setSelectedDocumentTypes(prev => {
+      if (prev.includes(docType)) {
+        return prev.filter(type => type !== docType);
+      } else {
+        return [...prev, docType];
+      }
+    });
+  };
+
   useEffect(() => {
     if (!isAssessmentLoading) {
-      setAssessmentDescription(assessment?.description)
+      // Existing fields
+      setAssessmentDescription(assessment?.description);
       setAssessmentStartDateEnabled(assessment?.enable_time_restrictions);
       setStartDate(assessment?.start_date ? new Date(assessment.start_date) : null);
       setEndDate(assessment?.end_date ? new Date(assessment.end_date) : null);
       setExtraTime(assessment?.extra_time_percentage_for_tests || 0);
+      
+      // Add missing fields from API payload
+      setshowResultsToCandidatesEnabled(assessment?.email_candidate_results || false);
+      setcollectCandidateDocumentsEnabled(assessment?.enable_collect_documents || false);
+      setdomainRestrictionEnabled(assessment?.enable_domain_restrictions || false);
+      
+      // Load domain restrictions
+      if (assessment?.domain_restrictions) {
+        setDomains(assessment.domain_restrictions);
+      }
+      
+      // Load domain restriction type (0 = allowed, 1 = disallowed)
+      if (assessment?.domain_restriction_type !== undefined) {
+        setStatus(assessment.domain_restriction_type === 0 ? "allowed" : "disallowed");
+      }
+      
+      // Load proctoring settings
+      if (assessment?.proctor_settings?.settings) {
+        const enabledSettings = assessment.proctor_settings.settings;
+        // Ensure enabledSettings is an array
+        const settingsArray = Array.isArray(enabledSettings) ? enabledSettings : [];
+        
+        setProctoringSettings(prev => {
+          const newSettings = { ...prev };
+          // Map API enum values back to local state keys
+          Object.keys(prev).forEach(key => {
+            const enumValue = proctorSettingsMap[key];
+            if (enumValue !== null && enumValue !== undefined) {
+              const numericValue = typeof enumValue === 'string' ? parseInt(enumValue, 10) : enumValue;
+              newSettings[key] = settingsArray.includes(numericValue);
+            }
+          });
+          return newSettings;
+        });
+      }
+      
+      // Load legal settings
+      setLegalSettings({
+        nonFluentEnglishSpeakers: assessment?.enable_accomadation_for_nonenglish || false,
+        concentrationMemoryImpairments: assessment?.enable_accomadation_for_disabled || false,
+      });
+      
+      // Load missing fields with correct backend field names
+      setAddIntroVideoEnabled(assessment?.intro_screen ? true : false);
+      setVideoLinkValue(assessment?.intro_screen || "");
+      setSelectedDocumentTypes(assessment?.collect_document_types || []);
+      setSelectedUsers(assessment?.moderators || []);
     }
-  }, [isAssessmentLoading, setAssessmentDescription, assessment?.description, assessment?.enable_time_restrictions, assessment?.start_date, assessment?.end_date, assessment?.extra_time_percentage_for_tests]);
+  }, [
+    isAssessmentLoading, 
+    assessment?.description, 
+    assessment?.enable_time_restrictions, 
+    assessment?.start_date, 
+    assessment?.end_date, 
+    assessment?.extra_time_percentage_for_tests,
+    assessment?.email_candidate_results,
+    assessment?.enable_collect_documents,
+    assessment?.enable_domain_restrictions,
+    assessment?.domain_restrictions,
+    assessment?.domain_restriction_type,
+    assessment?.proctor_settings,
+    assessment?.enable_accomadation_for_nonenglish,
+    assessment?.enable_accomadation_for_disabled,
+    assessment?.intro_screen,
+    assessment?.collect_document_types,
+    assessment?.moderators
+  ]);
 
   // Proctoring toggle state variables
   const [proctoringSettings, setProctoringSettings] = useState({
@@ -119,63 +206,10 @@ const Step4 = () => {
 
   // Api imports
   const { mutateAsync: updateAssessment, isPending: isUpdating } = useUpdateAssessment();
-  const { resolveEnum } = useEnums();
+  const { resolveEnum, enums } = useEnums();
+  const proctorSettingsMap = useProctorSettingsMap();
 
-  // Form data structure for API
-const [formData, setFormData] = useState({
-  // Essential Settings
-  description: assessmentDescription || "",
-  show_results_to_candidates: ishowResultsToCandidatesEnabled,
-  add_intro_video: isaddIntroVideoEnabled,
-  collect_candidate_documents: iscollectCandidateDocumentsEnabled,
-  
-  // Assessment Validity
-  enable_time_restrictions: isAssessmentStartDateEnabled,
-  start_date: null,
-  end_date: null,
-  
-  // Team Access
-  selected_users: selectedUsers,
-  domain_restriction: {
-    enabled: isdomainRestrictionEnabled,
-    status: status,
-    domains: domains
-  },
-  
-  // Proctoring Settings (using serial numbers)
-  proctor_settings: {
-    settings: [] // Prcotor setting are stored as numbers [1, 3, 6]
-  },
-  
-  // Legal Settings
-  legal_settings: {
-    extra_time_percentage_for_tests: 0,
-    enable_accomadation_for_disabled: legalSettings.concentrationMemoryImpairments,
-    enable_accomadation_for_nonenglish: legalSettings.nonFluentEnglishSpeakers
-  }
-});
-
-// Map proctoring toggles to numbers
-const PROCTORING_TOGGLE_MAP = {
-  locationLogging: 1,
-  webcamSnapshots: 2,
-  plagiarismDetection: 3,
-  browserExtensionDetection: 4,
-  fullscreenModeDetection: 5,
-  mouseOutTracking: 6,
-  disableCopyPaste: 7,
-  ipLogging: 8,
-  tabProctoring: 9,
-  keystrokeAnalysis: 10,
-  screenRecordProtection: 11,
-  restrictMultipleMonitors: 12,
-  faceDetection: 13,
-  gptDetection: 14,
-  aiIdentityVerification: 15,
-  virtualMachineDetection: 16,
-  browserFingerprinting: 17
-};
-
+ 
 // Section collapse state
   const [collapsedSections, setCollapsedSections] = useState({
     sequence: false,
@@ -243,8 +277,8 @@ const PROCTORING_TOGGLE_MAP = {
     setDomains(domains.filter((d) => d !== domain));
   };
 
-  const removeUser = (user) => {
-    setSelectedUsers(selectedUsers.filter((u) => u !== user));
+  const removeUser = (userId) => {
+    setSelectedUsers(selectedUsers.filter((user) => user.id !== userId));
   };
 
   const handleDescriptionChange = useCallback((e) => {
@@ -314,22 +348,32 @@ const PROCTORING_TOGGLE_MAP = {
   const handleFormSubmit = async () => {
     try {
     
-      // const enabledToggles = [];
-      // Object.keys(proctoringSettings).forEach(key => {
-      //   if (proctoringSettings[key] === true) {
-      //     const toggleNumber = PROCTORING_TOGGLE_MAP[key];
-      //     if (typeof toggleNumber === 'number') {
-      //       enabledToggles.push(toggleNumber);
-      //     }
-      //   }
-      // });
+        // Use resolveEnum to get the correct enum values for proctor settings
+    const enabledToggles = [];
+    Object.keys(proctoringSettings).forEach(key => {
+      if (proctoringSettings[key] === true) {
+        const enumValue = proctorSettingsMap[key];
+        console.log(`Proctor setting ${key}:`, enumValue, typeof enumValue); // Debug log
+        if (enumValue !== null && enumValue !== undefined) {
+          // Ensure the value is a number, not a string
+          const numericValue = typeof enumValue === 'string' ? parseInt(enumValue, 10) : enumValue;
+          if (!isNaN(numericValue)) {
+            enabledToggles.push(numericValue);
+          }
+        }
+      }
+    });
 
+console.log("Enabled toggles:", enabledToggles, "Type:", typeof enabledToggles[0]); // Debug log
       // Prepare data for API
       const apiData = {
         // Essential Settings
         description: assessmentDescription,
         email_candidate_results: ishowResultsToCandidatesEnabled,
         enable_collect_documents: iscollectCandidateDocumentsEnabled,
+        
+        // Intro Video
+        intro_screen: isaddIntroVideoEnabled ? videoLinkValue : null,
         
         // Assessment Validity
         enable_time_restrictions: isAssessmentStartDateEnabled,
@@ -341,11 +385,16 @@ const PROCTORING_TOGGLE_MAP = {
         domain_restriction_type: status === "allowed" ? 0 : 1,
         domain_restrictions: domains,
         
-        // (Commented out for validation)
-        // Proctoring Settings 
-        // proctor_settings: {
-        //   settings: enabledToggles
-        // },
+        // Team Access
+        moderators: selectedUsers.map(user => user.id),
+        
+        // Document Collection
+        collect_document_types: selectedDocumentTypes,
+        
+        // Proctoring Settings
+        proctor_settings: {
+          settings: enabledToggles
+        },
         
         // Legal Settings
         enable_accomadation_for_disabled: legalSettings.concentrationMemoryImpairments,
@@ -473,7 +522,7 @@ const PROCTORING_TOGGLE_MAP = {
           className="shadow-lg"
         >
           <p className="text-sm text-gray-600 mb-4">
-            Qualifying questions are presented to candidates ahead of the tests. The answers to these questions determine if
+          The Essential Settings section provides configuration options for defining the core parameters, operational behavior, and system-level controls of your assessment.
           </p>
           <div className="flex gap-6 items-start">
             {/* Left Column */}
@@ -667,7 +716,7 @@ const PROCTORING_TOGGLE_MAP = {
               <div>
               <h2 className="text-xl font-semibold">Assessment Validity</h2>
               <p className="text-sm text-gray-600 mb-1 mt-3">
-                Qualifying questions are presented to candidates ahead of the tests. The answers to these questions determine if
+                The Assessment Validity section allows you to set the duration and expiration of your assessment. This is recommended if inviting candidates using link share & integration.
                </p>
               </div>
                         <Button className="rounded-full px-4 py-2 text-sm bg-purpleUpgrade text-black border-purplePrimary">
@@ -702,12 +751,14 @@ const PROCTORING_TOGGLE_MAP = {
                 <div className="flex items-center gap-3">
                  <DateTimePicker 
                   className="w-full"
+                  placeholder="Select Start Date & Time"
                   value={startDate}
                   onChange={setStartDate}
                  />
                 
                  <DateTimePicker 
                   className="w-full"
+                  placeholder="Select End Date & Time"
                   value={endDate}
                   onChange={setEndDate}
                  />
@@ -738,7 +789,7 @@ const PROCTORING_TOGGLE_MAP = {
         >
           
           <p className="text-sm text-gray-600 mb-4">
-            Qualifying questions are presented to candidates ahead of the tests. The answers to these questions determine if ca, determinedetermine determine determine
+            The Access section allows you to control who can access your assessment. You can restrict access to specific domains or users.
           </p>
 
           <div className="space-y-6">
@@ -747,25 +798,62 @@ const PROCTORING_TOGGLE_MAP = {
               {/* Assessment Access */}
               <div className="w-1/2 bg-backgroundPrimary rounded-2xl p-6 border">
                 <div className="flex items-center gap-2 mb-4">
-                  <h3 className="text-lg font-semibold">Assessment Access</h3>
-                  <HelpCircle className="w-4 h-4 text-gray-400" />
+                    <h3 className="text-lg font-semibold">Assessment Access</h3>
+                    <CustomTooltip message="Select the users who can access the assessment." />
                 </div>
                 <div className="space-y-4">
-                  <div className="flex items-center gap-3 p-2 bg-white rounded-lg border">
-                    <span className="text-gray-500">Selected Users</span>
-                    <ChevronDownIcon className="w-4 h-4 ml-auto" />
-                  </div>
+                  <Dropdown
+                    backgroundColor="white"
+                    name="Select Users"
+                    variant="outline"
+                    multiselect
+                    rightCheckbox
+                    clearable
+                    searchable
+                    showSelectAll
+                    currentValue={selectedUsers.map(user => user.id)}
+                    options={[
+                      ...(users || []).map((user) => ({
+                        display: user.username,
+                        value: user.id,
+                        user,
+                      })),
+                    ]}
+                    onChange={(selectedUserIds) => {
+                      if (selectedUserIds === null || selectedUserIds.length === 0) {
+                        setSelectedUsers([]);
+                      } else {
+                        const selectedUserObjects = users?.filter(user => 
+                          selectedUserIds.includes(user.id)
+                        ) || [];
+                        setSelectedUsers(selectedUserObjects);
+                      }
+                    }}
+                    renderOption={({ user, display, isDefault }) =>
+                      isDefault ? (
+                        display
+                      ) : (
+                        <UserAvatarBadge
+                          user={user}
+                          className="gap-3 py-2"
+                          iconClassName="w-10 h-10"
+                        />
+                      )
+                    }
+                    className="w-full"
+                  />
+                  
                   <div className="space-y-3">
-                  <div className="flex gap-2">
+                    <div className="flex gap-2 flex-wrap">
                       {selectedUsers.map((user) => (
                         <Badge
-                          key={user}
+                          key={user.id}
                           variant="secondary"
                           className="bg-blue-100 text-blue-800"
                         >
-                          {user}
+                          {user.username}
                           <button
-                            onClick={() => removeUser(user)}
+                            onClick={() => removeUser(user.id)}
                             className="ml-2"
                           >
                             <X className="w-3 h-3" />
@@ -789,7 +877,7 @@ const PROCTORING_TOGGLE_MAP = {
                       <h3 className="text-lg font-semibold">
                         Domain Restriction
                       </h3>
-                      <HelpCircle className="w-4 h-4 text-gray-400" />
+                      <CustomTooltip message="Select the domains who can access the assessment." />
                   </div>
                 </div>
                 
@@ -863,21 +951,43 @@ const PROCTORING_TOGGLE_MAP = {
               <div className="mb-4">
                 <h3 className="text-lg font-semibold mb-2">Basic Proctoring</h3>
                 <p className="text-sm text-gray-600">
-                  Auto grade your assessments wit AI Auto grade your assessments
-                  wit AIAuto grade your assessments wit AIAuto grade your
-                  assessments wit AI
+                 Basic proctoring helps maintain the integrity of your assessment by detecting cheating and ensuring fair participation.
                 </p>
               </div>
               <div className="grid grid-cols-2 gap-4">
                 {/* Left Column */}
                 <div className="space-y-4">
                   {[
-                    { label: "Location logging", key: "locationLogging" },
-                    { label: "Webcam snapshots", key: "webcamSnapshots" },
-                    { label: "Plagiarism detection", key: "plagiarismDetection" },
-                    { label: "Browser extension detection", key: "browserExtensionDetection" },
-                    { label: "Fullscreen mode detection", key: "fullscreenModeDetection" },
-                    { label: "Mouse out tracking", key: "mouseOutTracking" },
+                    { 
+                      label: "Location logging", 
+                      key: "locationLogging",
+                      tooltip: "Tracks and logs the geographical location of candidates during the assessment to ensure they are taking the test from an authorized location."
+                    },
+                    { 
+                      label: "Webcam snapshots", 
+                      key: "webcamSnapshots",
+                      tooltip: "Takes periodic snapshots using the candidate's webcam to monitor their presence and behavior during the assessment."
+                    },
+                    { 
+                      label: "Plagiarism detection", 
+                      key: "plagiarismDetection",
+                      tooltip: "Automatically scans submitted answers against a database to detect potential plagiarism and copied content."
+                    },
+                    { 
+                      label: "Browser extension detection", 
+                      key: "browserExtensionDetection",
+                      tooltip: "Detects and blocks suspicious browser extensions that could be used for cheating or accessing unauthorized resources."
+                    },
+                    { 
+                      label: "Fullscreen mode detection", 
+                      key: "fullscreenModeDetection",
+                      tooltip: "Monitors if candidates switch out of fullscreen mode, which could indicate they are accessing other applications."
+                    },
+                    { 
+                      label: "Mouse out tracking", 
+                      key: "mouseOutTracking",
+                      tooltip: "Tracks when the mouse cursor leaves the assessment window, which could indicate switching to other applications."
+                    },
                   ].map((item) => (
                     <div
                       key={item.label}
@@ -890,7 +1000,7 @@ const PROCTORING_TOGGLE_MAP = {
                             onCheckedChange={() => handleProctoringToggle(item.key)} 
                           />
                           <span className="font-medium">{item.label}</span>
-                          <HelpCircle className="w-4 h-4 text-gray-400" />
+                          <CustomTooltip message={item.tooltip} />
                         </div>
                         <div className="w-10 h-8 bg-purpleUpgrade rounded-2xl flex items-center justify-center">
                           <Crown className="w-5 h-5 text-purplePrimary fill-purplePrimary " />
@@ -903,12 +1013,36 @@ const PROCTORING_TOGGLE_MAP = {
                 {/* Right Column */}
                 <div className="space-y-4">
                   {[
-                    { label: "Disable copy & Paste", key: "disableCopyPaste" },
-                    { label: "IP logging", key: "ipLogging" },
-                    { label: "Tab proctoring", key: "tabProctoring" },
-                    { label: "Keystroke analysis", key: "keystrokeAnalysis" },
-                    { label: "Screen record protection", key: "screenRecordProtection" },
-                    { label: "Restrict multiple monitors", key: "restrictMultipleMonitors" },
+                    { 
+                      label: "Disable copy & Paste", 
+                      key: "disableCopyPaste",
+                      tooltip: "Prevents candidates from copying content from the assessment or pasting external content into their answers."
+                    },
+                    { 
+                      label: "IP logging", 
+                      key: "ipLogging",
+                      tooltip: "Records the IP address of candidates to track their network location and detect potential proxy usage or location changes."
+                    },
+                    { 
+                      label: "Tab proctoring", 
+                      key: "tabProctoring",
+                      tooltip: "Monitors browser tab activity to detect when candidates switch to other tabs or open new windows during the assessment."
+                    },
+                    { 
+                      label: "Keystroke analysis", 
+                      key: "keystrokeAnalysis",
+                      tooltip: "Analyzes typing patterns and keystroke dynamics to detect unusual behavior or potential use of automated tools."
+                    },
+                    { 
+                      label: "Screen record protection", 
+                      key: "screenRecordProtection",
+                      tooltip: "Prevents candidates from taking screenshots or recording their screen during the assessment to protect content security."
+                    },
+                    { 
+                      label: "Restrict multiple monitors", 
+                      key: "restrictMultipleMonitors",
+                      tooltip: "Detects and restricts the use of multiple monitors to prevent candidates from viewing content on secondary screens."
+                    },
                   ].map((item) => (
                     <div
                       key={item.label}
@@ -921,7 +1055,7 @@ const PROCTORING_TOGGLE_MAP = {
                             onCheckedChange={() => handleProctoringToggle(item.key)} 
                           />
                           <span className="font-medium">{item.label}</span>
-                          <HelpCircle className="w-4 h-4 text-gray-400" />
+                          <CustomTooltip message={item.tooltip} />
                         </div>
                         <div className="w-10 h-8 bg-purpleUpgrade rounded-2xl flex items-center justify-center">
                         <Crown className="w-5 h-5 text-purplePrimary fill-purplePrimary " />
@@ -941,9 +1075,7 @@ const PROCTORING_TOGGLE_MAP = {
                     Advanced Proctoring
                   </h3>
                   <p className="text-sm opacity-90 text-gray-700">
-                    Auto grade your assessments wit AI Auto grade your
-                    assessments wit AIAuto grade your assessments wit AIAuto
-                    grade your assessments wit AI
+                     Advanced proctoring helps maintain the integrity of your assessment by detecting cheating and ensuring fair participation.
                   </p>
                 </div>
                 <Button className="rounded-full px-4 py-2 text-sm bg-purpleUpgrade text-black border-purplePrimary">
@@ -953,11 +1085,31 @@ const PROCTORING_TOGGLE_MAP = {
               </div>
               <div className="grid grid-cols-2 gap-4 text-gray-700">  
                 {[
-                  { label: "Multiple Face Detection", key: "faceDetection" },
-                  { label: "Virtual Machine Detection", key: "virtualMachineDetection" },
-                  { label: "GPT Detection", key: "gptDetection" },
-                  { label: "Browser fingerprinting", key: "browserFingerprinting" },
-                  { label: "AI Identity Verification", key: "aiIdentityVerification" },
+                  { 
+                    label: "Multiple Face Detection", 
+                    key: "faceDetection",
+                    tooltip: "Uses advanced AI to detect multiple faces in the webcam feed, alerting when unauthorized persons are present during the assessment."
+                  },
+                  { 
+                    label: "Virtual Machine Detection", 
+                    key: "virtualMachineDetection",
+                    tooltip: "Detects if the candidate is using a virtual machine or emulated environment, which could indicate attempts to bypass security measures."
+                  },
+                  { 
+                    label: "GPT Detection", 
+                    key: "gptDetection",
+                    tooltip: "Analyzes written responses using AI to detect if answers were generated by language models like ChatGPT or other AI writing tools."
+                  },
+                  { 
+                    label: "Browser fingerprinting", 
+                    key: "browserFingerprinting",
+                    tooltip: "Creates a unique fingerprint of the candidate's browser and system to detect if multiple people are using the same device."
+                  },
+                  { 
+                    label: "AI Identity Verification", 
+                    key: "aiIdentityVerification",
+                    tooltip: "Uses facial recognition and biometric analysis to verify the candidate's identity throughout the assessment process."
+                  },
                 ].map((feature) => (
                   <div key={feature.label} className="bg-white rounded-xl p-4">
                     <div className="flex items-center gap-3">
@@ -966,7 +1118,7 @@ const PROCTORING_TOGGLE_MAP = {
                         onCheckedChange={() => handleProctoringToggle(feature.key)} 
                       />
                       <span className="font-medium">{feature.label}</span>
-                      <HelpCircle className="w-4 h-4 opacity-70" />
+                      <CustomTooltip message={feature.tooltip} />
                     </div>
                   </div>
                 ))}
@@ -1019,11 +1171,8 @@ const PROCTORING_TOGGLE_MAP = {
                 </div>
                 <div className="bg-purpleQuaternary rounded-xl p-4 flex-1">
                   <p className="text-sm text-gray-700">
-                    Candidates with concentration/ memory impairments Candidates
-                    with concentration/ memory impairments Candidates with
-                    concentration/ memory impairments Candidates with
-                    concentration/ memory impairments. Candidates with
-                    concentration.
+                    Candidates with concentration/ memory impairments are eligible for accommodation. This will be added to the total time of the assessment. This is recommended for users with specific needs to maintain the integrity of the assessment.
+                    
                   </p>
                 </div>
               </div>
@@ -1055,7 +1204,7 @@ const PROCTORING_TOGGLE_MAP = {
                       <span className="font-medium text-gray-700">
                         Candidates with concentration/ memory impairments
                       </span>
-                      <CustomTooltip message="Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s." />
+                      <CustomTooltip message="Candidates with concentration/ memory impairments are eligible for accommodation." />
                     </div>
                     <CustomToggleSwitch 
                       checked={legalSettings.concentrationMemoryImpairments} 
