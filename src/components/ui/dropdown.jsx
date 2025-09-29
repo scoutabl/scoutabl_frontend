@@ -21,13 +21,16 @@ import Checkbox from "./checkbox2";
 
 const variants = {
   default: {
-    div: "",
+    div: "rounded-full",
+    button: "rounded-full bg-inherit text-inherit",
   },
   outline: {
-    div: COMMON_VARIANTS.outline,
+    div: cn(COMMON_VARIANTS.outline, "rounded-full"),
+    button: "rounded-full bg-inherit text-inherit",
   },
-  white: {
-    div: "bg-white",
+  squareLight: {
+    div: cn(COMMON_VARIANTS.outline, "rounded-none bg-white"),
+    button: "rounded-md bg-white text-black"
   },
 };
 
@@ -159,11 +162,11 @@ const Dropdown = ({
     <DropdownMenu modal={modal}>
       <div
         className={cn(
-          "flex flex-row items-center rounded-full hover:cursor-pointer",
+          "flex flex-row items-center hover:cursor-pointer",
           "h-10",
           showClearIcon ? "px-4" : "p-0",
           className,
-          !hasValue ? variants[variant].div : ""
+          variants[variant].div
         )}
         style={{
           background: hasValue ? SCOUTABL_TEXT : "inherit",
@@ -175,16 +178,13 @@ const Dropdown = ({
           <Button
             variant="outline"
             className={cn(
-              `rounded-full focus:outline-none text-sm select-none`,
+              `focus:outline-none text-sm select-none`,
               "focus-visible:ring-0 focus-visible:ring-offset-0 focus:ring-0 border-0",
               "gap-1 text-ellipsis overflow-hidden",
               showClearIcon ? "p-0" : "px-4",
-              className
+              className,
+              variants[variant].button
             )}
-            style={{
-              color: "inherit",
-              background: "inherit",
-            }}
           >
             {!iconOnly && (
               <span className="overflow-hidden text-ellipsis whitespace-nowrap">

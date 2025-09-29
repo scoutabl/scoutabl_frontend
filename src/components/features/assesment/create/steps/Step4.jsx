@@ -349,7 +349,7 @@ const Step4 = () => {
     try {
     
         // Use resolveEnum to get the correct enum values for proctor settings
-    const enabledToggles = [];
+    const enabledToggles = {};
     Object.keys(proctoringSettings).forEach(key => {
       if (proctoringSettings[key] === true) {
         const enumValue = proctorSettingsMap[key];
@@ -358,7 +358,7 @@ const Step4 = () => {
           // Ensure the value is a number, not a string
           const numericValue = typeof enumValue === 'string' ? parseInt(enumValue, 10) : enumValue;
           if (!isNaN(numericValue)) {
-            enabledToggles.push(numericValue);
+            enabledToggles[numericValue.toString()] = true;
           }
         }
       }
@@ -805,7 +805,7 @@ console.log("Enabled toggles:", enabledToggles, "Type:", typeof enabledToggles[0
                   <Dropdown
                     backgroundColor="white"
                     name="Select Users"
-                    variant="outline"
+                    variant="squareLight"
                     multiselect
                     rightCheckbox
                     clearable
