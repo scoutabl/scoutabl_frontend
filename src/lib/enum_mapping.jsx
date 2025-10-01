@@ -12,6 +12,26 @@ export const useAssessmentCategoryNameMap = () => {
   };
 };
 
+export const useDomainRestrictionTypeMap = () => {
+  const { resolveEnum } = useEnums();
+  return {
+    [resolveEnum("DomainRestrictionType.ALLOW")]: "Allow",
+    [resolveEnum("DomainRestrictionType.BLOCK")]: "Block",
+  };
+};
+
+export const useAssessmentDocumentTypeMap = () => {
+  const { resolveEnum } = useEnums();
+  return {
+  
+    [resolveEnum("AssessmentDocumentType.RESUME")]: "Resume",
+    [resolveEnum("AssessmentDocumentType.COVER_LETTER")]: "Cover Letter",
+    [resolveEnum("AssessmentDocumentType.RELIEVING_LETTER")]: "Relieving Letter",
+    [resolveEnum("AssessmentDocumentType.ID_PROOF")]: "ID Proof",
+    [resolveEnum("AssessmentDocumentType.EXPERIENCE_LETTER")]: "Experience Letter",
+  };
+};
+
 // Proctor settings mapping using resolveEnum
 export const useProctorSettingsMap = () => {
   const { resolveEnum, enums, enumsLoading } = useEnums();

@@ -46,7 +46,7 @@ const ACCEPTED_VIDEO_TYPES = VIDEO_MIME_TYPES.join(',');
 
 
 import { debounce } from "@/lib/utils";
-import { useProctorSettingsMap } from "@/lib/enum_mapping";
+import { useProctorSettingsMap, useAssessmentDocumentTypeMap, useDomainRestrictionTypeMap } from "@/lib/enum_mapping";
 
 
 const Step4 = () => {
@@ -72,10 +72,12 @@ const Step4 = () => {
   const [iscollectCandidateDocumentsEnabled, setcollectCandidateDocumentsEnabled] = useState(false);
   const [isAssessmentStartDateEnabled, setAssessmentStartDateEnabled] = useState(false);
   const [isdomainRestrictionEnabled, setdomainRestrictionEnabled] = useState(false);
-  const [status, setStatus] = useState("allowed"); 
+  const [status, setStatus] = useState("allow"); 
   const [dropdownKey, setDropdownKey] = useState(0);
   const [assessmentDescription, setAssessmentDescription] = useState();
 
+  const documentTypeMap = useAssessmentDocumentTypeMap();
+  const domainRestrictionTypeMap = useDomainRestrictionTypeMap();
   // State variables for date/time
   const [startDate, setStartDate] = useState(null);
   const [endDate, setEndDate] = useState(null);
@@ -117,7 +119,7 @@ const Step4 = () => {
       
       // Load domain restriction type (0 = allowed, 1 = disallowed)
       if (assessment?.domain_restriction_type !== undefined) {
-        setStatus(assessment.domain_restriction_type === 0 ? "allowed" : "disallowed");
+        setStatus(assessment.domain_restriction_type === 0 ? "allow" : "block");
       }
       
       // Load proctoring settings
@@ -328,6 +330,7 @@ const Step4 = () => {
         // Check file size (10MB limit for video files)
         if (file.size <= 10 * 1024 * 1024) {
           setUploadedFile(file);
+          setVideoLinkValue(""); // Clear video link when file is uploaded
           setFileError("");
         } else {
           setFileError("File size must be less than 10MB");
@@ -342,6 +345,16 @@ const Step4 = () => {
   const removeUploadedFile = () => {
     setUploadedFile(null);
     setFileError("");
+  };
+
+  // Add a function to handle video link input changes
+  const handleVideoLinkChange = (e) => {
+    setVideoLinkValue(e.target.value);
+    // Clear uploaded file when video link is entered
+    if (e.target.value.trim()) {
+      setUploadedFile(null);
+      setFileError("");
+    }
   };
 
   // Form submission handler
@@ -373,7 +386,7 @@ console.log("Enabled toggles:", enabledToggles, "Type:", typeof enabledToggles[0
         enable_collect_documents: iscollectCandidateDocumentsEnabled,
         
         // Intro Video
-        intro_screen: isaddIntroVideoEnabled ? videoLinkValue : null,
+        intro_screen: isaddIntroVideoEnabled ? (videoLinkValue || (uploadedFile ? uploadedFile.name : null)) : null,
         
         // Assessment Validity
         enable_time_restrictions: isAssessmentStartDateEnabled,
@@ -382,7 +395,7 @@ console.log("Enabled toggles:", enabledToggles, "Type:", typeof enabledToggles[0
         
         // Domain Restrictions
         enable_domain_restrictions: isdomainRestrictionEnabled,
-        domain_restriction_type: status === "allowed" ? 0 : 1,
+        domain_restriction_type: status === "allow" ? 0 : 1,
         domain_restrictions: domains,
         
         // Team Access
@@ -390,12 +403,14 @@ console.log("Enabled toggles:", enabledToggles, "Type:", typeof enabledToggles[0
         
         // Document Collection
         collect_document_types: selectedDocumentTypes,
+        enable_collect_documents: iscollectCandidateDocumentsEnabled,
         
         // Proctoring Settings
         proctor_settings: {
           settings: enabledToggles
         },
-        
+
+       
         // Legal Settings
         enable_accomadation_for_disabled: legalSettings.concentrationMemoryImpairments,
         enable_accomadation_for_nonenglish: legalSettings.nonFluentEnglishSpeakers,
@@ -414,6 +429,24 @@ console.log("Enabled toggles:", enabledToggles, "Type:", typeof enabledToggles[0
     } catch (error) {
       console.error("Error:", error.response?.data);
       toast.error("Failed to save settings. Please try again.");
+    }
+  };
+
+  // Add this state variable near the other state declarations (around line 56)
+  const [newDomain, setNewDomain] = useState("");
+
+  // Add this function near the removeDomain function (around line 278)
+  const addDomain = () => {
+    if (newDomain.trim() && !domains.includes(newDomain.trim())) {
+      setDomains([...domains, newDomain.trim()]);
+      setNewDomain("");
+    }
+  };
+
+  const handleDomainKeyPress = (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      addDomain();
     }
   };
 
@@ -582,9 +615,11 @@ console.log("Enabled toggles:", enabledToggles, "Type:", typeof enabledToggles[0
                   <div className="mt-4 space-y-4">
                     {/* Video Link Input */}
                     
-                      <Input className="bg-white rounded-lg p-3 h-[37px] border"
+                      <Input 
+                        className="bg-white rounded-lg p-3 h-[37px] border"
                         placeholder="Paste a link to your video"
-                       
+                        value={videoLinkValue}
+                        onChange={handleVideoLinkChange}
                       />
                     
                     
@@ -675,29 +710,23 @@ console.log("Enabled toggles:", enabledToggles, "Type:", typeof enabledToggles[0
 
                 {iscollectCandidateDocumentsEnabled && (
                   <div>
-                  <div className="flex gap-5">
-                    {["Resume", "Cover Letter", "Relieving Letter", "ID Proof"].map((doc) => (
-                      <div key={doc} className="flex items-center gap-2 p-2 pl-2 pr-2 mb-2 bg-white rounded-lg border whitespace-nowrap">
-                        <Checkbox />
-                        <span className="text-sm text-gray-700">{doc}</span>
-                      </div>
-                    ))}
-                  </div>
-                  <div className="flex gap-5">
-                    {["Contact Number", "Experience Certificate/ Letter"].map((doc) => (
-                      <div key={doc} className="flex items-center gap-2 p-2 pl-2 pr-2 mb-4 bg-white rounded-lg border whitespace-nowrap">
-                        <Checkbox />
-                        <span className="text-sm text-gray-700">{doc}</span>
-                      </div>
-                    ))}
-                  </div>
-                
+                    <div className="flex gap-5 flex-wrap">
+                      {Object.entries(documentTypeMap).map(([enumValue, displayName]) => (
+                        <div key={enumValue} className="flex items-center gap-2 p-2 pl-2 pr-2 mb-2 bg-white rounded-lg border whitespace-nowrap">
+                          <Checkbox 
+                            checked={selectedDocumentTypes.includes(parseInt(enumValue))}
+                            onCheckedChange={() => handleDocumentTypeToggle(parseInt(enumValue))}
+                          />
+                          <span className="text-sm text-gray-700">{displayName}</span>
+                        </div>
+                      ))}
+                    </div>
 
-                <Button variant="primary" className="w-auto px-4 py-2  rounded-lg">
-                  <PlusIcon className="w-4 h-4 mr-2" />
-                  Custom File Upload
-                </Button>
-                </div>
+                    <Button variant="primary" className="w-auto px-4 py-2 rounded-lg">
+                      <PlusIcon className="w-4 h-4 mr-2" />
+                      Custom File Upload
+                    </Button>
+                  </div>
                 )}
               </div>
              
@@ -885,13 +914,13 @@ console.log("Enabled toggles:", enabledToggles, "Type:", typeof enabledToggles[0
                     <div className="flex items-center text-gray-500 gap-3 p-1.5  bg-white rounded-lg border ml-auto">
                       <Dropdown
                         key={dropdownKey}
-                        options={[{display: "Allowed", value: "allowed"}, {display: "Disallowed", value: "disallowed"}]}
+                        options={[{display: domainRestrictionTypeMap[resolveEnum("DomainRestrictionType.ALLOW")], value: "allow"}, {display: domainRestrictionTypeMap[resolveEnum("DomainRestrictionType.BLOCK")], value: "block"}]}
                         onChange={(value) => {
                           setStatus(value);
                           setDropdownKey(prev => prev + 1); 
                         }}
                         currentValue={status}
-                        className="w-30 h-6 text-m p-1 gap-0 "
+                        className="w-30 h-6 text-m text-md p-1 gap-0 "
                         style={{ background: "P", color: "inherit" }}
                       />
                     </div>
@@ -900,28 +929,50 @@ console.log("Enabled toggles:", enabledToggles, "Type:", typeof enabledToggles[0
                     
                 {isdomainRestrictionEnabled && (
                     <div className="space-y-3">
-                      <div className="flex items-center gap-3 p-2 bg-white rounded-lg border">
-                        <span className="text-gray-500">Selected Users</span>
+                      {/* Domain Input Section */}
+                      <div className="flex items-center gap-3 p-2">
+                        <Input
+                          placeholder="Enter Domain Name (e.g., gmail.com)"
+                          value={newDomain}
+                          onChange={(e) => setNewDomain(e.target.value)}
+                          onKeyPress={handleDomainKeyPress}
+                          className="flex-1 border-0 focus:ring-0 focus:outline-none bg-white rounded-lg p-4"
+                        />
+                        <Button
+                          type="button"
+                          onClick={addDomain}
+                          disabled={!newDomain.trim() || domains.includes(newDomain.trim())}
+                          className="px-4 py-2 bg-purplePrimary text-white rounded-lg disabled:bg-gray-300 disabled:cursor-not-allowed"
+                        >
+                          Add
+                        </Button>
                       </div>
-                      <div className="flex gap-2">
-                        {domains.map((domain) => (
-                          <Badge
-                            key={domain}
-                            variant="secondary"
-                            className="bg-blue-100 text-blue-800"
-                          >
-                            {domain}
-                            <button
-                              onClick={() => removeDomain(domain)}
-                              className="ml-2"
-                            >
-                              <X className="w-3 h-3" />
-                            </button>
-                          </Badge>
-                        ))}
+                      
+                      {/* Selected Domains Display */}
+                      {domains.length > 0 && (
+                        <div className="space-y-2">
+                          
+                          <div className="flex gap-2 flex-wrap">
+                            {domains.map((domain) => (
+                              <Badge
+                                key={domain}
+                                variant="secondary"
+                                className="bg-blue-100 text-blue-800"
+                              >
+                                {domain}
+                                <button
+                                  onClick={() => removeDomain(domain)}
+                                  className="ml-2 hover:text-red-600"
+                                >
+                                  <X className="w-3 h-3" />
+                                </button>
+                              </Badge>
+                            ))}
+                          </div>
+                        </div>
+                      )}
                     </div>
-                  </div>
-                )}
+                  )}
               </div>
             </div>
 
