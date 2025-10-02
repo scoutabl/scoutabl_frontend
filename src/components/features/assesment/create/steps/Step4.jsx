@@ -403,7 +403,7 @@ console.log("Enabled toggles:", enabledToggles, "Type:", typeof enabledToggles[0
         
         // Document Collection
         collect_document_types: selectedDocumentTypes,
-        enable_collect_documents: iscollectCandidateDocumentsEnabled,
+        
         
         // Proctoring Settings
         proctor_settings: {
@@ -712,7 +712,7 @@ console.log("Enabled toggles:", enabledToggles, "Type:", typeof enabledToggles[0
                   <div>
                     <div className="flex gap-5 flex-wrap">
                       {Object.entries(documentTypeMap).map(([enumValue, displayName]) => (
-                        <div key={enumValue} className="flex items-center gap-2 p-2 pl-2 pr-2 mb-2 bg-white rounded-lg border whitespace-nowrap">
+                        <div key={enumValue} className="flex items-center gap-2 p-2  bg-white rounded-lg border whitespace-nowrap">
                           <Checkbox 
                             checked={selectedDocumentTypes.includes(parseInt(enumValue))}
                             onCheckedChange={() => handleDocumentTypeToggle(parseInt(enumValue))}
@@ -722,7 +722,7 @@ console.log("Enabled toggles:", enabledToggles, "Type:", typeof enabledToggles[0
                       ))}
                     </div>
 
-                    <Button variant="primary" className="w-auto px-4 py-2 rounded-lg">
+                    <Button variant="primary" className="w-auto mt-4  rounded-lg">
                       <PlusIcon className="w-4 h-4 mr-2" />
                       Custom File Upload
                     </Button>
