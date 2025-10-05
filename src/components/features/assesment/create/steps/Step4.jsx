@@ -38,6 +38,7 @@ import { useUsers } from "@/api/users/users";
 import UserAvatarBadge from "@/components/common/UserAvatarBadge";
 
 
+
 // Video file MIME types and extensions
 const VIDEO_MIME_TYPES = ['video/mp4', 'video/webm', 'video/mov', 'video/avi', 'video/wmv', 'video/flv', 'video/mkv', 'video/m4v', 'video/3gp'];
 const VIDEO_EXTENSIONS = ['.mp4', '.webm', '.mov', '.avi', '.wmv', '.flv', '.mkv', '.m4v', '.3gp'];
@@ -65,7 +66,7 @@ const Step4 = () => {
   const [testLibraryOpen, setTestLibraryOpen] = useState(false);
 
   // Toggle state variables
-  const [ishowResultsToCandidatesEnabled, setshowResultsToCandidatesEnabled] = useState(false);
+  const [isshowResultsToCandidatesEnabled, setshowResultsToCandidatesEnabled] = useState(false);
   const [isaddIntroVideoEnabled, setAddIntroVideoEnabled] = useState(false);
   const [uploadedFile, setUploadedFile] = useState(null);
   const [fileError, setFileError] = useState("");
@@ -78,16 +79,17 @@ const Step4 = () => {
 
   const documentTypeMap = useAssessmentDocumentTypeMap();
   const domainRestrictionTypeMap = useDomainRestrictionTypeMap();
+
   // State variables for date/time
   const [startDate, setStartDate] = useState(null);
   const [endDate, setEndDate] = useState(null);
   const [extraTime, setExtraTime] = useState(0);
 
-  // state variables
+  // state variables for video link and document types
   const [videoLinkValue, setVideoLinkValue] = useState("");
   const [selectedDocumentTypes, setSelectedDocumentTypes] = useState([]);
 
-  // Add handlers for document checkboxes
+  // handlers for document checkboxes
   const handleDocumentTypeToggle = (docType) => {
     setSelectedDocumentTypes(prev => {
       if (prev.includes(docType)) {
@@ -150,7 +152,11 @@ const Step4 = () => {
       
       // Load missing fields with correct backend field names
       setAddIntroVideoEnabled(assessment?.intro_screen ? true : false);
-      setVideoLinkValue(assessment?.intro_screen || "");
+      setVideoLinkValue(
+        assessment?.intro_screen?.video_url || 
+        (typeof assessment?.intro_screen === 'string' ? assessment.intro_screen : "") || 
+        ""
+      );
       setSelectedDocumentTypes(assessment?.collect_document_types || []);
       setSelectedUsers(assessment?.moderators || []);
     }
@@ -232,7 +238,7 @@ const Step4 = () => {
   ], []);
 
   // Initialize React Hook Form
-  const { control, handleSubmit, watch, setValue } = useForm({
+  const { control } = useForm({
     defaultValues: {
       extraTime: 10, // Default value for extra time
     }
@@ -253,19 +259,19 @@ const Step4 = () => {
       const sections = tabs.map(tab => document.getElementById(tab.id));
       const scrollPosition = window.scrollY + 100; // Offset for better detection
 
-      // Find which section is currently in view
-      for (let i = sections.length - 1; i >= 0; i--) {
-        const section = sections[i];
-        if (section) {
-          const sectionTop = section.offsetTop;
-          const sectionBottom = sectionTop + section.offsetHeight;
-          
-          if (scrollPosition >= sectionTop && scrollPosition < sectionBottom) {
-            setActiveTab(tabs[i].id);
-            break;
-          }
+// Find which section is currently in view
+    for (let i = sections.length - 1; i >= 0; i--) {
+      const section = sections[i];
+      if (section) {
+        const sectionTop = section.offsetTop;
+        const sectionBottom = sectionTop + section.offsetHeight;
+        
+        if (scrollPosition >= sectionTop && scrollPosition < sectionBottom) {
+          setActiveTab(tabs[i].id);
+          break;
         }
       }
+    }
     };
 
     // Add scroll event listener
@@ -345,6 +351,12 @@ const Step4 = () => {
   const removeUploadedFile = () => {
     setUploadedFile(null);
     setFileError("");
+    
+    // Reset the file input value to allow re-uploading the same file
+    const fileInput = document.getElementById('video-upload');
+    if (fileInput) {
+      fileInput.value = '';
+    }
   };
 
   // Add a function to handle video link input changes
@@ -360,93 +372,162 @@ const Step4 = () => {
   // Form submission handler
   const handleFormSubmit = async () => {
     try {
-    
-        // Use resolveEnum to get the correct enum values for proctor settings
-    const enabledToggles = {};
-    Object.keys(proctoringSettings).forEach(key => {
-      if (proctoringSettings[key] === true) {
-        const enumValue = proctorSettingsMap[key];
-        console.log(`Proctor setting ${key}:`, enumValue, typeof enumValue); // Debug log
-        if (enumValue !== null && enumValue !== undefined) {
-          // Ensure the value is a number, not a string
-          const numericValue = typeof enumValue === 'string' ? parseInt(enumValue, 10) : enumValue;
-          if (!isNaN(numericValue)) {
-            enabledToggles[numericValue.toString()] = true;
+      // Use resolveEnum to get the correct enum values for proctor settings
+      const enabledToggles = {};
+      Object.keys(proctoringSettings).forEach(key => {
+        if (proctoringSettings[key] === true) {
+          const enumValue = proctorSettingsMap[key];
+          if (enumValue !== null && enumValue !== undefined) {
+            const numericValue = typeof enumValue === 'string' ? parseInt(enumValue, 10) : enumValue;
+            if (!isNaN(numericValue)) {
+              enabledToggles[numericValue.toString()] = true;
+            }
           }
         }
-      }
-    });
+      });
 
-console.log("Enabled toggles:", enabledToggles, "Type:", typeof enabledToggles[0]); // Debug log
-      // Prepare data for API
-      const apiData = {
-        // Essential Settings
-        description: assessmentDescription,
-        email_candidate_results: ishowResultsToCandidatesEnabled,
-        enable_collect_documents: iscollectCandidateDocumentsEnabled,
+      // Check if we need to send FormData (when there's a file upload)
+      const hasFileUpload = isaddIntroVideoEnabled && uploadedFile;
+      
+      if (hasFileUpload) {
+        // Send as FormData for file uploads
+        const formData = new FormData();
         
-        // Intro Video
-        intro_screen: isaddIntroVideoEnabled ? (videoLinkValue || (uploadedFile ? uploadedFile.name : null)) : null,
+        // Essential Settings
+        formData.append('description', assessmentDescription || '');
+        formData.append('email_candidate_results', isshowResultsToCandidatesEnabled);
+        formData.append('enable_collect_documents', iscollectCandidateDocumentsEnabled);
+        
+        // Intro Video - only send if toggle is enabled
+        if (isaddIntroVideoEnabled) {
+          formData.append('intro_screen[video]', uploadedFile);
+          formData.append('intro_screen[id]', assessment?.intro_screen?.id || '');
+          formData.append('intro_screen[screen_type]', '0');
+        }
         
         // Assessment Validity
-        enable_time_restrictions: isAssessmentStartDateEnabled,
-        start_date: startDate,
-        end_date: endDate,
+        formData.append('enable_time_restrictions', isAssessmentStartDateEnabled);
+        if (startDate) formData.append('start_date', startDate.toISOString());
+        if (endDate) formData.append('end_date', endDate.toISOString());
         
         // Domain Restrictions
-        enable_domain_restrictions: isdomainRestrictionEnabled,
-        domain_restriction_type: status === "allow" ? 0 : 1,
-        domain_restrictions: domains,
+        formData.append('enable_domain_restrictions', isdomainRestrictionEnabled);
+        formData.append('domain_restriction_type', status === "allow" ? '0' : '1');
+        domains.forEach(domain => formData.append('domain_restrictions[]', domain));
         
         // Team Access
-        moderators: selectedUsers.map(user => user.id),
+        selectedUsers.forEach(user => formData.append('moderators[]', user.id));
         
         // Document Collection
-        collect_document_types: selectedDocumentTypes,
-        
+        selectedDocumentTypes.forEach(docType => formData.append('collect_document_types[]', docType));
         
         // Proctoring Settings
-        proctor_settings: {
-          settings: enabledToggles
-        },
-
-       
+        Object.keys(enabledToggles).forEach(key => {
+          formData.append(`proctor_settings[settings][${key}]`, 'true');
+        });
+        
         // Legal Settings
-        enable_accomadation_for_disabled: legalSettings.concentrationMemoryImpairments,
-        enable_accomadation_for_nonenglish: legalSettings.nonFluentEnglishSpeakers,
-        extra_time_percentage_for_tests: extraTime || 0
-      };
+        formData.append('enable_accomadation_for_disabled', legalSettings.concentrationMemoryImpairments);
+        formData.append('enable_accomadation_for_nonenglish', legalSettings.nonFluentEnglishSpeakers);
+        formData.append('extra_time_percentage_for_tests', extraTime || 0);
 
-      console.log("Sending data:", apiData);
+        // API method
+        await updateAssessment({
+          assessmentId: assessment?.id,
+          data: formData
+        });
 
-      await updateAssessment({
-        assessmentId: assessment?.id,
-        data: apiData
-      });
+      } else {
+        // Send as JSON when there's no file upload
+        const apiData = {
+          // Essential Settings
+          description: assessmentDescription,
+          email_candidate_results: isshowResultsToCandidatesEnabled,
+          enable_collect_documents: iscollectCandidateDocumentsEnabled,
+          
+          // Assessment Validity
+          enable_time_restrictions: isAssessmentStartDateEnabled,
+          start_date: startDate,
+          end_date: endDate,
+          
+          // Domain Restrictions
+          enable_domain_restrictions: isdomainRestrictionEnabled,
+          domain_restriction_type: status === "allow" ? 0 : 1,
+          domain_restrictions: domains,
+          
+          // Team Access
+          moderators: selectedUsers.map(user => user.id),
+          
+          // Document Collection
+          collect_document_types: selectedDocumentTypes,
+          
+          // Proctoring Settings
+          proctor_settings: {
+            settings: enabledToggles
+          },
+          
+          // Legal Settings
+          enable_accomadation_for_disabled: legalSettings.concentrationMemoryImpairments,
+          enable_accomadation_for_nonenglish: legalSettings.nonFluentEnglishSpeakers,
+          extra_time_percentage_for_tests: extraTime || 0
+        };
+
+        // Only add intro_screen if toggle is enabled
+        if (isaddIntroVideoEnabled) {
+          apiData.intro_screen = {
+            id: assessment?.intro_screen?.id || null,
+            screen_type: 0,
+            video_url: videoLinkValue || null,
+            video: null,
+            content: null,
+            logo: null
+          };
+        }
+
+        await updateAssessment({
+          assessmentId: assessment?.id,
+          data: apiData
+        });
+      }
 
       toast.success("Assessment settings saved successfully!");
       
     } catch (error) {
-      console.error("Error:", error.response?.data);
-      toast.error("Failed to save settings. Please try again.");
+      console.error("Error:", error);
+      console.error("Error response:", error.response?.data);
+      console.error("Error status:", error.response?.status);
+      console.error("Error headers:", error.response?.headers);
+      
+      // Log the specific intro_screen error
+      if (error.response?.data?.intro_screen) {
+        console.error("Intro screen error:", error.response.data.intro_screen);
+      }
+      
+      const errorMessage = error.response?.data?.message || 
+                          error.response?.data?.error || 
+                          error.message || 
+                          "Failed to save settings. Please try again.";
+      
+      toast.error(errorMessage);
     }
   };
 
-  // Add this state variable near the other state declarations (around line 56)
+  // Domain management state - tracks new domain input for adding to restrictions list
   const [newDomain, setNewDomain] = useState("");
 
-  // Add this function near the removeDomain function (around line 278)
+  // Add new domain to the restrictions list if it's valid and not already present
   const addDomain = () => {
     if (newDomain.trim() && !domains.includes(newDomain.trim())) {
       setDomains([...domains, newDomain.trim()]);
-      setNewDomain("");
+      setNewDomain(""); // Clear input after successful addition
     }
   };
 
+  // Handle Enter key press in domain input field to trigger domain addition
   const handleDomainKeyPress = (e) => {
     if (e.key === 'Enter') {
-      e.preventDefault();
-      addDomain();
+      e.preventDefault(); // Prevent form submission
+      addDomain(); // Add domain and clear input
     }
   };
 
@@ -586,7 +667,7 @@ console.log("Enabled toggles:", enabledToggles, "Type:", typeof enabledToggles[0
               <div className="bg-backgroundPrimary rounded-2xl p-4 border">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    <CustomToggleSwitch checked={ishowResultsToCandidatesEnabled} onCheckedChange={setshowResultsToCandidatesEnabled} />
+                    <CustomToggleSwitch checked={isshowResultsToCandidatesEnabled} onCheckedChange={setshowResultsToCandidatesEnabled} />
                     <h3 className="text-lg font-semibold text-gray-900">Show results to candidates</h3>
                   </div>
                   <Button className="rounded-full px-4 py-2 text-sm bg-purpleUpgrade text-black border-purplePrimary">
