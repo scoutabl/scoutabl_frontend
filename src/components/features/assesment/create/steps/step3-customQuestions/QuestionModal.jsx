@@ -38,6 +38,26 @@ import Assesment from '../../../Assesment';
 import { getValidationSchema } from './schema/CreateQuestionValidationSchema';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { cn } from '@/lib/utils';
+
+// Question type placeholders
+const QUESTION_TYPE_PLACEHOLDERS = {
+    'single-select': 'Select the correct answer from the options below.',
+    'multiple-select': 'Select all correct answers from the options below.',
+    'rating': 'Please rate the following on a scale of 1-5.',
+    'numeric-input': 'Enter the correct numerical value.',
+    'essay': 'Please provide a detailed written response to the following question.',
+    'video': 'Record a video response to the following question.',
+    'audio': 'Record an audio response to the following question.',
+    'rearrange': 'Rearrange the following items in the correct order.',
+    'code': 'Write code to solve the following problem.',
+    'coding': 'Write code to solve the following problem.'
+};
+
+// Helper function to get placeholder for question type
+const getPlaceholderForQuestionType = (questionType) => {
+    return QUESTION_TYPE_PLACEHOLDERS[questionType] || 'Enter your question here.';
+};
+
 const DEFAULT_SINGLE_SELECT_ANSWERS = [
     { answerId: 1, text: 'Yes' },
     { answerId: 2, text: 'No' },
@@ -273,7 +293,7 @@ const QuestionModal = memo(({
     trigger,
     questionType,
     setQuestionType,
-    initialQuestion = "Rearrange the following words to form a grammatically correct and meaningful sentence",
+    initialQuestion = "",
     onSave,
     initialData = {},
     isOpen,
@@ -565,7 +585,12 @@ const QuestionModal = memo(({
                             </div>
 
                             <div className="flex-1">
-                                <RichTextEditor content={watchedValues.post} onChange={handleTextEditorChange} wordCountToggle={false} />
+                                <RichTextEditor 
+                                    content={watchedValues.post} 
+                                    onChange={handleTextEditorChange} 
+                                    wordCountToggle={false}
+                                    placeholder={getPlaceholderForQuestionType(questionType)}
+                                />
                             </div>
                         </div>
                         <FormProvider {...form}>

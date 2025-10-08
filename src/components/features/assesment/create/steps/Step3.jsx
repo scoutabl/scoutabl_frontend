@@ -131,7 +131,7 @@ const Step3 = () => {
         initialData={modalInitialData}
         questionType={modalQuestionType}
         setQuestionType={setModalQuestionType}
-        asssessmentId={assessment?.id}
+        assessmentId={assessment?.id}
       />
 
       <EditAssessmentQuestionsPopup 

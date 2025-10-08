@@ -211,3 +211,122 @@ export const useDuplicateQuestion = (assessmentId) => {
     }
   });
 };
+
+// New API methods
+
+// Delete question permanently
+const deleteQuestion = async (questionId) => {
+  const accessToken = sessionStorage.getItem('accessToken') || localStorage.getItem('accessToken');
+  const { data } = await axios.delete(`${BASE_API_URL}/questions/${questionId}/`, {
+    headers: {
+      'Authorization': accessToken ? `Bearer ${accessToken}` : '',
+    },
+  });
+  return data;
+};
+
+export const useDeleteQuestion = (assessmentId) => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: deleteQuestion,
+    onSuccess: () => {
+      queryClient.invalidateQueries(['assessment-questions', assessmentId]);
+      queryClient.invalidateQueries(['questions']);
+      toast.success('Question deleted successfully');
+    },
+    onError: () => {
+      toast.error('Failed to delete question');
+    }
+  });
+};
+
+// Get questions filtered by type
+const getQuestionsByType = async (questionType, params = {}) => {
+  const accessToken = sessionStorage.getItem('accessToken') || localStorage.getItem('accessToken');
+  const queryParams = new URLSearchParams({
+    question_type: questionType,
+    ...params
+  });
+  
+  const { data } = await axios.get(`${BASE_API_URL}/questions/?${queryParams}`, {
+    headers: {
+      'Authorization': accessToken ? `Bearer ${accessToken}` : '',
+    },
+  });
+  return data;
+};
+
+export const useQuestionsByType = (questionType, params = {}) => {
+  return useQuery({
+    queryKey: ['questions', 'by-type', questionType, params],
+    queryFn: () => getQuestionsByType(questionType, params),
+    enabled: !!questionType,
+  });
+};
+
+// Get all questions for a specific assessment
+const getQuestionsByAssessment = async (assessmentId, params = {}) => {
+  const accessToken = sessionStorage.getItem('accessToken') || localStorage.getItem('accessToken');
+  const queryParams = new URLSearchParams({
+    assessment_id: assessmentId,
+    ...params
+  });
+  
+  const { data } = await axios.get(`${BASE_API_URL}/questions/?${queryParams}`, {
+    headers: {
+      'Authorization': accessToken ? `Bearer ${accessToken}` : '',
+    },
+  });
+  return data;
+};
+
+export const useQuestionsByAssessment = (assessmentId, params = {}) => {
+  return useQuery({
+    queryKey: ['questions', 'by-assessment', assessmentId, params],
+    queryFn: () => getQuestionsByAssessment(assessmentId, params),
+    enabled: !!assessmentId,
+  });
+};
+
+// Search questions by title/content
+const searchQuestions = async (searchTerm, params = {}) => {
+  const accessToken = sessionStorage.getItem('accessToken') || localStorage.getItem('accessToken');
+  const queryParams = new URLSearchParams({
+    search: searchTerm,
+    ...params
+  });
+  
+  const { data } = await axios.get(`${BASE_API_URL}/questions/?${queryParams}`, {
+    headers: {
+      'Authorization': accessToken ? `Bearer ${accessToken}` : '',
+    },
+  });
+  return data;
+};
+
+export const useSearchQuestions = (searchTerm, params = {}) => {
+  return useQuery({
+    queryKey: ['questions', 'search', searchTerm, params],
+    queryFn: () => searchQuestions(searchTerm, params),
+    enabled: !!searchTerm && searchTerm.length > 2, // Only search if term is longer than 2 chars
+  });
+};
+
+// Get question statistics/analytics
+const getQuestionStats = async (questionId) => {
+  const accessToken = sessionStorage.getItem('accessToken') || localStorage.getItem('accessToken');
+  const { data } = await axios.get(`${BASE_API_URL}/questions/${questionId}/stats/`, {
+    headers: {
+      'Authorization': accessToken ? `Bearer ${accessToken}` : '',
+    },
+  });
+  return data;
+};
+
+export const useQuestionStats = (questionId) => {
+  return useQuery({
+    queryKey: ['question-stats', questionId],
+    queryFn: () => getQuestionStats(questionId),
+    enabled: !!questionId,
+  });
+};
