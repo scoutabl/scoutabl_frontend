@@ -120,11 +120,13 @@ const Step3 = () => {
         assessmentId={assessment?.id} 
         questionType="custom"
         onEdit={handleEdit} 
+        onAddQuestion={() => handleAdd('single-select')} // Default question type for "Add Question" button
+        onAddFromLibrary={handleAddFromLibrary}
       />
 
       {/* Add / Edit modal */}
       <QuestionModal
-      key={modalMode + (modalInitialData?.id || "")}
+        key={modalMode + (modalInitialData?.id || "")}
         isOpen={modalOpen}
         setIsOpen={setModalOpen}
         mode={modalMode}

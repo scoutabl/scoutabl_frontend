@@ -3,7 +3,24 @@ import { Editor } from '@monaco-editor/react';
 import SimpleCodeNavbar from './SimpleCodeNavbar';
 
 export default function SimpleCodeEditor({ value, onChange, height = 350, languages, loading }) {
-    const [selectedLang, setSelectedLang] = useState(languages && languages.length > 0 ? languages[0] : null);
+    const [selectedLang, setSelectedLang] = useState(() => {
+        // Better initialization with fallback
+        if (languages && languages.length > 0) {
+            return languages[0];
+        }
+        return null;
+    });
+
+    // Add a safety check for the entire component
+    if (!languages || languages.length === 0) {
+        return (
+            <div className='flex flex-col gap-4'>
+                <div className='text-center text-gray-500 py-8'>
+                    No programming languages available
+                </div>
+            </div>
+        );
+    }
 
     const monacoLanguageMap = {
         python3: 'python',
@@ -29,40 +46,29 @@ export default function SimpleCodeEditor({ value, onChange, height = 350, langua
                 setSelectedLang={setSelectedLang}
                 loading={loading}
             />
-            <div className='px-6 py-8 rounded-5xl border border-seperatorPrimary h-[394px] w-full'>
+            <div className='border border-gray-300 rounded-lg overflow-hidden'>
                 <Editor
-                    key={selectedLang ? selectedLang.name : 'editor'}
-                    height='100%'
-                    width='100%'
-                    language={
-                        selectedLang && selectedLang.name
-                            ? monacoLanguageMap[selectedLang.name.toLowerCase().replace(/ /g, '')] || 'plaintext'
-                            : 'plaintext'
-                    }
-                    value={
-                        selectedLang && selectedLang.name && value
-                            ? value[selectedLang.name] || ''
-                            : ''
-                    }
-                    onChange={code => {
-                        if (selectedLang && selectedLang.name) {
-                            onChange({ ...value, [selectedLang.name]: code });
-                        }
-                    }}
+                    height={height}
+                    language={selectedLang ? monacoLanguageMap[selectedLang.name] || 'javascript' : 'javascript'}
+                    value={value}
+                    onChange={onChange}
+                    theme="vs-dark"
                     options={{
                         minimap: { enabled: false },
+                        scrollBeyondLastLine: false,
                         fontSize: 14,
                         lineNumbers: 'on',
-                        roundedSelection: false,
-                        scrollBeyondLastLine: false,
-                        fixedOverflowWidgets: true,
+                        wordWrap: 'on',
                     }}
                 />
             </div>
             <div className='flex flex-col gap-1'>
-                {/* should be dynamic */}
-                <span className='text-xs font-normal text-greyPrimary'>File extension: {selectedLang.fileExtension}</span>
-                <span className='text-xs font-normal text-greyPrimary'>{`Run: node {file}`}</span>
+                <span className='text-xs font-normal text-greyPrimary'>
+                    File extension: {selectedLang?.fileExtension || 'N/A'}
+                </span>
+                <span className='text-xs font-normal text-greyPrimary'>
+                    {`Run: node {file}`}
+                </span>
             </div>
         </div>
     );

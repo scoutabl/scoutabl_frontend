@@ -15,6 +15,7 @@ import { useEnums } from "@/context/EnumsContext";
 import Dropdown from "../ui/dropdown";
 import PaginatedScroll from "./PaginatedScroll";
 import { getQuestionType } from "@/lib/questionTypes";
+import { useQueryClient } from '@tanstack/react-query';
 
 const EditAssessmentQuestions = ({ questionType = "custom" }) => {
   /***************************************************************************
@@ -25,6 +26,7 @@ const EditAssessmentQuestions = ({ questionType = "custom" }) => {
   const { platformLibraryId, organisationLibraryId } = useBootstrap();
   const { data: allTags } = useAllTags();
   const { resolveEnum } = useEnums();
+  const queryClient = useQueryClient();
 
   // Determine which fields to use based on questionType
   const isCustom = questionType === "custom";
@@ -105,6 +107,9 @@ const EditAssessmentQuestions = ({ questionType = "custom" }) => {
       assessmentId: assessment.id,
       data: updateData,
     });
+
+    // Invalidate the assessment-questions query to force a refetch
+    queryClient.invalidateQueries(['assessment-questions', assessment.id]);
   };
 
   /***************************************************************************

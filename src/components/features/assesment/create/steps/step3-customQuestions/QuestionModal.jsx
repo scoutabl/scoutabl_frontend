@@ -33,11 +33,13 @@ import ReusableAnswer from './ReusableAnswer';
 import AiIcon from '@/assets/AiIcon.svg?react'
 import RichTextEditor from '@/components/RichTextEditor';
 import { toast } from 'sonner';
-import { useAddQuestion, useUpdateQuestion } from '@/api/createQuestion';
+import { useAssessmentContext } from "@/components/common/AssessmentNavbarWrapper";
+import { createQuestion } from "@/api/createQuestion";
 import Assesment from '../../../Assesment';
 import { getValidationSchema } from './schema/CreateQuestionValidationSchema';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { cn } from '@/lib/utils';
+import { useQueryClient } from '@tanstack/react-query';
 
 // Question type placeholders
 const QUESTION_TYPE_PLACEHOLDERS = {
@@ -57,33 +59,6 @@ const QUESTION_TYPE_PLACEHOLDERS = {
 const getPlaceholderForQuestionType = (questionType) => {
     return QUESTION_TYPE_PLACEHOLDERS[questionType] || 'Enter your question here.';
 };
-
-const DEFAULT_SINGLE_SELECT_ANSWERS = [
-    { answerId: 1, text: 'Yes' },
-    { answerId: 2, text: 'No' },
-];
-
-const DEFAULT_MULTIPLE_SELECT_ANSWERS = [
-    { id: 1, text: 'Javascript' },
-    { id: 2, text: 'C++' }
-];
-
-// Toggle handlers with proper form state management
-const handleToggleCompulsory = (checked) => {
-    setValue('isCompulsory', checked, { shouldValidate: true });
-};
-
-const handleToggleSaveToLibrary = (checked) => {
-    setValue('saveToLibrary', checked, { shouldValidate: true });
-};
-
-
-
-const DEFAULT_REARRANGE_OPTIONS = [
-    { id: 1, text: 'runs' },
-    { id: 2, text: 'quickly' },
-    { id: 3, text: 'dog' },
-]
 
 function convertHHMMSSToMinutes(hhmmss) {
     if (!hhmmss) return 120; // fallback
@@ -188,12 +163,12 @@ const useQuestionForm = (initialData, initialQuestion, mode, isOpen, questionTyp
             selectedRating: initialData.selectedRating || null,
             correctAnswer: initialData.value || 250,
             numericCondition: initialData.condition?.toString() || '2',
-            singleSelectAnswers: DEFAULT_SINGLE_SELECT_ANSWERS,
-            multipleSelectAnswers: DEFAULT_MULTIPLE_SELECT_ANSWERS,
+            singleSelectAnswers: [],
+            multipleSelectAnswers: [],
             rearrangeOrder: initialData.correct_order || [],
             rearrangeOptions: initialData.options
                 ? [...initialData.options].sort((a, b) => a.correct_order - b.correct_order)
-                : DEFAULT_REARRANGE_OPTIONS,
+                : [],
             shuffleEnabled: false,
             relevance_context: initialData.relevance_context || '',
             look_for_context: initialData.look_for_context || '',
@@ -294,7 +269,6 @@ const QuestionModal = memo(({
     questionType,
     setQuestionType,
     initialQuestion = "",
-    onSave,
     initialData = {},
     isOpen,
     setIsOpen,
@@ -303,12 +277,27 @@ const QuestionModal = memo(({
 }) => {
     const form = useQuestionForm(initialData, initialQuestion, mode, isOpen, questionType)
     const { handleSubmit, control, watch, setValue, formState: { errors, isValid } } = form;
-    const addQuestionMutation = useAddQuestion(assessmentId, () => { setIsOpen(false); });
-    const updateQuestionMutation = useUpdateQuestion(assessmentId, () => { setIsOpen(false); });
+    const { assessment, updateAssessment } = useAssessmentContext();
     const isEdit = mode === 'edit';
+    
+    // Add state variables for toggles
+    const [isCompulsoryEnabled, setIsCompulsoryEnabled] = useState(initialData.is_compulsory || false);
+    const [isSaveToLibraryEnabled, setIsSaveToLibraryEnabled] = useState(initialData.is_save_template || false);
+    
     // Use watch to get current form values
     const watchedValues = watch();
     const inputRefs = useRef([]);
+
+    // Toggle handlers component
+    const handleToggleCompulsory = (checked) => {
+        setIsCompulsoryEnabled(checked);
+        setValue('isCompulsory', checked, { shouldValidate: true });
+    };
+
+    const handleToggleSaveToLibrary = (checked) => {
+        setIsSaveToLibraryEnabled(checked);
+        setValue('saveToLibrary', checked, { shouldValidate: true });
+    };
 
     // RichTextEditor integration with react-hook-form
     const handleTextEditorChange = (content) => {
@@ -329,17 +318,363 @@ const QuestionModal = memo(({
 
     const onSubmit = (data) => {
         console.log("Form data before submit:", data);
-        console.log("shuffleEnabled in form data:", data.shuffleEnabled);
 
         const mins = parseInt(data.timeToAnswer, 10) || 0;
         const completion_time = `00:${String(mins).padStart(2, '0')}:00`;
 
-        let choices = [];
-        let multiple_true = false;
+        // For single-select questions
+        if (questionType === 'single-select') {
+            const choices = data.singleSelectAnswers.map(opt => ({
+                text: opt.text,
+                is_correct: String(opt.answerId) === String(data.selectedAnswer)
+            }));
 
-        //coding question payload
+            const payload = {
+                resourcetype: "MCQuestion",
+                completion_time,
+                save_template: data.saveToLibrary,
+                shuffle_options: !!data.shuffleEnabled,
+                title: data.post,
+                multiple_true: false,
+                custom_score: Number(data.customScore),
+                is_compulsory: data.isCompulsory,
+                choices
+            };
+
+            // Create the question first
+            createQuestion(payload).then(questionData => {
+                // Then add it to the assessment using the same pattern as "Add from Library"
+                const currentQuestions = assessment?.custom_questions || [];
+                const currentOrder = assessment?.custom_questions_order || [];
+                
+                const updateData = {
+                    custom_questions: [...currentQuestions, questionData.id],
+                    custom_questions_order: [
+                        ...currentOrder.filter((id) => id !== questionData.id),
+                        questionData.id,
+                    ],
+                };
+
+                updateAssessment({
+                    assessmentId: assessment.id,
+                    data: updateData,
+                }).then(() => {
+                    // Invalidate the assessment-questions query to force a refetch
+                    queryClient.invalidateQueries(['assessment-questions', assessmentId]);
+                    setIsOpen(false); // Close modal after successful update
+                });
+            }).catch(error => {
+                toast.error('Failed to save question.');
+            });
+            return;
+        }
+
+        // For multiple-select questions
+        if (questionType === 'multiple-select') {
+            const choices = data.multipleSelectAnswers.map(opt => ({
+                text: opt.text,
+                is_correct: data.selectedAnswers.map(String).includes(String(opt.id))
+            }));
+
+            const payload = {
+                resourcetype: "MCQuestion",
+                completion_time,
+                save_template: data.saveToLibrary,
+                shuffle_options: !!data.shuffleEnabled,
+                title: data.post,
+                multiple_true: true,
+                custom_score: Number(data.customScore),
+                is_compulsory: data.isCompulsory,
+                choices
+            };
+
+            // Create the question first
+            createQuestion(payload).then(questionData => {
+                // Then add it to the assessment using 
+                const currentQuestions = assessment?.custom_questions || [];
+                const currentOrder = assessment?.custom_questions_order || [];
+                
+                const updateData = {
+                    custom_questions: [...currentQuestions, questionData.id],
+                    custom_questions_order: [
+                        ...currentOrder.filter((id) => id !== questionData.id),
+                        questionData.id,
+                    ],
+                };
+
+                updateAssessment({
+                    assessmentId: assessment.id,
+                    data: updateData,
+                }).then(() => {
+                    // Invalidate the assessment-questions query to force a refetch
+                    queryClient.invalidateQueries(['assessment-questions', assessmentId]);
+                    setIsOpen(false); // Close modal after successful update
+                });
+            }).catch(error => {
+                toast.error('Failed to save question.');
+            });
+            return;
+        }
+
+        // For numeric-input questions
+        if (questionType === 'numeric-input') {
+            const payload = {
+                resourcetype: "NumberQuestion",
+                completion_time,
+                save_template: data.saveToLibrary,
+                title: data.post,
+                content: data.post,
+                value: data.correctAnswer,
+                condition: data.numericCondition,
+                custom_score: Number(data.customScore),
+                is_compulsory: data.isCompulsory,
+            };
+
+            // Create the question first
+            createQuestion(payload).then(questionData => {
+                // Then add it to the assessment using the same pattern as "Add from Library"
+                const currentQuestions = assessment?.custom_questions || [];
+                const currentOrder = assessment?.custom_questions_order || [];
+                
+                const updateData = {
+                    custom_questions: [...currentQuestions, questionData.id],
+                    custom_questions_order: [
+                        ...currentOrder.filter((id) => id !== questionData.id),
+                        questionData.id,
+                    ],
+                };
+
+                updateAssessment({
+                    assessmentId: assessment.id,
+                    data: updateData,
+                }).then(() => {
+                    // Invalidate the assessment-questions query to force a refetch
+                    queryClient.invalidateQueries(['assessment-questions', assessmentId]);
+                    setIsOpen(false); // Close modal after successful update
+                });
+            }).catch(error => {
+                toast.error('Failed to save question.');
+            });
+            return;
+        }
+
+        // For rating questions
+        if (questionType === 'rating') {
+            const payload = {
+                resourcetype: "RatingQuestion",
+                completion_time,
+                save_template: data.saveToLibrary,
+                title: data.post,
+                content: data.post,
+                rating_scale: data.ratingScale,
+                custom_score: Number(data.customScore),
+                is_compulsory: data.isCompulsory,
+            };
+
+            // Create the question first
+            createQuestion(payload).then(questionData => {
+                // Then add it to the assessment using the same pattern as "Add from Library"
+                const currentQuestions = assessment?.custom_questions || [];
+                const currentOrder = assessment?.custom_questions_order || [];
+                
+                const updateData = {
+                    custom_questions: [...currentQuestions, questionData.id],
+                    custom_questions_order: [
+                        ...currentOrder.filter((id) => id !== questionData.id),
+                        questionData.id,
+                    ],
+                };
+
+                updateAssessment({
+                    assessmentId: assessment.id,
+                    data: updateData,
+                }).then(() => {
+                    // Invalidate the assessment-questions query to force a refetch
+                    queryClient.invalidateQueries(['assessment-questions', assessmentId]);
+                    setIsOpen(false); // Close modal after successful update
+                });
+            }).catch(error => {
+                toast.error('Failed to save question.');
+            });
+            return;
+        }
+
+        // For rearrange questions
+        if (questionType === 'rearrange') {
+            const options = data.rearrangeOptions.map((opt, idx) => ({
+                text: opt.text,
+                question_order: idx,
+                correct_order: idx
+            }));
+
+            const payload = {
+                resourcetype: "RearrangeQuestion",
+                completion_time,
+                save_template: data.saveToLibrary,
+                title: data.post,
+                content: data.post,
+                shuffle_options: true,
+                custom_score: Number(data.customScore),
+                is_compulsory: data.isCompulsory,
+                options
+            };
+
+            // Create the question first
+            createQuestion(payload).then(questionData => {
+                // Then add it to the assessment using the same pattern as "Add from Library"
+                const currentQuestions = assessment?.custom_questions || [];
+                const currentOrder = assessment?.custom_questions_order || [];
+                
+                const updateData = {
+                    custom_questions: [...currentQuestions, questionData.id],
+                    custom_questions_order: [
+                        ...currentOrder.filter((id) => id !== questionData.id),
+                        questionData.id,
+                    ],
+                };
+
+                updateAssessment({
+                    assessmentId: assessment.id,
+                    data: updateData,
+                }).then(() => {
+                    // Invalidate the assessment-questions query to force a refetch
+                    queryClient.invalidateQueries(['assessment-questions', assessmentId]);
+                    setIsOpen(false); // Close modal after successful update
+                });
+            }).catch(error => {
+                toast.error('Failed to save question.');
+            });
+            return;
+        }
+
+        // For essay questions
+        if (questionType === 'essay') {
+            const payload = {
+                resourcetype: "EssayQuestion",
+                completion_time,
+                save_template: data.saveToLibrary,
+                content: data.title || '',
+                title: data.title,
+                relevance_context: data.relevance_context,
+                look_for_context: data.look_for_context,
+                custom_score: Number(data.customScore),
+                is_compulsory: data.isCompulsory,
+            };
+
+            // Create the question first
+            createQuestion(payload).then(questionData => {
+                // Then add it to the assessment using the same pattern as "Add from Library"
+                const currentQuestions = assessment?.custom_questions || [];
+                const currentOrder = assessment?.custom_questions_order || [];
+                
+                const updateData = {
+                    custom_questions: [...currentQuestions, questionData.id],
+                    custom_questions_order: [
+                        ...currentOrder.filter((id) => id !== questionData.id),
+                        questionData.id,
+                    ],
+                };
+
+                updateAssessment({
+                    assessmentId: assessment.id,
+                    data: updateData,
+                }).then(() => {
+                    // Invalidate the assessment-questions query to force a refetch
+                    queryClient.invalidateQueries(['assessment-questions', assessmentId]);
+                    setIsOpen(false); // Close modal after successful update
+                });
+            }).catch(error => {
+                toast.error('Failed to save question.');
+            });
+            return;
+        }
+
+        // For video questions
+        if (questionType === 'video') {
+            const payload = {
+                resourcetype: "VideoQuestion",
+                completion_time,
+                save_template: data.saveToLibrary,
+                content: data.title || '',
+                title: data.title,
+                relevance_context: data.relevance_context,
+                look_for_context: data.look_for_context,
+                custom_score: Number(data.customScore),
+                is_compulsory: data.isCompulsory,
+            };
+
+            // Create the question first
+            createQuestion(payload).then(questionData => {
+                // Then add it to the assessment using the same pattern as "Add from Library"
+                const currentQuestions = assessment?.custom_questions || [];
+                const currentOrder = assessment?.custom_questions_order || [];
+                
+                const updateData = {
+                    custom_questions: [...currentQuestions, questionData.id],
+                    custom_questions_order: [
+                        ...currentOrder.filter((id) => id !== questionData.id),
+                        questionData.id,
+                    ],
+                };
+
+                updateAssessment({
+                    assessmentId: assessment.id,
+                    data: updateData,
+                }).then(() => {
+                    // Invalidate the assessment-questions query to force a refetch
+                    queryClient.invalidateQueries(['assessment-questions', assessmentId]);
+                    setIsOpen(false); // Close modal after successful update
+                });
+            }).catch(error => {
+                toast.error('Failed to save question.');
+            });
+            return;
+        }
+
+        // For audio questions
+        if (questionType === 'audio') {
+            const payload = {
+                resourcetype: "AudioQuestion",
+                completion_time,
+                save_template: data.saveToLibrary,
+                content: data.title || '',
+                title: data.title,
+                relevance_context: data.relevance_context,
+                look_for_context: data.look_for_context,
+                custom_score: Number(data.customScore),
+                is_compulsory: data.isCompulsory,
+            };
+
+            // Create the question first
+            createQuestion(payload).then(questionData => {
+                // Then add it to the assessment using the same pattern as "Add from Library"
+                const currentQuestions = assessment?.custom_questions || [];
+                const currentOrder = assessment?.custom_questions_order || [];
+                
+                const updateData = {
+                    custom_questions: [...currentQuestions, questionData.id],
+                    custom_questions_order: [
+                        ...currentOrder.filter((id) => id !== questionData.id),
+                        questionData.id,
+                    ],
+                };
+
+                updateAssessment({
+                    assessmentId: assessment.id,
+                    data: updateData,
+                }).then(() => {
+                    // Invalidate the assessment-questions query to force a refetch
+                    queryClient.invalidateQueries(['assessment-questions', assessmentId]);
+                    setIsOpen(false); // Close modal after successful update
+                });
+            }).catch(error => {
+                toast.error('Failed to save question.');
+            });
+            return;
+        }
+
+        // For coding questions (keeping existing logic for now)
         if (questionType === 'coding') {
-            // Handle coding question submission
             const payload = {
                 resourcetype: 'CodingQuestion',
                 completion_time: data.customScore,
@@ -355,134 +690,109 @@ const QuestionModal = memo(({
                 test_cases: data.testCases,
                 enable_precision_check: data.enablePrecisionCheck,
                 disable_compile: data.disableCompile,
-                // ...add other coding-specific fields as needed
             };
 
-            if (isEdit) {
-                updateQuestionMutation.mutate({ questionId: initialData.id, payload });
-            } else {
-                addQuestionMutation.mutate(payload);
-            }
-            return;
-        }
-
-        if (questionType === 'multiple-select') {
-            choices = data.multipleSelectAnswers.map(opt => {
-                const choiceData = {
-                    text: opt.text,
-                    is_correct: data.selectedAnswers.map(String).includes(String(opt.id))
-                };
-
-                if (isEdit && initialData.choices?.some(c => String(c.id) === String(opt.id))) {
-                    choiceData.id = opt.id;
-                }
-
-                return choiceData;
-            });
-            multiple_true = true;
-        }
-        else if (questionType === 'single-select') {
-            choices = data.singleSelectAnswers.map(opt => {
-                const choiceData = {
-                    text: opt.text,
-                    is_correct: String(opt.answerId) === String(data.selectedAnswer)
-                };
-
-                // Only include id if it matches a backend id
-                const isBackendId = initialData.choices?.some(c => String(c.id) === String(opt.answerId));
-                if (isEdit && isBackendId) {
-                    choiceData.id = opt.answerId;
-                }
-
-                return choiceData;
-            });
-            multiple_true = false;
-        }
-        // Rest of your submission logic...
-        if (questionType === 'single-select' || questionType === 'multiple-select') {
-            const payload = {
-                resourcetype: "MCQuestion",
-                completion_time,
-                save_template: data.saveToLibrary,
-                shuffle_options: !!data.shuffleEnabled,
-                title: data.post,
-                multiple_true,
-                custom_score: Number(data.customScore),
-                is_compulsory: data.isCompulsory,
-                choices
-            };
-
-            if (isEdit) {
-                updateQuestionMutation.mutate({ questionId: initialData.id, payload });
-            } else {
-                addQuestionMutation.mutate(payload);
-            }
-            return;
-        }
-
-        //numeric-input payload
-        if (questionType === 'numeric-input') {
-            const payload = {
-                "resourcetype": "NumberQuestion",
-                completion_time,
-                "save_template": data.saveToLibrary,
-                "title": data.post,
-                "content": data.post,
-                "value": data.correctAnswer,
-                "condition": data.numericCondition
-            }
-            if (isEdit) {
-                updateQuestionMutation.mutate({ questionId: initialData.id, payload });
-            } else {
-                addQuestionMutation.mutate(payload);
-            }
-            return;
-        }
-        // hanlde rearrange quetion
-        if (questionType === 'rearrange') {
-            const options = data.rearrangeOptions.map((opt, idx) => ({
-                ...(mode === 'edit' && opt.id ? { id: opt.id } : {}),
-                text: opt.text,
-                question_order: idx,
-                correct_order: idx
-            }));
-
-            const payload = {
-                resourcetype: "RearrangeQuestion",
-                completion_time,
-                save_template: data.saveToLibrary,
-                title: data.post,
-                content: data.post,
-                shuffle_options: true,
-                options
-            };
-            if (isEdit) {
-                updateQuestionMutation.mutate({ questionId: initialData.id, payload });
-            } else {
-                addQuestionMutation.mutate(payload);
-            }
-            return;
-        }
-
-        if (['essay', 'video', 'audio'].includes(questionType)) {
-            const payload = {
-                resourcetype: questionType === 'essay' ? 'EssayQuestion' : questionType === 'video' ? 'VideoQuestion' : 'AudioQuestion',
-                completion_time,
-                save_template: data.saveToLibrary,
-                content: data.title || '', // If you have a content field, otherwise use title or another field
-                title: data.title,
-                relevance_context: data.relevance_context,
-                look_for_context: data.look_for_context,
-                // ...add other fields as needed
-            };
-            if (isEdit) {
-                updateQuestionMutation.mutate({ questionId: initialData.id, payload });
-            } else {
-                addQuestionMutation.mutate(payload);
-            }
             return;
         }
     };
+
+    // Helper function to prepare question data for local storage
+    const prepareQuestionData = (data) => {
+        const mins = parseInt(data.timeToAnswer, 10) || 0;
+        const completion_time = `00:${String(mins).padStart(2, '0')}:00`;
+
+        // Create a temporary ID for local storage
+        const tempId = initialData.id || `temp_${Date.now()}`;
+
+        const baseQuestion = {
+            id: tempId,
+            title: data.post,
+            completion_time,
+            custom_score: Number(data.customScore),
+            is_compulsory: data.isCompulsory,
+            save_template: data.saveToLibrary,
+            questionType: questionType,
+            __type: questionType,
+            isLocal: true,
+        };
+
+        // Add question type specific data
+        switch (questionType) {
+            case 'single-select':
+                return {
+                    ...baseQuestion,
+                    resourcetype: 'MCQuestion',
+                    multiple_true: false,
+                    choices: data.singleSelectAnswers.map(opt => ({
+                        id: opt.answerId,
+                        text: opt.text,
+                        is_correct: String(opt.answerId) === String(data.selectedAnswer)
+                    })),
+                    selectedAnswer: data.selectedAnswer
+                };
+            case 'multiple-select':
+                return {
+                    ...baseQuestion,
+                    resourcetype: 'MCQuestion',
+                    multiple_true: true,
+                    choices: data.multipleSelectAnswers.map(opt => ({
+                        id: opt.id,
+                        text: opt.text,
+                        is_correct: data.selectedAnswers.map(String).includes(String(opt.id))
+                    })),
+                    selectedAnswers: data.selectedAnswers
+                };
+            case 'numeric-input':
+                return {
+                    ...baseQuestion,
+                    resourcetype: 'NumberQuestion',
+                    value: data.correctAnswer,
+                    condition: data.numericCondition
+                };
+            case 'rearrange':
+                return {
+                    ...baseQuestion,
+                    resourcetype: 'RearrangeQuestion',
+                    options: data.rearrangeOptions.map((opt, idx) => ({
+                        id: opt.id || Date.now() + idx,
+                        text: opt.text,
+                        question_order: idx,
+                        correct_order: idx
+                    }))
+                };
+            case 'essay':
+            case 'video':
+            case 'audio':
+                return {
+                    ...baseQuestion,
+                    resourcetype: questionType === 'essay' ? 'EssayQuestion' : 
+                                 questionType === 'video' ? 'VideoQuestion' : 'AudioQuestion',
+                    relevance_context: data.relevance_context,
+                    look_for_context: data.look_for_context,
+                };
+            case 'code':
+                return {
+                    ...baseQuestion,
+                    resourcetype: 'CodingQuestion',
+                    content: data.question,
+                    difficulty: data.difficulty,
+                    input_formats: data.inputFormats,
+                    constraints: data.constraints,
+                    output_formats: data.outputFormats,
+                    tags: data.tags,
+                    selected_languages: data.selectedLanguages,
+                    code_stubs: data.codeStubs,
+                    test_cases: data.testCases,
+                    enable_precision_check: data.enablePrecisionCheck,
+                    disable_compile: data.disableCompile,
+                };
+            default:
+                return baseQuestion;
+        }
+    };
+
+    const queryClient = useQueryClient();
+
     const renderQuestionContent = useMemo(() => {
         switch (questionType) {
             case 'single-select':
@@ -540,9 +850,9 @@ const QuestionModal = memo(({
                     <DialogHeader className="max-h-9">
                         <DialogTitle className="flex items-center gap-2">
                             <span className="text-xl text-greyPrimary">New Question:</span>
-                            <Select value={questionType} onValueChange={setQuestionType}>
+                            <Select value={questionType || ''} onValueChange={setQuestionType}>
                                 <SelectTrigger className="w-[176px] text-sm bg-blueSecondary text-greyAccent">
-                                    <SelectValue />
+                                    <SelectValue placeholder="Select type" />
                                 </SelectTrigger>
                                 <SelectContent>
                                     <SelectItem value="single-select">Single Select</SelectItem>
@@ -557,17 +867,19 @@ const QuestionModal = memo(({
                                 </SelectContent>
                             </Select>
                         </DialogTitle>
+                        <DialogDescription>
+                            {mode === 'edit' ? 'Edit your question details below.' : 'Add a new question to your assessment.'}
+                        </DialogDescription>
                     </DialogHeader>
-                    <DialogDescription className="sr-only">
-                        Add a new question to your assessment.
-                    </DialogDescription>
                     <div className="flex items-center gap-3">
                         <button className="h-[33px] w-[112px] text-sm text-purplePrimary border border-purplePrimary rounded-full hover:bg-purplePrimary hover:text-white transition-colors duration-300 ease-linear flex items-center justify-center gap-2">
                             <Eye className="w-4 h-4 transition-colors duration-300 ease-linear" />
                             Preview
                         </button>
-                        <DialogClose className="p-2 text-greyPrimary hover:text-dangerPrimary transition-colors duration-300 ease-linear">
-                            <X className="w-5 h-5" />
+                        <DialogClose asChild>
+                            <button className="h-[33px] w-[33px] rounded-full border border-gray-300 flex items-center justify-center hover:bg-gray-50 transition-colors duration-300 ease-linear">
+                                <X className="w-4 h-4" />
+                            </button>
                         </DialogClose>
                     </div>
                 </div>
@@ -621,7 +933,7 @@ const QuestionModal = memo(({
                                         </div>
                                         <div className="flex items-center gap-8">
                                             <span className="text-base font-medium text-greyPrimary">Compulsory Question</span>
-                                            <CustomToggleSwitch checked={Boolean(watchedValues.isCompulsory)} onCheckedChange={handleToggleCompulsory} />
+                                            <CustomToggleSwitch checked={isCompulsoryEnabled} onCheckedChange={handleToggleCompulsory} />
                                         </div>
                                     </div>
                                     <div className='flex items-center justify-between'>
@@ -649,8 +961,7 @@ const QuestionModal = memo(({
                                         </div>
                                         <div className="flex items-center justify-between gap-4">
                                             <span className="text-base font-medium text-greyPrimary">Save question to library</span>
-                                           
-                                            <CustomToggleSwitch checked={Boolean(watchedValues.saveToLibrary)} onCheckedChange={handleToggleSaveToLibrary} />
+                                            <CustomToggleSwitch checked={isSaveToLibraryEnabled} onCheckedChange={handleToggleSaveToLibrary} />
                                         </div>
                                     </div>
                                 </div>

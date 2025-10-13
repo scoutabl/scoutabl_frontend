@@ -400,9 +400,9 @@ const Step4 = () => {
         
         // Intro Video - only send if toggle is enabled
         if (isaddIntroVideoEnabled) {
-          formData.append('intro_screen[video]', uploadedFile);
-          formData.append('intro_screen[id]', assessment?.intro_screen?.id || '');
-          formData.append('intro_screen[screen_type]', '0');
+          formData.append('intro_screen.video', uploadedFile);
+          formData.append('intro_screen.id', assessment?.intro_screen?.id || '');
+          formData.append('intro_screen.screen_type', '0');
         }
         
         // Assessment Validity
@@ -741,26 +741,28 @@ const Step4 = () => {
                     )}
                     
                     {/* Uploaded File Display (if any) */}
-                    {uploadedFile && (
-                      <div className="bg-white rounded-lg p-2 border w-1/2">
-                         <div className="flex items-center justify-between">
-                           <div className="flex items-center gap-0.5">
-                             <FileIcon className="w-5 h-5 text-blue-600" />
-                             <span className="text-sm text-gray-900">{uploadedFile.name}</span>
-                             <span className="text-gray-400">•</span>
-                             <a className="text-blue-500 text-sm hover:underline">Preview</a>
-                             <span className="text-gray-400">•</span>
-                             <span className="text-sm text-gray-500">{(uploadedFile.size / (1024 * 1024)).toFixed(1)}MB</span>
-                           </div>
-                           <button 
-                             onClick={removeUploadedFile}
-                             className="text-gray-400 hover:text-black transition-colors"
-                           >
-                             <X className="w-4 h-4" />
-                           </button>
-                         </div>
-                       </div>
-                    )}
+                     {uploadedFile && (
+                  <div className="bg-white rounded-lg p-2 border w-full">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2 min-w-0 flex-1">
+                        <FileIcon className="w-5 h-5 text-blue-600 flex-shrink-0" />
+                        <div className="flex items-center gap-1 min-w-0 flex-1">
+                          <span className="text-sm text-gray-900 truncate">{uploadedFile.name}</span>
+                          <span className="text-gray-400 flex-shrink-0">•</span>
+                          <a className="text-blue-500 text-sm hover:underline flex-shrink-0">Preview</a>
+                          <span className="text-gray-400 flex-shrink-0">•</span>
+                          <span className="text-sm text-gray-500 flex-shrink-0">{(uploadedFile.size / (1024 * 1024)).toFixed(1)}MB</span>
+                        </div>
+                      </div>
+                      <button 
+                        onClick={removeUploadedFile}
+                        className="text-gray-400 hover:text-black transition-colors flex-shrink-0 ml-2"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </div>
+                  )}
                   </div>
                 )}
               </div>

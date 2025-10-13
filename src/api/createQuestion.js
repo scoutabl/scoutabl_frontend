@@ -1,52 +1,93 @@
 import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query';
-import axios from 'axios';
 import { toast } from 'sonner';
-const BASE_API_URL = import.meta.env.VITE_API_BASE_URL
+import BaseAPI from './base';
 
-const createQuestion = async (payload) => {
-  const accessToken = sessionStorage.getItem('accessToken') || localStorage.getItem('accessToken');
-  const headers = {
-    'Content-Type': 'application/json',
-  };
-  if (accessToken) {
-    headers['Authorization'] = `Bearer ${accessToken}`;
-  }
-  console.log('Access Token:', accessToken);
-  console.log('Payload being sent:', payload);
-  console.log('Authorization header:', headers.Authorization);
-  const { data } = await axios.post(`${BASE_API_URL}/questions/`, payload, { headers });
-  return data;
-};
+const QUESTION_URL = "/questions/";
 
+class QuestionAPI extends BaseAPI {
+    constructor() {
+        super();
+    }
+
+    async createQuestion(payload) {
+        return (await this.post(QUESTION_URL, payload)).data;
+    }
+
+    async getQuestion(questionId) {
+        const url = `${QUESTION_URL}${questionId}/`;
+        return (await this.get(url)).data;
+    }
+
+    async updateQuestion(questionId, payload) {
+        const url = `${QUESTION_URL}${questionId}/`;
+        return (await this.patch(url, payload)).data;
+    }
+
+    async deleteQuestion(questionId) {
+        const url = `${QUESTION_URL}${questionId}/`;
+        return (await this.delete(url)).data;
+    }
+
+    async getQuestionsByType(questionType, params = {}) {
+        const queryParams = this.paramsToString({
+            question_type: questionType,
+            ...params
+        });
+        const url = `${QUESTION_URL}?${queryParams}`;
+        return (await this.get(url)).data;
+    }
+
+    async searchQuestions(searchTerm, params = {}) {
+        const queryParams = this.paramsToString({
+            search: searchTerm,
+            ...params
+        });
+        const url = `${QUESTION_URL}?${queryParams}`;
+        return (await this.get(url)).data;
+    }
+
+    async duplicateQuestion(questionId) {
+        const url = `${QUESTION_URL}${questionId}/duplicate/`;
+        return (await this.post(url)).data;
+    }
+
+    async getQuestionStats(questionId) {
+        const url = `${QUESTION_URL}${questionId}/stats/`;
+        return (await this.get(url)).data;
+    }
+
+    async getQuestionsByAssessment(assessmentId, params = {}) {
+        const queryParams = this.paramsToString({
+            assessment_id: assessmentId,
+            ...params
+        });
+        const url = `${QUESTION_URL}?${queryParams}`;
+        return (await this.get(url)).data;
+    }
+}
+
+const questionAPI = new QuestionAPI();
+
+// Export the API instance and individual methods
+export { questionAPI };
+export const createQuestion = questionAPI.createQuestion.bind(questionAPI);
+export const getQuestion = questionAPI.getQuestion.bind(questionAPI);
+export const updateQuestion = questionAPI.updateQuestion.bind(questionAPI);
+export const deleteQuestion = questionAPI.deleteQuestion.bind(questionAPI);
+export const getQuestionsByType = questionAPI.getQuestionsByType.bind(questionAPI);
+export const searchQuestions = questionAPI.searchQuestions.bind(questionAPI);
+export const duplicateQuestion = questionAPI.duplicateQuestion.bind(questionAPI);
+export const getQuestionStats = questionAPI.getQuestionStats.bind(questionAPI);
+export const getQuestionsByAssessment = questionAPI.getQuestionsByAssessment.bind(questionAPI);
+
+// Get assessment data
 const getAssessment = async (assessmentId) => {
   const accessToken = sessionStorage.getItem('accessToken') || localStorage.getItem('accessToken');
-  const { data } = await axios.get(`${BASE_API_URL}/assessments/${assessmentId}/`, {
-    headers: {
-      'Authorization': accessToken ? `Bearer ${accessToken}` : '',
-    },
-  });
-  return data;
-};
-// const getAssessment = async (assessmentId) => {
-//   const accessToken = sessionStorage.getItem('accessToken') || localStorage.getItem('accessToken');
-//   const { data } = await axios.get(`${BASE_API_URL}/assessments/${assessmentId}/`, {
-//     headers: {
-//       'Authorization': accessToken ? `Bearer ${accessToken}` : '',
-//     },
-//   });
-//   return data;
-// };
-
-const getQuestion = async (questionId) => {
-  const accessToken = sessionStorage.getItem('accessToken') || localStorage.getItem('accessToken');
-  const { data } = await axios.get(`${BASE_API_URL}/questions/${questionId}/`, {
-    headers: {
-      'Authorization': accessToken ? `Bearer ${accessToken}` : '',
-    },
-  });
+  const { data } = await questionAPI.get(`/assessments/${assessmentId}/`);
   return data;
 };
 
+// Get all questions for a specific assessment
 export const useAssessmentQuestions = (assessmentId) => {
   return useQuery({
     queryKey: ['assessment-questions', assessmentId],
@@ -56,206 +97,86 @@ export const useAssessmentQuestions = (assessmentId) => {
       const questions = await Promise.all(questionIds.map(getQuestion));
       return questions;
     },
-    staleTime: 1000 * 60 * 5, // 5 minutes: data is fresh for 5 minutes
-    refetchOnWindowFocus: false, // don't refetch when window regains focus
-    refetchOnMount: false, // don't refetch on mount if data is fresh
+    enabled: !!assessmentId,
   });
 };
 
-const patchAssessment = async ({ assessmentId, questionId }) => {
-  const accessToken = sessionStorage.getItem('accessToken') || localStorage.getItem('accessToken');
-  // 1. Fetch current assessment
-  const assessment = await getAssessment(assessmentId);
-  const currentCustomQuestions = assessment.custom_questions || [];
-  // 2. Append new questionId (avoid duplicates)
-  const updatedQuestions = Array.from(new Set([...currentCustomQuestions, questionId]));
-  // 3. Patch with updated array
-  const { data } = await axios.patch(`${BASE_API_URL}/assessments/${assessmentId}/`, {
-    custom_questions: updatedQuestions,
-  }, {
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': accessToken ? `Bearer ${accessToken}` : '',
-    },
-  });
-  return data;
-};
-
-//add question to assessment
+// Add question to assessment
 export const useAddQuestion = (assessmentId, onSuccess) => {
   const queryClient = useQueryClient();
-
-  const patchMutation = useMutation({
-    mutationFn: patchAssessment,
-    onSuccess: (data) => {
-      queryClient.invalidateQueries(['assessment-questions', assessmentId]);
-      onSuccess?.(data);
-    },
-  });
-
   return useMutation({
     mutationFn: createQuestion,
-    onSuccess: (questionData) => {
-      patchMutation.mutate({ assessmentId, questionId: questionData.id });
-    },
-    onError: (error) => {
-      toast.error('Failed to save question.');
-    },
-  });
-};
-
-//remove question from assessment
-const removeQuestionFromAssessment = async ({ assessmentId, questionId }) => {
-  const accessToken = sessionStorage.getItem('accessToken') || localStorage.getItem('accessToken');
-  // 1. Fetch current assessment
-  const { data: assessment } = await axios.get(`${BASE_API_URL}/assessments/${assessmentId}/`, {
-    headers: { 'Authorization': `Bearer ${accessToken}` }
-  });
-  const updatedQuestions = (assessment.custom_questions || []).filter(id => id !== questionId);
-  // 2. Patch with updated array
-  await axios.patch(`${BASE_API_URL}/assessments/${assessmentId}/`, {
-    custom_questions: updatedQuestions,
-  }, {
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${accessToken}`,
-    },
-  });
-};
-
-export const useRemoveQuestion = (assessmentId) => {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: ({ questionId }) => removeQuestionFromAssessment({ assessmentId, questionId }),
-    onSuccess: () => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries(['assessment-questions', assessmentId]);
-      toast.success("Question deleted"); // <-- Add this line
+      queryClient.invalidateQueries(['assessment', assessmentId]);
+      queryClient.invalidateQueries(['questions']);
+      onSuccess && onSuccess(data);
     },
   });
 };
 
-//update question 
-const updateQuestion = async ({ questionId, payload }) => {
-  const accessToken = sessionStorage.getItem('accessToken') || localStorage.getItem('accessToken');
-  const headers = {
-    'Content-Type': 'application/json',
-    ...(accessToken && { 'Authorization': `Bearer ${accessToken}` }),
-  };
-  const { data } = await axios.patch(`${BASE_API_URL}/questions/${questionId}/`, payload, { headers });
-  return data;
-};
-
+// Update question
 export const useUpdateQuestion = (assessmentId, onSuccess) => {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ questionId, payload }) => updateQuestion({ questionId, payload }),
+    mutationFn: ({ questionId, payload }) => updateQuestion(questionId, payload),
     onSuccess: (data) => {
       queryClient.invalidateQueries(['assessment-questions', assessmentId]);
-      onSuccess?.(data);
-      toast.success("Question updated");
+      queryClient.invalidateQueries(['assessment', assessmentId]);
+      queryClient.invalidateQueries(['questions']);
+      onSuccess && onSuccess(data);
     },
-    onError: () => {
-      toast.error("Failed to update question.");
-    }
   });
 };
 
-// Duplicate a question by fetching its data and creating a new one
-export const duplicateQuestion = async ({ questionId, assessmentId }) => {
-  const accessToken = sessionStorage.getItem('accessToken') || localStorage.getItem('accessToken');
-  const headers = {
-    'Content-Type': 'application/json',
-    ...(accessToken && { 'Authorization': `Bearer ${accessToken}` }),
-  };
-
-  // 1. Fetch the original question
-  const { data: original } = await axios.get(`${BASE_API_URL}/questions/${questionId}/`, { headers });
-
-  // 2. Prepare the payload for the new question (remove id, update title, etc.)
-  const { id, created_at, updated_at, polymorphic_ctype, library, ...rest } = original;
-
-  // Clean choices array
-  const cleanedChoices = (rest.choices || []).map(choice => ({
-    text: choice.text,
-    is_correct: choice.is_correct,
-    // include other fields only if required by your API, e.g. order
-  }));
-
-  const payload = {
-    ...rest,
-    title: `Copy of ${rest.title || ''}`,
-    save_template: false,
-    choices: cleanedChoices,
-    // Only include other fields if your API requires them
-  };
-
-  // 3. Create the new question
-  const { data: newQuestion } = await axios.post(`${BASE_API_URL}/questions/`, payload, { headers });
-
-  // 4. Add the new question to the assessment
-  await patchAssessment({ assessmentId, questionId: newQuestion.id });
-
-  return newQuestion;
-};
-
-export const useDuplicateQuestion = (assessmentId) => {
+// Remove question from assessment
+export const useRemoveQuestion = (assessmentId) => {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ questionId }) => duplicateQuestion({ questionId, assessmentId }),
+    mutationFn: ({ assessmentId: id, questionId }) => {
+     
+      return questionAPI.patch(`/assessments/${id}/`, {
+        custom_questions: [], // Remove the question
+      });
+    },
     onSuccess: () => {
       queryClient.invalidateQueries(['assessment-questions', assessmentId]);
-      toast.success('Question duplicated');
+      queryClient.invalidateQueries(['assessment', assessmentId]);
     },
-    onError: () => {
-      toast.error('Failed to duplicate question');
-    }
   });
 };
-
-// New API methods
 
 // Delete question permanently
-const deleteQuestion = async (questionId) => {
-  const accessToken = sessionStorage.getItem('accessToken') || localStorage.getItem('accessToken');
-  const { data } = await axios.delete(`${BASE_API_URL}/questions/${questionId}/`, {
-    headers: {
-      'Authorization': accessToken ? `Bearer ${accessToken}` : '',
-    },
-  });
-  return data;
-};
-
 export const useDeleteQuestion = (assessmentId) => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: deleteQuestion,
     onSuccess: () => {
       queryClient.invalidateQueries(['assessment-questions', assessmentId]);
+      queryClient.invalidateQueries(['assessment', assessmentId]);
       queryClient.invalidateQueries(['questions']);
-      toast.success('Question deleted successfully');
     },
-    onError: () => {
-      toast.error('Failed to delete question');
-    }
+  });
+};
+
+// Duplicate question
+export const useDuplicateQuestion = (assessmentId) => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ questionId }) => duplicateQuestion(questionId),
+    onSuccess: (data) => {
+      queryClient.invalidateQueries(['assessment-questions', assessmentId]);
+      queryClient.invalidateQueries(['assessment', assessmentId]);
+      queryClient.invalidateQueries(['questions']);
+      toast.success('Question duplicated successfully');
+    },
+    onError: (error) => {
+      toast.error('Failed to duplicate question');
+    },
   });
 };
 
 // Get questions filtered by type
-const getQuestionsByType = async (questionType, params = {}) => {
-  const accessToken = sessionStorage.getItem('accessToken') || localStorage.getItem('accessToken');
-  const queryParams = new URLSearchParams({
-    question_type: questionType,
-    ...params
-  });
-  
-  const { data } = await axios.get(`${BASE_API_URL}/questions/?${queryParams}`, {
-    headers: {
-      'Authorization': accessToken ? `Bearer ${accessToken}` : '',
-    },
-  });
-  return data;
-};
-
 export const useQuestionsByType = (questionType, params = {}) => {
   return useQuery({
     queryKey: ['questions', 'by-type', questionType, params],
@@ -265,21 +186,6 @@ export const useQuestionsByType = (questionType, params = {}) => {
 };
 
 // Get all questions for a specific assessment
-const getQuestionsByAssessment = async (assessmentId, params = {}) => {
-  const accessToken = sessionStorage.getItem('accessToken') || localStorage.getItem('accessToken');
-  const queryParams = new URLSearchParams({
-    assessment_id: assessmentId,
-    ...params
-  });
-  
-  const { data } = await axios.get(`${BASE_API_URL}/questions/?${queryParams}`, {
-    headers: {
-      'Authorization': accessToken ? `Bearer ${accessToken}` : '',
-    },
-  });
-  return data;
-};
-
 export const useQuestionsByAssessment = (assessmentId, params = {}) => {
   return useQuery({
     queryKey: ['questions', 'by-assessment', assessmentId, params],
@@ -289,40 +195,15 @@ export const useQuestionsByAssessment = (assessmentId, params = {}) => {
 };
 
 // Search questions by title/content
-const searchQuestions = async (searchTerm, params = {}) => {
-  const accessToken = sessionStorage.getItem('accessToken') || localStorage.getItem('accessToken');
-  const queryParams = new URLSearchParams({
-    search: searchTerm,
-    ...params
-  });
-  
-  const { data } = await axios.get(`${BASE_API_URL}/questions/?${queryParams}`, {
-    headers: {
-      'Authorization': accessToken ? `Bearer ${accessToken}` : '',
-    },
-  });
-  return data;
-};
-
 export const useSearchQuestions = (searchTerm, params = {}) => {
   return useQuery({
     queryKey: ['questions', 'search', searchTerm, params],
     queryFn: () => searchQuestions(searchTerm, params),
-    enabled: !!searchTerm && searchTerm.length > 2, // Only search if term is longer than 2 chars
+    enabled: !!searchTerm,
   });
 };
 
 // Get question statistics/analytics
-const getQuestionStats = async (questionId) => {
-  const accessToken = sessionStorage.getItem('accessToken') || localStorage.getItem('accessToken');
-  const { data } = await axios.get(`${BASE_API_URL}/questions/${questionId}/stats/`, {
-    headers: {
-      'Authorization': accessToken ? `Bearer ${accessToken}` : '',
-    },
-  });
-  return data;
-};
-
 export const useQuestionStats = (questionId) => {
   return useQuery({
     queryKey: ['question-stats', questionId],

@@ -39,6 +39,7 @@ import {
   useUpdateAssessment,
 } from "@/api/assessments/assessment";
 import { useDuplicateQuestion } from "@/api/createQuestion";
+import { useAssessmentQuestions } from '@/api/createQuestion';
 
 import Step3Loading from "@/components/features/assesment/create/steps/step3-customQuestions/Step3Loading";
 import { getQuestionType } from "@/lib/questionTypes";
@@ -128,18 +129,7 @@ const QuestionSequenceTable = ({
     data: questions,
     isLoading: isQuestionsLoading,
     error: questionsError,
-  } = useQuestions({
-    params: {
-      id__in: questionIds.join(","),
-      question_type: resolveEnum(
-        isCustom
-          ? "QuestionType.CUSTOM_QUESTION"
-          : "QuestionType.QUALIFYING_QUESTION"
-      ),
-      fetch_all: 1,
-    },
-    enabled: !!assessmentId,
-  });
+  } = useAssessmentQuestions(assessmentId);
 
   const totalScore = questions?.reduce((acc, q) => acc + q.custom_score, 0);
 
