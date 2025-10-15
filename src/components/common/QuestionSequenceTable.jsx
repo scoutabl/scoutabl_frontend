@@ -53,6 +53,7 @@ import Loading from "../ui/loading";
 import { useEnums } from "@/context/EnumsContext";
 import { useAssessmentContext } from "./AssessmentNavbarWrapper";
 
+
 const variants = {
   default: {
     header: "bg-purpleSecondary",
@@ -131,7 +132,20 @@ const QuestionSequenceTable = ({
     error: questionsError,
   } = useAssessmentQuestions(assessmentId);
 
-  const totalScore = questions?.reduce((acc, q) => acc + q.custom_score, 0);
+  // Calculate total score with optimistic updates
+  const totalScore = useMemo(() => {
+    if (!questions) return 0;
+    
+    // Get the current question IDs from the assessment
+    const currentQuestionIds = isCustom
+      ? assessment?.custom_questions || []
+      : assessment?.qualifying_questions || [];
+    
+    // Filter questions to only include those that are currently in the assessment
+    const activeQuestions = questions.filter(q => currentQuestionIds.includes(q.id));
+    
+    return activeQuestions.reduce((acc, q) => acc + (q.custom_score || 0), 0);
+  }, [questions, assessment?.custom_questions, assessment?.qualifying_questions, isCustom]);
 
   /***************************************************************************
    * Local state                                                              *

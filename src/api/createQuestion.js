@@ -120,10 +120,38 @@ export const useUpdateQuestion = (assessmentId, onSuccess) => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: ({ questionId, payload }) => updateQuestion(questionId, payload),
-    onSuccess: (data) => {
+    onMutate: async ({ questionId, payload }) => {
+      // Cancel outgoing refetches to avoid race conditions
+      await queryClient.cancelQueries(['assessment-questions', assessmentId]);
+      
+      // Snapshot current data for rollback
+      const previousQuestions = queryClient.getQueryData(['assessment-questions', assessmentId]);
+      
+      // Optimistically update the cache
+      queryClient.setQueryData(['assessment-questions', assessmentId], (old) => {
+        if (!old) return old;
+        
+        return old.map(question => 
+          question.id === questionId 
+            ? { ...question, ...payload }
+            : question
+        );
+      });
+      
+      return { previousQuestions };
+    },
+    onError: (err, variables, context) => {
+      // Rollback on error
+      if (context?.previousQuestions) {
+        queryClient.setQueryData(['assessment-questions', assessmentId], context.previousQuestions);
+      }
+      toast.error('Failed to update question');
+    },
+    onSettled: () => {
+      // Ensure server state consistency
       queryClient.invalidateQueries(['assessment-questions', assessmentId]);
-      queryClient.invalidateQueries(['assessment', assessmentId]);
-      queryClient.invalidateQueries(['questions']);
+    },
+    onSuccess: (data) => {
       onSuccess && onSuccess(data);
     },
   });

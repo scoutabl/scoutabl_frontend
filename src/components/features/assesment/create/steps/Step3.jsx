@@ -12,6 +12,7 @@ import AiIcon from "@/assets/AiIcon.svg?react";
 import ChevronLeftIcon from "@/assets/chevronLeftIcon.svg?react";
 import ChevronRightIcon from "@/assets/chevronRightIcon.svg?react";
 import EditAssessmentQuestionsPopup from "./EditAssessmentQuestionsPopup";
+import { getQuestionType } from "@/lib/questionTypes";
 
 // -------------------------------------------------------------
 // Step-3 – Add Custom Questions
@@ -50,7 +51,9 @@ const Step3 = () => {
   const handleEdit = (question) => {
     setModalMode("edit");
     setModalInitialData(question);
-    setModalQuestionType(question.__type); // Sequencer passes a decorated field
+    // Determine question type from question data
+    const questionType = getQuestionType(question.resourcetype, question.multiple_true);
+    setModalQuestionType(questionType);
     setModalOpen(true);
   };
 

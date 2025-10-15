@@ -40,6 +40,7 @@ import { getValidationSchema } from './schema/CreateQuestionValidationSchema';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { cn } from '@/lib/utils';
 import { useQueryClient } from '@tanstack/react-query';
+import { useUpdateQuestion } from "@/api/createQuestion";
 
 // Question type placeholders
 const QUESTION_TYPE_PLACEHOLDERS = {
@@ -185,6 +186,8 @@ const useQuestionForm = (initialData, initialQuestion, mode, isOpen, questionTyp
             timeToAnswer: convertHHMMSSToMinutes(initialData.completion_time),
             customScore: initialData.custom_score || 120,
             shuffleEnabled: initialData.shuffle_options || false,
+            isCompulsory: initialData.is_compulsory || false,
+            saveToLibrary: initialData.is_save_template || false,
         };
 
         // Question type specific processing for edit mode
@@ -201,21 +204,21 @@ const useQuestionForm = (initialData, initialQuestion, mode, isOpen, questionTyp
     const getCodingDefaults = () => {
         return {
             // Basic question fields
-            question: initialData?.question || initialQuestion || '',
+            question: initialData?.question || initialData?.content || initialQuestion || '',
             difficulty: initialData?.difficulty || '1',
-            inputFormats: initialData?.inputFormats || '',
+            inputFormats: initialData?.input_formats || initialData?.inputFormats || '',
             constraints: initialData?.constraints || '',
-            outputFormats: initialData?.outputFormats || '',
+            outputFormats: initialData?.output_formats || initialData?.outputFormats || '',
             tags: initialData?.tags || [],
 
             // Coding-specific fields
-            selectedLanguages: initialData?.selectedLanguages || [],
-            codeStubs: initialData?.codeStubs || {},
-            customScore: initialData?.customScore || 10,
-            saveToLibrary: initialData?.saveToLibrary || false,
-            enablePrecisionCheck: initialData?.enablePrecisionCheck || false,
-            disableCompile: initialData?.disableCompile || false,
-            testCases: initialData?.testCases || [],
+            selectedLanguages: initialData?.selected_languages || initialData?.selectedLanguages || [],
+            codeStubs: initialData?.code_stubs || initialData?.codeStubs || {},
+            customScore: initialData?.custom_score || initialData?.customScore || 10,
+            saveToLibrary: initialData?.is_save_template || initialData?.saveToLibrary || false,
+            enablePrecisionCheck: initialData?.enable_precision_check || initialData?.enablePrecisionCheck || false,
+            disableCompile: initialData?.disable_compile || initialData?.disableCompile || false,
+            testCases: initialData?.test_cases || initialData?.testCases || [],
         };
     };
 
@@ -223,7 +226,7 @@ const useQuestionForm = (initialData, initialQuestion, mode, isOpen, questionTyp
     const getQuestionTypeOverrides = (data, type) => {
         const overrides = {};
 
-        if (type === 'single-select') {
+        if (type === 'single-select' && data.choices) {
             overrides.singleSelectAnswers = data.choices.map(choice => ({
                 answerId: Number(choice.id),
                 text: choice.text,
@@ -233,7 +236,7 @@ const useQuestionForm = (initialData, initialQuestion, mode, isOpen, questionTyp
             overrides.selectedAnswer = correctChoice ? Number(correctChoice.id) : null;
         }
 
-        if (type === 'multiple-select') {
+        if (type === 'multiple-select' && data.choices) {
             overrides.multipleSelectAnswers = data.choices.map(choice => ({
                 id: Number(choice.id),
                 text: choice.text
@@ -280,22 +283,26 @@ const QuestionModal = memo(({
     const { assessment, updateAssessment } = useAssessmentContext();
     const isEdit = mode === 'edit';
     
-    // Add state variables for toggles
-    const [isCompulsoryEnabled, setIsCompulsoryEnabled] = useState(initialData.is_compulsory || false);
-    const [isSaveToLibraryEnabled, setIsSaveToLibraryEnabled] = useState(initialData.is_save_template || false);
+    // Update mutation with loading state
+    const { mutate: updateQuestionMutation, isPending: isUpdating } = useUpdateQuestion(assessmentId, () => {
+        toast.success('Question updated successfully!');
+        setIsOpen(false);
+    });
     
     // Use watch to get current form values
     const watchedValues = watch();
     const inputRefs = useRef([]);
 
+    // Get toggle values directly from form
+    const isCompulsoryEnabled = watchedValues.isCompulsory || false;
+    const isSaveToLibraryEnabled = watchedValues.saveToLibrary || false;
+
     // Toggle handlers component
     const handleToggleCompulsory = (checked) => {
-        setIsCompulsoryEnabled(checked);
         setValue('isCompulsory', checked, { shouldValidate: true });
     };
 
     const handleToggleSaveToLibrary = (checked) => {
-        setIsSaveToLibraryEnabled(checked);
         setValue('saveToLibrary', checked, { shouldValidate: true });
     };
 
@@ -322,6 +329,12 @@ const QuestionModal = memo(({
         const mins = parseInt(data.timeToAnswer, 10) || 0;
         const completion_time = `00:${String(mins).padStart(2, '0')}:00`;
 
+        // Handle edit mode
+        if (isEdit && initialData.id) {
+            handleUpdateQuestion(data, completion_time);
+            return;
+        }
+
         // For single-select questions
         if (questionType === 'single-select') {
             const choices = data.singleSelectAnswers.map(opt => ({
@@ -335,6 +348,7 @@ const QuestionModal = memo(({
                 save_template: data.saveToLibrary,
                 shuffle_options: !!data.shuffleEnabled,
                 title: data.post,
+                content: data.post, // Add content field - should be same as title
                 multiple_true: false,
                 custom_score: Number(data.customScore),
                 is_compulsory: data.isCompulsory,
@@ -382,6 +396,7 @@ const QuestionModal = memo(({
                 save_template: data.saveToLibrary,
                 shuffle_options: !!data.shuffleEnabled,
                 title: data.post,
+                content: data.post, // Add content field - should be same as title
                 multiple_true: true,
                 custom_score: Number(data.customScore),
                 is_compulsory: data.isCompulsory,
@@ -423,7 +438,7 @@ const QuestionModal = memo(({
                 completion_time,
                 save_template: data.saveToLibrary,
                 title: data.post,
-                content: data.post,
+                content: data.post, // Add content field
                 value: data.correctAnswer,
                 condition: data.numericCondition,
                 custom_score: Number(data.customScore),
@@ -465,7 +480,7 @@ const QuestionModal = memo(({
                 completion_time,
                 save_template: data.saveToLibrary,
                 title: data.post,
-                content: data.post,
+                content: data.post, // Add content field
                 rating_scale: data.ratingScale,
                 custom_score: Number(data.customScore),
                 is_compulsory: data.isCompulsory,
@@ -696,6 +711,174 @@ const QuestionModal = memo(({
         }
     };
 
+    // handleUpdateQuestion
+    const handleUpdateQuestion = (data, completion_time) => {
+        let payload = {};
+
+        // For single-select questions
+        if (questionType === 'single-select') {
+            const choices = data.singleSelectAnswers.map(opt => ({
+                text: opt.text,
+                is_correct: String(opt.answerId) === String(data.selectedAnswer)
+            }));
+
+            payload = {
+                resourcetype: "MCQuestion",
+                completion_time,
+                save_template: data.saveToLibrary,
+                shuffle_options: !!data.shuffleEnabled,
+                title: data.post,
+                content: data.post, 
+                multiple_true: false,
+                custom_score: Number(data.customScore),
+                is_compulsory: data.isCompulsory,
+                choices
+            };
+        }
+
+        // For multiple-select questions
+        else if (questionType === 'multiple-select') {
+            const choices = data.multipleSelectAnswers.map(opt => ({
+                text: opt.text,
+                is_correct: data.selectedAnswers.map(String).includes(String(opt.id))
+            }));
+
+            payload = {
+                resourcetype: "MCQuestion",
+                completion_time,
+                save_template: data.saveToLibrary,
+                shuffle_options: !!data.shuffleEnabled,
+                title: data.post,
+                content: data.post, 
+                multiple_true: true,
+                custom_score: Number(data.customScore),
+                is_compulsory: data.isCompulsory,
+                choices
+            };
+        }
+
+        // For numeric-input questions
+        else if (questionType === 'numeric-input') {
+            payload = {
+                resourcetype: "NumberQuestion",
+                completion_time,
+                save_template: data.saveToLibrary,
+                title: data.post,
+                content: data.post, 
+                value: data.correctAnswer,
+                condition: data.numericCondition,
+                custom_score: Number(data.customScore),
+                is_compulsory: data.isCompulsory,
+            };
+        }
+
+        // For rating questions
+        else if (questionType === 'rating') {
+            payload = {
+                resourcetype: "RatingQuestion",
+                completion_time,
+                save_template: data.saveToLibrary,
+                title: data.post,
+                content: data.post, 
+                rating_scale: data.ratingScale,
+                custom_score: Number(data.customScore),
+                is_compulsory: data.isCompulsory,
+            };
+        }
+
+        // For rearrange questions
+        else if (questionType === 'rearrange') {
+            const options = data.rearrangeOptions.map((opt, idx) => ({
+                text: opt.text,
+                question_order: idx,
+                correct_order: idx
+            }));
+
+            payload = {
+                resourcetype: "RearrangeQuestion",
+                completion_time,
+                save_template: data.saveToLibrary,
+                title: data.post,
+                content: data.post,
+                shuffle_options: true,
+                custom_score: Number(data.customScore),
+                is_compulsory: data.isCompulsory,
+                options
+            };
+        }
+
+        // For essay questions
+        else if (questionType === 'essay') {
+            payload = {
+                resourcetype: "EssayQuestion",
+                completion_time,
+                save_template: data.saveToLibrary,
+                content: data.title || '',
+                title: data.title,
+                relevance_context: data.relevance_context,
+                look_for_context: data.look_for_context,
+                custom_score: Number(data.customScore),
+                is_compulsory: data.isCompulsory,
+            };
+        }
+
+        // For video questions
+        else if (questionType === 'video') {
+            payload = {
+                resourcetype: "VideoQuestion",
+                completion_time,
+                save_template: data.saveToLibrary,
+                content: data.title || '',
+                title: data.title,
+                relevance_context: data.relevance_context,
+                look_for_context: data.look_for_context,
+                custom_score: Number(data.customScore),
+                is_compulsory: data.isCompulsory,
+            };
+        }
+
+        // For audio questions
+        else if (questionType === 'audio') {
+            payload = {
+                resourcetype: "AudioQuestion",
+                completion_time,
+                save_template: data.saveToLibrary,
+                content: data.title || '',
+                title: data.title,
+                relevance_context: data.relevance_context,
+                look_for_context: data.look_for_context,
+                custom_score: Number(data.customScore),
+                is_compulsory: data.isCompulsory,
+            };
+        }
+
+        // For coding questions
+        else if (questionType === 'coding') {
+            payload = {
+                resourcetype: 'CodingQuestion',
+                completion_time: data.customScore,
+                save_template: data.saveToLibrary,
+                content: data.question,
+                difficulty: data.difficulty,
+                input_formats: data.inputFormats,
+                constraints: data.constraints,
+                output_formats: data.outputFormats,
+                tags: data.tags,
+                selected_languages: data.selectedLanguages,
+                code_stubs: data.codeStubs,
+                test_cases: data.testCases,
+                enable_precision_check: data.enablePrecisionCheck,
+                disable_compile: data.disableCompile,
+            };
+        }
+
+        // Call the update mutation
+        updateQuestionMutation({
+            questionId: initialData.id,
+            payload: payload
+        });
+    };
+
     // Helper function to prepare question data for local storage
     const prepareQuestionData = (data) => {
         const mins = parseInt(data.timeToAnswer, 10) || 0;
@@ -849,9 +1032,20 @@ const QuestionModal = memo(({
                 <div className="flex items-center justify-between mb-4">
                     <DialogHeader className="max-h-9">
                         <DialogTitle className="flex items-center gap-2">
-                            <span className="text-xl text-greyPrimary">New Question:</span>
-                            <Select value={questionType || ''} onValueChange={setQuestionType}>
-                                <SelectTrigger className="w-[176px] text-sm bg-blueSecondary text-greyAccent">
+                            <span className="text-xl text-greyPrimary">
+                                {isEdit ? 'Edit Question:' : 'New Question:'}
+                            </span>
+                            <Select 
+                                value={questionType || ''} 
+                                onValueChange={setQuestionType}
+                                disabled={isEdit} // Disable the dropdown in edit mode
+                            >
+                                <SelectTrigger 
+                                    className={cn(
+                                        "w-[176px] text-sm bg-blueSecondary text-greyAccent",
+                                        isEdit && "opacity-60 cursor-not-allowed" // Visual feedback for disabled state
+                                    )}
+                                >
                                     <SelectValue placeholder="Select type" />
                                 </SelectTrigger>
                                 <SelectContent>
@@ -868,7 +1062,10 @@ const QuestionModal = memo(({
                             </Select>
                         </DialogTitle>
                         <DialogDescription>
-                            {mode === 'edit' ? 'Edit your question details below.' : 'Add a new question to your assessment.'}
+                            {mode === 'edit' 
+                                ? 'Edit your question details below. Question type cannot be changed.' 
+                                : 'Add a new question to your assessment.'
+                            }
                         </DialogDescription>
                     </DialogHeader>
                     <div className="flex items-center gap-3">
@@ -968,14 +1165,16 @@ const QuestionModal = memo(({
                                 {renderQuestionContent}
                                 <motion.button
                                     type="submit"
-                                    whileHover={{ scale: 1.05 }}
-                                    whileTap={{ scale: 0.95 }}
+                                    disabled={isUpdating}
+                                    whileHover={{ scale: isUpdating ? 1 : 1.05 }}
+                                    whileTap={{ scale: isUpdating ? 1 : 0.95 }}
                                     className={cn("mt-4 ml-auto grid place-content-center bg-[#1EA378] text-white rounded-full text-sm font-medium", {
                                         'w-[124px] h-[37px]': !isEdit,
                                         'w-[156px] h-[44px]': isEdit,
+                                        'opacity-50 cursor-not-allowed': isUpdating,
                                     })}
                                 >
-                                    {isEdit ? 'Update Question' : 'Add Question'}
+                                    {isUpdating ? 'Updating...' : (isEdit ? 'Update Question' : 'Add Question')}
                                 </motion.button>
                             </form>
                         </FormProvider>
