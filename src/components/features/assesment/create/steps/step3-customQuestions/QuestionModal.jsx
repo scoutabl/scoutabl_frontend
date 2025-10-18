@@ -177,11 +177,11 @@ const useQuestionForm = (initialData, initialQuestion, mode, isOpen, questionTyp
         };
 
         // Return base defaults for non-edit modes
-        if (mode !== 'edit' || !initialData.choices) {
+        if (mode !== 'edit') {
             return baseDefaults;
         }
 
-        // Edit mode specific overrides
+        // Edit mode specific overrides - apply to ALL question types in edit mode
         const editOverrides = {
             timeToAnswer: convertHHMMSSToMinutes(initialData.completion_time),
             customScore: initialData.custom_score || 120,
@@ -190,8 +190,8 @@ const useQuestionForm = (initialData, initialQuestion, mode, isOpen, questionTyp
             saveToLibrary: initialData.is_save_template || false,
         };
 
-        // Question type specific processing for edit mode
-        const questionTypeOverrides = getQuestionTypeOverrides(initialData, questionType);
+        // Question type specific processing for edit mode (only for question types with choices)
+        const questionTypeOverrides = initialData.choices ? getQuestionTypeOverrides(initialData, questionType) : {};
 
         return {
             ...baseDefaults,
@@ -283,6 +283,9 @@ const QuestionModal = memo(({
     const { assessment, updateAssessment } = useAssessmentContext();
     const isEdit = mode === 'edit';
     
+    // queryClient declaration
+    const queryClient = useQueryClient();
+    
     // Update mutation with loading state
     const { mutate: updateQuestionMutation, isPending: isUpdating } = useUpdateQuestion(assessmentId, () => {
         toast.success('Question updated successfully!');
@@ -323,6 +326,156 @@ const QuestionModal = memo(({
         console.log("Zod validation errors:", errors);
     };
 
+    // Common payload builder function
+    const buildQuestionPayload = (data, completion_time) => {
+        const basePayload = {
+            completion_time,
+            save_template: data.saveToLibrary,
+            custom_score: Number(data.customScore),
+            is_compulsory: data.isCompulsory,
+        };
+
+        switch (questionType) {
+            case 'single-select':
+                return {
+                    ...basePayload,
+                    resourcetype: "MCQuestion",
+                    shuffle_options: !!data.shuffleEnabled,
+                    title: data.post,
+                    content: data.post,
+                    multiple_true: false,
+                    choices: data.singleSelectAnswers.map(opt => ({
+                        text: opt.text,
+                        is_correct: String(opt.answerId) === String(data.selectedAnswer)
+                    }))
+                };
+
+            case 'multiple-select':
+                return {
+                    ...basePayload,
+                    resourcetype: "MCQuestion",
+                    shuffle_options: !!data.shuffleEnabled,
+                    title: data.post,
+                    content: data.post,
+                    multiple_true: true,
+                    choices: data.multipleSelectAnswers.map(opt => ({
+                        text: opt.text,
+                        is_correct: data.selectedAnswers.map(String).includes(String(opt.id))
+                    }))
+                };
+
+            case 'numeric-input':
+                return {
+                    ...basePayload,
+                    resourcetype: "NumberQuestion",
+                    title: data.post,
+                    content: data.post,
+                    value: data.correctAnswer,
+                    condition: data.numericCondition,
+                };
+
+            case 'rating':
+                return {
+                    ...basePayload,
+                    resourcetype: "RatingQuestion",
+                    title: data.post,
+                    content: data.post,
+                    rating_scale: data.ratingScale,
+                };
+
+            case 'rearrange':
+                return {
+                    ...basePayload,
+                    resourcetype: "RearrangeQuestion",
+                    title: data.post,
+                    content: data.post,
+                    shuffle_options: true,
+                    options: data.rearrangeOptions.map((opt, idx) => ({
+                        text: opt.text,
+                        question_order: idx,
+                        correct_order: idx
+                    }))
+                };
+
+            case 'essay':
+                return {
+                    ...basePayload,
+                    resourcetype: "EssayQuestion",
+                    content: data.post, 
+                    title: data.title,
+                    relevance_context: data.relevance_context,
+                    look_for_context: data.look_for_context,
+                };
+
+            case 'video':
+                return {
+                    ...basePayload,
+                    resourcetype: "VideoQuestion",
+                    content: data.post, 
+                    title: data.title,
+                    relevance_context: data.relevance_context,
+                    look_for_context: data.look_for_context,
+                };
+
+            case 'audio':
+                return {
+                    ...basePayload,
+                    resourcetype: "AudioQuestion",
+                    content: data.post, 
+                    title: data.title,
+                    relevance_context: data.relevance_context,
+                    look_for_context: data.look_for_context,
+                };
+
+            case 'coding':
+                return {
+                    ...basePayload,
+                    resourcetype: 'CodingQuestion',
+                    completion_time: data.customScore,
+                    content: data.question,
+                    difficulty: data.difficulty,
+                    input_formats: data.inputFormats,
+                    constraints: data.constraints,
+                    output_formats: data.outputFormats,
+                    tags: data.tags,
+                    selected_languages: data.selectedLanguages,
+                    code_stubs: data.codeStubs,
+                    test_cases: data.testCases,
+                    enable_precision_check: data.enablePrecisionCheck,
+                    disable_compile: data.disableCompile,
+                };
+
+            default:
+                throw new Error(`Unsupported question type: ${questionType}`);
+        }
+    };
+
+    // Common API call function for creating questions
+    const handleCreateQuestion = (payload) => {
+        createQuestion(payload).then(questionData => {
+            const currentQuestions = assessment?.custom_questions || [];
+            const currentOrder = assessment?.custom_questions_order || [];
+            
+            const updateData = {
+                custom_questions: [...currentQuestions, questionData.id],
+                custom_questions_order: [
+                    ...currentOrder.filter((id) => id !== questionData.id),
+                    questionData.id,
+                ],
+            };
+
+            updateAssessment({
+                assessmentId: assessment.id,
+                data: updateData,
+            }).then(() => {
+                queryClient.invalidateQueries(['assessment-questions', assessmentId]);
+                setIsOpen(false);
+            });
+        }).catch(error => {
+            toast.error('Failed to save question.');
+        });
+    };
+
     const onSubmit = (data) => {
         console.log("Form data before submit:", data);
 
@@ -335,548 +488,28 @@ const QuestionModal = memo(({
             return;
         }
 
-        // For single-select questions
-        if (questionType === 'single-select') {
-            const choices = data.singleSelectAnswers.map(opt => ({
-                text: opt.text,
-                is_correct: String(opt.answerId) === String(data.selectedAnswer)
-            }));
-
-            const payload = {
-                resourcetype: "MCQuestion",
-                completion_time,
-                save_template: data.saveToLibrary,
-                shuffle_options: !!data.shuffleEnabled,
-                title: data.post,
-                content: data.post, // Add content field - should be same as title
-                multiple_true: false,
-                custom_score: Number(data.customScore),
-                is_compulsory: data.isCompulsory,
-                choices
-            };
-
-            // Create the question first
-            createQuestion(payload).then(questionData => {
-                // Then add it to the assessment using the same pattern as "Add from Library"
-                const currentQuestions = assessment?.custom_questions || [];
-                const currentOrder = assessment?.custom_questions_order || [];
-                
-                const updateData = {
-                    custom_questions: [...currentQuestions, questionData.id],
-                    custom_questions_order: [
-                        ...currentOrder.filter((id) => id !== questionData.id),
-                        questionData.id,
-                    ],
-                };
-
-                updateAssessment({
-                    assessmentId: assessment.id,
-                    data: updateData,
-                }).then(() => {
-                    // Invalidate the assessment-questions query to force a refetch
-                    queryClient.invalidateQueries(['assessment-questions', assessmentId]);
-                    setIsOpen(false); // Close modal after successful update
-                });
-            }).catch(error => {
-                toast.error('Failed to save question.');
-            });
-            return;
-        }
-
-        // For multiple-select questions
-        if (questionType === 'multiple-select') {
-            const choices = data.multipleSelectAnswers.map(opt => ({
-                text: opt.text,
-                is_correct: data.selectedAnswers.map(String).includes(String(opt.id))
-            }));
-
-            const payload = {
-                resourcetype: "MCQuestion",
-                completion_time,
-                save_template: data.saveToLibrary,
-                shuffle_options: !!data.shuffleEnabled,
-                title: data.post,
-                content: data.post, // Add content field - should be same as title
-                multiple_true: true,
-                custom_score: Number(data.customScore),
-                is_compulsory: data.isCompulsory,
-                choices
-            };
-
-            // Create the question first
-            createQuestion(payload).then(questionData => {
-                // Then add it to the assessment using 
-                const currentQuestions = assessment?.custom_questions || [];
-                const currentOrder = assessment?.custom_questions_order || [];
-                
-                const updateData = {
-                    custom_questions: [...currentQuestions, questionData.id],
-                    custom_questions_order: [
-                        ...currentOrder.filter((id) => id !== questionData.id),
-                        questionData.id,
-                    ],
-                };
-
-                updateAssessment({
-                    assessmentId: assessment.id,
-                    data: updateData,
-                }).then(() => {
-                    // Invalidate the assessment-questions query to force a refetch
-                    queryClient.invalidateQueries(['assessment-questions', assessmentId]);
-                    setIsOpen(false); // Close modal after successful update
-                });
-            }).catch(error => {
-                toast.error('Failed to save question.');
-            });
-            return;
-        }
-
-        // For numeric-input questions
-        if (questionType === 'numeric-input') {
-            const payload = {
-                resourcetype: "NumberQuestion",
-                completion_time,
-                save_template: data.saveToLibrary,
-                title: data.post,
-                content: data.post, // Add content field
-                value: data.correctAnswer,
-                condition: data.numericCondition,
-                custom_score: Number(data.customScore),
-                is_compulsory: data.isCompulsory,
-            };
-
-            // Create the question first
-            createQuestion(payload).then(questionData => {
-                // Then add it to the assessment using the same pattern as "Add from Library"
-                const currentQuestions = assessment?.custom_questions || [];
-                const currentOrder = assessment?.custom_questions_order || [];
-                
-                const updateData = {
-                    custom_questions: [...currentQuestions, questionData.id],
-                    custom_questions_order: [
-                        ...currentOrder.filter((id) => id !== questionData.id),
-                        questionData.id,
-                    ],
-                };
-
-                updateAssessment({
-                    assessmentId: assessment.id,
-                    data: updateData,
-                }).then(() => {
-                    // Invalidate the assessment-questions query to force a refetch
-                    queryClient.invalidateQueries(['assessment-questions', assessmentId]);
-                    setIsOpen(false); // Close modal after successful update
-                });
-            }).catch(error => {
-                toast.error('Failed to save question.');
-            });
-            return;
-        }
-
-        // For rating questions
-        if (questionType === 'rating') {
-            const payload = {
-                resourcetype: "RatingQuestion",
-                completion_time,
-                save_template: data.saveToLibrary,
-                title: data.post,
-                content: data.post, // Add content field
-                rating_scale: data.ratingScale,
-                custom_score: Number(data.customScore),
-                is_compulsory: data.isCompulsory,
-            };
-
-            // Create the question first
-            createQuestion(payload).then(questionData => {
-                // Then add it to the assessment using the same pattern as "Add from Library"
-                const currentQuestions = assessment?.custom_questions || [];
-                const currentOrder = assessment?.custom_questions_order || [];
-                
-                const updateData = {
-                    custom_questions: [...currentQuestions, questionData.id],
-                    custom_questions_order: [
-                        ...currentOrder.filter((id) => id !== questionData.id),
-                        questionData.id,
-                    ],
-                };
-
-                updateAssessment({
-                    assessmentId: assessment.id,
-                    data: updateData,
-                }).then(() => {
-                    // Invalidate the assessment-questions query to force a refetch
-                    queryClient.invalidateQueries(['assessment-questions', assessmentId]);
-                    setIsOpen(false); // Close modal after successful update
-                });
-            }).catch(error => {
-                toast.error('Failed to save question.');
-            });
-            return;
-        }
-
-        // For rearrange questions
-        if (questionType === 'rearrange') {
-            const options = data.rearrangeOptions.map((opt, idx) => ({
-                text: opt.text,
-                question_order: idx,
-                correct_order: idx
-            }));
-
-            const payload = {
-                resourcetype: "RearrangeQuestion",
-                completion_time,
-                save_template: data.saveToLibrary,
-                title: data.post,
-                content: data.post,
-                shuffle_options: true,
-                custom_score: Number(data.customScore),
-                is_compulsory: data.isCompulsory,
-                options
-            };
-
-            // Create the question first
-            createQuestion(payload).then(questionData => {
-                // Then add it to the assessment using the same pattern as "Add from Library"
-                const currentQuestions = assessment?.custom_questions || [];
-                const currentOrder = assessment?.custom_questions_order || [];
-                
-                const updateData = {
-                    custom_questions: [...currentQuestions, questionData.id],
-                    custom_questions_order: [
-                        ...currentOrder.filter((id) => id !== questionData.id),
-                        questionData.id,
-                    ],
-                };
-
-                updateAssessment({
-                    assessmentId: assessment.id,
-                    data: updateData,
-                }).then(() => {
-                    // Invalidate the assessment-questions query to force a refetch
-                    queryClient.invalidateQueries(['assessment-questions', assessmentId]);
-                    setIsOpen(false); // Close modal after successful update
-                });
-            }).catch(error => {
-                toast.error('Failed to save question.');
-            });
-            return;
-        }
-
-        // For essay questions
-        if (questionType === 'essay') {
-            const payload = {
-                resourcetype: "EssayQuestion",
-                completion_time,
-                save_template: data.saveToLibrary,
-                content: data.title || '',
-                title: data.title,
-                relevance_context: data.relevance_context,
-                look_for_context: data.look_for_context,
-                custom_score: Number(data.customScore),
-                is_compulsory: data.isCompulsory,
-            };
-
-            // Create the question first
-            createQuestion(payload).then(questionData => {
-                // Then add it to the assessment using the same pattern as "Add from Library"
-                const currentQuestions = assessment?.custom_questions || [];
-                const currentOrder = assessment?.custom_questions_order || [];
-                
-                const updateData = {
-                    custom_questions: [...currentQuestions, questionData.id],
-                    custom_questions_order: [
-                        ...currentOrder.filter((id) => id !== questionData.id),
-                        questionData.id,
-                    ],
-                };
-
-                updateAssessment({
-                    assessmentId: assessment.id,
-                    data: updateData,
-                }).then(() => {
-                    // Invalidate the assessment-questions query to force a refetch
-                    queryClient.invalidateQueries(['assessment-questions', assessmentId]);
-                    setIsOpen(false); // Close modal after successful update
-                });
-            }).catch(error => {
-                toast.error('Failed to save question.');
-            });
-            return;
-        }
-
-        // For video questions
-        if (questionType === 'video') {
-            const payload = {
-                resourcetype: "VideoQuestion",
-                completion_time,
-                save_template: data.saveToLibrary,
-                content: data.title || '',
-                title: data.title,
-                relevance_context: data.relevance_context,
-                look_for_context: data.look_for_context,
-                custom_score: Number(data.customScore),
-                is_compulsory: data.isCompulsory,
-            };
-
-            // Create the question first
-            createQuestion(payload).then(questionData => {
-                // Then add it to the assessment using the same pattern as "Add from Library"
-                const currentQuestions = assessment?.custom_questions || [];
-                const currentOrder = assessment?.custom_questions_order || [];
-                
-                const updateData = {
-                    custom_questions: [...currentQuestions, questionData.id],
-                    custom_questions_order: [
-                        ...currentOrder.filter((id) => id !== questionData.id),
-                        questionData.id,
-                    ],
-                };
-
-                updateAssessment({
-                    assessmentId: assessment.id,
-                    data: updateData,
-                }).then(() => {
-                    // Invalidate the assessment-questions query to force a refetch
-                    queryClient.invalidateQueries(['assessment-questions', assessmentId]);
-                    setIsOpen(false); // Close modal after successful update
-                });
-            }).catch(error => {
-                toast.error('Failed to save question.');
-            });
-            return;
-        }
-
-        // For audio questions
-        if (questionType === 'audio') {
-            const payload = {
-                resourcetype: "AudioQuestion",
-                completion_time,
-                save_template: data.saveToLibrary,
-                content: data.title || '',
-                title: data.title,
-                relevance_context: data.relevance_context,
-                look_for_context: data.look_for_context,
-                custom_score: Number(data.customScore),
-                is_compulsory: data.isCompulsory,
-            };
-
-            // Create the question first
-            createQuestion(payload).then(questionData => {
-                // Then add it to the assessment using the same pattern as "Add from Library"
-                const currentQuestions = assessment?.custom_questions || [];
-                const currentOrder = assessment?.custom_questions_order || [];
-                
-                const updateData = {
-                    custom_questions: [...currentQuestions, questionData.id],
-                    custom_questions_order: [
-                        ...currentOrder.filter((id) => id !== questionData.id),
-                        questionData.id,
-                    ],
-                };
-
-                updateAssessment({
-                    assessmentId: assessment.id,
-                    data: updateData,
-                }).then(() => {
-                    // Invalidate the assessment-questions query to force a refetch
-                    queryClient.invalidateQueries(['assessment-questions', assessmentId]);
-                    setIsOpen(false); // Close modal after successful update
-                });
-            }).catch(error => {
-                toast.error('Failed to save question.');
-            });
-            return;
-        }
-
-        // For coding questions (keeping existing logic for now)
-        if (questionType === 'coding') {
-            const payload = {
-                resourcetype: 'CodingQuestion',
-                completion_time: data.customScore,
-                save_template: data.saveToLibrary,
-                content: data.question,
-                difficulty: data.difficulty,
-                input_formats: data.inputFormats,
-                constraints: data.constraints,
-                output_formats: data.outputFormats,
-                tags: data.tags,
-                selected_languages: data.selectedLanguages,
-                code_stubs: data.codeStubs,
-                test_cases: data.testCases,
-                enable_precision_check: data.enablePrecisionCheck,
-                disable_compile: data.disableCompile,
-            };
-
-            return;
+        // Build payload and make API call
+        try {
+            const payload = buildQuestionPayload(data, completion_time);
+            handleCreateQuestion(payload);
+        } catch (error) {
+            toast.error(`Unsupported question type: ${questionType}`);
         }
     };
 
     // handleUpdateQuestion
     const handleUpdateQuestion = (data, completion_time) => {
-        let payload = {};
-
-        // For single-select questions
-        if (questionType === 'single-select') {
-            const choices = data.singleSelectAnswers.map(opt => ({
-                text: opt.text,
-                is_correct: String(opt.answerId) === String(data.selectedAnswer)
-            }));
-
-            payload = {
-                resourcetype: "MCQuestion",
-                completion_time,
-                save_template: data.saveToLibrary,
-                shuffle_options: !!data.shuffleEnabled,
-                title: data.post,
-                content: data.post, 
-                multiple_true: false,
-                custom_score: Number(data.customScore),
-                is_compulsory: data.isCompulsory,
-                choices
-            };
+        try {
+            const payload = buildQuestionPayload(data, completion_time);
+            
+            // Call the update mutation
+            updateQuestionMutation({
+                questionId: initialData.id,
+                payload: payload
+            });
+        } catch (error) {
+            toast.error(`Unsupported question type: ${questionType}`);
         }
-
-        // For multiple-select questions
-        else if (questionType === 'multiple-select') {
-            const choices = data.multipleSelectAnswers.map(opt => ({
-                text: opt.text,
-                is_correct: data.selectedAnswers.map(String).includes(String(opt.id))
-            }));
-
-            payload = {
-                resourcetype: "MCQuestion",
-                completion_time,
-                save_template: data.saveToLibrary,
-                shuffle_options: !!data.shuffleEnabled,
-                title: data.post,
-                content: data.post, 
-                multiple_true: true,
-                custom_score: Number(data.customScore),
-                is_compulsory: data.isCompulsory,
-                choices
-            };
-        }
-
-        // For numeric-input questions
-        else if (questionType === 'numeric-input') {
-            payload = {
-                resourcetype: "NumberQuestion",
-                completion_time,
-                save_template: data.saveToLibrary,
-                title: data.post,
-                content: data.post, 
-                value: data.correctAnswer,
-                condition: data.numericCondition,
-                custom_score: Number(data.customScore),
-                is_compulsory: data.isCompulsory,
-            };
-        }
-
-        // For rating questions
-        else if (questionType === 'rating') {
-            payload = {
-                resourcetype: "RatingQuestion",
-                completion_time,
-                save_template: data.saveToLibrary,
-                title: data.post,
-                content: data.post, 
-                rating_scale: data.ratingScale,
-                custom_score: Number(data.customScore),
-                is_compulsory: data.isCompulsory,
-            };
-        }
-
-        // For rearrange questions
-        else if (questionType === 'rearrange') {
-            const options = data.rearrangeOptions.map((opt, idx) => ({
-                text: opt.text,
-                question_order: idx,
-                correct_order: idx
-            }));
-
-            payload = {
-                resourcetype: "RearrangeQuestion",
-                completion_time,
-                save_template: data.saveToLibrary,
-                title: data.post,
-                content: data.post,
-                shuffle_options: true,
-                custom_score: Number(data.customScore),
-                is_compulsory: data.isCompulsory,
-                options
-            };
-        }
-
-        // For essay questions
-        else if (questionType === 'essay') {
-            payload = {
-                resourcetype: "EssayQuestion",
-                completion_time,
-                save_template: data.saveToLibrary,
-                content: data.title || '',
-                title: data.title,
-                relevance_context: data.relevance_context,
-                look_for_context: data.look_for_context,
-                custom_score: Number(data.customScore),
-                is_compulsory: data.isCompulsory,
-            };
-        }
-
-        // For video questions
-        else if (questionType === 'video') {
-            payload = {
-                resourcetype: "VideoQuestion",
-                completion_time,
-                save_template: data.saveToLibrary,
-                content: data.title || '',
-                title: data.title,
-                relevance_context: data.relevance_context,
-                look_for_context: data.look_for_context,
-                custom_score: Number(data.customScore),
-                is_compulsory: data.isCompulsory,
-            };
-        }
-
-        // For audio questions
-        else if (questionType === 'audio') {
-            payload = {
-                resourcetype: "AudioQuestion",
-                completion_time,
-                save_template: data.saveToLibrary,
-                content: data.title || '',
-                title: data.title,
-                relevance_context: data.relevance_context,
-                look_for_context: data.look_for_context,
-                custom_score: Number(data.customScore),
-                is_compulsory: data.isCompulsory,
-            };
-        }
-
-        // For coding questions
-        else if (questionType === 'coding') {
-            payload = {
-                resourcetype: 'CodingQuestion',
-                completion_time: data.customScore,
-                save_template: data.saveToLibrary,
-                content: data.question,
-                difficulty: data.difficulty,
-                input_formats: data.inputFormats,
-                constraints: data.constraints,
-                output_formats: data.outputFormats,
-                tags: data.tags,
-                selected_languages: data.selectedLanguages,
-                code_stubs: data.codeStubs,
-                test_cases: data.testCases,
-                enable_precision_check: data.enablePrecisionCheck,
-                disable_compile: data.disableCompile,
-            };
-        }
-
-        // Call the update mutation
-        updateQuestionMutation({
-            questionId: initialData.id,
-            payload: payload
-        });
     };
 
     // Helper function to prepare question data for local storage
@@ -973,8 +606,6 @@ const QuestionModal = memo(({
                 return baseQuestion;
         }
     };
-
-    const queryClient = useQueryClient();
 
     const renderQuestionContent = useMemo(() => {
         switch (questionType) {
