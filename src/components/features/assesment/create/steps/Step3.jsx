@@ -106,9 +106,15 @@ const Step3 = () => {
           <p className="text-sm font-medium text-greyAccent">You can add up to 20 custom questions at a time</p>
         </div>
         <div className="flex items-center gap-3">
-          <Button variant="outline">
+        <Button 
+            variant="outline" 
+            effect="shineHover"
+            onClick={() => {
+                handleStepChange('finalize');
+            }}
+          >
             Skip to Finalize
-          </Button>
+        </Button>
           <Button variant="primary" onClick={handleAddFromLibrary}>
             Add from Library
           </Button>
