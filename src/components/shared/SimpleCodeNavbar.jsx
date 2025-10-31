@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import CustomDropdown from './CustomDropdown';
 import ResetIcon from '@/assets/resetIcon.svg?react'
-const SimpleCodeNavbar = ({ languages, selectedLang, setSelectedLang, loading, isOpen, setIsOpen }) => {
+const SimpleCodeNavbar = ({ languages, selectedLang, setSelectedLang, loading, isOpen, setIsOpen, onResetToDefault, value }) => {
     const [error, setError] = useState(null);
 
     const monacoLanguageMap = {
@@ -35,7 +35,15 @@ const SimpleCodeNavbar = ({ languages, selectedLang, setSelectedLang, loading, i
                 setSelectedLang={setSelectedLang}
                 loading={loading}
             />
-            <button onClick={(e) => e.preventDefault()} className='px-3 py-[4px] flex items-center gap-1 text-white text-xs bg-purplePrimary rounded-md'>
+            <button
+                onClick={e => {
+                    e.preventDefault();
+                    if (onResetToDefault && selectedLang) {
+                        const defaultValue = selectedLang.defaultTemplate || selectedLang.default_template?.content || '';
+                        onResetToDefault(selectedLang.name, defaultValue);
+                    }
+                }}
+                className='px-3 py-[4px] flex items-center gap-1 text-white text-xs bg-purplePrimary rounded-md'>
                 <ResetIcon className="text-white size-3" />
                 Reset to Default
             </button>

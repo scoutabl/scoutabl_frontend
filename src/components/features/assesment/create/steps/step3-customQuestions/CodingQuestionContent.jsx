@@ -1664,7 +1664,6 @@ const CodingQuestionContent = ({
             ) {
                 const selectedIds = selectedLangsRaw;
                 const popularLanguages = ["Python 3", "Java", "C++", "NodeJS", "PHP", "C#"];
-
                 const langResultMap = allLanguages?.results.map(lang => {
                     const override = langOverrides[lang.id] || {};
                     return {
@@ -1677,12 +1676,28 @@ const CodingQuestionContent = ({
                         fileExtension: languageFileExtensions[lang.code] || "",
                     };
                 });
-
                 const selectedLanguageObjects = selectedIds
                     .map(id => langResultMap.find(l => l.id === id))
                     .filter(Boolean);
-
                 setValue('selectedLanguages', selectedLanguageObjects);
+
+                
+                // Fill codeStubs for all selected languages for instant prepass
+                const prevStubs = getValues('codeStubs') || {};
+                const nextStubs = { ...prevStubs };
+                for (const lang of selectedLanguageObjects) {
+                    if (typeof nextStubs[lang.name] !== 'string') {
+                        nextStubs[lang.name] = lang.defaultTemplate || lang.default_template?.content || '';
+                    }
+                }
+                // Remove stubs for languages not in selection
+                Object.keys(nextStubs).forEach(langName => {
+                    if (!selectedLanguageObjects.some(l => l.name === langName)) {
+                        delete nextStubs[langName];
+                    }
+                });
+                setValue('codeStubs', nextStubs, { shouldDirty: true, shouldTouch: false, shouldValidate: false });
+                // -------------------------------------------------
             }
             setCurrentStep((s) => s + 1);
         } else {
@@ -2692,9 +2707,10 @@ const CodingQuestionContent = ({
                             <Button
                                 variant="next"
                                 effect="shineHover"
-                                type="submit"
+                                type="button"
+                                onClick={onSubmit}
                             >
-                                Submit
+                                Add Question
                                 <ChevronRightIcon />
                             </Button>
                         )}

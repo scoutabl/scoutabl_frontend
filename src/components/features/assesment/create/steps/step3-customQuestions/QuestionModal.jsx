@@ -428,22 +428,21 @@ const QuestionModal = memo(({
                 };
 
             case 'coding':
+            case 'code': {
+                let languagesArr = data.selectedLanguages || [];
+                if (languagesArr.length > 0 && typeof languagesArr[0] === 'object') {
+                    languagesArr = languagesArr.map(l => l.id);
+                }
                 return {
-                    ...basePayload,
                     resourcetype: 'CodingQuestion',
-                    completion_time: data.customScore,
-                    content: data.question,
-                    difficulty: data.difficulty,
-                    input_formats: data.inputFormats,
-                    constraints: data.constraints,
-                    output_formats: data.outputFormats,
-                    tags: data.tags,
-                    selected_languages: data.selectedLanguages,
-                    code_stubs: data.codeStubs,
-                    test_cases: data.testCases,
-                    enable_precision_check: data.enablePrecisionCheck,
-                    disable_compile: data.disableCompile,
+                    title: data.question || '',
+                    testcases: data.testCases || [],
+                    templates: data.templates || [],
+                    language_configs: data.language_configs || [],
+                    save_template: !!data.saveToLibrary,
+                    languages: languagesArr,
                 };
+            }
 
             default:
                 throw new Error(`Unsupported question type: ${questionType}`);
@@ -633,6 +632,7 @@ const QuestionModal = memo(({
                 return (
                     <RearrangeAnswers inputRefs={inputRefs} />
                 )
+            case 'coding':
             case 'code':
                 return (
                     <FormProvider>
@@ -712,7 +712,7 @@ const QuestionModal = memo(({
                     </div>
                 </div>
 
-                {questionType === 'code' ? (
+                {questionType === 'code' || questionType === 'coding' ? (
                     <>
                         {renderQuestionContent}
                     </>
