@@ -155,6 +155,7 @@ const Assesment = () => {
               clearable
               multiselect
               showSelectAll
+              searchable
               options={[
                 {
                   display: "Published",
@@ -194,6 +195,7 @@ const Assesment = () => {
               rightCheckbox
               clearable
               variant="outline"
+              searchable
               showSelectAll
               options={[
                 ...(users || []).map((user) => ({

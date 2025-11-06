@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { useAssessmentContext } from "@/components/common/AssessmentNavbarWrapper";
 import AssessmentStep from "@/components/common/AssessmentStep";
 import Section from "@/components/common/Section";
@@ -27,40 +27,158 @@ import { CustomToggleSwitch } from "@/components/ui/custom-toggle-switch";
 import FileIcon from "@/assets/fileIcon.svg?react";
 import Dropdown from "@/components/ui/dropdown";
 import { Controller, useForm } from 'react-hook-form';
-import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
+import { DateTimePicker } from "@/components/ui/datetimepicker";
+import { CustomTooltip } from "@/components/ui/custom-tooltip";
+
+// Api imports
+import { useUpdateAssessment } from "@/api/assessments/assessment";
+import { useEnums } from "@/context/EnumsContext";
+import { toast } from "sonner";
+import { useUsers } from "@/api/users/users";
+import UserAvatarBadge from "@/components/common/UserAvatarBadge";
+
+
 
 // Video file MIME types and extensions
 const VIDEO_MIME_TYPES = ['video/mp4', 'video/webm', 'video/mov', 'video/avi', 'video/wmv', 'video/flv', 'video/mkv', 'video/m4v', 'video/3gp'];
 const VIDEO_EXTENSIONS = ['.mp4', '.webm', '.mov', '.avi', '.wmv', '.flv', '.mkv', '.m4v', '.3gp'];
 const ACCEPTED_VIDEO_TYPES = VIDEO_MIME_TYPES.join(',');
-import { DateTimePicker } from "@/components/ui/datetimepicker";
-import { CustomTooltip } from "@/components/ui/custom-tooltip";
 
+
+
+import { debounce } from "@/lib/utils";
+import { useProctorSettingsMap, useAssessmentDocumentTypeMap, useDomainRestrictionTypeMap } from "@/lib/enum_mapping";
 
 
 const Step4 = () => {
-  const { assessment, steps, selectedStep, handleStepChange } =
+  const { assessment, steps, selectedStep, handleStepChange, isAssessmentLoading } =
     useAssessmentContext();
   const [activeTab, setActiveTab] = useState("sequence");
   const [domains, setDomains] = useState(["gmail.com", "abc.com"]);
-  const [selectedUsers, setSelectedUsers] = useState([
-    "sxcscascsc",
-    "scacascasc",
-  ]);
+  
+  // Update selectedUsers state to work with user objects
+  const [selectedUsers, setSelectedUsers] = useState([]);
+  
+  // Fetch users data
+  const { data: users } = useUsers();
   const [customQuestionLibraryOpen, setCustomQuestionLibraryOpen] = useState(false);
   const [qualifyingQuestionLibraryOpen, setQualifyingQuestionLibraryOpen] = useState(false);
   const [testLibraryOpen, setTestLibraryOpen] = useState(false);
 
-  // Add toggle state variables
-  const [ishowResultsToCandidatesEnabled, setshowResultsToCandidatesEnabled] = useState(false);
+  // Toggle state variables
+  const [isshowResultsToCandidatesEnabled, setshowResultsToCandidatesEnabled] = useState(false);
   const [isaddIntroVideoEnabled, setAddIntroVideoEnabled] = useState(false);
   const [uploadedFile, setUploadedFile] = useState(null);
   const [fileError, setFileError] = useState("");
   const [iscollectCandidateDocumentsEnabled, setcollectCandidateDocumentsEnabled] = useState(false);
   const [isAssessmentStartDateEnabled, setAssessmentStartDateEnabled] = useState(false);
   const [isdomainRestrictionEnabled, setdomainRestrictionEnabled] = useState(false);
-  const [status, setStatus] = useState("allowed"); 
+  const [status, setStatus] = useState("allow"); 
   const [dropdownKey, setDropdownKey] = useState(0);
+  const [assessmentDescription, setAssessmentDescription] = useState();
+
+  const documentTypeMap = useAssessmentDocumentTypeMap();
+  const domainRestrictionTypeMap = useDomainRestrictionTypeMap();
+
+  // State variables for date/time
+  const [startDate, setStartDate] = useState(null);
+  const [endDate, setEndDate] = useState(null);
+  const [extraTime, setExtraTime] = useState(0);
+
+  // state variables for video link and document types
+  const [videoLinkValue, setVideoLinkValue] = useState("");
+  const [selectedDocumentTypes, setSelectedDocumentTypes] = useState([]);
+
+  // handlers for document checkboxes
+  const handleDocumentTypeToggle = (docType) => {
+    setSelectedDocumentTypes(prev => {
+      if (prev.includes(docType)) {
+        return prev.filter(type => type !== docType);
+      } else {
+        return [...prev, docType];
+      }
+    });
+  };
+
+  useEffect(() => {
+    if (!isAssessmentLoading) {
+      // Existing fields
+      setAssessmentDescription(assessment?.description);
+      setAssessmentStartDateEnabled(assessment?.enable_time_restrictions);
+      setStartDate(assessment?.start_date ? new Date(assessment.start_date) : null);
+      setEndDate(assessment?.end_date ? new Date(assessment.end_date) : null);
+      setExtraTime(assessment?.extra_time_percentage_for_tests || 0);
+      
+      // Add missing fields from API payload
+      setshowResultsToCandidatesEnabled(assessment?.email_candidate_results || false);
+      setcollectCandidateDocumentsEnabled(assessment?.enable_collect_documents || false);
+      setdomainRestrictionEnabled(assessment?.enable_domain_restrictions || false);
+      
+      // Load domain restrictions
+      if (assessment?.domain_restrictions) {
+        setDomains(assessment.domain_restrictions);
+      }
+      
+      // Load domain restriction type (0 = allowed, 1 = disallowed)
+      if (assessment?.domain_restriction_type !== undefined) {
+        setStatus(assessment.domain_restriction_type === 0 ? "allow" : "block");
+      }
+      
+      // Load proctoring settings
+      if (assessment?.proctor_settings?.settings) {
+        const enabledSettings = assessment.proctor_settings.settings;
+        // Ensure enabledSettings is an array
+        const settingsArray = Array.isArray(enabledSettings) ? enabledSettings : [];
+        
+        setProctoringSettings(prev => {
+          const newSettings = { ...prev };
+          // Map API enum values back to local state keys
+          Object.keys(prev).forEach(key => {
+            const enumValue = proctorSettingsMap[key];
+            if (enumValue !== null && enumValue !== undefined) {
+              const numericValue = typeof enumValue === 'string' ? parseInt(enumValue, 10) : enumValue;
+              newSettings[key] = settingsArray.includes(numericValue);
+            }
+          });
+          return newSettings;
+        });
+      }
+      
+      // Load legal settings
+      setLegalSettings({
+        nonFluentEnglishSpeakers: assessment?.enable_accomadation_for_nonenglish || false,
+        concentrationMemoryImpairments: assessment?.enable_accomadation_for_disabled || false,
+      });
+      
+      // Load missing fields with correct backend field names
+      setAddIntroVideoEnabled(assessment?.intro_screen ? true : false);
+      setVideoLinkValue(
+        assessment?.intro_screen?.video_url || 
+        (typeof assessment?.intro_screen === 'string' ? assessment.intro_screen : "") || 
+        ""
+      );
+      setSelectedDocumentTypes(assessment?.collect_document_types || []);
+      setSelectedUsers(assessment?.moderators || []);
+    }
+  }, [
+    isAssessmentLoading, 
+    assessment?.description, 
+    assessment?.enable_time_restrictions, 
+    assessment?.start_date, 
+    assessment?.end_date, 
+    assessment?.extra_time_percentage_for_tests,
+    assessment?.email_candidate_results,
+    assessment?.enable_collect_documents,
+    assessment?.enable_domain_restrictions,
+    assessment?.domain_restrictions,
+    assessment?.domain_restriction_type,
+    assessment?.proctor_settings,
+    assessment?.enable_accomadation_for_nonenglish,
+    assessment?.enable_accomadation_for_disabled,
+    assessment?.intro_screen,
+    assessment?.collect_document_types,
+    assessment?.moderators
+  ]);
 
   // Proctoring toggle state variables
   const [proctoringSettings, setProctoringSettings] = useState({
@@ -73,7 +191,7 @@ const Step4 = () => {
     mouseOutTracking: false,
     
     // Basic Proctoring - Right Column
-    disableCopyPaste: false, // This one starts as enabled
+    disableCopyPaste: false,
     ipLogging: false,
     tabProctoring: false,
     keystrokeAnalysis: false,
@@ -94,7 +212,13 @@ const Step4 = () => {
     concentrationMemoryImpairments: false,
   });
 
-  // Section collapse state
+  // Api imports
+  const { mutateAsync: updateAssessment, isPending: isUpdating } = useUpdateAssessment();
+  const { resolveEnum, enums } = useEnums();
+  const proctorSettingsMap = useProctorSettingsMap();
+
+ 
+// Section collapse state
   const [collapsedSections, setCollapsedSections] = useState({
     sequence: false,
     "essential-settings": false,
@@ -104,17 +228,17 @@ const Step4 = () => {
     legal: false,
   });
 
-  const tabs = [
+  const tabs = useMemo(() => [
     { id: "sequence", label: "Sequence" },
     { id: "essential-settings", label: "Essential Settings" },
     { id: "assessment-validity", label: "Assessment Validity" },
     { id: "team-access", label: "Team Access" },
     { id: "proctoring", label: "Proctoring" },
     { id: "legal", label: "Legal" },
-  ];
+  ], []);
 
   // Initialize React Hook Form
-  const { control, handleSubmit, watch, setValue } = useForm({
+  const { control } = useForm({
     defaultValues: {
       extraTime: 10, // Default value for extra time
     }
@@ -135,19 +259,19 @@ const Step4 = () => {
       const sections = tabs.map(tab => document.getElementById(tab.id));
       const scrollPosition = window.scrollY + 100; // Offset for better detection
 
-      // Find which section is currently in view
-      for (let i = sections.length - 1; i >= 0; i--) {
-        const section = sections[i];
-        if (section) {
-          const sectionTop = section.offsetTop;
-          const sectionBottom = sectionTop + section.offsetHeight;
-          
-          if (scrollPosition >= sectionTop && scrollPosition < sectionBottom) {
-            setActiveTab(tabs[i].id);
-            break;
-          }
+// Find which section is currently in view
+    for (let i = sections.length - 1; i >= 0; i--) {
+      const section = sections[i];
+      if (section) {
+        const sectionTop = section.offsetTop;
+        const sectionBottom = sectionTop + section.offsetHeight;
+        
+        if (scrollPosition >= sectionTop && scrollPosition < sectionBottom) {
+          setActiveTab(tabs[i].id);
+          break;
         }
       }
+    }
     };
 
     // Add scroll event listener
@@ -155,15 +279,19 @@ const Step4 = () => {
     
     // Cleanup
     return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
+  }, [tabs]);
 
   const removeDomain = (domain) => {
     setDomains(domains.filter((d) => d !== domain));
   };
 
-  const removeUser = (user) => {
-    setSelectedUsers(selectedUsers.filter((u) => u !== user));
+  const removeUser = (userId) => {
+    setSelectedUsers(selectedUsers.filter((user) => user.id !== userId));
   };
+
+  const handleDescriptionChange = useCallback((e) => {
+    setAssessmentDescription(e.target.value);
+  }, []);
 
   const scrollToSection = (sectionId) => {
     setActiveTab(sectionId);
@@ -205,9 +333,10 @@ const Step4 = () => {
         VIDEO_EXTENSIONS.some(ext => file.name.toLowerCase().endsWith(ext));
       
       if (isValidVideoType) {
-        // Check file size (100MB limit for video files)
+        // Check file size (10MB limit for video files)
         if (file.size <= 10 * 1024 * 1024) {
           setUploadedFile(file);
+          setVideoLinkValue(""); // Clear video link when file is uploaded
           setFileError("");
         } else {
           setFileError("File size must be less than 10MB");
@@ -222,6 +351,184 @@ const Step4 = () => {
   const removeUploadedFile = () => {
     setUploadedFile(null);
     setFileError("");
+    
+    // Reset the file input value to allow re-uploading the same file
+    const fileInput = document.getElementById('video-upload');
+    if (fileInput) {
+      fileInput.value = '';
+    }
+  };
+
+  // Add a function to handle video link input changes
+  const handleVideoLinkChange = (e) => {
+    setVideoLinkValue(e.target.value);
+    // Clear uploaded file when video link is entered
+    if (e.target.value.trim()) {
+      setUploadedFile(null);
+      setFileError("");
+    }
+  };
+
+  // Form submission handler
+  const handleFormSubmit = async () => {
+    try {
+      // Use resolveEnum to get the correct enum values for proctor settings
+      const enabledToggles = {};
+      Object.keys(proctoringSettings).forEach(key => {
+        if (proctoringSettings[key] === true) {
+          const enumValue = proctorSettingsMap[key];
+          if (enumValue !== null && enumValue !== undefined) {
+            const numericValue = typeof enumValue === 'string' ? parseInt(enumValue, 10) : enumValue;
+            if (!isNaN(numericValue)) {
+              enabledToggles[numericValue.toString()] = true;
+            }
+          }
+        }
+      });
+
+      // Check if we need to send FormData (when there's a file upload)
+      const hasFileUpload = isaddIntroVideoEnabled && uploadedFile;
+      
+      if (hasFileUpload) {
+        // Send as FormData for file uploads
+        const formData = new FormData();
+        
+        // Essential Settings
+        formData.append('description', assessmentDescription || '');
+        formData.append('email_candidate_results', isshowResultsToCandidatesEnabled);
+        formData.append('enable_collect_documents', iscollectCandidateDocumentsEnabled);
+        
+        // Intro Video - only send if toggle is enabled
+        if (isaddIntroVideoEnabled) {
+          formData.append('intro_screen.video', uploadedFile);
+          formData.append('intro_screen.id', assessment?.intro_screen?.id || '');
+          formData.append('intro_screen.screen_type', '0');
+        }
+        
+        // Assessment Validity
+        formData.append('enable_time_restrictions', isAssessmentStartDateEnabled);
+        if (startDate) formData.append('start_date', startDate.toISOString());
+        if (endDate) formData.append('end_date', endDate.toISOString());
+        
+        // Domain Restrictions
+        formData.append('enable_domain_restrictions', isdomainRestrictionEnabled);
+        formData.append('domain_restriction_type', status === "allow" ? '0' : '1');
+        domains.forEach(domain => formData.append('domain_restrictions[]', domain));
+        
+        // Team Access
+        selectedUsers.forEach(user => formData.append('moderators[]', user.id));
+        
+        // Document Collection
+        selectedDocumentTypes.forEach(docType => formData.append('collect_document_types[]', docType));
+        
+        // Proctoring Settings
+        Object.keys(enabledToggles).forEach(key => {
+          formData.append(`proctor_settings[settings][${key}]`, 'true');
+        });
+        
+        // Legal Settings
+        formData.append('enable_accomadation_for_disabled', legalSettings.concentrationMemoryImpairments);
+        formData.append('enable_accomadation_for_nonenglish', legalSettings.nonFluentEnglishSpeakers);
+        formData.append('extra_time_percentage_for_tests', extraTime || 0);
+
+        // API method
+        await updateAssessment({
+          assessmentId: assessment?.id,
+          data: formData
+        });
+
+      } else {
+        // Send as JSON when there's no file upload
+        const apiData = {
+          // Essential Settings
+          description: assessmentDescription,
+          email_candidate_results: isshowResultsToCandidatesEnabled,
+          enable_collect_documents: iscollectCandidateDocumentsEnabled,
+          
+          // Assessment Validity
+          enable_time_restrictions: isAssessmentStartDateEnabled,
+          start_date: startDate,
+          end_date: endDate,
+          
+          // Domain Restrictions
+          enable_domain_restrictions: isdomainRestrictionEnabled,
+          domain_restriction_type: status === "allow" ? 0 : 1,
+          domain_restrictions: domains,
+          
+          // Team Access
+          moderators: selectedUsers.map(user => user.id),
+          
+          // Document Collection
+          collect_document_types: selectedDocumentTypes,
+          
+          // Proctoring Settings
+          proctor_settings: {
+            settings: enabledToggles
+          },
+          
+          // Legal Settings
+          enable_accomadation_for_disabled: legalSettings.concentrationMemoryImpairments,
+          enable_accomadation_for_nonenglish: legalSettings.nonFluentEnglishSpeakers,
+          extra_time_percentage_for_tests: extraTime || 0
+        };
+
+        // Only add intro_screen if toggle is enabled
+        if (isaddIntroVideoEnabled) {
+          apiData.intro_screen = {
+            id: assessment?.intro_screen?.id || null,
+            screen_type: 0,
+            video_url: videoLinkValue || null,
+            video: null,
+            content: null,
+            logo: null
+          };
+        }
+
+        await updateAssessment({
+          assessmentId: assessment?.id,
+          data: apiData
+        });
+      }
+
+      toast.success("Assessment settings saved successfully!");
+      
+    } catch (error) {
+      console.error("Error:", error);
+      console.error("Error response:", error.response?.data);
+      console.error("Error status:", error.response?.status);
+      console.error("Error headers:", error.response?.headers);
+      
+      // Log the specific intro_screen error
+      if (error.response?.data?.intro_screen) {
+        console.error("Intro screen error:", error.response.data.intro_screen);
+      }
+      
+      const errorMessage = error.response?.data?.message || 
+                          error.response?.data?.error || 
+                          error.message || 
+                          "Failed to save settings. Please try again.";
+      
+      toast.error(errorMessage);
+    }
+  };
+
+  // Domain management state - tracks new domain input for adding to restrictions list
+  const [newDomain, setNewDomain] = useState("");
+
+  // Add new domain to the restrictions list if it's valid and not already present
+  const addDomain = () => {
+    if (newDomain.trim() && !domains.includes(newDomain.trim())) {
+      setDomains([...domains, newDomain.trim()]);
+      setNewDomain(""); // Clear input after successful addition
+    }
+  };
+
+  // Handle Enter key press in domain input field to trigger domain addition
+  const handleDomainKeyPress = (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault(); // Prevent form submission
+      addDomain(); // Add domain and clear input
+    }
   };
 
   return (
@@ -329,7 +636,7 @@ const Step4 = () => {
           className="shadow-lg"
         >
           <p className="text-sm text-gray-600 mb-4">
-            Qualifying questions are presented to candidates ahead of the tests. The answers to these questions determine if
+          The Essential Settings section provides configuration options for defining the core parameters, operational behavior, and system-level controls of your assessment.
           </p>
           <div className="flex gap-6 items-start">
             {/* Left Column */}
@@ -344,6 +651,8 @@ const Step4 = () => {
                 <div className="relative">
                   <Textarea
                     placeholder="Software Developer"
+                    value={assessmentDescription}
+                    onChange={handleDescriptionChange}
                     className="w-full min-h-[95px] bg-white border rounded-md resize-none focus:ring-0 focus:outline-none p-3 pr-24"
                   />
                   <div className="absolute bottom-3 right-3">
@@ -358,7 +667,7 @@ const Step4 = () => {
               <div className="bg-backgroundPrimary rounded-2xl p-4 border">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    <CustomToggleSwitch checked={ishowResultsToCandidatesEnabled} onCheckedChange={setshowResultsToCandidatesEnabled} />
+                    <CustomToggleSwitch checked={isshowResultsToCandidatesEnabled} onCheckedChange={setshowResultsToCandidatesEnabled} />
                     <h3 className="text-lg font-semibold text-gray-900">Show results to candidates</h3>
                   </div>
                   <Button className="rounded-full px-4 py-2 text-sm bg-purpleUpgrade text-black border-purplePrimary">
@@ -387,9 +696,11 @@ const Step4 = () => {
                   <div className="mt-4 space-y-4">
                     {/* Video Link Input */}
                     
-                      <Input className="bg-white rounded-lg p-3 h-[37px] border"
+                      <Input 
+                        className="bg-white rounded-lg p-3 h-[37px] border"
                         placeholder="Paste a link to your video"
-                       
+                        value={videoLinkValue}
+                        onChange={handleVideoLinkChange}
                       />
                     
                     
@@ -430,26 +741,28 @@ const Step4 = () => {
                     )}
                     
                     {/* Uploaded File Display (if any) */}
-                    {uploadedFile && (
-                      <div className="bg-white rounded-lg p-2 border w-1/2">
-                         <div className="flex items-center justify-between">
-                           <div className="flex items-center gap-0.5">
-                             <FileIcon className="w-5 h-5 text-blue-600" />
-                             <span className="text-sm text-gray-900">{uploadedFile.name}</span>
-                             <span className="text-gray-400">•</span>
-                             <a className="text-blue-500 text-sm hover:underline">Preview</a>
-                             <span className="text-gray-400">•</span>
-                             <span className="text-sm text-gray-500">{(uploadedFile.size / (1024 * 1024)).toFixed(1)}MB</span>
-                           </div>
-                           <button 
-                             onClick={removeUploadedFile}
-                             className="text-gray-400 hover:text-black transition-colors"
-                           >
-                             <X className="w-4 h-4" />
-                           </button>
-                         </div>
-                       </div>
-                    )}
+                     {uploadedFile && (
+                  <div className="bg-white rounded-lg p-2 border w-full">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2 min-w-0 flex-1">
+                        <FileIcon className="w-5 h-5 text-blue-600 flex-shrink-0" />
+                        <div className="flex items-center gap-1 min-w-0 flex-1">
+                          <span className="text-sm text-gray-900 truncate">{uploadedFile.name}</span>
+                          <span className="text-gray-400 flex-shrink-0">•</span>
+                          <a className="text-blue-500 text-sm hover:underline flex-shrink-0">Preview</a>
+                          <span className="text-gray-400 flex-shrink-0">•</span>
+                          <span className="text-sm text-gray-500 flex-shrink-0">{(uploadedFile.size / (1024 * 1024)).toFixed(1)}MB</span>
+                        </div>
+                      </div>
+                      <button 
+                        onClick={removeUploadedFile}
+                        className="text-gray-400 hover:text-black transition-colors flex-shrink-0 ml-2"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </div>
+                  )}
                   </div>
                 )}
               </div>
@@ -480,29 +793,23 @@ const Step4 = () => {
 
                 {iscollectCandidateDocumentsEnabled && (
                   <div>
-                  <div className="flex gap-5">
-                    {["Resume", "Cover Letter", "Relieving Letter", "ID Proof"].map((doc) => (
-                      <div key={doc} className="flex items-center gap-2 p-2 pl-2 pr-2 mb-2 bg-white rounded-lg border whitespace-nowrap">
-                        <Checkbox />
-                        <span className="text-sm text-gray-700">{doc}</span>
-                      </div>
-                    ))}
-                  </div>
-                  <div className="flex gap-5">
-                    {["Contact Number", "Experience Certificate/ Letter"].map((doc) => (
-                      <div key={doc} className="flex items-center gap-2 p-2 pl-2 pr-2 mb-4 bg-white rounded-lg border whitespace-nowrap">
-                        <Checkbox />
-                        <span className="text-sm text-gray-700">{doc}</span>
-                      </div>
-                    ))}
-                  </div>
-                
+                    <div className="flex gap-5 flex-wrap">
+                      {Object.entries(documentTypeMap).map(([enumValue, displayName]) => (
+                        <div key={enumValue} className="flex items-center gap-2 p-2  bg-white rounded-lg border whitespace-nowrap">
+                          <Checkbox 
+                            checked={selectedDocumentTypes.includes(parseInt(enumValue))}
+                            onCheckedChange={() => handleDocumentTypeToggle(parseInt(enumValue))}
+                          />
+                          <span className="text-sm text-gray-700">{displayName}</span>
+                        </div>
+                      ))}
+                    </div>
 
-                <Button variant="primary" className="w-auto px-4 py-2  rounded-lg">
-                  <PlusIcon className="w-4 h-4 mr-2" />
-                  Custom File Upload
-                </Button>
-                </div>
+                    <Button variant="primary" className="w-auto mt-4  rounded-lg">
+                      <PlusIcon className="w-4 h-4 mr-2" />
+                      Custom File Upload
+                    </Button>
+                  </div>
                 )}
               </div>
              
@@ -521,7 +828,7 @@ const Step4 = () => {
               <div>
               <h2 className="text-xl font-semibold">Assessment Validity</h2>
               <p className="text-sm text-gray-600 mb-1 mt-3">
-                Qualifying questions are presented to candidates ahead of the tests. The answers to these questions determine if
+                The Assessment Validity section allows you to set the duration and expiration of your assessment. This is recommended if inviting candidates using link share & integration.
                </p>
               </div>
                         <Button className="rounded-full px-4 py-2 text-sm bg-purpleUpgrade text-black border-purplePrimary">
@@ -554,9 +861,19 @@ const Step4 = () => {
                 </p>
                 {isAssessmentStartDateEnabled && (
                 <div className="flex items-center gap-3">
-                 <DateTimePicker className="w-full"/>
+                 <DateTimePicker 
+                  className="w-full"
+                  placeholder="Select Start Date & Time"
+                  value={startDate}
+                  onChange={setStartDate}
+                 />
                 
-                 <DateTimePicker className="w-full"/>
+                 <DateTimePicker 
+                  className="w-full"
+                  placeholder="Select End Date & Time"
+                  value={endDate}
+                  onChange={setEndDate}
+                 />
                 </div>  
                 )}
               </div>
@@ -584,7 +901,7 @@ const Step4 = () => {
         >
           
           <p className="text-sm text-gray-600 mb-4">
-            Qualifying questions are presented to candidates ahead of the tests. The answers to these questions determine if ca, determinedetermine determine determine
+            The Access section allows you to control who can access your assessment. You can restrict access to specific domains or users.
           </p>
 
           <div className="space-y-6">
@@ -593,25 +910,62 @@ const Step4 = () => {
               {/* Assessment Access */}
               <div className="w-1/2 bg-backgroundPrimary rounded-2xl p-6 border">
                 <div className="flex items-center gap-2 mb-4">
-                  <h3 className="text-lg font-semibold">Assessment Access</h3>
-                  <HelpCircle className="w-4 h-4 text-gray-400" />
+                    <h3 className="text-lg font-semibold">Assessment Access</h3>
+                    <CustomTooltip message="Select the users who can access the assessment." />
                 </div>
                 <div className="space-y-4">
-                  <div className="flex items-center gap-3 p-2 bg-white rounded-lg border">
-                    <span className="text-gray-500">Selected Users</span>
-                    <ChevronDownIcon className="w-4 h-4 ml-auto" />
-                  </div>
+                  <Dropdown
+                    backgroundColor="white"
+                    name="Select Users"
+                    variant="squareLight"
+                    multiselect
+                    rightCheckbox
+                    clearable
+                    searchable
+                    showSelectAll
+                    currentValue={selectedUsers.map(user => user.id)}
+                    options={[
+                      ...(users || []).map((user) => ({
+                        display: user.username,
+                        value: user.id,
+                        user,
+                      })),
+                    ]}
+                    onChange={(selectedUserIds) => {
+                      if (selectedUserIds === null || selectedUserIds.length === 0) {
+                        setSelectedUsers([]);
+                      } else {
+                        const selectedUserObjects = users?.filter(user => 
+                          selectedUserIds.includes(user.id)
+                        ) || [];
+                        setSelectedUsers(selectedUserObjects);
+                      }
+                    }}
+                    renderOption={({ user, display, isDefault }) =>
+                      isDefault ? (
+                        display
+                      ) : (
+                        <UserAvatarBadge
+                          user={user}
+                          className="gap-3 py-2"
+                          iconClassName="w-10 h-10"
+                        />
+                      )
+                    }
+                    className="w-full"
+                  />
+                  
                   <div className="space-y-3">
-                  <div className="flex gap-2">
+                    <div className="flex gap-2 flex-wrap">
                       {selectedUsers.map((user) => (
                         <Badge
-                          key={user}
+                          key={user.id}
                           variant="secondary"
                           className="bg-blue-100 text-blue-800"
                         >
-                          {user}
+                          {user.username}
                           <button
-                            onClick={() => removeUser(user)}
+                            onClick={() => removeUser(user.id)}
                             className="ml-2"
                           >
                             <X className="w-3 h-3" />
@@ -635,7 +989,7 @@ const Step4 = () => {
                       <h3 className="text-lg font-semibold">
                         Domain Restriction
                       </h3>
-                      <HelpCircle className="w-4 h-4 text-gray-400" />
+                      <CustomTooltip message="Select the domains who can access the assessment." />
                   </div>
                 </div>
                 
@@ -643,13 +997,13 @@ const Step4 = () => {
                     <div className="flex items-center text-gray-500 gap-3 p-1.5  bg-white rounded-lg border ml-auto">
                       <Dropdown
                         key={dropdownKey}
-                        options={[{display: "Allowed", value: "allowed"}, {display: "Disallowed", value: "disallowed"}]}
+                        options={[{display: domainRestrictionTypeMap[resolveEnum("DomainRestrictionType.ALLOW")], value: "allow"}, {display: domainRestrictionTypeMap[resolveEnum("DomainRestrictionType.BLOCK")], value: "block"}]}
                         onChange={(value) => {
                           setStatus(value);
                           setDropdownKey(prev => prev + 1); 
                         }}
                         currentValue={status}
-                        className="w-30 h-6 text-m p-1 gap-0 "
+                        className="w-30 h-6 text-m text-md p-1 gap-0 "
                         style={{ background: "P", color: "inherit" }}
                       />
                     </div>
@@ -658,28 +1012,50 @@ const Step4 = () => {
                     
                 {isdomainRestrictionEnabled && (
                     <div className="space-y-3">
-                      <div className="flex items-center gap-3 p-2 bg-white rounded-lg border">
-                        <span className="text-gray-500">Selected Users</span>
+                      {/* Domain Input Section */}
+                      <div className="flex items-center gap-3 p-2">
+                        <Input
+                          placeholder="Enter Domain Name (e.g., gmail.com)"
+                          value={newDomain}
+                          onChange={(e) => setNewDomain(e.target.value)}
+                          onKeyPress={handleDomainKeyPress}
+                          className="flex-1 border-0 focus:ring-0 focus:outline-none bg-white rounded-lg p-4"
+                        />
+                        <Button
+                          type="button"
+                          onClick={addDomain}
+                          disabled={!newDomain.trim() || domains.includes(newDomain.trim())}
+                          className="px-4 py-2 bg-purplePrimary text-white rounded-lg disabled:bg-gray-300 disabled:cursor-not-allowed"
+                        >
+                          Add
+                        </Button>
                       </div>
-                      <div className="flex gap-2">
-                        {domains.map((domain) => (
-                          <Badge
-                            key={domain}
-                            variant="secondary"
-                            className="bg-blue-100 text-blue-800"
-                          >
-                            {domain}
-                            <button
-                              onClick={() => removeDomain(domain)}
-                              className="ml-2"
-                            >
-                              <X className="w-3 h-3" />
-                            </button>
-                          </Badge>
-                        ))}
+                      
+                      {/* Selected Domains Display */}
+                      {domains.length > 0 && (
+                        <div className="space-y-2">
+                          
+                          <div className="flex gap-2 flex-wrap">
+                            {domains.map((domain) => (
+                              <Badge
+                                key={domain}
+                                variant="secondary"
+                                className="bg-blue-100 text-blue-800"
+                              >
+                                {domain}
+                                <button
+                                  onClick={() => removeDomain(domain)}
+                                  className="ml-2 hover:text-red-600"
+                                >
+                                  <X className="w-3 h-3" />
+                                </button>
+                              </Badge>
+                            ))}
+                          </div>
+                        </div>
+                      )}
                     </div>
-                  </div>
-                )}
+                  )}
               </div>
             </div>
 
@@ -709,21 +1085,43 @@ const Step4 = () => {
               <div className="mb-4">
                 <h3 className="text-lg font-semibold mb-2">Basic Proctoring</h3>
                 <p className="text-sm text-gray-600">
-                  Auto grade your assessments wit AI Auto grade your assessments
-                  wit AIAuto grade your assessments wit AIAuto grade your
-                  assessments wit AI
+                 Basic proctoring helps maintain the integrity of your assessment by detecting cheating and ensuring fair participation.
                 </p>
               </div>
               <div className="grid grid-cols-2 gap-4">
                 {/* Left Column */}
                 <div className="space-y-4">
                   {[
-                    { label: "Location logging", key: "locationLogging" },
-                    { label: "Webcam snapshots", key: "webcamSnapshots" },
-                    { label: "Plagiarism detection", key: "plagiarismDetection" },
-                    { label: "Browser extension detection", key: "browserExtensionDetection" },
-                    { label: "Fullscreen mode detection", key: "fullscreenModeDetection" },
-                    { label: "Mouse out tracking", key: "mouseOutTracking" },
+                    { 
+                      label: "Location logging", 
+                      key: "locationLogging",
+                      tooltip: "Tracks and logs the geographical location of candidates during the assessment to ensure they are taking the test from an authorized location."
+                    },
+                    { 
+                      label: "Webcam snapshots", 
+                      key: "webcamSnapshots",
+                      tooltip: "Takes periodic snapshots using the candidate's webcam to monitor their presence and behavior during the assessment."
+                    },
+                    { 
+                      label: "Plagiarism detection", 
+                      key: "plagiarismDetection",
+                      tooltip: "Automatically scans submitted answers against a database to detect potential plagiarism and copied content."
+                    },
+                    { 
+                      label: "Browser extension detection", 
+                      key: "browserExtensionDetection",
+                      tooltip: "Detects and blocks suspicious browser extensions that could be used for cheating or accessing unauthorized resources."
+                    },
+                    { 
+                      label: "Fullscreen mode detection", 
+                      key: "fullscreenModeDetection",
+                      tooltip: "Monitors if candidates switch out of fullscreen mode, which could indicate they are accessing other applications."
+                    },
+                    { 
+                      label: "Mouse out tracking", 
+                      key: "mouseOutTracking",
+                      tooltip: "Tracks when the mouse cursor leaves the assessment window, which could indicate switching to other applications."
+                    },
                   ].map((item) => (
                     <div
                       key={item.label}
@@ -736,7 +1134,7 @@ const Step4 = () => {
                             onCheckedChange={() => handleProctoringToggle(item.key)} 
                           />
                           <span className="font-medium">{item.label}</span>
-                          <HelpCircle className="w-4 h-4 text-gray-400" />
+                          <CustomTooltip message={item.tooltip} />
                         </div>
                         <div className="w-10 h-8 bg-purpleUpgrade rounded-2xl flex items-center justify-center">
                           <Crown className="w-5 h-5 text-purplePrimary fill-purplePrimary " />
@@ -749,12 +1147,36 @@ const Step4 = () => {
                 {/* Right Column */}
                 <div className="space-y-4">
                   {[
-                    { label: "Disable copy & Paste", key: "disableCopyPaste" },
-                    { label: "IP logging", key: "ipLogging" },
-                    { label: "Tab proctoring", key: "tabProctoring" },
-                    { label: "Keystroke analysis", key: "keystrokeAnalysis" },
-                    { label: "Screen record protection", key: "screenRecordProtection" },
-                    { label: "Restrict multiple monitors", key: "restrictMultipleMonitors" },
+                    { 
+                      label: "Disable copy & Paste", 
+                      key: "disableCopyPaste",
+                      tooltip: "Prevents candidates from copying content from the assessment or pasting external content into their answers."
+                    },
+                    { 
+                      label: "IP logging", 
+                      key: "ipLogging",
+                      tooltip: "Records the IP address of candidates to track their network location and detect potential proxy usage or location changes."
+                    },
+                    { 
+                      label: "Tab proctoring", 
+                      key: "tabProctoring",
+                      tooltip: "Monitors browser tab activity to detect when candidates switch to other tabs or open new windows during the assessment."
+                    },
+                    { 
+                      label: "Keystroke analysis", 
+                      key: "keystrokeAnalysis",
+                      tooltip: "Analyzes typing patterns and keystroke dynamics to detect unusual behavior or potential use of automated tools."
+                    },
+                    { 
+                      label: "Screen record protection", 
+                      key: "screenRecordProtection",
+                      tooltip: "Prevents candidates from taking screenshots or recording their screen during the assessment to protect content security."
+                    },
+                    { 
+                      label: "Restrict multiple monitors", 
+                      key: "restrictMultipleMonitors",
+                      tooltip: "Detects and restricts the use of multiple monitors to prevent candidates from viewing content on secondary screens."
+                    },
                   ].map((item) => (
                     <div
                       key={item.label}
@@ -767,7 +1189,7 @@ const Step4 = () => {
                             onCheckedChange={() => handleProctoringToggle(item.key)} 
                           />
                           <span className="font-medium">{item.label}</span>
-                          <HelpCircle className="w-4 h-4 text-gray-400" />
+                          <CustomTooltip message={item.tooltip} />
                         </div>
                         <div className="w-10 h-8 bg-purpleUpgrade rounded-2xl flex items-center justify-center">
                         <Crown className="w-5 h-5 text-purplePrimary fill-purplePrimary " />
@@ -787,9 +1209,7 @@ const Step4 = () => {
                     Advanced Proctoring
                   </h3>
                   <p className="text-sm opacity-90 text-gray-700">
-                    Auto grade your assessments wit AI Auto grade your
-                    assessments wit AIAuto grade your assessments wit AIAuto
-                    grade your assessments wit AI
+                     Advanced proctoring helps maintain the integrity of your assessment by detecting cheating and ensuring fair participation.
                   </p>
                 </div>
                 <Button className="rounded-full px-4 py-2 text-sm bg-purpleUpgrade text-black border-purplePrimary">
@@ -799,11 +1219,31 @@ const Step4 = () => {
               </div>
               <div className="grid grid-cols-2 gap-4 text-gray-700">  
                 {[
-                  { label: "Multiple Face Detection", key: "faceDetection" },
-                  { label: "Virtual Machine Detection", key: "virtualMachineDetection" },
-                  { label: "GPT Detection", key: "gptDetection" },
-                  { label: "Browser fingerprinting", key: "browserFingerprinting" },
-                  { label: "AI Identity Verification", key: "aiIdentityVerification" },
+                  { 
+                    label: "Multiple Face Detection", 
+                    key: "faceDetection",
+                    tooltip: "Uses advanced AI to detect multiple faces in the webcam feed, alerting when unauthorized persons are present during the assessment."
+                  },
+                  { 
+                    label: "Virtual Machine Detection", 
+                    key: "virtualMachineDetection",
+                    tooltip: "Detects if the candidate is using a virtual machine or emulated environment, which could indicate attempts to bypass security measures."
+                  },
+                  { 
+                    label: "GPT Detection", 
+                    key: "gptDetection",
+                    tooltip: "Analyzes written responses using AI to detect if answers were generated by language models like ChatGPT or other AI writing tools."
+                  },
+                  { 
+                    label: "Browser fingerprinting", 
+                    key: "browserFingerprinting",
+                    tooltip: "Creates a unique fingerprint of the candidate's browser and system to detect if multiple people are using the same device."
+                  },
+                  { 
+                    label: "AI Identity Verification", 
+                    key: "aiIdentityVerification",
+                    tooltip: "Uses facial recognition and biometric analysis to verify the candidate's identity throughout the assessment process."
+                  },
                 ].map((feature) => (
                   <div key={feature.label} className="bg-white rounded-xl p-4">
                     <div className="flex items-center gap-3">
@@ -812,7 +1252,7 @@ const Step4 = () => {
                         onCheckedChange={() => handleProctoringToggle(feature.key)} 
                       />
                       <span className="font-medium">{feature.label}</span>
-                      <HelpCircle className="w-4 h-4 opacity-70" />
+                      <CustomTooltip message={feature.tooltip} />
                     </div>
                   </div>
                 ))}
@@ -849,24 +1289,24 @@ const Step4 = () => {
                   name="extraTime"
                   control={control}
                   render={({ field }) => (
-                      <Input
-                          {...field}
-                          type="number"
-                          placeholder='120 Min'
-                          className='px-3 py-2 max-h-10 max-w-[114px] text-base font-medium text-greyAccent bg-white rounded-tr-md rounded-br-md rounded-tl-none rounded-bl-none border-0 rounded-xl'
-                          onChange={(e) => field.onChange(Number(e.target.value))}
-                      />
+                    <Input
+                        {...field}
+                        type="number"
+                        placeholder='120 Min'
+                        className='px-3 py-2 max-h-10 max-w-[114px] text-base font-medium text-greyAccent bg-white rounded-tr-md rounded-br-md rounded-tl-none rounded-bl-none border-0 rounded-xl'
+                        onChange={(e) => {
+                          field.onChange(Number(e.target.value));
+                          setExtraTime(Number(e.target.value));
+                        }}
+                    />
                   )}
                  />
                   
                 </div>
                 <div className="bg-purpleQuaternary rounded-xl p-4 flex-1">
                   <p className="text-sm text-gray-700">
-                    Candidates with concentration/ memory impairments Candidates
-                    with concentration/ memory impairments Candidates with
-                    concentration/ memory impairments Candidates with
-                    concentration/ memory impairments. Candidates with
-                    concentration.
+                    Candidates with concentration/ memory impairments are eligible for accommodation. This will be added to the total time of the assessment. This is recommended for users with specific needs to maintain the integrity of the assessment.
+                    
                   </p>
                 </div>
               </div>
@@ -898,7 +1338,7 @@ const Step4 = () => {
                       <span className="font-medium text-gray-700">
                         Candidates with concentration/ memory impairments
                       </span>
-                      <CustomTooltip message="Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s." />
+                      <CustomTooltip message="Candidates with concentration/ memory impairments are eligible for accommodation." />
                     </div>
                     <CustomToggleSwitch 
                       checked={legalSettings.concentrationMemoryImpairments} 
@@ -913,21 +1353,23 @@ const Step4 = () => {
       </div>
 
       {/* Navigation Buttons */}
-      <div className="flex justify-between items-center">
-        <Button variant="back"
+      <div className="flex justify-between items-center pb-6">
+        <Button 
+        variant="back"
         effect="shineHover"
-         className="rounded-full mb-6 px-6 py-2" onClick={handleBack}>
-          <ChevronLeftIcon className="w-4 h-4 mr-2" />
+        onClick={handleBack}
+        >
+        <ChevronLeftIcon />
           Back
         </Button>
         <Button
           variant="next"
           effect="shineHover"
-          
-          className="rounded-full mb-6 px-6 py-2 bg-gray-300 text-gray-500  cursor-not-allowed"
-          disabled
+          onClick={handleFormSubmit}
+          disabled={isUpdating}
+          className="rounded-full bg-purplePrimary text-white"
         >
-          Finish
+          {isUpdating ? "Saving..." : "Finish"}
         </Button>
       </div>
     </div>

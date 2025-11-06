@@ -1437,7 +1437,7 @@
 // }
 
 // export default CodingQuestionContent
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useForm, FormProvider, Controller, useWatch } from "react-hook-form";
 import { CircleAlert, Eye, EyeOff, X } from 'lucide-react';
 import { motion } from "framer-motion";
@@ -1477,6 +1477,8 @@ import EditTestIcon from '@/assets/editquestion.svg?react';
 import DeleteIcon from '@/assets/trashIcon.svg?react';
 import UploadZipICon from '@/assets/uploadZipIcon.svg?react';
 import PlusIcon from '@/assets/plusIcon.svg?react'
+import { CustomTooltip } from "@/components/ui/custom-tooltip";
+import { CustomToggleSwitch } from "@/components/ui/custom-toggle-switch";
 const questionTagsList = [
     { value: "arrays", label: "Arrays" },
     { value: "recursion", label: "Recursion" },
@@ -1572,6 +1574,25 @@ const CodingQuestionContent = ({
 
     const selectedLanguages = getValues('selectedLanguages');
 
+    // Toggle states for step 4
+    const [isSaveToLibraryEnabled, setSaveToLibraryEnabled] = useState(getValues('saveToLibrary') || false);
+    const [isEnablePrecisionCheckEnabled, setEnablePrecisionCheckEnabled] = useState(getValues('enablePrecisionCheck') || false);
+    const [isDisableCompileEnabled, setDisableCompileEnabled] = useState(getValues('disableCompile') || false);
+    const [isTestCaseVisibleEnabled, setTestCaseVisibleEnabled] = useState(getValues('visible') || false);
+    
+    // Update the form values when the toggle states change
+    useEffect(() => {
+        setValue('enablePrecisionCheck', isEnablePrecisionCheckEnabled);
+    }, [isEnablePrecisionCheckEnabled, setValue]);
+
+    useEffect(() => {
+        setValue('disableCompile', isDisableCompileEnabled);
+    }, [isDisableCompileEnabled, setValue]);
+
+    useEffect(() => {
+        setValue('saveToLibrary', isSaveToLibraryEnabled);
+    }, [isSaveToLibraryEnabled, setValue]);
+
     // Initialize form with default values when languages are loaded
     useEffect(() => {
         if (allLanguages && !getValues('selectedLanguages')?.length) {
@@ -1643,7 +1664,6 @@ const CodingQuestionContent = ({
             ) {
                 const selectedIds = selectedLangsRaw;
                 const popularLanguages = ["Python 3", "Java", "C++", "NodeJS", "PHP", "C#"];
-
                 const langResultMap = allLanguages?.results.map(lang => {
                     const override = langOverrides[lang.id] || {};
                     return {
@@ -1656,12 +1676,28 @@ const CodingQuestionContent = ({
                         fileExtension: languageFileExtensions[lang.code] || "",
                     };
                 });
-
                 const selectedLanguageObjects = selectedIds
                     .map(id => langResultMap.find(l => l.id === id))
                     .filter(Boolean);
-
                 setValue('selectedLanguages', selectedLanguageObjects);
+
+                
+                // Fill codeStubs for all selected languages for instant prepass
+                const prevStubs = getValues('codeStubs') || {};
+                const nextStubs = { ...prevStubs };
+                for (const lang of selectedLanguageObjects) {
+                    if (typeof nextStubs[lang.name] !== 'string') {
+                        nextStubs[lang.name] = lang.defaultTemplate || lang.default_template?.content || '';
+                    }
+                }
+                // Remove stubs for languages not in selection
+                Object.keys(nextStubs).forEach(langName => {
+                    if (!selectedLanguageObjects.some(l => l.name === langName)) {
+                        delete nextStubs[langName];
+                    }
+                });
+                setValue('codeStubs', nextStubs, { shouldDirty: true, shouldTouch: false, shouldValidate: false });
+                // -------------------------------------------------
             }
             setCurrentStep((s) => s + 1);
         } else {
@@ -1682,7 +1718,7 @@ const CodingQuestionContent = ({
             <div className="flex flex-col gap-6">
                 <div className="flex items-center gap-2">
                     <h3 className="flex text-base font-medium text-greyPrimary">Problem Statement<span className="text-dangerPrimary">*</span></h3>
-                    <QuestionIcon />
+                    <CustomTooltip message="Enter the problem statement for the question." />
                 </div>
                 <Controller
                     name="question"
@@ -1696,7 +1732,7 @@ const CodingQuestionContent = ({
                     }}
                     render={({ field }) => (
                         <div>
-                            <RichTextEditor {...field} content={field.value} onChange={field.onChange} wordCountToggle={false} />
+                            <RichTextEditor {...field} content={field.value} onChange={field.onChange} wordCountToggle={false} placeholder="Enter the problem statement for the question."/>
                             {errors.question && <p className="text-dangerPrimary text-xs mt-1">{errors.question.message}</p>}
                         </div>
                     )}
@@ -1709,7 +1745,7 @@ const CodingQuestionContent = ({
                         rules={{ required: 'Difficulty is required' }}
                         render={({ field }) => (
                             <div className="w-[230px]">
-                                <Select value={field.value} onValueChange={field.onChange}>
+                                <Select value={field.value || '1'} onValueChange={field.onChange}>
                                     <SelectTrigger chevronColor="text-greyAccent" className="!h-[42px] w-[230px] p-3 flex items-center justify-between text-xs font-normal bg-white text-greyPrimary rounded-md">
                                         <SelectValue />
                                     </SelectTrigger>
@@ -1732,7 +1768,7 @@ const CodingQuestionContent = ({
                             Input Formats
                             <span className="text-dangerPrimary">*</span>
                         </label>
-                        <QuestionIcon />
+                        <CustomTooltip message="Please enter the input formats for the question. They are used for the input validation of the question." />
                     </div>
                     <div className="w-full">
                         <Input
@@ -1753,7 +1789,7 @@ const CodingQuestionContent = ({
                             Constraints
                             <span className="text-dangerPrimary">*</span>
                         </label>
-                        <QuestionIcon />
+                        <CustomTooltip message="Constraints are used to limit the input data for the question." />
                     </div>
                     <div className="w-full">
                         <Input
@@ -1774,13 +1810,13 @@ const CodingQuestionContent = ({
                             Output Format
                             <span className="text-dangerPrimary">*</span>
                         </label>
-                        <QuestionIcon />
+                        <CustomTooltip message="Enter a desired output format for the question." />
                     </div>
                     <div className="w-full">
                         <Input
                             type='text'
                             id="output-formats"
-                            placeholder="output"
+                            placeholder="Output"
                             className={cn('w-full', {
                                 'border-dangerPrimary': errors.outputFormats
                             })}
@@ -1795,7 +1831,7 @@ const CodingQuestionContent = ({
                             Question Tags
                             <span className="text-dangerPrimary">*</span>
                         </label>
-                        <QuestionIcon />
+                        <CustomTooltip message="Select the tags for the question. They are used to categorize the question." />
                     </div>
                     <div className="w-full">
                         {/* <Controller
@@ -1830,7 +1866,7 @@ const CodingQuestionContent = ({
                                             clearErrors('tags');
                                         }
                                     }}
-                                    placeholder="Select Quesiton Tags"
+                                    placeholder="Select Question Tags"
                                     emptyIndicator={<p className="text-center text-lg leading-10 text-gray-600 dark:text-gray-400">no results found.</p>}
                                     error={errors.tags}
                                 />
@@ -2136,10 +2172,12 @@ const CodingQuestionContent = ({
     function Step4Content({ form, testCases, setTestCases }) {
         const [modalOpen, setModalOpen] = useState(false);
         const [editingCase, setEditingCase] = useState(null);
-        const [saveToLibrary, setSaveToLibrary] = useState(false);
-        const [enablePrecisionCheck, setEnablePrecisionCheck] = useState(false);
-        const [disableCompile, setDisableCompile] = useState(false);
+        const [isSaveToLibraryEnabled, setSaveToLibraryEnabled] = useState(false);
+        const [isEnablePrecisionCheckEnabled, setEnablePrecisionCheckEnabled] = useState(false);
+        const [isDisableCompileEnabled, setDisableCompileEnabled] = useState(false);
         const [testCaseVisible, setTestCaseVisible] = useState(false);
+
+        const updateTimeoutRef = useRef(null);
 
         useEffect(() => {
             console.log("Test Cases:", testCases);
@@ -2206,13 +2244,13 @@ const CodingQuestionContent = ({
                         <div className="text-sm font-semibold ">Testcase</div>
                         <div className="flex items-center justify-center gap-2 text-sm font-semibold text-center">
                             Visibility
-                            <QuestionIcon size={24} className="text-greyAccent" />
+                            <CustomTooltip message="Visibility of the test case"/>
                         </div>
                         <div className="flex items-center justify-center gap-2 text-sm font-semibold text-center">Points
-                            <QuestionIcon size={24} className="text-greyAccent" />
+                            <CustomTooltip message="Points of the test case"/>
                         </div>
                         <div className="flex items-center justify-center gap-2 text-sm font-semibold text-center">
-                            Weightage <QuestionIcon size={24} className="text-greyAccent" />
+                            Weightage <CustomTooltip message="Weightage of the test case"/>
                         </div>
                         <div className="text-sm font-semibold text-center">Action</div>
                     </div>
@@ -2283,7 +2321,7 @@ const CodingQuestionContent = ({
                                 Add Case
                             </motion.button>
                         </DialogTrigger>
-                        <DialogContent className="p-0 rounded-[24px] flex flex-col min-w-[1208px] overflow-y-auto">
+                        <DialogContent className="p-0 rounded-[24px] flex flex-col w-[1000px] overflow-y-auto">
                             <DialogHeader className='sr-only'>
                                 <DialogTitle>{editingCase !== null ? 'Edit Test Case' : 'Add Test Case'}</DialogTitle>
                                 <DialogDescription>
@@ -2346,7 +2384,7 @@ const CodingQuestionContent = ({
                                             Input
                                             <span className="text-dangerPrimary">*</span>
                                         </label>
-                                        <QuestionIcon />
+                                        <CustomTooltip message="Input of the test case"/>
                                     </div>
                                     <div className="flex flex-col gap-1 w-full">
                                         <div className="flex gap-4">
@@ -2383,7 +2421,7 @@ const CodingQuestionContent = ({
                                             Output
                                             <span className="text-dangerPrimary">*</span>
                                         </label>
-                                        <QuestionIcon />
+                                        <CustomTooltip message="Output of the test case"/>
                                     </div>
                                     <div className="flex flex-col gap-1 w-full">
                                         <div className="flex gap-4">
@@ -2446,7 +2484,7 @@ const CodingQuestionContent = ({
                                         <label htmlFor="testCaseWeightage" className="text-greyPrimary text-base font-medium">
                                             Weightage
                                         </label>
-                                        <QuestionIcon />
+                                        <CustomTooltip message="Points of the test case"/>
                                     </div>
                                     <div className="flex flex-col gap-1 w-full">
                                         <Controller
@@ -2475,25 +2513,25 @@ const CodingQuestionContent = ({
                                 <div className="w-full flex items-center gap-4">
                                     <div className="min-w-[220px] flex items-center gap-2">
                                         <span className="text-base font-medium text-greyPrimary">Visible to participants</span>
-                                        <QuestionIcon />
+                                        <CustomTooltip message="Visibility of the test case"/>
+                                        <Controller
+                                            name="visible"
+                                            control={addCaseControl}
+                                            render={({ field }) => (
+                                                <label className="relative inline-flex items-center cursor-pointer">
+                                                    <input
+                                                        type="checkbox"
+                                                        checked={field.value}
+                                                        onChange={e => field.onChange(e.target.checked)}
+                                                        className="sr-only"
+                                                    />
+                                                    <div className={`w-11 h-6 rounded-full transition-colors ${field.value ? 'bg-purplePrimary' : 'bg-greyAccent/50'}`}>
+                                                        <div className={`w-5 h-5 bg-white rounded-full shadow-md transform transition-transform ${field.value ? 'translate-x-5' : 'translate-x-0'} mt-0.5 ml-0.5`}></div>
+                                                    </div>
+                                                </label>
+                                            )}
+                                        />
                                     </div>
-                                    <Controller
-                                        name="visible"
-                                        control={addCaseControl}
-                                        render={({ field }) => (
-                                            <label className="relative inline-flex items-center cursor-pointer">
-                                                <Input
-                                                    type="checkbox"
-                                                    checked={field.value}
-                                                    onChange={e => field.onChange(e.target.checked)}
-                                                    className="sr-only"
-                                                />
-                                                <div className={`w-11 h-6 rounded-full transition-colors ${field.value ? 'bg-purplePrimary' : 'bg-greyAccent'}`}>
-                                                    <div className={`w-5 h-5 bg-white rounded-full shadow-md transform transition-transform ${field.value ? 'translate-x-5' : 'translate-x-0'} mt-0.5 ml-0.5`}></div>
-                                                </div>
-                                            </label>
-                                        )}
-                                    />
                                 </div>
                                 <div className="w-full flex items-center justify-between mt-[65px]">
                                     <DialogClose >
@@ -2541,64 +2579,44 @@ const CodingQuestionContent = ({
                         </div>
                         <div className="flex items-center gap-4">
                             <span className="min-w-[221px] text-base font-medium text-greyPrimary">Save question to library</span>
-                            <Controller
-                                name="saveToLibrary"
-                                control={control}
-                                render={({ field }) => (
-                                    <label className="relative inline-flex items-center cursor-pointer">
-                                        <Input
-                                            type="checkbox"
-                                            checked={field.value}
-                                            onChange={e => field.onChange(e.target.checked)}
-                                            className="sr-only"
-                                        />
-                                        <div className={`w-11 h-6 rounded-full transition-colors ${field.value ? 'bg-purplePrimary' : 'bg-greyAccent'}`}>
-                                            <div className={`w-5 h-5 bg-white rounded-full shadow-md transform transition-transform ${field.value ? 'translate-x-5' : 'translate-x-0'} mt-0.5 ml-0.5`}></div>
-                                        </div>
-                                    </label>
-                                )}
-                            />
+                           <CustomToggleSwitch checked={isSaveToLibraryEnabled} onCheckedChange={setSaveToLibraryEnabled} />
                         </div>
                     </div>
                     <div className="px-4 py-6 flex flex-col items-center gap-4 rounded-2xl bg-purpleSecondary max-w-[310px]">
                         <div className="flex items-center gap-4">
                             <span className="min-w-[220px] text-base font-medium text-greyPrimary">Enable Precision Check</span>
-                            <Controller
-                                name="enablePrecisionCheck"
-                                control={control}
-                                render={({ field }) => (
-                                    <label className="relative inline-flex items-center cursor-pointer">
-                                        <Input
-                                            type="checkbox"
-                                            checked={field.value}
-                                            onChange={e => field.onChange(e.target.checked)}
-                                            className="sr-only"
-                                        />
-                                        <div className={`w-11 h-6 rounded-full transition-colors ${field.value ? 'bg-purplePrimary' : 'bg-greyAccent'}`}>
-                                            <div className={`w-5 h-5 bg-white rounded-full shadow-md transform transition-transform ${field.value ? 'translate-x-5' : 'translate-x-0'} mt-0.5 ml-0.5`}></div>
-                                        </div>
-                                    </label>
-                                )}
+                            <CustomToggleSwitch 
+                                checked={isEnablePrecisionCheckEnabled} 
+                                onCheckedChange={(checked) => {
+                                    setEnablePrecisionCheckEnabled(checked);
+                                    // Clear any existing timeout
+                                    if (updateTimeoutRef.current) {
+                                        clearTimeout(updateTimeoutRef.current);
+                                    }
+                                    
+                                    // Debounce the form update to prevent text selection
+                                    updateTimeoutRef.current = setTimeout(() => {
+                                        setValue('enablePrecisionCheck', checked);
+                                    }, 50);
+                                }} 
                             />
                         </div>
                         <div className="flex items-center gap-4">
                             <span className="min-w-[220px] text-base font-medium text-greyPrimary">Disable Compile & Test</span>
-                            <Controller
-                                name="disableCompile"
-                                control={control}
-                                render={({ field }) => (
-                                    <label className="relative inline-flex items-center cursor-pointer">
-                                        <Input
-                                            type="checkbox"
-                                            checked={field.value}
-                                            onChange={e => field.onChange(e.target.checked)}
-                                            className="sr-only"
-                                        />
-                                        <div className={`w-11 h-6 rounded-full transition-colors ${field.value ? 'bg-purplePrimary' : 'bg-greyAccent'}`}>
-                                            <div className={`w-5 h-5 bg-white rounded-full shadow-md transform transition-transform ${field.value ? 'translate-x-5' : 'translate-x-0'} mt-0.5 ml-0.5`}></div>
-                                        </div>
-                                    </label>
-                                )}
+                            <CustomToggleSwitch 
+                                checked={isDisableCompileEnabled} 
+                                onCheckedChange={(checked) => {
+                                    setDisableCompileEnabled(checked);
+                                    // Clear any existing timeout
+                                    if (updateTimeoutRef.current) {
+                                        clearTimeout(updateTimeoutRef.current);
+                                    }
+                                    
+                                    // Debounce the form update to prevent text selection
+                                    updateTimeoutRef.current = setTimeout(() => {
+                                        setValue('disableCompile', checked);
+                                    }, 50);
+                                }} 
                             />
                         </div>
                     </div>
@@ -2689,9 +2707,10 @@ const CodingQuestionContent = ({
                             <Button
                                 variant="next"
                                 effect="shineHover"
-                                type="submit"
+                                type="button"
+                                onClick={onSubmit}
                             >
-                                Submit
+                                Add Question
                                 <ChevronRightIcon />
                             </Button>
                         )}

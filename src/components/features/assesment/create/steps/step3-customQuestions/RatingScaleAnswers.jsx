@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback, useMemo, memo } from 'react';
+import { useFormContext } from 'react-hook-form';
 import PurpleStarIcon from '@/assets/purpleStar.svg?react'
 import NumericInputIcon from '@/assets/numericInputIcon.svg?react'
 import RatingIcon from '@/assets/ratingIcon.svg?react'
@@ -40,8 +41,9 @@ const RatingOption = memo(({ option, isSelected, onClick }) => {
     );
 });
 
-
-const RatingScaleAnswers = memo(({ scale, selectedRating, onRatingChange }) => {
+const RatingScaleAnswers = memo(({ scale, selectedRating, onRatingChange, mode = 'add' }) => {
+    const { setValue, watch, formState: { errors } } = useFormContext();
+    
     const SCALE_OPTIONS = {
         'star-rating': [
             { value: 1, label: 'Hated it', stars: 1 },
@@ -62,11 +64,21 @@ const RatingScaleAnswers = memo(({ scale, selectedRating, onRatingChange }) => {
             label: `${i + 1}`,
         })),
     };
-    const [activeTab, setActiveTab] = useState('star-rating');
+
+    // Get form values
+    const formRatingScale = watch('ratingScale');
+    const formSelectedRating = watch('selectedRating');
+    
+    const [activeTab, setActiveTab] = useState(formRatingScale || 'star-rating');
 
     const scaleOptions = useMemo(() => {
         return SCALE_OPTIONS[activeTab] || SCALE_OPTIONS['star-rating'];
     }, [activeTab]);
+
+    // Update form when activeTab changes
+    useEffect(() => {
+        setValue('ratingScale', activeTab);
+    }, [activeTab, setValue]);
 
     const handleStarRatingClick = useCallback(() => {
         setActiveTab('star-rating');
@@ -81,8 +93,9 @@ const RatingScaleAnswers = memo(({ scale, selectedRating, onRatingChange }) => {
     }, []);
 
     const handleOptionClick = useCallback((value) => {
-        onRatingChange(value);
-    }, [onRatingChange]);
+        setValue('selectedRating', value);
+        onRatingChange && onRatingChange(value);
+    }, [setValue, onRatingChange]);
 
     return (
         <div className="space-y-4">
@@ -90,6 +103,7 @@ const RatingScaleAnswers = memo(({ scale, selectedRating, onRatingChange }) => {
                 <span className="text-sm font-medium text-gray-700">Select a scale</span>
                 <div className="flex gap-2">
                     <button
+                        type="button"
                         onClick={handleStarRatingClick}
                         className={cn("flex items-center px-3 gap-2 py-[6px] text-sm font-medium bg-white hover:bg-purplePrimary text-purplePrimary hover:text-white rounded-full border border-purplePrimary transition-all duration-300 ease-in group hover:cursor-pointer",
                             { 'bg-purplePrimary text-white': activeTab === 'star-rating' }
@@ -99,6 +113,7 @@ const RatingScaleAnswers = memo(({ scale, selectedRating, onRatingChange }) => {
                         Star Rating (1-5)
                     </button>
                     <button
+                        type="button"
                         onClick={handleLikertClick}
                         className={cn("flex items-center px-3 gap-2 py-[6px] text-sm font-medium bg-white hover:bg-purplePrimary text-purplePrimary hover:text-white rounded-full border border-purplePrimary transition-all duration-300 ease-in group hover:cursor-pointer",
                             { 'bg-purplePrimary text-white': activeTab === 'likert' }
@@ -108,6 +123,7 @@ const RatingScaleAnswers = memo(({ scale, selectedRating, onRatingChange }) => {
                         Likert Scale
                     </button>
                     <button
+                        type="button"
                         onClick={handleNumericClick}
                         className={cn("flex items-center px-3 gap-2 py-[6px] text-sm font-medium bg-white hover:bg-purplePrimary text-purplePrimary hover:text-white rounded-full border border-purplePrimary transition-all duration-300 ease-in group hover:cursor-pointer",
                             { 'bg-purplePrimary text-white': activeTab === 'numeric' }
@@ -119,16 +135,26 @@ const RatingScaleAnswers = memo(({ scale, selectedRating, onRatingChange }) => {
                 </div>
             </div>
 
+            {/* Show error if rating scale is not selected */}
+            {errors.ratingScale && (
+                <p className="text-red-500 text-sm">{errors.ratingScale.message}</p>
+            )}
+
             <div className="space-y-3">
                 {scaleOptions.map((option) => (
                     <RatingOption
                         key={option.value}
                         option={option}
-                        isSelected={selectedRating === option.value}
+                        isSelected={formSelectedRating === option.value}
                         onClick={handleOptionClick}
                     />
                 ))}
             </div>
+
+            {/* Show error if no rating is selected */}
+            {errors.selectedRating && (
+                <p className="text-red-500 text-sm">{errors.selectedRating.message}</p>
+            )}
         </div>
     );
 });

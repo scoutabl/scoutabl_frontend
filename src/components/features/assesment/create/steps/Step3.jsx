@@ -12,6 +12,7 @@ import AiIcon from "@/assets/AiIcon.svg?react";
 import ChevronLeftIcon from "@/assets/chevronLeftIcon.svg?react";
 import ChevronRightIcon from "@/assets/chevronRightIcon.svg?react";
 import EditAssessmentQuestionsPopup from "./EditAssessmentQuestionsPopup";
+import { getQuestionType } from "@/lib/questionTypes";
 
 // -------------------------------------------------------------
 // Step-3 – Add Custom Questions
@@ -50,7 +51,9 @@ const Step3 = () => {
   const handleEdit = (question) => {
     setModalMode("edit");
     setModalInitialData(question);
-    setModalQuestionType(question.__type); // Sequencer passes a decorated field
+    // Determine question type from question data
+    const questionType = getQuestionType(question.resourcetype, question.multiple_true);
+    setModalQuestionType(questionType);
     setModalOpen(true);
   };
 
@@ -103,9 +106,15 @@ const Step3 = () => {
           <p className="text-sm font-medium text-greyAccent">You can add up to 20 custom questions at a time</p>
         </div>
         <div className="flex items-center gap-3">
-          <Button variant="outline">
+        <Button 
+            variant="outline" 
+            effect="shineHover"
+            onClick={() => {
+                handleStepChange('finalize');
+            }}
+          >
             Skip to Finalize
-          </Button>
+        </Button>
           <Button variant="primary" onClick={handleAddFromLibrary}>
             Add from Library
           </Button>
@@ -120,18 +129,20 @@ const Step3 = () => {
         assessmentId={assessment?.id} 
         questionType="custom"
         onEdit={handleEdit} 
+        onAddQuestion={() => handleAdd('single-select')} // Default question type for "Add Question" button
+        onAddFromLibrary={handleAddFromLibrary}
       />
 
       {/* Add / Edit modal */}
       <QuestionModal
-      key={modalMode + (modalInitialData?.id || "")}
+        key={modalMode + (modalInitialData?.id || "")}
         isOpen={modalOpen}
         setIsOpen={setModalOpen}
         mode={modalMode}
         initialData={modalInitialData}
         questionType={modalQuestionType}
         setQuestionType={setModalQuestionType}
-        asssessmentId={assessment?.id}
+        assessmentId={assessment?.id}
       />
 
       <EditAssessmentQuestionsPopup 

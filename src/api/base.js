@@ -25,13 +25,19 @@ export default class BaseAPI {
         return new URLSearchParams(params).toString();
     }
 
-    headers(extraHeaders = {}) {
+    headers(extraHeaders = {}, data) {
         const accessToken = sessionStorage.getItem('accessToken') || localStorage.getItem('accessToken');
-        return {
-            'Content-Type': 'application/json',
+        const headers = {
             'Authorization': `Bearer ${accessToken}`,
             ...extraHeaders,
+        };
+        
+        // Only set Content-Type for non-FormData
+        if (!(data instanceof FormData)) {
+            headers['Content-Type'] = 'application/json';
         }
+        
+        return headers;
     }
 
     get(url, config) {
@@ -42,13 +48,13 @@ export default class BaseAPI {
 
     post(url, data, config) {
         return this.api.post(url, data, {
-            headers: this.headers(config?.headers),
+            headers: this.headers(config?.headers, data),
         });
     }
 
     put(url, data, config) {
         return this.api.put(url, data, {
-            headers: this.headers(config?.headers),
+            headers: this.headers(config?.headers, data),
         });
     }
 
@@ -60,7 +66,7 @@ export default class BaseAPI {
 
     patch(url, data, config) {
         return this.api.patch(url, data, {
-            headers: this.headers(config?.headers),
+            headers: this.headers(config?.headers, data),
         });
     }
 }

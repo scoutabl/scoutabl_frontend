@@ -33,37 +33,33 @@ import ReusableAnswer from './ReusableAnswer';
 import AiIcon from '@/assets/AiIcon.svg?react'
 import RichTextEditor from '@/components/RichTextEditor';
 import { toast } from 'sonner';
-import { useAddQuestion, useUpdateQuestion } from '@/api/createQuestion';
+import { useAssessmentContext } from "@/components/common/AssessmentNavbarWrapper";
+import { createQuestion } from "@/api/createQuestion";
 import Assesment from '../../../Assesment';
 import { getValidationSchema } from './schema/CreateQuestionValidationSchema';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { cn } from '@/lib/utils';
-const DEFAULT_SINGLE_SELECT_ANSWERS = [
-    { answerId: 1, text: 'Yes' },
-    { answerId: 2, text: 'No' },
-];
+import { useQueryClient } from '@tanstack/react-query';
+import { useUpdateQuestion } from "@/api/createQuestion";
 
-const DEFAULT_MULTIPLE_SELECT_ANSWERS = [
-    { id: 1, text: 'Javascript' },
-    { id: 2, text: 'C++' }
-];
-
-// Toggle handlers with proper form state management
-const handleToggleCompulsory = (checked) => {
-    setValue('isCompulsory', checked, { shouldValidate: true });
+// Question type placeholders
+const QUESTION_TYPE_PLACEHOLDERS = {
+    'single-select': 'Select the correct answer from the options below.',
+    'multiple-select': 'Select all correct answers from the options below.',
+    'rating': 'Please rate the following on a scale of 1-5.',
+    'numeric-input': 'Enter the correct numerical value.',
+    'essay': 'Please provide a detailed written response to the following question.',
+    'video': 'Record a video response to the following question.',
+    'audio': 'Record an audio response to the following question.',
+    'rearrange': 'Rearrange the following items in the correct order.',
+    'code': 'Write code to solve the following problem.',
+    'coding': 'Write code to solve the following problem.'
 };
 
-const handleToggleSaveToLibrary = (checked) => {
-    setValue('saveToLibrary', checked, { shouldValidate: true });
+// Helper function to get placeholder for question type
+const getPlaceholderForQuestionType = (questionType) => {
+    return QUESTION_TYPE_PLACEHOLDERS[questionType] || 'Enter your question here.';
 };
-
-
-
-const DEFAULT_REARRANGE_OPTIONS = [
-    { id: 1, text: 'runs' },
-    { id: 2, text: 'quickly' },
-    { id: 3, text: 'dog' },
-]
 
 function convertHHMMSSToMinutes(hhmmss) {
     if (!hhmmss) return 120; // fallback
@@ -168,12 +164,12 @@ const useQuestionForm = (initialData, initialQuestion, mode, isOpen, questionTyp
             selectedRating: initialData.selectedRating || null,
             correctAnswer: initialData.value || 250,
             numericCondition: initialData.condition?.toString() || '2',
-            singleSelectAnswers: DEFAULT_SINGLE_SELECT_ANSWERS,
-            multipleSelectAnswers: DEFAULT_MULTIPLE_SELECT_ANSWERS,
+            singleSelectAnswers: [],
+            multipleSelectAnswers: [],
             rearrangeOrder: initialData.correct_order || [],
             rearrangeOptions: initialData.options
                 ? [...initialData.options].sort((a, b) => a.correct_order - b.correct_order)
-                : DEFAULT_REARRANGE_OPTIONS,
+                : [],
             shuffleEnabled: false,
             relevance_context: initialData.relevance_context || '',
             look_for_context: initialData.look_for_context || '',
@@ -181,19 +177,21 @@ const useQuestionForm = (initialData, initialQuestion, mode, isOpen, questionTyp
         };
 
         // Return base defaults for non-edit modes
-        if (mode !== 'edit' || !initialData.choices) {
+        if (mode !== 'edit') {
             return baseDefaults;
         }
 
-        // Edit mode specific overrides
+        // Edit mode specific overrides - apply to ALL question types in edit mode
         const editOverrides = {
             timeToAnswer: convertHHMMSSToMinutes(initialData.completion_time),
             customScore: initialData.custom_score || 120,
             shuffleEnabled: initialData.shuffle_options || false,
+            isCompulsory: initialData.is_compulsory || false,
+            saveToLibrary: initialData.is_save_template || false,
         };
 
-        // Question type specific processing for edit mode
-        const questionTypeOverrides = getQuestionTypeOverrides(initialData, questionType);
+        // Question type specific processing for edit mode (only for question types with choices)
+        const questionTypeOverrides = initialData.choices ? getQuestionTypeOverrides(initialData, questionType) : {};
 
         return {
             ...baseDefaults,
@@ -206,21 +204,21 @@ const useQuestionForm = (initialData, initialQuestion, mode, isOpen, questionTyp
     const getCodingDefaults = () => {
         return {
             // Basic question fields
-            question: initialData?.question || initialQuestion || '',
+            question: initialData?.question || initialData?.content || initialQuestion || '',
             difficulty: initialData?.difficulty || '1',
-            inputFormats: initialData?.inputFormats || '',
+            inputFormats: initialData?.input_formats || initialData?.inputFormats || '',
             constraints: initialData?.constraints || '',
-            outputFormats: initialData?.outputFormats || '',
+            outputFormats: initialData?.output_formats || initialData?.outputFormats || '',
             tags: initialData?.tags || [],
 
             // Coding-specific fields
-            selectedLanguages: initialData?.selectedLanguages || [],
-            codeStubs: initialData?.codeStubs || {},
-            customScore: initialData?.customScore || 10,
-            saveToLibrary: initialData?.saveToLibrary || false,
-            enablePrecisionCheck: initialData?.enablePrecisionCheck || false,
-            disableCompile: initialData?.disableCompile || false,
-            testCases: initialData?.testCases || [],
+            selectedLanguages: initialData?.selected_languages || initialData?.selectedLanguages || [],
+            codeStubs: initialData?.code_stubs || initialData?.codeStubs || {},
+            customScore: initialData?.custom_score || initialData?.customScore || 10,
+            saveToLibrary: initialData?.is_save_template || initialData?.saveToLibrary || false,
+            enablePrecisionCheck: initialData?.enable_precision_check || initialData?.enablePrecisionCheck || false,
+            disableCompile: initialData?.disable_compile || initialData?.disableCompile || false,
+            testCases: initialData?.test_cases || initialData?.testCases || [],
         };
     };
 
@@ -228,7 +226,7 @@ const useQuestionForm = (initialData, initialQuestion, mode, isOpen, questionTyp
     const getQuestionTypeOverrides = (data, type) => {
         const overrides = {};
 
-        if (type === 'single-select') {
+        if (type === 'single-select' && data.choices) {
             overrides.singleSelectAnswers = data.choices.map(choice => ({
                 answerId: Number(choice.id),
                 text: choice.text,
@@ -238,7 +236,7 @@ const useQuestionForm = (initialData, initialQuestion, mode, isOpen, questionTyp
             overrides.selectedAnswer = correctChoice ? Number(correctChoice.id) : null;
         }
 
-        if (type === 'multiple-select') {
+        if (type === 'multiple-select' && data.choices) {
             overrides.multipleSelectAnswers = data.choices.map(choice => ({
                 id: Number(choice.id),
                 text: choice.text
@@ -273,8 +271,7 @@ const QuestionModal = memo(({
     trigger,
     questionType,
     setQuestionType,
-    initialQuestion = "Rearrange the following words to form a grammatically correct and meaningful sentence",
-    onSave,
+    initialQuestion = "",
     initialData = {},
     isOpen,
     setIsOpen,
@@ -283,12 +280,34 @@ const QuestionModal = memo(({
 }) => {
     const form = useQuestionForm(initialData, initialQuestion, mode, isOpen, questionType)
     const { handleSubmit, control, watch, setValue, formState: { errors, isValid } } = form;
-    const addQuestionMutation = useAddQuestion(assessmentId, () => { setIsOpen(false); });
-    const updateQuestionMutation = useUpdateQuestion(assessmentId, () => { setIsOpen(false); });
+    const { assessment, updateAssessment } = useAssessmentContext();
     const isEdit = mode === 'edit';
+    
+    // queryClient declaration
+    const queryClient = useQueryClient();
+    
+    // Update mutation with loading state
+    const { mutate: updateQuestionMutation, isPending: isUpdating } = useUpdateQuestion(assessmentId, () => {
+        toast.success('Question updated successfully!');
+        setIsOpen(false);
+    });
+    
     // Use watch to get current form values
     const watchedValues = watch();
     const inputRefs = useRef([]);
+
+    // Get toggle values directly from form
+    const isCompulsoryEnabled = watchedValues.isCompulsory || false;
+    const isSaveToLibraryEnabled = watchedValues.saveToLibrary || false;
+
+    // Toggle handlers component
+    const handleToggleCompulsory = (checked) => {
+        setValue('isCompulsory', checked, { shouldValidate: true });
+    };
+
+    const handleToggleSaveToLibrary = (checked) => {
+        setValue('saveToLibrary', checked, { shouldValidate: true });
+    };
 
     // RichTextEditor integration with react-hook-form
     const handleTextEditorChange = (content) => {
@@ -307,162 +326,286 @@ const QuestionModal = memo(({
         console.log("Zod validation errors:", errors);
     };
 
+    // Common payload builder function
+    const buildQuestionPayload = (data, completion_time) => {
+        const basePayload = {
+            completion_time,
+            save_template: data.saveToLibrary,
+            custom_score: Number(data.customScore),
+            is_compulsory: data.isCompulsory,
+        };
+
+        switch (questionType) {
+            case 'single-select':
+                return {
+                    ...basePayload,
+                    resourcetype: "MCQuestion",
+                    shuffle_options: !!data.shuffleEnabled,
+                    title: data.post,
+                    content: data.post,
+                    multiple_true: false,
+                    choices: data.singleSelectAnswers.map(opt => ({
+                        text: opt.text,
+                        is_correct: String(opt.answerId) === String(data.selectedAnswer)
+                    }))
+                };
+
+            case 'multiple-select':
+                return {
+                    ...basePayload,
+                    resourcetype: "MCQuestion",
+                    shuffle_options: !!data.shuffleEnabled,
+                    title: data.post,
+                    content: data.post,
+                    multiple_true: true,
+                    choices: data.multipleSelectAnswers.map(opt => ({
+                        text: opt.text,
+                        is_correct: data.selectedAnswers.map(String).includes(String(opt.id))
+                    }))
+                };
+
+            case 'numeric-input':
+                return {
+                    ...basePayload,
+                    resourcetype: "NumberQuestion",
+                    title: data.post,
+                    content: data.post,
+                    value: data.correctAnswer,
+                    condition: data.numericCondition,
+                };
+
+            case 'rating':
+                return {
+                    ...basePayload,
+                    resourcetype: "RatingQuestion",
+                    title: data.post,
+                    content: data.post,
+                    rating_scale: data.ratingScale,
+                };
+
+            case 'rearrange':
+                return {
+                    ...basePayload,
+                    resourcetype: "RearrangeQuestion",
+                    title: data.post,
+                    content: data.post,
+                    shuffle_options: true,
+                    options: data.rearrangeOptions.map((opt, idx) => ({
+                        text: opt.text,
+                        question_order: idx,
+                        correct_order: idx
+                    }))
+                };
+
+            case 'essay':
+                return {
+                    ...basePayload,
+                    resourcetype: "EssayQuestion",
+                    content: data.post, 
+                    title: data.title,
+                    relevance_context: data.relevance_context,
+                    look_for_context: data.look_for_context,
+                };
+
+            case 'video':
+                return {
+                    ...basePayload,
+                    resourcetype: "VideoQuestion",
+                    content: data.post, 
+                    title: data.title,
+                    relevance_context: data.relevance_context,
+                    look_for_context: data.look_for_context,
+                };
+
+            case 'audio':
+                return {
+                    ...basePayload,
+                    resourcetype: "AudioQuestion",
+                    content: data.post, 
+                    title: data.title,
+                    relevance_context: data.relevance_context,
+                    look_for_context: data.look_for_context,
+                };
+
+            case 'coding':
+            case 'code': {
+                let languagesArr = data.selectedLanguages || [];
+                if (languagesArr.length > 0 && typeof languagesArr[0] === 'object') {
+                    languagesArr = languagesArr.map(l => l.id);
+                }
+                return {
+                    resourcetype: 'CodingQuestion',
+                    title: data.question || '',
+                    testcases: data.testCases || [],
+                    templates: data.templates || [],
+                    language_configs: data.language_configs || [],
+                    save_template: !!data.saveToLibrary,
+                    languages: languagesArr,
+                };
+            }
+
+            default:
+                throw new Error(`Unsupported question type: ${questionType}`);
+        }
+    };
+
+    // Common API call function for creating questions
+    const handleCreateQuestion = (payload) => {
+        createQuestion(payload).then(questionData => {
+            const currentQuestions = assessment?.custom_questions || [];
+            const currentOrder = assessment?.custom_questions_order || [];
+            
+            const updateData = {
+                custom_questions: [...currentQuestions, questionData.id],
+                custom_questions_order: [
+                    ...currentOrder.filter((id) => id !== questionData.id),
+                    questionData.id,
+                ],
+            };
+
+            updateAssessment({
+                assessmentId: assessment.id,
+                data: updateData,
+            }).then(() => {
+                queryClient.invalidateQueries(['assessment-questions', assessmentId]);
+                setIsOpen(false);
+            });
+        }).catch(error => {
+            toast.error('Failed to save question.');
+        });
+    };
+
     const onSubmit = (data) => {
         console.log("Form data before submit:", data);
-        console.log("shuffleEnabled in form data:", data.shuffleEnabled);
 
         const mins = parseInt(data.timeToAnswer, 10) || 0;
         const completion_time = `00:${String(mins).padStart(2, '0')}:00`;
 
-        let choices = [];
-        let multiple_true = false;
-
-        //coding question payload
-        if (questionType === 'coding') {
-            // Handle coding question submission
-            const payload = {
-                resourcetype: 'CodingQuestion',
-                completion_time: data.customScore,
-                save_template: data.saveToLibrary,
-                content: data.question,
-                difficulty: data.difficulty,
-                input_formats: data.inputFormats,
-                constraints: data.constraints,
-                output_formats: data.outputFormats,
-                tags: data.tags,
-                selected_languages: data.selectedLanguages,
-                code_stubs: data.codeStubs,
-                test_cases: data.testCases,
-                enable_precision_check: data.enablePrecisionCheck,
-                disable_compile: data.disableCompile,
-                // ...add other coding-specific fields as needed
-            };
-
-            if (isEdit) {
-                updateQuestionMutation.mutate({ questionId: initialData.id, payload });
-            } else {
-                addQuestionMutation.mutate(payload);
-            }
+        // Handle edit mode
+        if (isEdit && initialData.id) {
+            handleUpdateQuestion(data, completion_time);
             return;
         }
 
-        if (questionType === 'multiple-select') {
-            choices = data.multipleSelectAnswers.map(opt => {
-                const choiceData = {
-                    text: opt.text,
-                    is_correct: data.selectedAnswers.map(String).includes(String(opt.id))
-                };
-
-                if (isEdit && initialData.choices?.some(c => String(c.id) === String(opt.id))) {
-                    choiceData.id = opt.id;
-                }
-
-                return choiceData;
-            });
-            multiple_true = true;
-        }
-        else if (questionType === 'single-select') {
-            choices = data.singleSelectAnswers.map(opt => {
-                const choiceData = {
-                    text: opt.text,
-                    is_correct: String(opt.answerId) === String(data.selectedAnswer)
-                };
-
-                // Only include id if it matches a backend id
-                const isBackendId = initialData.choices?.some(c => String(c.id) === String(opt.answerId));
-                if (isEdit && isBackendId) {
-                    choiceData.id = opt.answerId;
-                }
-
-                return choiceData;
-            });
-            multiple_true = false;
-        }
-        // Rest of your submission logic...
-        if (questionType === 'single-select' || questionType === 'multiple-select') {
-            const payload = {
-                resourcetype: "MCQuestion",
-                completion_time,
-                save_template: data.saveToLibrary,
-                shuffle_options: !!data.shuffleEnabled,
-                title: data.post,
-                multiple_true,
-                custom_score: Number(data.customScore),
-                is_compulsory: data.isCompulsory,
-                choices
-            };
-
-            if (isEdit) {
-                updateQuestionMutation.mutate({ questionId: initialData.id, payload });
-            } else {
-                addQuestionMutation.mutate(payload);
-            }
-            return;
-        }
-
-        //numeric-input payload
-        if (questionType === 'numeric-input') {
-            const payload = {
-                "resourcetype": "NumberQuestion",
-                completion_time,
-                "save_template": data.saveToLibrary,
-                "title": data.post,
-                "content": data.post,
-                "value": data.correctAnswer,
-                "condition": data.numericCondition
-            }
-            if (isEdit) {
-                updateQuestionMutation.mutate({ questionId: initialData.id, payload });
-            } else {
-                addQuestionMutation.mutate(payload);
-            }
-            return;
-        }
-        // hanlde rearrange quetion
-        if (questionType === 'rearrange') {
-            const options = data.rearrangeOptions.map((opt, idx) => ({
-                ...(mode === 'edit' && opt.id ? { id: opt.id } : {}),
-                text: opt.text,
-                question_order: idx,
-                correct_order: idx
-            }));
-
-            const payload = {
-                resourcetype: "RearrangeQuestion",
-                completion_time,
-                save_template: data.saveToLibrary,
-                title: data.post,
-                content: data.post,
-                shuffle_options: true,
-                options
-            };
-            if (isEdit) {
-                updateQuestionMutation.mutate({ questionId: initialData.id, payload });
-            } else {
-                addQuestionMutation.mutate(payload);
-            }
-            return;
-        }
-
-        if (['essay', 'video', 'audio'].includes(questionType)) {
-            const payload = {
-                resourcetype: questionType === 'essay' ? 'EssayQuestion' : questionType === 'video' ? 'VideoQuestion' : 'AudioQuestion',
-                completion_time,
-                save_template: data.saveToLibrary,
-                content: data.title || '', // If you have a content field, otherwise use title or another field
-                title: data.title,
-                relevance_context: data.relevance_context,
-                look_for_context: data.look_for_context,
-                // ...add other fields as needed
-            };
-            if (isEdit) {
-                updateQuestionMutation.mutate({ questionId: initialData.id, payload });
-            } else {
-                addQuestionMutation.mutate(payload);
-            }
-            return;
+        // Build payload and make API call
+        try {
+            const payload = buildQuestionPayload(data, completion_time);
+            handleCreateQuestion(payload);
+        } catch (error) {
+            toast.error(`Unsupported question type: ${questionType}`);
         }
     };
+
+    // handleUpdateQuestion
+    const handleUpdateQuestion = (data, completion_time) => {
+        try {
+            const payload = buildQuestionPayload(data, completion_time);
+            
+            // Call the update mutation
+            updateQuestionMutation({
+                questionId: initialData.id,
+                payload: payload
+            });
+        } catch (error) {
+            toast.error(`Unsupported question type: ${questionType}`);
+        }
+    };
+
+    // Helper function to prepare question data for local storage
+    const prepareQuestionData = (data) => {
+        const mins = parseInt(data.timeToAnswer, 10) || 0;
+        const completion_time = `00:${String(mins).padStart(2, '0')}:00`;
+
+        // Create a temporary ID for local storage
+        const tempId = initialData.id || `temp_${Date.now()}`;
+
+        const baseQuestion = {
+            id: tempId,
+            title: data.post,
+            completion_time,
+            custom_score: Number(data.customScore),
+            is_compulsory: data.isCompulsory,
+            save_template: data.saveToLibrary,
+            questionType: questionType,
+            __type: questionType,
+            isLocal: true,
+        };
+
+        // Add question type specific data
+        switch (questionType) {
+            case 'single-select':
+                return {
+                    ...baseQuestion,
+                    resourcetype: 'MCQuestion',
+                    multiple_true: false,
+                    choices: data.singleSelectAnswers.map(opt => ({
+                        id: opt.answerId,
+                        text: opt.text,
+                        is_correct: String(opt.answerId) === String(data.selectedAnswer)
+                    })),
+                    selectedAnswer: data.selectedAnswer
+                };
+            case 'multiple-select':
+                return {
+                    ...baseQuestion,
+                    resourcetype: 'MCQuestion',
+                    multiple_true: true,
+                    choices: data.multipleSelectAnswers.map(opt => ({
+                        id: opt.id,
+                        text: opt.text,
+                        is_correct: data.selectedAnswers.map(String).includes(String(opt.id))
+                    })),
+                    selectedAnswers: data.selectedAnswers
+                };
+            case 'numeric-input':
+                return {
+                    ...baseQuestion,
+                    resourcetype: 'NumberQuestion',
+                    value: data.correctAnswer,
+                    condition: data.numericCondition
+                };
+            case 'rearrange':
+                return {
+                    ...baseQuestion,
+                    resourcetype: 'RearrangeQuestion',
+                    options: data.rearrangeOptions.map((opt, idx) => ({
+                        id: opt.id || Date.now() + idx,
+                        text: opt.text,
+                        question_order: idx,
+                        correct_order: idx
+                    }))
+                };
+            case 'essay':
+            case 'video':
+            case 'audio':
+                return {
+                    ...baseQuestion,
+                    resourcetype: questionType === 'essay' ? 'EssayQuestion' : 
+                                 questionType === 'video' ? 'VideoQuestion' : 'AudioQuestion',
+                    relevance_context: data.relevance_context,
+                    look_for_context: data.look_for_context,
+                };
+            case 'code':
+                return {
+                    ...baseQuestion,
+                    resourcetype: 'CodingQuestion',
+                    content: data.question,
+                    difficulty: data.difficulty,
+                    input_formats: data.inputFormats,
+                    constraints: data.constraints,
+                    output_formats: data.outputFormats,
+                    tags: data.tags,
+                    selected_languages: data.selectedLanguages,
+                    code_stubs: data.codeStubs,
+                    test_cases: data.testCases,
+                    enable_precision_check: data.enablePrecisionCheck,
+                    disable_compile: data.disableCompile,
+                };
+            default:
+                return baseQuestion;
+        }
+    };
+
     const renderQuestionContent = useMemo(() => {
         switch (questionType) {
             case 'single-select':
@@ -489,6 +632,7 @@ const QuestionModal = memo(({
                 return (
                     <RearrangeAnswers inputRefs={inputRefs} />
                 )
+            case 'coding':
             case 'code':
                 return (
                     <FormProvider>
@@ -519,10 +663,21 @@ const QuestionModal = memo(({
                 <div className="flex items-center justify-between mb-4">
                     <DialogHeader className="max-h-9">
                         <DialogTitle className="flex items-center gap-2">
-                            <span className="text-xl text-greyPrimary">New Question:</span>
-                            <Select value={questionType} onValueChange={setQuestionType}>
-                                <SelectTrigger className="w-[176px] text-sm bg-blueSecondary text-greyAccent">
-                                    <SelectValue />
+                            <span className="text-xl text-greyPrimary">
+                                {isEdit ? 'Edit Question:' : 'New Question:'}
+                            </span>
+                            <Select 
+                                value={questionType || ''} 
+                                onValueChange={setQuestionType}
+                                disabled={isEdit} // Disable the dropdown in edit mode
+                            >
+                                <SelectTrigger 
+                                    className={cn(
+                                        "w-[176px] text-sm bg-blueSecondary text-greyAccent",
+                                        isEdit && "opacity-60 cursor-not-allowed" // Visual feedback for disabled state
+                                    )}
+                                >
+                                    <SelectValue placeholder="Select type" />
                                 </SelectTrigger>
                                 <SelectContent>
                                     <SelectItem value="single-select">Single Select</SelectItem>
@@ -537,22 +692,27 @@ const QuestionModal = memo(({
                                 </SelectContent>
                             </Select>
                         </DialogTitle>
+                        <DialogDescription>
+                            {mode === 'edit' 
+                                ? 'Edit your question details below. Question type cannot be changed.' 
+                                : 'Add a new question to your assessment.'
+                            }
+                        </DialogDescription>
                     </DialogHeader>
-                    <DialogDescription className="sr-only">
-                        Add a new question to your assessment.
-                    </DialogDescription>
                     <div className="flex items-center gap-3">
                         <button className="h-[33px] w-[112px] text-sm text-purplePrimary border border-purplePrimary rounded-full hover:bg-purplePrimary hover:text-white transition-colors duration-300 ease-linear flex items-center justify-center gap-2">
                             <Eye className="w-4 h-4 transition-colors duration-300 ease-linear" />
                             Preview
                         </button>
-                        <DialogClose className="p-2 text-greyPrimary hover:text-dangerPrimary transition-colors duration-300 ease-linear">
-                            <X className="w-5 h-5" />
+                        <DialogClose asChild>
+                            <button className="h-[33px] w-[33px] rounded-full border border-gray-300 flex items-center justify-center hover:bg-gray-50 transition-colors duration-300 ease-linear">
+                                <X className="w-4 h-4" />
+                            </button>
                         </DialogClose>
                     </div>
                 </div>
 
-                {questionType === 'code' ? (
+                {questionType === 'code' || questionType === 'coding' ? (
                     <>
                         {renderQuestionContent}
                     </>
@@ -565,7 +725,12 @@ const QuestionModal = memo(({
                             </div>
 
                             <div className="flex-1">
-                                <RichTextEditor content={watchedValues.post} onChange={handleTextEditorChange} wordCountToggle={false} />
+                                <RichTextEditor 
+                                    content={watchedValues.post} 
+                                    onChange={handleTextEditorChange} 
+                                    wordCountToggle={false}
+                                    placeholder={getPlaceholderForQuestionType(questionType)}
+                                />
                             </div>
                         </div>
                         <FormProvider {...form}>
@@ -596,7 +761,7 @@ const QuestionModal = memo(({
                                         </div>
                                         <div className="flex items-center gap-8">
                                             <span className="text-base font-medium text-greyPrimary">Compulsory Question</span>
-                                            <CustomToggleSwitch checked={Boolean(watchedValues.isCompulsory)} onCheckedChange={handleToggleCompulsory} />
+                                            <CustomToggleSwitch checked={isCompulsoryEnabled} onCheckedChange={handleToggleCompulsory} />
                                         </div>
                                     </div>
                                     <div className='flex items-center justify-between'>
@@ -624,22 +789,23 @@ const QuestionModal = memo(({
                                         </div>
                                         <div className="flex items-center justify-between gap-4">
                                             <span className="text-base font-medium text-greyPrimary">Save question to library</span>
-                                           
-                                            <CustomToggleSwitch checked={Boolean(watchedValues.saveToLibrary)} onCheckedChange={handleToggleSaveToLibrary} />
+                                            <CustomToggleSwitch checked={isSaveToLibraryEnabled} onCheckedChange={handleToggleSaveToLibrary} />
                                         </div>
                                     </div>
                                 </div>
                                 {renderQuestionContent}
                                 <motion.button
                                     type="submit"
-                                    whileHover={{ scale: 1.05 }}
-                                    whileTap={{ scale: 0.95 }}
+                                    disabled={isUpdating}
+                                    whileHover={{ scale: isUpdating ? 1 : 1.05 }}
+                                    whileTap={{ scale: isUpdating ? 1 : 0.95 }}
                                     className={cn("mt-4 ml-auto grid place-content-center bg-[#1EA378] text-white rounded-full text-sm font-medium", {
                                         'w-[124px] h-[37px]': !isEdit,
                                         'w-[156px] h-[44px]': isEdit,
+                                        'opacity-50 cursor-not-allowed': isUpdating,
                                     })}
                                 >
-                                    {isEdit ? 'Update Question' : 'Add Question'}
+                                    {isUpdating ? 'Updating...' : (isEdit ? 'Update Question' : 'Add Question')}
                                 </motion.button>
                             </form>
                         </FormProvider>

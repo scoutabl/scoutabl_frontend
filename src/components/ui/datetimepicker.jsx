@@ -22,20 +22,24 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 
-export function DateTimePicker({ currentValue, onChange }) {
+export function DateTimePicker({ currentValue, onChange, placeholder = "Select date and time" }) {
   const [open, setOpen] = React.useState(false)
-  const [dateTime, setDateTime] = React.useState(currentValue || new Date())
+  // Separate state for the selected value (what's displayed in the button)
+  const [selectedValue, setSelectedValue] = React.useState(currentValue || null)
+  // Separate state for the temporary value being edited in the popup
+  const [tempDateTime, setTempDateTime] = React.useState(currentValue || new Date())
 
   React.useEffect(() => {
     if (currentValue) {
-      setDateTime(currentValue)
+      setSelectedValue(currentValue)
+      setTempDateTime(currentValue)
     }
   }, [currentValue])
 
   const today = new Date()
 
-  const updateDateTime = ({ newDate, newHour, newMinute, amFlag }) => {
-    setDateTime((prev) => {
+  const updateTempDateTime = ({ newDate, newHour, newMinute, amFlag }) => {
+    setTempDateTime((prev) => {
       const updated = new Date(prev)
 
       if (newDate) {
@@ -64,19 +68,18 @@ export function DateTimePicker({ currentValue, onChange }) {
         if (!amFlag && h < 12) updated.setHours(h + 12)
       }
 
-      if (onChange) onChange(updated)
       return updated
     })
   }
 
-  // Derived values
-  const hours24 = dateTime.getHours()
+  // Derived values for tempDateTime
+  const hours24 = tempDateTime.getHours()
   const isAM = hours24 < 12
   const hour12 = hours24 % 12 === 0 ? 12 : hours24 % 12
-  const minute = dateTime.getMinutes().toString().padStart(2, "0")
+  const minute = tempDateTime.getMinutes().toString().padStart(2, "0")
 
   const formatHeader = (date) => {
-    if (!date) return "Select Date & Time"
+    if (!date) return placeholder
     const options = {
       weekday: "short",
       month: "short",
@@ -89,8 +92,8 @@ export function DateTimePicker({ currentValue, onChange }) {
   }
 
   // Calendar grid logic
-  const [currentMonth, setCurrentMonth] = React.useState(dateTime.getMonth())
-  const [currentYear, setCurrentYear] = React.useState(dateTime.getFullYear())
+  const [currentMonth, setCurrentMonth] = React.useState(tempDateTime.getMonth())
+  const [currentYear, setCurrentYear] = React.useState(tempDateTime.getFullYear())
 
   const months = [
     "January", "February", "March", "April", "May", "June",
@@ -120,6 +123,29 @@ export function DateTimePicker({ currentValue, onChange }) {
     weeks.push(week)
   }
 
+  const handleOK = () => {
+    setSelectedValue(tempDateTime)
+    if (onChange) onChange(tempDateTime)
+    setOpen(false)
+  }
+
+  const handleCancel = () => {
+    // Reset tempDateTime to the current selected value
+    setTempDateTime(selectedValue || new Date())
+    setCurrentMonth((selectedValue || new Date()).getMonth())
+    setCurrentYear((selectedValue || new Date()).getFullYear())
+    setOpen(false)
+  }
+
+  const handleClear = () => {
+    setSelectedValue(null)
+    setTempDateTime(new Date())
+    setCurrentMonth(new Date().getMonth())
+    setCurrentYear(new Date().getFullYear())
+    if (onChange) onChange(null)
+    setOpen(false)
+  }
+
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
@@ -128,7 +154,7 @@ export function DateTimePicker({ currentValue, onChange }) {
           className="w-full justify-start text-left font-normal bg-white border-0 text-gray-500"
         >
           <CalendarIcon className="mr-2 h-4 w-4" />
-          {dateTime ? formatHeader(dateTime) : "Select Date & Time"}
+          {selectedValue ? formatHeader(selectedValue) : placeholder}
         </Button>
       </PopoverTrigger>
       <PopoverContent
@@ -141,7 +167,7 @@ export function DateTimePicker({ currentValue, onChange }) {
             Select Start Date & Time
           </h3>
           <div className="text-xl font-bold text-gray-900 mt-1">
-            {formatHeader(dateTime)}
+            {formatHeader(tempDateTime)}
           </div>
         </div>
 
@@ -237,7 +263,7 @@ export function DateTimePicker({ currentValue, onChange }) {
                   : null
                 const isSelected =
                   thisDate &&
-                  dateTime.toDateString() === thisDate.toDateString()
+                  tempDateTime.toDateString() === thisDate.toDateString()
                 const isToday =
                   thisDate && thisDate.toDateString() === today.toDateString()
                 return (
@@ -245,7 +271,7 @@ export function DateTimePicker({ currentValue, onChange }) {
                     {d ? (
                       <button
                         onClick={() =>
-                          updateDateTime({ newDate: new Date(currentYear, currentMonth, d) })
+                          updateTempDateTime({ newDate: new Date(currentYear, currentMonth, d) })
                         }
                         className={`h-9 w-9 flex items-center justify-center rounded-full text-sm
                           ${isSelected ? "bg-purplePrimary text-white" : ""}
@@ -274,7 +300,7 @@ export function DateTimePicker({ currentValue, onChange }) {
               min="1"
               max="12"
               value={hour12}
-              onChange={(e) => updateDateTime({ newHour: e.target.value })}
+              onChange={(e) => updateTempDateTime({ newHour: e.target.value })}
               className="w-24 h-18 text-center !text-3xl font-bold bg-backgroundPrimary rounded-lg border border-gray-200"
               style={{ fontSize: '30px', color: '#4a5568' }}
             />
@@ -290,7 +316,7 @@ export function DateTimePicker({ currentValue, onChange }) {
               min="0"
               max="59"
               value={minute}
-              onChange={(e) => updateDateTime({ newMinute: e.target.value })}
+              onChange={(e) => updateTempDateTime({ newMinute: e.target.value })}
               className="w-24 h-18 text-cente !text-3xl font-bold bg-backgroundPrimary rounded-lg border border-gray-200"
               style={{ fontSize: '30px', color: '#4a5568' }}
             />
@@ -305,7 +331,7 @@ export function DateTimePicker({ currentValue, onChange }) {
               className={`rounded-none px-4 py-2 font-semibold ${
                 isAM ? "bg-pinkPrimary text-gray-700" : "text-gray-700 bg-backgroundPrimary "
               }`}
-              onClick={() => updateDateTime({ amFlag: true })}
+              onClick={() => updateTempDateTime({ amFlag: true })}
             >
               AM
             </Button>
@@ -315,7 +341,7 @@ export function DateTimePicker({ currentValue, onChange }) {
               className={`rounded-none px-4 py-2 font-semibold border-t ${
                 !isAM ? "bg-pinkPrimary text-gray-700" : "text-gray-700 bg-backgroundPrimary "
               }`}   
-              onClick={() => updateDateTime({ amFlag: false })}
+              onClick={() => updateTempDateTime({ amFlag: false })}
             >
               PM
             </Button>
@@ -327,13 +353,7 @@ export function DateTimePicker({ currentValue, onChange }) {
           <Button
             variant="ghost"
             className="text-grey-600 font-medium"
-            onClick={() => {
-              const now = new Date()
-              setDateTime(now)
-              setCurrentMonth(now.getMonth())
-              setCurrentYear(now.getFullYear())
-              if (onChange) onChange(now)
-            }}
+            onClick={handleClear}
           >
             Clear
           </Button>
@@ -341,14 +361,14 @@ export function DateTimePicker({ currentValue, onChange }) {
             <Button
               variant="ghost"
               className="text-grey-600 font-medium"
-              onClick={() => setOpen(false)}
+              onClick={handleCancel}
             >
               Cancel
             </Button>
             <Button
               variant="ghost"
               className="text-grey-600 font-medium"
-              onClick={() => setOpen(false)}
+              onClick={handleOK}
             >
               OK
             </Button>

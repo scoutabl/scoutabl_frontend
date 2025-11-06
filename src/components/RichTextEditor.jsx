@@ -227,7 +227,7 @@
 
 // export default RichTextEditor;
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import Underline from '@tiptap/extension-underline';
@@ -611,8 +611,9 @@ const MenuBar = ({ editor }) => {
     );
 };
 
-const RichTextEditor = ({ content = '', onChange = () => { }, wordCountToggle }) => {
+const RichTextEditor = ({ content = '', onChange = () => { }, wordCountToggle, placeholder = '' }) => {
     const [wordCount, setWordCount] = useState(0);
+    const [showPlaceholder, setShowPlaceholder] = useState(!content || content.trim() === '');
 
     const editor = useEditor({
         extensions: [
@@ -671,16 +672,31 @@ const RichTextEditor = ({ content = '', onChange = () => { }, wordCountToggle })
             const text = editor.getText();
             setWordCount(text.split(/\s+/).filter(word => word.length > 0).length);
             onChange(html);
+            
+            // Update placeholder visibility
+            setShowPlaceholder(!text || text.trim() === '');
+        },
+        onFocus: () => {
+            setShowPlaceholder(false);
+        },
+        onBlur: ({ editor }) => {
+            const text = editor.getText();
+            setShowPlaceholder(!text || text.trim() === '');
         },
     });
+
+    // Update placeholder visibility when content changes
+    useEffect(() => {
+        if (editor) {
+            const text = editor.getText();
+            setShowPlaceholder(!text || text.trim() === '');
+        }
+    }, [content, editor]);
 
     return (
         <div className="flex flex-col h-full border-[1px] border-[rgba(224,224,224,0.65)] [box-shadow:0px_16px_24px_rgba(0,_0,_0,_0.06),_0px_2px_6px_rgba(0,_0,_0,_0.04)] rounded-5xl">
             <MenuBar editor={editor} />
-            {/* <div className="flex-1 min-h-0 bg-backgroundPrimary">
-                <EditorContent editor={editor} className="h-full" />
-            </div> */}
-            <div className="flex-1 min-h-0 bg-backgroundPrimary overflow-hidden rounded-bl-5xl rounded-br-5xl">
+            <div className="flex-1 min-h-0 bg-backgroundPrimary overflow-hidden rounded-bl-5xl rounded-br-5xl relative">
                 <EditorContent
                     editor={editor}
                     className="h-full overflow-y-auto"
@@ -690,6 +706,16 @@ const RichTextEditor = ({ content = '', onChange = () => { }, wordCountToggle })
                         wordBreak: 'break-word'
                     }}
                 />
+                {showPlaceholder && placeholder && (
+                    <div 
+                        className="absolute top-6 left-6 pointer-events-none text-gray-400 text-sm"
+                        style={{ 
+                            zIndex: 10
+                        }}
+                    >
+                        {placeholder}
+                    </div>
+                )}
             </div>
             {wordCountToggle && (
                 <div className="p-6 bg-backgroundPrimary rounded-bl-5xl rounded-br-5xl">
@@ -697,7 +723,6 @@ const RichTextEditor = ({ content = '', onChange = () => { }, wordCountToggle })
                 </div>
             )}
         </div>
-
     );
 };
 

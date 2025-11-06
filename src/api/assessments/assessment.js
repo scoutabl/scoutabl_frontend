@@ -71,8 +71,15 @@ export const useAssessmentsSummary = () => {
     return useQuery({
         queryKey: ["assessments_summary"],
         queryFn: () => assesmentAPI.getAssessmentsSummary(),
+        enabled: false, 
+        retry: 1, 
+        retryDelay: 1000, 
+        onError: (error) => {
+            console.error('Failed to fetch assessments summary:', error);
+        },
+        refetchOnWindowFocus: false,
     });
-}
+};
 
 export const useAssessment = (assessmentId) => {
     return useQuery({
